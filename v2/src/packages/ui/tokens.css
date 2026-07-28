@@ -1,0 +1,151 @@
+/* ═══════════════════════════════════════════════════════════════
+   PlotMap V2 — Design Tokens (violet-dusk palette)
+   Source of truth: approved-designs/02-Dashboard/design_handoff_plotmap/
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Fonts ─────────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap');
+
+:root {
+  /* ── Base surfaces ────────────────────────────────────────── */
+  --pm-base: #f5efff;
+  --pm-surface: #fffaf0;
+  --pm-surface-alt: #faf7ff;
+  --pm-surface-violet: #f0eaff;
+  --pm-hairline: #ddd2f5;
+  --pm-hairline-2: #e4dbf7;
+
+  /* ── Bloom gradient (standard app background) ─────────────── */
+  --pm-bloom: radial-gradient(62% 50% at -2% -4%, rgba(139,96,232,.50), transparent 62%),
+              radial-gradient(54% 44% at 104% 0%, rgba(255,201,60,.42), transparent 60%),
+              radial-gradient(70% 60% at 50% 108%, rgba(255,225,230,.55), transparent 65%);
+
+  /* ── Accent / semantic ────────────────────────────────────── */
+  --pm-gold: #ffc93c;
+  --pm-gold-bright: #ffd75e;
+  --pm-gold-deep: #f4ae14;
+  --pm-gold-ink: #8a5a0c;
+  --pm-gold-eyebrow: #a8792a;
+  --pm-gold-bed: #fff3d1;
+  --pm-gold-bed-border: #f6d98d;
+
+  --pm-violet: #5b32c4;
+  --pm-violet-bed: #efe8fb;
+  --pm-violet-bed-2: #e7defc;
+  --pm-violet-bed-border: #d6c6f5;
+
+  --pm-forest: #1f4d3a;
+  --pm-forest-deep: #1b3a2e;
+  --pm-forest-dark: #1a2f24;
+
+  --pm-green: #12704a;
+  --pm-green-bright: #12a150;
+  --pm-green-bed: #dcf3e5;
+  --pm-green-bed-2: #d9f5e3;
+  --pm-green-bed-border: #b3e0c6;
+
+  --pm-rose-bed: #ffe1e6;
+
+  --pm-pin-glow: #ffc21e;
+
+  /* ── Ink ───────────────────────────────────────────────────── */
+  --pm-ink: #241f1c;
+  --pm-ink-2: #3a332c;
+  --pm-ink-muted: #6b6156;
+  --pm-ink-soft: #8d8271;
+  --pm-on-dark: #faf7ff;
+  --pm-on-dark-muted: #c9dbcf;
+
+  /* ── Link ──────────────────────────────────────────────────── */
+  --pm-link: #7d6c40;
+  --pm-link-hover: #5f5130;
+
+  /* ── Typography ────────────────────────────────────────────── */
+  --pm-font-display: 'Newsreader', serif;
+  --pm-font-ui: 'Hanken Grotesk', system-ui, sans-serif;
+
+  /* ── Spacing ───────────────────────────────────────────────── */
+  --pm-gutter: 34px;
+  --pm-content-max: 1140px;
+  --pm-grid-gap: 18px;
+  --pm-card-pad: 26px;
+  --pm-sheet-pad: 22px;
+
+  /* ── Radii ─────────────────────────────────────────────────── */
+  --pm-r-hero: 26px;
+  --pm-r-launcher: 24px;
+  --pm-r-card: 22px;
+  --pm-r-tile-lg: 20px;
+  --pm-r-tile: 18px;
+  --pm-r-tile-sm: 16px;
+  --pm-r-nav: 14px;
+  --pm-r-pill: 13px;
+  --pm-r-chip: 10px;
+  --pm-r-status: 999px;
+  --pm-r-dot: 50%;
+
+  /* ── Shadows ───────────────────────────────────────────────── */
+  --pm-shadow-card: 0 1px 2px rgba(30,28,22,.03), 0 16px 38px -30px rgba(30,28,22,.7);
+  --pm-shadow-gold: 0 14px 24px -16px rgba(120,86,10,.9);
+  --pm-shadow-violet: 0 14px 24px -16px rgba(52,28,120,.9);
+  --pm-shadow-forest: 0 14px 24px -16px rgba(12,45,30,.9);
+
+  /* ── Motion ────────────────────────────────────────────────── */
+  --pm-ease: cubic-bezier(.2,.8,.2,1);
+  --pm-hover-dur: 150ms;
+}
+
+/* ── Animations ──────────────────────────────────────────────── */
+@keyframes wRise {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes barGrow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes omRise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes omSlide {
+  from { opacity: 0; transform: translateX(34px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes omPop {
+  from { opacity: 0; transform: scale(.96); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes omVeil {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes omGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(240,168,60,.45); }
+  50% { box-shadow: 0 0 0 10px rgba(240,168,60,0); }
+}
+@keyframes pinIn {
+  0% { opacity: 0; transform: scale(.7); }
+  60% { transform: scale(1.06); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes ringPulse {
+  0% { transform: translate(-50%,-50%) scale(.35); opacity: .9; }
+  100% { transform: translate(-50%,-50%) scale(2.8); opacity: 0; }
+}
+@keyframes lPulse {
+  0% { transform: scale(.6); opacity: .9; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ── Custom scrollbar ────────────────────────────────────────── */
+[data-scroll]::-webkit-scrollbar { width: 10px; }
+[data-scroll]::-webkit-scrollbar-thumb {
+  background: #e6cf9a; border-radius: 9px;
+  border: 3px solid transparent; background-clip: content-box;
+}
+[data-scroll]::-webkit-scrollbar-track { background: transparent; }

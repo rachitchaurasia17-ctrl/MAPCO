@@ -1,0 +1,23 @@
+/* ═══════════════════════════════════════════════════════════════
+   PlotMap V2 — CSS Reset
+   ═══════════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  font-family: var(--pm-font-ui);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'ss01', 'cv01', 'tnum';
+  color: var(--pm-ink);
+}
+a { color: var(--pm-link); text-decoration: none; }
+a:hover { color: var(--pm-link-hover); }
+button {
+  font-family: inherit; cursor: pointer;
+  border: none; background: none; color: inherit; padding: 0;
+}
+input, select, textarea { font-family: inherit; }
+h1, h2, h3, h4, h5, h6, p { margin: 0; }
+img { display: block; max-width: 100%; }
+::selection { background: #f0a83c; color: var(--pm-ink); }
