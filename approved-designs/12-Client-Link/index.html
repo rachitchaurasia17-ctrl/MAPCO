@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MAPCO Design Handoff - 12 Private Client Link (Buyer Presentation)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Archivo:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-dark: #0b0713;
+    --bg-card: #150f24;
+    --bg-card-elevated: #1e1633;
+    --border-color: #2b1d47;
+    --border-highlight: #4a3472;
+    --text-primary: #f6f2ff;
+    --text-secondary: #b5a4d9;
+    --text-muted: #7b69a1;
+    --accent-gold: #e8b352;
+    --accent-purple: #9675e6;
+    --accent-green: #14b85c;
+    --accent-red: #ef4444;
+    --font-heading: 'Newsreader', serif;
+    --font-body: 'Archivo', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* State Switcher Bar */
+  .state-switcher-bar {
+    width: 100%;
+    background: #120921;
+    border-bottom: 1px solid var(--border-color);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 13px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .state-switcher-title {
+    font-family: var(--font-mono);
+    color: var(--accent-gold);
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .state-btn-group { display: flex; gap: 6px; flex-wrap: wrap; }
+  .state-btn {
+    background: #201338;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 4px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  .state-btn:hover, .state-btn.active {
+    background: var(--accent-purple);
+    color: #fff;
+    border-color: var(--accent-purple);
+  }
+
+  /* Mobile Frame Simulation Container */
+  .mobile-frame-container {
+    width: 100%;
+    max-width: 440px;
+    min-height: 100vh;
+    background: var(--bg-dark);
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid rgba(255,255,255,0.05);
+    border-right: 1px solid rgba(255,255,255,0.05);
+    position: relative;
+  }
+
+  /* Header */
+  .client-header {
+    padding: 20px 20px 14px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(21, 15, 36, 0.9);
+    backdrop-filter: blur(10px);
+    position: sticky;
+    top: 48px;
+    z-index: 50;
+  }
+  .header-brand {
+    font-family: var(--font-heading);
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+  }
+  .header-verified {
+    background: rgba(232, 179, 82, 0.15);
+    color: var(--accent-gold);
+    border: 1px solid rgba(232, 179, 82, 0.3);
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+  }
+
+  /* Scroll Body */
+  .client-body {
+    flex: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* Voice Note Card */
+  .voice-card {
+    background: linear-gradient(135deg, #1e1338 0%, #150f24 100%);
+    border: 1px solid var(--accent-purple);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 8px 24px rgba(150, 117, 230, 0.15);
+  }
+  .voice-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .dealer-info { display: flex; align-items: center; gap: 10px; }
+  .dealer-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--accent-gold);
+    color: #000;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+  .voice-controls {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: rgba(0,0,0,0.3);
+    padding: 10px 14px;
+    border-radius: 10px;
+  }
+  .play-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--accent-gold);
+    color: #000;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .waveform-bars {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 24px;
+  }
+  .bar {
+    flex: 1;
+    background: var(--accent-purple);
+    border-radius: 2px;
+    opacity: 0.6;
+  }
+  .bar.active { background: var(--accent-gold); opacity: 1; }
+
+  /* Property Gallery Carousel */
+  .gallery-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .gallery-image-box {
+    width: 100%;
+    height: 230px;
+    background: #1c1430;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+  }
+  .photo-badge {
+    position: absolute;
+    bottom: 12px;
+    right: 12px;
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    padding: 3px 8px;
+    border-radius: 8px;
+  }
+
+  /* Property Details Box */
+  .details-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .prop-title {
+    font-family: var(--font-heading);
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+  .prop-price {
+    font-family: var(--font-mono);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent-gold);
+  }
+  .specs-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .spec-item {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border-color);
+    padding: 10px 12px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+  }
+  .spec-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
+  .spec-val { font-size: 13.5px; font-weight: 600; color: var(--text-primary); }
+
+  /* Contact Sticky Footer */
+  .client-footer {
+    padding: 16px 20px 24px 20px;
+    background: rgba(21, 15, 36, 0.95);
+    border-top: 1px solid var(--border-color);
+    backdrop-filter: blur(12px);
+    display: flex;
+    gap: 12px;
+    position: sticky;
+    bottom: 0;
+  }
+  .btn-call {
+    flex: 1;
+    background: var(--accent-gold);
+    color: #000;
+    font-weight: 700;
+    border: none;
+    padding: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    text-align: center;
+  }
+  .btn-whatsapp {
+    flex: 1;
+    background: var(--accent-green);
+    color: #fff;
+    font-weight: 700;
+    border: none;
+    padding: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  /* Special States overlay */
+  .state-container { display: none; width: 100%; }
+  .state-container.active { display: flex; flex-direction: column; gap: 20px; }
+
+  .status-message-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-highlight);
+    border-radius: 16px;
+    padding: 40px 24px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    margin: 40px 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- State Switcher Bar for Reviewers -->
+<div class="state-switcher-bar">
+  <span class="state-switcher-title">12 Private Client Link State:</span>
+  <div class="state-btn-group">
+    <button class="state-btn active" onclick="switchState('default')">Default (Price & Area Shown)</button>
+    <button class="state-btn" onclick="switchState('price-hidden')">Price Hidden State</button>
+    <button class="state-btn" onclick="switchState('expired')">Expired Link State</button>
+    <button class="state-btn" onclick="switchState('revoked')">Revoked Link State</button>
+    <button class="state-btn" onclick="switchState('no-media')">Unavailable Media State</button>
+    <button class="state-btn" onclick="switchState('loading')">Loading State</button>
+  </div>
+</div>
+
+<!-- Mobile Frame Centered Viewport -->
+<div class="mobile-frame-container">
+
+  <!-- Header -->
+  <header class="client-header">
+    <div class="header-brand">PlotMap</div>
+    <div class="header-verified">VERIFIED PROPERTY</div>
+  </header>
+
+  <!-- DEFAULT ACTIVE PRESENTATION STATE -->
+  <div id="state-default" class="state-container active">
+    <div class="client-body">
+      
+      <!-- Dealer Voice Note Player -->
+      <div class="voice-card">
+        <div class="voice-header">
+          <div class="dealer-info">
+            <div class="dealer-avatar">LP</div>
+            <div>
+              <div style="font-weight:600; font-size:14px;">Luminous Premier Dealer</div>
+              <div style="font-size:11px; color:var(--text-secondary);">Voice Introduction • 0:45</div>
+            </div>
+          </div>
+        </div>
+        <div class="voice-controls">
+          <button class="play-btn">▶</button>
+          <div class="waveform-bars">
+            <div class="bar active" style="height:12px;"></div>
+            <div class="bar active" style="height:20px;"></div>
+            <div class="bar active" style="height:16px;"></div>
+            <div class="bar active" style="height:22px;"></div>
+            <div class="bar" style="height:10px;"></div>
+            <div class="bar" style="height:14px;"></div>
+            <div class="bar" style="height:18px;"></div>
+            <div class="bar" style="height:10px;"></div>
+          </div>
+          <span style="font-family:var(--font-mono); font-size:11px; color:var(--accent-gold);">0:45</span>
+        </div>
+      </div>
+
+      <!-- Approved Photos Gallery -->
+      <div class="gallery-card">
+        <div class="gallery-image-box">
+          <span style="font-size:36px;">🗺️</span>
+          <span class="photo-badge">📷 1 of 4 Approved Photos</span>
+        </div>
+      </div>
+
+      <!-- Property Details -->
+      <div class="details-card">
+        <div class="prop-title">250 Sq.Yd Prime Residential Plot</div>
+        <div id="price-display" class="prop-price">₹ 1.85 Cr</div>
+        
+        <div class="specs-grid">
+          <div class="spec-item">
+            <span class="spec-label">Location / Corridor</span>
+            <span id="location-display" class="spec-val">Sector 82, Aerocity Mohali</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Plot Size</span>
+            <span class="spec-val">250 Sq.Yd</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Road Width</span>
+            <span class="spec-val">60 Ft Wide Road</span>
+          </div>
+          <div class="spec-item">
+            <span class="spec-label">Facing</span>
+            <span class="spec-val">East Facing</span>
+          </div>
+        </div>
+
+        <div style="border-top:1px solid var(--border-color); padding-top:12px; margin-top:4px;">
+          <span class="spec-label">Property Description</span>
+          <p style="font-size:13px; color:var(--text-secondary); margin-top:6px;">
+            Prime 250 sq.yd residential plot situated in a developed sector with 60ft wide connectivity, close to commercial hub and airport corridor. Excellent build readiness.
+          </p>
+        </div>
+      </div>
+
+      <!-- Security Guarantee Note -->
+      <div style="text-align:center; font-size:11px; color:var(--text-muted); font-family:var(--font-mono); padding:10px 0;">
+        🔒 Client-Safe Presentation • Verified Snapshot
+      </div>
+
+    </div>
+
+    <!-- Contact Sticky Footer -->
+    <footer class="client-footer">
+      <button class="btn-call">📞 Call Dealer</button>
+      <button class="btn-whatsapp">💬 WhatsApp</button>
+    </footer>
+  </div>
+
+  <!-- EXPIRED LINK STATE -->
+  <div id="state-expired" class="state-container">
+    <div class="client-body">
+      <div class="status-message-card" style="border-color: rgba(239, 68, 68, 0.4);">
+        <div style="font-size: 48px;">⏳</div>
+        <h2 style="font-family: var(--font-heading); font-size: 24px; color: var(--accent-red);">Link Expired</h2>
+        <p style="font-size: 13.5px; color: var(--text-secondary);">This private property presentation link has expired after its 7-day validity period.</p>
+        <p style="font-size: 12px; color: var(--text-muted);">Please contact your real estate dealer to request an updated active presentation link.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- REVOKED LINK STATE -->
+  <div id="state-revoked" class="state-container">
+    <div class="client-body">
+      <div class="status-message-card" style="border-color: rgba(239, 68, 68, 0.4);">
+        <div style="font-size: 48px;">🚫</div>
+        <h2 style="font-family: var(--font-heading); font-size: 24px; color: var(--accent-red);">Presentation Revoked</h2>
+        <p style="font-size: 13.5px; color: var(--text-secondary);">This presentation link has been deactivated by the dealer.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- UNAVAILABLE MEDIA STATE -->
+  <div id="state-no-media" class="state-container">
+    <div class="client-body">
+      <div class="status-message-card">
+        <div style="font-size: 48px;">🖼️</div>
+        <h2 style="font-family: var(--font-heading); font-size: 22px;">Media Unavailable</h2>
+        <p style="font-size: 13px; color: var(--text-secondary);">The requested property photos or audio intro are no longer available in storage.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOADING STATE -->
+  <div id="state-loading" class="state-container">
+    <div class="client-body">
+      <h3 style="font-family: var(--font-heading); text-align:center; margin-top:40px;">Resolving Property Link...</h3>
+      <div style="background: var(--bg-card); height: 200px; border-radius: 14px; opacity: 0.5;"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function switchState(stateName) {
+    document.querySelectorAll('.state-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.state-container').forEach(c => c.classList.remove('active'));
+
+    const defaultState = document.getElementById('state-default');
+    const priceDisplay = document.getElementById('price-display');
+
+    if (stateName === 'default') {
+      defaultState.classList.add('active');
+      priceDisplay.innerText = '₹ 1.85 Cr';
+    } else if (stateName === 'price-hidden') {
+      defaultState.classList.add('active');
+      priceDisplay.innerText = 'Price Available on Request';
+    } else if (stateName === 'expired') {
+      document.getElementById('state-expired').classList.add('active');
+    } else if (stateName === 'revoked') {
+      document.getElementById('state-revoked').classList.add('active');
+    } else if (stateName === 'no-media') {
+      document.getElementById('state-no-media').classList.add('active');
+    } else if (stateName === 'loading') {
+      document.getElementById('state-loading').classList.add('active');
+    }
+  }
+</script>
+</body>
+</html>

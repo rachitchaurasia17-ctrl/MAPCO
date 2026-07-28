@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MAPCO Design Handoff - 04 Deals (Dealer Command)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Archivo:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-dark: #0f0b18;
+    --bg-card: #191228;
+    --bg-card-hover: #221836;
+    --bg-card-elevated: #281d3d;
+    --border-color: #2e2048;
+    --border-highlight: #46326c;
+    --text-primary: #f3effe;
+    --text-secondary: #a99ac6;
+    --text-muted: #786898;
+    --accent-amber: #e5a93c;
+    --accent-amber-glow: rgba(229, 169, 60, 0.18);
+    --accent-purple: #8c72cf;
+    --accent-green: #12a150;
+    --accent-green-glow: rgba(18, 161, 80, 0.18);
+    --accent-red: #e54d42;
+    --accent-blue: #3b82f6;
+    --font-heading: 'Newsreader', serif;
+    --font-body: 'Archivo', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* State Switcher Bar for Design Review */
+  .state-switcher-bar {
+    background: #140d21;
+    border-bottom: 1px solid var(--border-color);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 13px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .state-switcher-title {
+    font-family: var(--font-mono);
+    color: var(--accent-amber);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .state-btn-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .state-btn {
+    background: #201633;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 4px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: var(--font-body);
+    transition: all 0.2s ease;
+  }
+  .state-btn:hover, .state-btn.active {
+    background: var(--accent-purple);
+    color: #fff;
+    border-color: var(--accent-purple);
+  }
+
+  /* App Shell Top Header */
+  .app-header {
+    background: rgba(25, 18, 40, 0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-color);
+    padding: 16px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .brand-zone {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .brand-logo {
+    font-family: var(--font-heading);
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    color: var(--text-primary);
+  }
+  .brand-badge {
+    background: rgba(229, 169, 60, 0.15);
+    color: var(--accent-amber);
+    border: 1px solid rgba(229, 169, 60, 0.3);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+  }
+  .header-metrics {
+    display: flex;
+    gap: 24px;
+  }
+  .metric-box {
+    display: flex;
+    flex-direction: column;
+  }
+  .metric-val {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+  }
+  .metric-lbl {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Main Container */
+  .main-content {
+    flex: 1;
+    padding: 24px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* Action Bar */
+  .action-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .page-title {
+    font-family: var(--font-heading);
+    font-size: 32px;
+    font-weight: 500;
+  }
+  .action-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .search-input {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    width: 220px;
+  }
+  .btn-primary {
+    background: var(--accent-amber);
+    color: #000;
+    font-weight: 600;
+    border: none;
+    padding: 9px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s ease;
+  }
+  .btn-primary:hover {
+    background: #f0b64d;
+  }
+
+  /* Kanban Board Grid */
+  .kanban-board {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px;
+    align-items: start;
+  }
+  .kanban-col {
+    background: rgba(25, 18, 40, 0.6);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 520px;
+  }
+  .col-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .col-title {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .col-count {
+    background: var(--border-color);
+    color: var(--text-primary);
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-family: var(--font-mono);
+  }
+  .col-sum {
+    font-size: 12px;
+    font-family: var(--font-mono);
+    color: var(--accent-amber);
+  }
+
+  /* Deal Card */
+  .deal-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 14px;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .deal-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--border-highlight);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  }
+  .card-prop-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-primary);
+  }
+  .card-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .card-customer {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-secondary);
+  }
+  .card-price {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--accent-amber);
+    font-size: 14px;
+  }
+  .card-task-tag {
+    background: rgba(140, 114, 207, 0.15);
+    border: 1px solid rgba(140, 114, 207, 0.3);
+    color: var(--accent-purple);
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Side Drawer Details Overlay */
+  .drawer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    display: none;
+    justify-content: flex-end;
+  }
+  .drawer-overlay.active {
+    display: flex;
+  }
+  .drawer-panel {
+    background: #160f24;
+    border-left: 1px solid var(--border-highlight);
+    width: 480px;
+    max-width: 90vw;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    animation: slideLeft 0.25s ease-out;
+  }
+  @keyframes slideLeft {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+  .drawer-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .drawer-body {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .section-block {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .section-title {
+    font-size: 12px;
+    font-family: var(--font-mono);
+    color: var(--accent-amber);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .log-item {
+    padding-left: 12px;
+    border-left: 2px solid var(--accent-purple);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 13px;
+  }
+
+  /* Modal Dialogs */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 300;
+  }
+  .modal-backdrop.active {
+    display: flex;
+  }
+  .modal-card {
+    background: #191228;
+    border: 1px solid var(--border-highlight);
+    border-radius: 14px;
+    width: 480px;
+    max-width: 90vw;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .form-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .form-input, .form-select {
+    background: #100a1c;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+  }
+
+  /* Special UI States */
+  .state-container { display: none; }
+  .state-container.active { display: flex; flex-direction: column; gap: 20px; }
+
+  /* Empty State Card */
+  .empty-card {
+    background: var(--bg-card);
+    border: 1px dashed var(--border-highlight);
+    border-radius: 14px;
+    padding: 48px 24px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    max-width: 460px;
+    margin: 40px auto;
+  }
+
+  /* Responsive Rules */
+  @media (max-width: 1024px) {
+    .kanban-board { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 640px) {
+    .kanban-board { grid-template-columns: 1fr; }
+    .header-metrics { display: none; }
+    .main-content { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- State Switcher for Design Verification -->
+<div class="state-switcher-bar">
+  <span class="state-switcher-title">04 Deals View State:</span>
+  <div class="state-btn-group">
+    <button class="state-btn active" onclick="switchState('default')">Default (Kanban)</button>
+    <button class="state-btn" onclick="switchState('drawer')">Deal Details Drawer</button>
+    <button class="state-btn" onclick="switchState('new-modal')">New Deal Modal</button>
+    <button class="state-btn" onclick="switchState('closing-modal')">Closing Modal</button>
+    <button class="state-btn" onclick="switchState('loading')">Loading State</button>
+    <button class="state-btn" onclick="switchState('empty')">Empty State</button>
+    <button class="state-btn" onclick="switchState('error')">Error State</button>
+  </div>
+</div>
+
+<!-- Header Shell -->
+<header class="app-header">
+  <div class="brand-zone">
+    <div class="brand-logo">MAPCO</div>
+    <div class="brand-badge">DEALER COMMAND</div>
+  </div>
+  <div class="header-metrics">
+    <div class="metric-box">
+      <span class="metric-val">4 Active</span>
+      <span class="metric-lbl">Pipeline Deals</span>
+    </div>
+    <div class="metric-box">
+      <span class="metric-val">₹ 7.60 Cr</span>
+      <span class="metric-lbl">Target Volume</span>
+    </div>
+    <div class="metric-box">
+      <span class="metric-val">2 Due</span>
+      <span class="metric-lbl">Follow-ups Today</span>
+    </div>
+  </div>
+</header>
+
+<!-- Main Container -->
+<main class="main-content">
+
+  <!-- DEFAULT ACTIVE DEALS VIEW -->
+  <div id="state-default" class="state-container active">
+    <div class="action-bar">
+      <div>
+        <h1 class="page-title">Active Deals</h1>
+        <p style="font-size: 13px; color: var(--text-secondary);">Manage ongoing property transactions, negotiations, and scheduled site visits.</p>
+      </div>
+      <div class="action-controls">
+        <input type="text" class="search-input" placeholder="Search by customer or sector...">
+        <button class="btn-primary" onclick="switchState('new-modal')">+ Create Deal</button>
+      </div>
+    </div>
+
+    <!-- Kanban Columns -->
+    <div class="kanban-board">
+      
+      <!-- Col 1: Discussion -->
+      <div class="kanban-col">
+        <div class="col-header">
+          <span class="col-title">Discussion & Inquiry <span class="col-count">1</span></span>
+          <span class="col-sum">₹ 1.85 Cr</span>
+        </div>
+        <div class="deal-card" onclick="switchState('drawer')">
+          <div class="card-prop-title">250 Sq.Yd Plot #142</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Sector 82, Aerocity Mohali</div>
+          <div class="card-meta-row">
+            <span class="card-customer">👤 Eleanor Vance</span>
+            <span class="card-price">₹ 1.85 Cr</span>
+          </div>
+          <div class="card-task-tag">📅 Call scheduled: Tomorrow 11 AM</div>
+        </div>
+      </div>
+
+      <!-- Col 2: Site Visit -->
+      <div class="kanban-col">
+        <div class="col-header">
+          <span class="col-title">Site Visit Scheduled <span class="col-count">1</span></span>
+          <span class="col-sum">₹ 2.10 Cr</span>
+        </div>
+        <div class="deal-card" onclick="switchState('drawer')">
+          <div class="card-prop-title">300 Sq.Yd Corner Plot #88</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Sector 83, Alpha Corridor</div>
+          <div class="card-meta-row">
+            <span class="card-customer">👤 Alexander Vance</span>
+            <span class="card-price">₹ 2.10 Cr</span>
+          </div>
+          <div class="card-task-tag" style="border-color: rgba(229,169,60,0.4); color: var(--accent-amber);">🚗 Site Visit: Today 4:30 PM</div>
+        </div>
+      </div>
+
+      <!-- Col 3: Token Advance -->
+      <div class="kanban-col">
+        <div class="col-header">
+          <span class="col-title">Token Advance Paid <span class="col-count">1</span></span>
+          <span class="col-sum">₹ 1.45 Cr</span>
+        </div>
+        <div class="deal-card" onclick="switchState('drawer')">
+          <div class="card-prop-title">200 Sq.Yd Plot #55</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Sector 79, Mohali</div>
+          <div class="card-meta-row">
+            <span class="card-customer">👤 Vikramaditya Singh</span>
+            <span class="card-price">₹ 1.45 Cr</span>
+          </div>
+          <div class="card-task-tag" style="border-color: rgba(18,161,80,0.4); color: var(--accent-green);">💰 Token received ₹ 5.0L</div>
+        </div>
+      </div>
+
+      <!-- Col 4: Legal & Closing -->
+      <div class="kanban-col">
+        <div class="col-header">
+          <span class="col-title">Documentation & Legal <span class="col-count">1</span></span>
+          <span class="col-sum">₹ 2.20 Cr</span>
+        </div>
+        <div class="deal-card" onclick="switchState('drawer')">
+          <div class="card-prop-title">Commercial Bay Plot #12</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Airport Road, Mohali</div>
+          <div class="card-meta-row">
+            <span class="card-customer">👤 Rajesh Kumar</span>
+            <span class="card-price">₹ 2.20 Cr</span>
+          </div>
+          <div class="card-task-tag">📄 Registry verification in progress</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- LOADING STATE -->
+  <div id="state-loading" class="state-container">
+    <h2 style="font-family: var(--font-heading);">Loading Active Deals...</h2>
+    <div style="display: flex; gap: 16px; margin-top: 10px;">
+      <div style="background: var(--bg-card); border: 1px solid var(--border-color); height: 300px; width: 100%; border-radius: 12px; opacity: 0.5;"></div>
+      <div style="background: var(--bg-card); border: 1px solid var(--border-color); height: 300px; width: 100%; border-radius: 12px; opacity: 0.5;"></div>
+    </div>
+  </div>
+
+  <!-- EMPTY STATE -->
+  <div id="state-empty" class="state-container">
+    <div class="empty-card">
+      <div style="font-size: 40px;">🤝</div>
+      <h3 style="font-family: var(--font-heading); font-size: 22px;">No Active Deals Found</h3>
+      <p style="font-size: 13px; color: var(--text-secondary);">You currently have no active property deals in your pipeline. Create your first deal to track buyer negotiations and site visits.</p>
+      <button class="btn-primary" onclick="switchState('new-modal')">+ Create First Deal</button>
+    </div>
+  </div>
+
+  <!-- ERROR STATE -->
+  <div id="state-error" class="state-container">
+    <div class="empty-card" style="border-color: rgba(229, 77, 66, 0.4);">
+      <div style="font-size: 40px;">⚠️</div>
+      <h3 style="font-family: var(--font-heading); font-size: 22px; color: var(--accent-red);">Unable to Load Deals</h3>
+      <p style="font-size: 13px; color: var(--text-secondary);">Failed to synchronize deal records with local storage. Please check connection or retry.</p>
+      <button class="btn-primary" style="background: #281d3d; color: #fff; border: 1px solid var(--border-color);" onclick="switchState('default')">🔄 Retry Sync</button>
+    </div>
+  </div>
+
+</main>
+
+<!-- DEAL DETAIL DRAWER -->
+<div id="drawer-overlay" class="drawer-overlay">
+  <div class="drawer-panel">
+    <div class="drawer-header">
+      <div>
+        <h3 style="font-family: var(--font-heading); font-size: 20px;">250 Sq.Yd Plot #142</h3>
+        <span style="font-size: 12px; color: var(--text-secondary);">Sector 82, Aerocity Mohali</span>
+      </div>
+      <button onclick="closeDrawer()" style="background:none; border:none; color:var(--text-secondary); font-size:20px; cursor:pointer;">✕</button>
+    </div>
+    <div class="drawer-body">
+      
+      <!-- Stage & Outcome Control -->
+      <div class="section-block">
+        <span class="section-title">Deal Stage</span>
+        <select class="form-select">
+          <option>Discussion & Inquiry</option>
+          <option>Site Visit Scheduled</option>
+          <option>Token Advance Paid</option>
+          <option>Documentation & Legal</option>
+        </select>
+        <div style="display:flex; gap:10px; margin-top:6px;">
+          <button style="flex:1; background:rgba(18,161,80,0.2); border:1px solid var(--accent-green); color:var(--accent-green); padding:8px; border-radius:6px; font-weight:600; cursor:pointer;" onclick="switchState('closing-modal')">✓ Mark Won</button>
+          <button style="flex:1; background:rgba(229,77,66,0.2); border:1px solid var(--accent-red); color:var(--accent-red); padding:8px; border-radius:6px; font-weight:600; cursor:pointer;" onclick="switchState('closing-modal')">✕ Mark Lost</button>
+        </div>
+      </div>
+
+      <!-- Linked Customer -->
+      <div class="section-block">
+        <span class="section-title">Linked Buyer Customer</span>
+        <div style="font-weight:600; font-size:15px;">Eleanor Vance</div>
+        <div style="font-size:12px; color:var(--text-secondary);">HNW Buyer • Target Budget: ₹ 1.80 Cr - ₹ 2.10 Cr</div>
+        <div style="font-size:12px; color:var(--accent-purple);">📞 +91 98765 43210 (Internal)</div>
+      </div>
+
+      <!-- Offer History -->
+      <div class="section-block">
+        <span class="section-title">Negotiation & Offer Log</span>
+        <div class="log-item">
+          <span style="font-weight:600;">Counter Offer: ₹ 1.85 Cr</span>
+          <span style="color:var(--text-muted); font-size:11px;">Yesterday 4:30 PM by Dealer</span>
+        </div>
+        <div class="log-item">
+          <span style="font-weight:600;">Initial Buyer Offer: ₹ 1.78 Cr</span>
+          <span style="color:var(--text-muted); font-size:11px;">25 July 2026 by Customer</span>
+        </div>
+      </div>
+
+      <!-- Follow-up Notes -->
+      <div class="section-block">
+        <span class="section-title">Follow-up Notes (Local Store)</span>
+        <p style="font-size:12px; color:var(--text-secondary);">Client requested sector map layout PDF before site visit on Thursday. Prefers East facing entry.</p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- NEW DEAL MODAL -->
+<div id="modal-new-deal" class="modal-backdrop">
+  <div class="modal-card">
+    <h3 style="font-family: var(--font-heading); font-size: 22px;">Create New Deal</h3>
+    <div class="form-group">
+      <label class="form-label">Select Customer</label>
+      <select class="form-select">
+        <option>Eleanor Vance (HNW)</option>
+        <option>Alexander Vance</option>
+        <option>Vikramaditya Singh</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Select Property</label>
+      <select class="form-select">
+        <option>Plot #142, Sector 82 Aerocity (₹ 1.85 Cr)</option>
+        <option>Plot #88, Sector 83 Alpha (₹ 2.10 Cr)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Initial Agreed Deal Value (INR)</label>
+      <input type="text" class="form-input" value="₹ 1,85,00,000">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Initial Stage</label>
+      <select class="form-select">
+        <option>Discussion & Inquiry</option>
+        <option>Site Visit Scheduled</option>
+      </select>
+    </div>
+    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
+      <button style="background:none; border:1px solid var(--border-color); color:var(--text-secondary); padding:8px 16px; border-radius:6px; cursor:pointer;" onclick="closeModal('modal-new-deal')">Cancel</button>
+      <button class="btn-primary" onclick="closeModal('modal-new-deal'); switchState('default');">Save Deal</button>
+    </div>
+  </div>
+</div>
+
+<!-- CLOSING OUTCOME MODAL -->
+<div id="modal-closing" class="modal-backdrop">
+  <div class="modal-card">
+    <h3 style="font-family: var(--font-heading); font-size: 22px;">Record Closing Outcome</h3>
+    <div class="form-group">
+      <label class="form-label">Final Outcome Status</label>
+      <select class="form-select">
+        <option>Closed Won (Deal Completed)</option>
+        <option>Closed Lost (Cancelled)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Final Transaction Amount (INR)</label>
+      <input type="text" class="form-input" value="₹ 1,85,00,000">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Closing Notes / Reason</label>
+      <input type="text" class="form-input" placeholder="e.g. Token advance paid and registry date set for Aug 15.">
+    </div>
+    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
+      <button style="background:none; border:1px solid var(--border-color); color:var(--text-secondary); padding:8px 16px; border-radius:6px; cursor:pointer;" onclick="closeModal('modal-closing')">Cancel</button>
+      <button class="btn-primary" onclick="closeModal('modal-closing'); switchState('default');">Save Outcome</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  function switchState(stateName) {
+    document.querySelectorAll('.state-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.state-container').forEach(c => c.classList.remove('active'));
+    document.getElementById('drawer-overlay').classList.remove('active');
+    document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('active'));
+
+    if (stateName === 'default') {
+      document.getElementById('state-default').classList.add('active');
+    } else if (stateName === 'drawer') {
+      document.getElementById('state-default').classList.add('active');
+      document.getElementById('drawer-overlay').classList.add('active');
+    } else if (stateName === 'new-modal') {
+      document.getElementById('state-default').classList.add('active');
+      document.getElementById('modal-new-deal').classList.add('active');
+    } else if (stateName === 'closing-modal') {
+      document.getElementById('state-default').classList.add('active');
+      document.getElementById('modal-closing').classList.add('active');
+    } else if (stateName === 'loading') {
+      document.getElementById('state-loading').classList.add('active');
+    } else if (stateName === 'empty') {
+      document.getElementById('state-empty').classList.add('active');
+    } else if (stateName === 'error') {
+      document.getElementById('state-error').classList.add('active');
+    }
+  }
+
+  function closeDrawer() {
+    document.getElementById('drawer-overlay').classList.remove('active');
+  }
+  function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+  }
+</script>
+</body>
+</html>
