@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div data-reveal style="opacity:1">
+  <div onMouseEnter="{{ enter }}" onMouseLeave="{{ leave }}" style="position:relative;width:100%;aspect-ratio:3/4;overflow:hidden;background:#ece7df;cursor:pointer">
+
+    <!-- back image (revealed on hover) -->
+    <div style="{{ backStyle }}">
+      <image-slot id="{{ p.slotBack }}" fit="cover" shape="rect" placeholder="{{ p.backLabel }}" style="position:absolute;inset:0;width:100%;height:100%;display:block"></image-slot>
+    </div>
+
+    <!-- front image -->
+    <div style="{{ frontStyle }}">
+      <image-slot id="{{ p.slotFront }}" fit="cover" shape="rect" placeholder="{{ p.frontLabel }}" style="position:absolute;inset:0;width:100%;height:100%;display:block"></image-slot>
+    </div>
+
+    <!-- tag -->
+    <sc-if value="{{ showTag }}" hint-placeholder-val="{{ true }}">
+      <span style="{{ tagStyle }}">{{ p.tag }}</span>
+    </sc-if>
+
+    <!-- wishlist -->
+    <button onClick="{{ toggleWish }}" aria-label="Wishlist" style="{{ wishStyle }}">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="{{ wishFill }}" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-7.5-4.9-10-9.3C.4 8.4 1.9 4.5 5.6 4.5c2.2 0 3.6 1.4 4.4 2.6.8-1.2 2.2-2.6 4.4-2.6 3.7 0 5.2 3.9 3.6 7.2C19.5 16.1 12 21 12 21z"/></svg>
+    </button>
+
+    <!-- stock chip -->
+    <sc-if value="{{ stockLow }}" hint-placeholder-val="{{ true }}">
+      <span style="position:absolute;left:12px;top:12px;display:flex;align-items:center;gap:6px;padding:5px 9px;background:rgba(250,248,244,.82);backdrop-filter:blur(6px);font:600 8.5px/1 'Helvetica Neue',Helvetica,Arial,sans-serif;letter-spacing:.14em;color:#9c6b4a;text-transform:uppercase">
+        <span style="width:5px;height:5px;border-radius:50%;background:#9c6b4a;display:inline-block"></span>Low stock
+      </span>
+    </sc-if>
+
+    <!-- quick add bar -->
+    <div style="{{ overlayStyle }}">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
+        <span style="font:600 9px/1 'Helvetica Neue',Helvetica,Arial,sans-serif;letter-spacing:.2em;color:#1a1714;text-transform:uppercase">Quick add</span>
+        <span style="font:500 10px/1 'Helvetica Neue',Helvetica,Arial,sans-serif;letter-spacing:.04em;color:#8c8478">{{ lovedText }}</span>
+      </div>
+      <div style="display:flex;gap:6px">
+        <sc-for list="{{ sizeList }}" as="sz" hint-placeholder-count="4">
+          <button onClick="{{ sz.add }}" style="flex:1;padding:9px 0;background:transparent;border:1px solid rgba(26,23,20,.22);font:600 10px/1 'Helvetica Neue',Helvetica,Arial,sans-serif;letter-spacing:.06em;color:#1a1714;cursor:pointer;transition:all .2s" style-hover="background:#1a1714;color:#faf8f4;border-color:#1a1714">{{ sz.label }}</button>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+
+  <!-- meta -->
+  <div style="padding:13px 2px 0">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
+      <h3 style="margin:0;font:400 14px/1.3 'Helvetica Neue',Helvetica,Arial,sans-serif;letter-spacing:.01em;color:#1a1714">{{ p.name }}</h3>
+      <span style="font:400 14px/1 'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1714;white-space:nowrap">{{ p.price }}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:7px">
+      <span style="font:400 11px/1 'Helvetica Neue',Helvetica,Arial,sans-serif;letter-spacing:.1em;color:#a39a8c;text-transform:uppercase">{{ colorName }}</span>
+      <div style="display:flex;gap:6px">
+        <sc-for list="{{ colorList }}" as="c" hint-placeholder-count="3">
+          <button onClick="{{ c.pick }}" aria-label="Color" style="{{ c.style }}"></button>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:300,&quot;height&quot;:480},&quot;p&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;any&quot;,&quot;default&quot;:{&quot;id&quot;:&quot;x&quot;,&quot;name&quot;:&quot;The Cotton Tee&quot;,&quot;price&quot;:&quot;$90&quot;,&quot;frontLabel&quot;:&quot;FRONT · 3:4&quot;,&quot;backLabel&quot;:&quot;BACK&quot;,&quot;tag&quot;:&quot;New&quot;,&quot;stock&quot;:&quot;low&quot;,&quot;loved&quot;:&quot;1.2k&quot;,&quot;sizes&quot;:[&quot;XS&quot;,&quot;S&quot;,&quot;M&quot;,&quot;L&quot;],&quot;colors&quot;:[{&quot;name&quot;:&quot;Bone&quot;,&quot;hex&quot;:&quot;#ece7df&quot;},{&quot;name&quot;:&quot;Ink&quot;,&quot;hex&quot;:&quot;#1a1714&quot;},{&quot;name&quot;:&quot;Clay&quot;,&quot;hex&quot;:&quot;#9c6b4a&quot;}]}},&quot;onAdd&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;(item:any)=&gt;void&quot;}}">
+class Component extends DCLogic {
+  state = { hover:false, wished:false, color:0 };
+
+  add(size){
+    const fn = this.props.onAdd;
+    const p = this.props.p || {};
+    if(fn) fn({ id:p.id, name:p.name, price:p.price, size, color:(p.colors&&p.colors[this.state.color]&&p.colors[this.state.color].name)||'' });
+  }
+
+  renderVals(){
+    const p = this.props.p || {};
+    const hover = this.state.hover;
+    const colors = p.colors || [];
+    const cur = colors[this.state.color] || {};
+
+    const imgBase = "position:absolute;inset:0;transition:opacity .55s cubic-bezier(.22,1,.36,1),transform 1.1s cubic-bezier(.22,1,.36,1);will-change:opacity,transform;";
+    const frontStyle = imgBase + (hover ? "opacity:0;transform:scale(1.04);" : "opacity:1;transform:scale(1);");
+    const backStyle  = imgBase + (hover ? "opacity:1;transform:scale(1.04);" : "opacity:0;transform:scale(1);");
+
+    const overlayStyle = "position:absolute;left:0;right:0;bottom:0;padding:14px;background:linear-gradient(transparent,rgba(250,248,244,.0) 0,rgba(250,248,244,.94) 38%);transition:transform .5s cubic-bezier(.22,1,.36,1),opacity .4s;"
+      + (hover ? "transform:translateY(0);opacity:1;" : "transform:translateY(101%);opacity:0;");
+
+    const wishStyle = "position:absolute;right:12px;top:12px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:rgba(250,248,244,.82);backdrop-filter:blur(6px);border:none;border-radius:50%;cursor:pointer;color:"+(this.state.wished?"#9c6b4a":"#1a1714")+";transition:transform .2s;z-index:3";
+
+    const sizeList = (p.sizes||[]).map(s => ({ label:s, add:()=>this.add(s) }));
+    const colorList = colors.map((c,i)=>({
+      pick:()=>this.setState({color:i}),
+      style:"width:13px;height:13px;border-radius:50%;background:"+c.hex+";cursor:pointer;padding:0;border:1px solid rgba(26,23,20,.18);"+(i===this.state.color?"box-shadow:0 0 0 1.5px #faf8f4,0 0 0 2.5px #1a1714;":"")
+    }));
+
+    const tagStyle = "position:absolute;left:12px;top:12px;padding:5px 9px;background:#1a1714;color:#faf8f4;font:600 8.5px/1 'Helvetica Neue',Helvetica,Arial,sans-serif;letter-spacing:.16em;text-transform:uppercase;z-index:2";
+
+    return {
+      p, frontStyle, backStyle, overlayStyle, wishStyle,
+      wishFill: this.state.wished ? "#9c6b4a" : "none",
+      showTag: !!p.tag, tagStyle,
+      stockLow: p.stock === 'low',
+      lovedText: p.loved ? ("\u2661 "+p.loved) : "",
+      colorName: cur.name || "",
+      sizeList, colorList,
+      enter:()=>this.setState({hover:true}),
+      leave:()=>this.setState({hover:false}),
+      toggleWish:()=>this.setState(s=>({wished:!s.wished})),
+    };
+  }
+}
+</script>
+</body>
+</html>
