@@ -1,0 +1,449 @@
+/* ═══════════════════════════════════════════════════════════════
+   PlotMap V2 — Data Architecture Contracts
+   ---------------------------------------------------------------
+   The single boundary every UI module talks to. UI modules import
+   ONLY from here (and types.ts). They must never import Supabase,
+   IndexedDB, or know whether data is online/offline.
+
+   Pass 2 will add:
+     - SupabaseAdapter        (implements these same interfaces)
+     - IndexedDbAdapter       (lightweight offline read cache)
+     - SyncQueue              (controlled write queue)
+   ...without touching a single screen component, because screens
+   depend on the interfaces below, not on any concrete adapter.
+
+   Sources: 08_DATA_MODEL_AND_ADAPTERS, 20_SECURITY_INVARIANTS,
+            21_REUSE_ADAPT_REWRITE_PROHIBIT, 22_V2_ARCHITECTURE
+   ═══════════════════════════════════════════════════════════════ */
+
+import type {
+  Property, Client, Deal, ClientLink, MapData, DemandSignal,
+} from './types';
+
+/* ───────────────────────────────────────────────────────────────
+   1. STRUCTURED RESULT / ERROR TYPES
+   Async repo methods never throw for expected failures — they
+   return a discriminated Result so the UI can render a real error
+   state instead of an unhandled rejection.
+   ─────────────────────────────────────────────────────────────── */
+
+export type RepoErrorCode =
+  | 'network'          // transport failed / offline with no cache
+  | 'unauthorized'     // no/invalid session
+  | 'forbidden'        // role/scope mismatch
+  | 'not_found'        // resource absent
+  | 'gone'             // link/token expired or revoked
+  | 'rate_limited'
+  | 'conflict'         // optimistic-concurrency clash (Pass 2 sync)
+  | 'validation'       // bad input
+  | 'aborted'          // AbortSignal fired
+  | 'unavailable'      // asset/backend temporarily unavailable
+  | 'unknown';
+
+export interface RepoError {
+  readonly code: RepoErrorCode;
+  readonly message: string;
+  /** true when a retry might succeed (network, rate_limited, unavailable). */
+  readonly retryable: boolean;
+  /** optional machine detail for logging — never rendered to buyers. */
+  readonly detail?: string;
+}
+
+export type Ok<T> = { readonly ok: true; readonly value: T };
+export type Err = { readonly ok: false; readonly error: RepoError };
+export type Result<T> = Ok<T> | Err;
+
+export const ok = <T>(value: T): Ok<T> => ({ ok: true, value });
+export const err = (
+  code: RepoErrorCode,
+  message: string,
+  opts: { retryable?: boolean; detail?: string } = {},
+): Err => ({
+  ok: false,
+  error: {
+    code,
+    message,
+    retryable: opts.retryable ?? (code === 'network' || code === 'rate_limited' || code === 'unavailable'),
+    detail: opts.detail,
+  },
+});
+
+/* ───────────────────────────────────────────────────────────────
+   2. CURSOR PAGINATION
+   Large collections (properties, clients, deals, demand, events)
+   are paginated so screens never hold unbounded arrays and Pass 2
+   can back this with Supabase keyset pagination unchanged.
+   ─────────────────────────────────────────────────────────────── */
+
+export interface PageParams {
+  /** opaque cursor from a previous Page.nextCursor; undefined = first page. */
+  readonly cursor?: string;
+  /** hard page size cap enforced by the adapter. */
+  readonly limit?: number;
+  /** free-text search applied before pagination. */
+  readonly query?: string;
+}
+
+export interface Page<T> {
+  readonly items: readonly T[];
+  /** pass back as PageParams.cursor to fetch the next page; null = end. */
+  readonly nextCursor: string | null;
+  /** total is best-effort; may be undefined for expensive backends. */
+  readonly total?: number;
+}
+
+/** Options shared by every async repo call. */
+export interface QueryOptions {
+  readonly signal?: AbortSignal;
+}
+
+/* ───────────────────────────────────────────────────────────────
+   3. TYPED ASYNC STATE (for UI)
+   Every page component receives one of these — never raw data and
+   never backend logic. This is how loading/empty/error/no-result
+   become first-class instead of alert() placeholders.
+   ─────────────────────────────────────────────────────────────── */
+
+export type AsyncState<T> =
+  | { readonly kind: 'idle' }
+  | { readonly kind: 'loading' }
+  | { readonly kind: 'ready'; readonly data: T }
+  | { readonly kind: 'empty' }              // loaded, nothing exists
+  | { readonly kind: 'no-results' }         // loaded, filter/search excluded all
+  | { readonly kind: 'error'; readonly error: RepoError };
+
+export const State = {
+  idle: <T>(): AsyncState<T> => ({ kind: 'idle' }),
+  loading: <T>(): AsyncState<T> => ({ kind: 'loading' }),
+  ready: <T>(data: T): AsyncState<T> => ({ kind: 'ready', data }),
+  empty: <T>(): AsyncState<T> => ({ kind: 'empty' }),
+  noResults: <T>(): AsyncState<T> => ({ kind: 'no-results' }),
+  error: <T>(error: RepoError): AsyncState<T> => ({ kind: 'error', error }),
+};
+
+/** Map a Result into an AsyncState<T[]>, choosing empty vs no-results. */
+export function pageToState<T>(
+  r: Result<Page<T>>,
+  opts: { filtered?: boolean } = {},
+): AsyncState<Page<T>> {
+  if (!r.ok) return { kind: 'error', error: r.error };
+  if (r.value.items.length === 0) {
+    return { kind: opts.filtered ? 'no-results' : 'empty' };
+  }
+  return { kind: 'ready', data: r.value };
+}
+
+/* ───────────────────────────────────────────────────────────────
+   4. FUTURE SYNC METADATA (typed now, implemented in Pass 2)
+   Screens may read these fields to show "offline / pending" chips
+   later. No sync is implemented in Pass 1.
+   ─────────────────────────────────────────────────────────────── */
+
+export type SyncStatus = 'synced' | 'pending' | 'conflict' | 'local-only';
+
+export interface SyncMeta {
+  readonly status: SyncStatus;
+  /** monotonic server revision, if known. */
+  readonly rev?: number;
+  /** ISO timestamp of last successful server sync. */
+  readonly syncedAt?: string;
+}
+
+/** Wrap any entity with optional sync metadata without changing the entity. */
+export type Synced<T> = T & { readonly _sync?: SyncMeta };
+
+/* ───────────────────────────────────────────────────────────────
+   5. AUTH / ACCOUNT / DEVICE STATE CONTRACTS
+   Landing + gating screens render off these typed states only.
+   ─────────────────────────────────────────────────────────────── */
+
+export type ActivationState =
+  | { readonly kind: 'required' }
+  | { readonly kind: 'validating' }
+  | { readonly kind: 'invalid-code' }
+  | { readonly kind: 'expired-code' }
+  | { readonly kind: 'device-approval-required' }
+  | { readonly kind: 'device-limit-reached'; readonly max: number }
+  | { readonly kind: 'activated' }
+  | { readonly kind: 'error'; readonly error: RepoError };
+
+export type AccountState =
+  | { readonly kind: 'active' }
+  | { readonly kind: 'trial'; readonly daysLeft: number }
+  | { readonly kind: 'trial-ending'; readonly daysLeft: number }
+  | { readonly kind: 'expired' }
+  | { readonly kind: 'suspended' }
+  | { readonly kind: 'access-denied' }
+  | { readonly kind: 'role-mismatch'; readonly need: string };
+
+export interface AuthRepository {
+  getActivationState(opts?: QueryOptions): Promise<Result<ActivationState>>;
+  submitActivationCode(code: string, opts?: QueryOptions): Promise<Result<ActivationState>>;
+  getAccountState(opts?: QueryOptions): Promise<Result<AccountState>>;
+}
+
+/* ───────────────────────────────────────────────────────────────
+   6. RECORD REPOSITORIES (properties / customers / deals)
+   ─────────────────────────────────────────────────────────────── */
+
+export interface PropertyRepository {
+  list(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<Property>>>;
+  get(id: string, opts?: QueryOptions): Promise<Result<Property>>;
+}
+
+export interface CustomerRepository {
+  list(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<Client>>>;
+  get(id: string, opts?: QueryOptions): Promise<Result<Client>>;
+}
+
+export interface DealRepository {
+  list(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<Deal>>>;
+  get(id: string, opts?: QueryOptions): Promise<Result<Deal>>;
+}
+
+/* ───────────────────────────────────────────────────────────────
+   7. DEMAND (full frontend contract)
+   Placement per blueprint: Demand is a dealer record surface, not a
+   standalone public URL. It lives inside the dealer app alongside
+   Properties/Customers/Deals and is matched against the property
+   repository. Fixtures are deterministic — never fabricated live
+   market intelligence or random matches.
+   ─────────────────────────────────────────────────────────────── */
+
+export type RequirementCategory = 'buy' | 'rent' | 'invest';
+export type Urgency = 'immediate' | 'this-quarter' | 'exploring';
+export type FollowUpStatus = 'new' | 'contacted' | 'visit-planned' | 'closed';
+export type DemandInternalStatus = 'open' | 'on-hold' | 'fulfilled' | 'lost';
+
+export interface DemandRecord {
+  readonly id: string;
+  readonly customerId: string;
+  readonly customerName: string;
+  readonly category: RequirementCategory;
+  readonly preferredLocations: readonly string[];
+  readonly propertyType: Property['type'];
+  readonly sizeMin?: string;
+  readonly sizeMax?: string;
+  readonly configuration?: string;      // e.g. "3 BHK", "1 kanal"
+  readonly budgetMin: number;
+  readonly budgetMax: number;
+  readonly urgency: Urgency;
+  readonly followUp: FollowUpStatus;
+  readonly status: DemandInternalStatus;
+  readonly note?: string;
+}
+
+export interface DemandMatch {
+  readonly property: Property;
+  /** 0..1 deterministic score derived from budget/type/location overlap. */
+  readonly score: number;
+  readonly reasons: readonly string[];
+}
+
+/** Input for create/edit drawer. id omitted → create. */
+export type DemandDraft = Omit<DemandRecord, 'id' | 'customerName'> & {
+  readonly id?: string;
+};
+
+export interface DemandRepository {
+  list(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<DemandRecord>>>;
+  get(id: string, opts?: QueryOptions): Promise<Result<DemandRecord>>;
+  /** Deterministic matching against the property repository. */
+  match(id: string, opts?: QueryOptions): Promise<Result<DemandMatch[]>>;
+  save(draft: DemandDraft, opts?: QueryOptions): Promise<Result<DemandRecord>>;
+}
+
+/* ───────────────────────────────────────────────────────────────
+   8. MAP REGISTRY / PRESENTATION / EVENTS
+   ─────────────────────────────────────────────────────────────── */
+
+export interface MapRepository {
+  /** metadata only — never the raster bytes, so lists stay light. */
+  listRegistry(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<Omit<MapData, 'sets'>>>>;
+  /** full map with mark sets, loaded only when a map is opened. */
+  get(id: string, opts?: QueryOptions): Promise<Result<MapData>>;
+}
+
+export type PresentationState =
+  | { readonly kind: 'maps-loading' }
+  | { readonly kind: 'no-map' }
+  | { readonly kind: 'no-properties' }
+  | { readonly kind: 'ready'; readonly maps: readonly Omit<MapData, 'sets'>[] }
+  | { readonly kind: 'selected-unavailable' }
+  | { readonly kind: 'map-asset-failed' }
+  | { readonly kind: 'overlay-unavailable' }
+  | { readonly kind: 'error'; readonly error: RepoError };
+
+export interface PresentationRepository {
+  getState(opts?: QueryOptions): Promise<Result<PresentationState>>;
+}
+
+export type PresentationEventKind =
+  | 'opened' | 'map-changed' | 'property-viewed' | 'gallery-opened' | 'closed';
+
+export interface PresentationEvent {
+  readonly kind: PresentationEventKind;
+  readonly propertyId?: string;
+  readonly mapId?: string;
+  /** ISO timestamp supplied by caller (Date is not created inside repos). */
+  readonly at: string;
+}
+
+export interface PresentationEventsRepository {
+  /** fire-and-forget analytics; never blocks the UI. */
+  record(event: PresentationEvent, opts?: QueryOptions): Promise<Result<void>>;
+}
+
+/* ───────────────────────────────────────────────────────────────
+   9. CLIENT LINKS + CLIENT-SAFE (BUYER) TYPES
+   SECURITY INVARIANT (20_SECURITY_INVARIANTS):
+   The buyer payload TYPE cannot contain seller phone/identity,
+   commission, negotiation/internal notes, team info, owner-only
+   info, or internal property status. These fields are ABSENT from
+   the type and the payload — not hidden with CSS.
+   ─────────────────────────────────────────────────────────────── */
+
+/** A single landmark, safe to show a buyer. */
+export interface ClientSafeLandmark {
+  readonly name: string;
+  readonly distance: string;
+  readonly icon: string;
+}
+
+/**
+ * The ONLY property shape a buyer page may ever receive.
+ * Note what is deliberately NOT here: no `views`, no `published`,
+ * no `sold` (internal status), no owner/seller phone, no price
+ * unless the link explicitly reveals it, no commission, no notes.
+ */
+export interface ClientSafeProperty {
+  readonly id: string;
+  readonly area: string;
+  /** Present only when the link's location visibility permits it. */
+  readonly loc?: string;
+  readonly size: string;
+  readonly facing: string;
+  readonly position: string;
+  /** approved photos only. */
+  readonly photos: readonly string[];
+  /** Present only when the link's price visibility is 'shown'. */
+  readonly price?: number;
+  readonly approvals: readonly string[];
+  readonly landmarks: readonly ClientSafeLandmark[];
+}
+
+export interface ClientSafePayload {
+  readonly dealerDisplayName: string;      // display name only, never phone/identity record
+  readonly properties: readonly ClientSafeProperty[];
+  readonly voiceNote?: { readonly url: string; readonly seconds: number };
+  readonly priceVisible: boolean;
+  readonly locationVisible: boolean;
+}
+
+/**
+ * Compile-time proof that ClientSafeProperty cannot carry forbidden
+ * keys. If someone adds `phone`, `commission`, `note`, `sold`,
+ * `published`, `views`, `owner`, or `internalStatus` to the type,
+ * this assignment fails to compile. (Used by the type tests.)
+ */
+export type ForbiddenClientKey =
+  | 'phone' | 'commission' | 'note' | 'notes' | 'sold' | 'published'
+  | 'views' | 'owner' | 'sellerPhone' | 'internalStatus' | 'team';
+type _AssertNoForbidden = Extract<keyof ClientSafeProperty, ForbiddenClientKey>;
+/** Must be `never`. Enforced in tests/type-guard below. */
+export const _clientSafeHasNoForbiddenKeys: _AssertNoForbidden extends never ? true : never = true;
+
+export type ClientLinkState =
+  | { readonly kind: 'resolving' }
+  | { readonly kind: 'valid'; readonly payload: ClientSafePayload }
+  | { readonly kind: 'invalid-token' }
+  | { readonly kind: 'expired' }
+  | { readonly kind: 'revoked' }
+  | { readonly kind: 'unavailable' }
+  | { readonly kind: 'no-approved-photos'; readonly payload: ClientSafePayload };
+
+export interface ClientLinkRepository {
+  /** dealer-side listing of links (record surface). */
+  list(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<ClientLink>>>;
+  /**
+   * Buyer-side resolution. Returns ONLY client-safe data. The token
+   * is passed as an argument and never stored or echoed back.
+   */
+  resolve(token: string, opts?: QueryOptions): Promise<Result<ClientLinkState>>;
+}
+
+/* ───────────────────────────────────────────────────────────────
+   10. MEDIA
+   ─────────────────────────────────────────────────────────────── */
+
+export type MediaState =
+  | { readonly kind: 'loading' }
+  | { readonly kind: 'ready'; readonly url: string }
+  | { readonly kind: 'image-unavailable' }
+  | { readonly kind: 'audio-unavailable' };
+
+export interface MediaRepository {
+  /** thumbnail URL for list cards (small). */
+  thumb(assetId: string): string;
+  /** full-resolution URL, resolved only when opened. */
+  full(assetId: string, opts?: QueryOptions): Promise<Result<MediaState>>;
+}
+
+/* ───────────────────────────────────────────────────────────────
+   11. DEMAND SIGNALS (dashboard aggregate)
+   ─────────────────────────────────────────────────────────────── */
+
+export interface DemandSignalsRepository {
+  get(opts?: QueryOptions): Promise<Result<DemandSignal[]>>;
+}
+
+/* ───────────────────────────────────────────────────────────────
+   12. THE ROOT ADAPTER
+   One object exposing every repository. Mock now, Supabase/IndexedDB
+   in Pass 2 — screens depend on this shape, not the implementation.
+   ─────────────────────────────────────────────────────────────── */
+
+export interface DataAdapterV2 {
+  readonly auth: AuthRepository;
+  readonly properties: PropertyRepository;
+  readonly customers: CustomerRepository;
+  readonly deals: DealRepository;
+  readonly demand: DemandRepository;
+  readonly demandSignals: DemandSignalsRepository;
+  readonly maps: MapRepository;
+  readonly presentation: PresentationRepository;
+  readonly presentationEvents: PresentationEventsRepository;
+  readonly clientLinks: ClientLinkRepository;
+  readonly media: MediaRepository;
+}
+
+/* ───────────────────────────────────────────────────────────────
+   13. DEV-ONLY SCENARIO CONTRACT
+   Every empty/loading/error/expired/etc. state is reachable by
+   switching a scenario. Wired ONLY in dev (import.meta.env.DEV).
+   ─────────────────────────────────────────────────────────────── */
+
+export type Scenario =
+  // records
+  | 'default'
+  | 'empty' | 'loading' | 'error' | 'no-results'
+  // account / activation
+  | 'trial' | 'trial-ending' | 'account-expired' | 'account-suspended'
+  | 'access-denied' | 'role-mismatch'
+  | 'activation-required' | 'activation-invalid' | 'activation-expired'
+  | 'device-approval' | 'device-limit'
+  // client link
+  | 'link-valid' | 'link-invalid' | 'link-expired' | 'link-revoked'
+  | 'link-unavailable' | 'link-no-photos' | 'link-price-hidden' | 'link-location-hidden'
+  // presentation
+  | 'maps-loading' | 'no-map' | 'no-properties' | 'selected-unavailable'
+  | 'map-asset-failed' | 'overlay-unavailable';
+
+export function activeScenario(): Scenario {
+  // dev-only: ?scenario=empty  → deterministic mock behaviour.
+  if (typeof window === 'undefined') return 'default';
+  const isDev = (import.meta as { env?: { DEV?: boolean } }).env?.DEV ?? false;
+  if (!isDev) return 'default';
+  const raw = new URLSearchParams(window.location.search).get('scenario');
+  return (raw as Scenario) || 'default';
+}
