@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Fredoka:wght@400;500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+<style>
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{ background:#FDF7EF; font-family:'Plus Jakarta Sans',system-ui,sans-serif; color:#2B2535; -webkit-font-smoothing:antialiased; overflow-x:hidden; }
+  ::selection{ background:#16A3AF; color:#fff; }
+  a{ color:inherit; text-decoration:none; }
+  @keyframes ak-float-a{ 0%,100%{ transform:translate(0,0) } 50%{ transform:translate(28px,-36px) } }
+  @keyframes ak-float-b{ 0%,100%{ transform:translate(0,0) } 50%{ transform:translate(-34px,26px) } }
+  @keyframes ak-float-c{ 0%,100%{ transform:translate(0,0) } 50%{ transform:translate(20px,30px) } }
+  @keyframes ak-bob{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-16px) } }
+  @keyframes ak-spin{ to{ transform:rotate(360deg) } }
+  @keyframes ak-spin-rev{ to{ transform:rotate(-360deg) } }
+  @keyframes ak-morph{ 0%,100%{ border-radius:42% 58% 63% 37% / 47% 42% 58% 53% } 50%{ border-radius:62% 38% 41% 59% / 56% 63% 37% 44% } }
+  @keyframes ak-twinkle{ 0%,100%{ opacity:.25; transform:scale(.7) } 50%{ opacity:1; transform:scale(1.15) } }
+  @keyframes ak-pulse{ 0%{ transform:scale(1); opacity:.55 } 70%{ transform:scale(1.9); opacity:0 } 100%{ opacity:0 } }
+  @keyframes ak-marquee{ from{ transform:translateX(0) } to{ transform:translateX(-50%) } }
+  @keyframes ak-bounce-cue{ 0%,100%{ transform:translateY(0); opacity:.4 } 50%{ transform:translateY(10px); opacity:1 } }
+  @keyframes ak-grad{ 0%{ background-position:0% 50% } 50%{ background-position:100% 50% } 100%{ background-position:0% 50% } }
+  @keyframes ak-drift{ 0%{ transform:translate(0,0) rotate(var(--r,0deg)) } 33%{ transform:translate(16px,-22px) rotate(calc(var(--r,0deg) + 6deg)) } 66%{ transform:translate(-14px,-10px) rotate(calc(var(--r,0deg) - 5deg)) } 100%{ transform:translate(0,0) rotate(var(--r,0deg)) } }
+  @keyframes ak-sway{ 0%,100%{ transform:translateY(0) rotate(var(--r,0deg)) } 50%{ transform:translateY(-18px) rotate(calc(var(--r,0deg) + 4deg)) } }
+  @keyframes ak-cloud{ from{ transform:translateX(0) } to{ transform:translateX(40px) } }
+  @keyframes ak-draw{ from{ stroke-dashoffset:var(--len,300) } to{ stroke-dashoffset:0 } }
+  .ak-crayon{ font-family:'Caveat',cursive !important; font-weight:700 !important; letter-spacing:.5px; }
+  .ak-toy{ position:absolute; pointer-events:none; will-change:transform; }
+  .ak-underline{ display:block; width:100%; height:14px; margin-top:2px; overflow:visible; }
+  .ak-underline path{ stroke-dasharray:var(--len,300); stroke-dashoffset:var(--len,300); }
+  .ak-underline.ak-drawn path{ animation:ak-draw 1s cubic-bezier(.6,0,.2,1) forwards; }
+  @media (max-width:760px){ .ak-nav-links{ display:none !important; } .ak-nav-mobile-cta{ display:inline-block !important; } }
+  @media (max-width:860px){
+    .ak-story-grid{ grid-template-columns:1fr !important; }
+    .ak-story-grid > div:first-child{ position:relative !important; height:auto !important; padding:20px 0 0 !important; }
+    .ak-story-grid > div:first-child > div{ width:min(64%,300px) !important; }
+    .ak-story-grid [data-story-panel]{ min-height:auto !important; padding:34px 0 !important; }
+  }
+  @media (max-width:880px){ .ak-svc-grid{ grid-template-columns:1fr !important; } .ak-exp-shell{ grid-template-columns:1fr !important; } .ak-exp-tabs{ flex-direction:row !important; flex-wrap:wrap !important; } }
+  @media (max-width:960px){ .ak-story-cards{ grid-template-columns:repeat(2,1fr) !important; } }
+  @media (max-width:600px){ .ak-story-cards{ grid-template-columns:1fr !important; } }
+  @media (max-width:880px){ .ak-founder-grid{ grid-template-columns:1fr !important; } }
+  @media (max-width:760px){ .ak-jp{ grid-template-columns:1fr !important; } .ak-cond-grid{ grid-template-columns:1fr !important; } }
+  @media (max-width:900px){ .ak-process-grid{ grid-template-columns:repeat(2,1fr) !important; } }
+  @media (max-width:520px){ .ak-process-grid{ grid-template-columns:1fr !important; } }
+  @media (max-width:760px){ .ak-why-grid{ grid-template-columns:1fr !important; } .ak-tele-grid{ grid-template-columns:1fr !important; } .ak-contact-grid{ grid-template-columns:1fr !important; } }
+  @media (max-width:900px){ .ak-sports-grid{ grid-template-columns:repeat(2,1fr) !important; } .ak-impact-grid{ grid-template-columns:repeat(2,1fr) !important; } .ak-know-grid{ grid-template-columns:1fr !important; } }
+  @media (max-width:520px){ .ak-sports-grid{ grid-template-columns:1fr !important; } }
+  @media (max-width:680px){ [data-exp-panel]{ grid-template-columns:1fr !important; } }
+  .ak-exp-panel-grid{}
+</style>
+</helmet>
+
+<div id="ak-page" style="position:relative; width:100%; overflow:hidden;">
+
+  <div id="ak-cursor" style="position:fixed; top:0; left:0; width:34px; height:34px; border:2px solid rgba(22,163,175,.6); border-radius:50%; pointer-events:none; z-index:9999; transform:translate(-50%,-50%); transition:width .25s, height .25s, background .25s, border-color .25s; mix-blend-mode:multiply; will-change:transform; display:none;"></div>
+
+  <!-- NAV -->
+  <nav id="ak-nav" style="position:fixed; top:0; left:0; width:100%; z-index:900; display:flex; align-items:center; justify-content:space-between; padding:18px clamp(20px,4vw,56px); transition:background .4s, box-shadow .4s, padding .4s;">
+    <a href="#ak-hero" data-magnetic style="display:flex; align-items:center; gap:12px;">
+      <img src="images/aakar-emblem.png" alt="AAKAR" style="width:46px; height:46px; object-fit:contain; filter:drop-shadow(0 6px 14px rgba(22,163,175,.25));">
+      <span style="font-family:'Fredoka',sans-serif; font-weight:700; font-size:26px; letter-spacing:.5px; line-height:1;"><span style="color:#16A3AF">A</span><span style="color:#ED1A5F">A</span><span style="color:#F58A1F">K</span><span style="color:#7DB72C">A</span><span style="color:#B57400">R</span></span>
+    </a>
+    <div class="ak-nav-links" style="display:flex; align-items:center; gap:30px; font-weight:600; font-size:15px;">
+      <a href="#ak-explorer" data-navlink style="opacity:.78; transition:opacity .2s;">Services</a>
+      <a href="#ak-journey" data-navlink style="opacity:.78; transition:opacity .2s;">Journey</a>
+      <a href="#ak-conditions" data-navlink style="opacity:.78; transition:opacity .2s;">We Support</a>
+      <a href="Gallery.dc.html" style="opacity:.78; transition:opacity .2s;">Gallery</a>
+      <a href="Workshops & Training.dc.html" style="opacity:.78; transition:opacity .2s;">Workshops</a>
+      <a href="#ak-contact" data-magnetic style="display:inline-flex; align-items:center; gap:8px; background:#16A3AF; color:#fff; padding:12px 22px; border-radius:40px; font-weight:700; box-shadow:0 10px 24px rgba(22,163,175,.32);">Book Assessment</a>
+    </div>
+    <a href="#ak-contact" class="ak-nav-mobile-cta" style="display:none; background:#16A3AF; color:#fff; padding:10px 18px; border-radius:40px; font-weight:700; font-size:14px;">Book</a>
+  </nav>
+
+  <!-- HERO -->
+  <section id="ak-hero" data-screen-label="Hero" style="position:relative; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:120px clamp(20px,5vw,80px) 80px; overflow:hidden; background:radial-gradient(120% 120% at 50% 0%, #FFFDF8 0%, #FDF3E4 45%, #F7ECDD 100%);">
+    <!-- ambient gradient blobs -->
+    <div data-parallax="0.18" style="position:absolute; top:-8%; left:-6%; width:46vw; height:46vw; max-width:620px; max-height:620px; background:radial-gradient(circle at 40% 40%, rgba(22,163,175,.42), rgba(22,163,175,0) 68%); filter:blur(20px); animation:ak-float-a 13s ease-in-out infinite;"></div>
+    <div data-parallax="0.12" style="position:absolute; bottom:-12%; right:-8%; width:44vw; height:44vw; max-width:600px; max-height:600px; background:radial-gradient(circle at 50% 50%, rgba(237,26,95,.30), rgba(237,26,95,0) 68%); filter:blur(22px); animation:ak-float-b 16s ease-in-out infinite;"></div>
+    <div data-parallax="0.22" style="position:absolute; top:18%; right:6%; width:30vw; height:30vw; max-width:380px; max-height:380px; background:radial-gradient(circle at 50% 50%, rgba(245,138,31,.30), rgba(245,138,31,0) 68%); filter:blur(20px); animation:ak-float-c 11s ease-in-out infinite;"></div>
+    <div data-parallax="0.16" style="position:absolute; bottom:8%; left:8%; width:26vw; height:26vw; max-width:320px; max-height:320px; background:radial-gradient(circle at 50% 50%, rgba(125,183,44,.28), rgba(125,183,44,0) 68%); filter:blur(20px); animation:ak-float-a 15s ease-in-out infinite;"></div>
+
+    <!-- rotating dashed rings echoing logo -->
+    <div data-parallax="0.3" style="position:absolute; top:50%; left:50%; width:min(78vh,720px); height:min(78vh,720px); margin:calc(min(78vh,720px)/-2) 0 0 calc(min(78vh,720px)/-2); border-radius:50%; border:2px dashed rgba(22,163,175,.18); animation:ak-spin 60s linear infinite;"></div>
+    <div data-parallax="0.4" style="position:absolute; top:50%; left:50%; width:min(54vh,500px); height:min(54vh,500px); margin:calc(min(54vh,500px)/-2) 0 0 calc(min(54vh,500px)/-2); border-radius:50%; border:2px dashed rgba(237,26,95,.16); animation:ak-spin-rev 45s linear infinite;"></div>
+
+    <div id="ak-hero-particles" style="position:absolute; inset:0; pointer-events:none;"></div>
+
+    <div style="position:relative; z-index:5; max-width:1060px; text-align:center;">
+      <div data-reveal="up" style="display:inline-flex; align-items:center; gap:9px; background:rgba(255,255,255,.7); backdrop-filter:blur(8px); border:1px solid rgba(22,163,175,.2); padding:9px 18px; border-radius:40px; font-weight:600; font-size:14px; color:#0E7A84; margin-bottom:30px; box-shadow:0 8px 22px rgba(22,163,175,.12);">
+        <span style="display:inline-block; width:9px; height:9px; border-radius:50%; background:#7DB72C;"></span>
+        A Child Development Centre
+      </div>
+      <h1 data-reveal="up" data-delay="80" style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:clamp(2.7rem,7.2vw,6.2rem); line-height:1.02; letter-spacing:-.5px; margin:0 0 22px;">
+        Every child has a<br><span style="background:linear-gradient(100deg,#16A3AF,#7DB72C 30%,#F58A1F 58%,#ED1A5F 80%,#FFB300); background-size:220% 100%; -webkit-background-clip:text; background-clip:text; color:transparent; animation:ak-grad 9s ease-in-out infinite;">unique way to shine.</span>
+      </h1>
+      <p data-reveal="up" data-delay="180" style="font-size:clamp(1.05rem,1.8vw,1.4rem); line-height:1.6; max-width:660px; margin:0 auto 38px; color:#5A5466; font-weight:500;">
+        Your child is not a problem to be fixed. Every child develops differently — and at AAKAR, we help them discover, nurture and unlock their fullest potential.
+      </p>
+      <div data-reveal="up" data-delay="280" style="display:flex; gap:16px; justify-content:center; flex-wrap:wrap;">
+        <a href="#ak-contact" data-magnetic style="display:inline-flex; align-items:center; gap:10px; background:#16A3AF; color:#fff; padding:17px 30px; border-radius:46px; font-weight:700; font-size:17px; box-shadow:0 16px 34px rgba(22,163,175,.34);">
+          Book a Developmental Assessment
+          <span style="display:inline-block; transform:translateY(1px);">→</span>
+        </a>
+        <a href="#ak-story" data-magnetic style="display:inline-flex; align-items:center; gap:10px; background:rgba(255,255,255,.8); border:1.5px solid rgba(43,37,53,.12); color:#2B2535; padding:17px 28px; border-radius:46px; font-weight:700; font-size:17px;">
+          See how we help
+        </a>
+      </div>
+    </div>
+
+    <div style="position:absolute; bottom:26px; left:50%; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; gap:8px; font-size:12px; letter-spacing:2px; text-transform:uppercase; color:#9A93A2; font-weight:600;">
+      Scroll
+      <span style="animation:ak-bounce-cue 1.8s ease-in-out infinite; font-size:18px;">↓</span>
+    </div>
+  </section>
+
+  <!-- STORYTELLING : child unfolds (compact grid) -->
+  <section id="ak-story" data-screen-label="Story" style="position:relative; padding:clamp(70px,9vw,130px) clamp(20px,5vw,80px); overflow:hidden; background:radial-gradient(120% 95% at 12% 0%, #FFE7BE 0%, #FFD7E6 46%, #C9EEE2 100%);">
+    <div data-parallax="0.07" style="position:absolute; top:6%; left:-5%; width:380px; height:380px; background:radial-gradient(circle,rgba(22,163,175,.28),transparent 70%); filter:blur(8px);"></div>
+    <div data-parallax="0.1" style="position:absolute; bottom:-8%; right:-6%; width:420px; height:420px; background:radial-gradient(circle,rgba(237,26,95,.24),transparent 70%); filter:blur(8px);"></div>
+    <div data-parallax="0.13" style="position:absolute; top:30%; right:10%; width:60px; height:60px; border-radius:50%; background:#F58A1F; opacity:.18; animation:ak-bob 6s ease-in-out infinite;"></div>
+    <div data-parallax="0.16" style="position:absolute; bottom:18%; left:7%; width:40px; height:40px; border-radius:14px; background:#7DB72C; opacity:.2; transform:rotate(20deg); animation:ak-bob 5s ease-in-out infinite;"></div>
+
+    <div style="position:relative; max-width:1180px; margin:0 auto; text-align:center;">
+      <div data-reveal="up" style="font-weight:700; letter-spacing:3px; text-transform:uppercase; font-size:13px; color:#16A3AF; margin-bottom:14px;">A small story</div>
+      <h2 data-reveal="up" data-delay="80" class="ak-crayon" style="font-size:clamp(2.7rem,6.4vw,5.2rem); line-height:1; letter-spacing:.5px; margin:0 auto; max-width:880px;"><span style="display:inline-block; position:relative;">Watch a child unfold — one ability at a time.<svg class="ak-underline" data-crayon-underline viewBox="0 0 300 14" preserveAspectRatio="none" style="--len:320; position:absolute; left:0; right:0; bottom:-8px;"><path d="M4 9 C 60 2, 120 14, 180 7 S 260 3, 296 8" fill="none" stroke="#16A3AF" stroke-width="4" stroke-linecap="round"></path></svg></span></h2>
+      <p data-reveal="up" data-delay="160" style="max-width:620px; margin:18px auto 0; color:#5A5466; font-size:clamp(1rem,1.6vw,1.18rem); line-height:1.6;">Development isn't a straight line. As your child grows, AAKAR meets them at every turn — gently turning struggle into skill.</p>
+    </div>
+
+    <div class="ak-story-cards" style="position:relative; max-width:1180px; margin:clamp(40px,5vw,64px) auto 0; display:grid; grid-template-columns:repeat(3,1fr); gap:20px;">
+      <div data-reveal="up" data-hover style="position:relative; background:rgba(255,255,255,.72); backdrop-filter:blur(6px); border:1px solid rgba(22,163,175,.16); border-radius:24px; padding:28px 26px 26px; overflow:hidden; transition:transform .4s cubic-bezier(.16,1,.3,1), box-shadow .4s; box-shadow:0 12px 30px rgba(22,163,175,.08);">
+        <div style="position:absolute; top:-30px; right:-30px; width:110px; height:110px; background:linear-gradient(135deg,#16A3AF,#0E7A84); border-radius:42% 58% 63% 37% / 47% 42% 58% 53%; animation:ak-morph 9s ease-in-out infinite; opacity:.9;"></div>
+        <div style="position:relative; font-family:'Fredoka',sans-serif; font-weight:700; font-size:30px; color:#16A3AF; line-height:1;">01</div>
+        <h3 style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.32rem; margin:10px 0 8px;">First, we understand.</h3>
+        <p style="color:#5A5466; font-size:.98rem; line-height:1.6; margin:0;">A gentle <strong style="color:#0E7A84;">developmental assessment</strong> shows exactly where your child is — and what they're ready for next. No labels.</p>
+      </div>
+      <div data-reveal="up" data-delay="70" data-hover style="position:relative; background:rgba(255,255,255,.72); backdrop-filter:blur(6px); border:1px solid rgba(237,26,95,.16); border-radius:24px; padding:28px 26px 26px; overflow:hidden; transition:transform .4s cubic-bezier(.16,1,.3,1), box-shadow .4s; box-shadow:0 12px 30px rgba(237,26,95,.08);">
+        <div style="position:absolute; top:-30px; right:-30px; width:110px; height:110px; background:linear-gradient(135deg,#ED1A5F,#C2134B); border-radius:58% 42% 37% 63% / 42% 53% 47% 58%; animation:ak-morph 10s ease-in-out infinite; opacity:.9;"></div>
+        <div style="position:relative; font-family:'Fredoka',sans-serif; font-weight:700; font-size:30px; color:#ED1A5F; line-height:1;">02</div>
+        <h3 style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.32rem; margin:10px 0 8px;">We help them connect.</h3>
+        <p style="color:#5A5466; font-size:.98rem; line-height:1.6; margin:0;"><strong style="color:#C2134B;">Speech & language therapy</strong> turns frustration into first words — and first words into whole conversations.</p>
+      </div>
+      <div data-reveal="up" data-delay="140" data-hover style="position:relative; background:rgba(255,255,255,.72); backdrop-filter:blur(6px); border:1px solid rgba(245,138,31,.18); border-radius:24px; padding:28px 26px 26px; overflow:hidden; transition:transform .4s cubic-bezier(.16,1,.3,1), box-shadow .4s; box-shadow:0 12px 30px rgba(245,138,31,.08);">
+        <div style="position:absolute; top:-30px; right:-30px; width:110px; height:110px; background:linear-gradient(135deg,#F58A1F,#D26E08); border-radius:50% 50% 42% 58% / 55% 45% 55% 45%; animation:ak-morph 11s ease-in-out infinite; opacity:.9;"></div>
+        <div style="position:relative; font-family:'Fredoka',sans-serif; font-weight:700; font-size:30px; color:#D26E08; line-height:1;">03</div>
+        <h3 style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.32rem; margin:10px 0 8px;">We help them move.</h3>
+        <p style="color:#5A5466; font-size:.98rem; line-height:1.6; margin:0;">From holding a crayon to climbing stairs — <strong style="color:#B65F07;">occupational therapy & physio</strong> build the strength everyday confidence needs.</p>
+      </div>
+      <div data-reveal="up" data-hover style="position:relative; background:rgba(255,255,255,.72); backdrop-filter:blur(6px); border:1px solid rgba(125,183,44,.18); border-radius:24px; padding:28px 26px 26px; overflow:hidden; transition:transform .4s cubic-bezier(.16,1,.3,1), box-shadow .4s; box-shadow:0 12px 30px rgba(125,183,44,.08);">
+        <div style="position:absolute; top:-30px; right:-30px; width:110px; height:110px; background:linear-gradient(135deg,#7DB72C,#5E9018); border-radius:42% 58% 55% 45% / 48% 46% 54% 52%; animation:ak-morph 9.5s ease-in-out infinite; opacity:.9;"></div>
+        <div style="position:relative; font-family:'Fredoka',sans-serif; font-weight:700; font-size:30px; color:#5E9018; line-height:1;">04</div>
+        <h3 style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.32rem; margin:10px 0 8px;">We help them learn.</h3>
+        <p style="color:#5A5466; font-size:.98rem; line-height:1.6; margin:0;">Some minds need a different doorway in. <strong style="color:#5E9018;">Special education</strong> meets your child exactly where they think.</p>
+      </div>
+      <div data-reveal="up" data-delay="70" data-hover style="position:relative; background:rgba(255,255,255,.72); backdrop-filter:blur(6px); border:1px solid rgba(255,179,0,.16); border-radius:24px; padding:28px 26px 26px; overflow:hidden; transition:transform .4s cubic-bezier(.16,1,.3,1), box-shadow .4s; box-shadow:0 12px 30px rgba(255,179,0,.08);">
+        <div style="position:absolute; top:-30px; right:-30px; width:110px; height:110px; background:linear-gradient(135deg,#FFB300,#E0A100); border-radius:58% 42% 47% 53% / 42% 58% 42% 58%; animation:ak-morph 10.5s ease-in-out infinite; opacity:.9;"></div>
+        <div style="position:relative; font-family:'Fredoka',sans-serif; font-weight:700; font-size:30px; color:#B57400; line-height:1;">05</div>
+        <h3 style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.32rem; margin:10px 0 8px;">We help them belong.</h3>
+        <p style="color:#5A5466; font-size:.98rem; line-height:1.6; margin:0;"><strong style="color:#A86A00;">Social skills & behaviour support</strong> help your child feel at home in the world — and in a room full of children.</p>
+      </div>
+      <div data-reveal="up" data-delay="140" data-hover style="position:relative; background:rgba(255,255,255,.72); backdrop-filter:blur(6px); border:1px solid rgba(22,163,175,.16); border-radius:24px; padding:28px 26px 26px; overflow:hidden; transition:transform .4s cubic-bezier(.16,1,.3,1), box-shadow .4s; box-shadow:0 12px 30px rgba(22,163,175,.08);">
+        <div style="position:absolute; top:-30px; right:-30px; width:110px; height:110px; background:linear-gradient(135deg,#16A3AF,#7DB72C); border-radius:46% 54% 60% 40% / 52% 44% 56% 48%; animation:ak-morph 9s ease-in-out infinite; opacity:.9;"></div>
+        <div style="position:relative; font-family:'Fredoka',sans-serif; font-weight:700; font-size:30px; color:#0E7A84; line-height:1;">06</div>
+        <h3 style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.32rem; margin:10px 0 8px;">We help them thrive.</h3>
+        <p style="color:#5A5466; font-size:.98rem; line-height:1.6; margin:0;">The goal was never therapy — it was independence. <strong style="color:#0E7A84;">Life-skills & ADL training</strong> hand the world back to your child.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- INTERACTIVE SERVICE EXPLORER -->
+  <section id="ak-explorer" data-screen-label="Explorer" style="position:relative; background:radial-gradient(120% 95% at 82% 0%, #C9EEE2 0%, #FFEDBC 50%, #FFD7E6 100%); color:#2B2535; padding:clamp(70px,9vw,130px) clamp(20px,5vw,80px); overflow:hidden;">
+    <div data-parallax="0.1" style="position:absolute; top:10%; left:-6%; width:420px; height:420px; background:radial-gradient(circle,rgba(22,163,175,.28),transparent 70%); filter:blur(10px);"></div>
+    <div data-parallax="0.16" style="position:absolute; bottom:-10%; right:-4%; width:460px; height:460px; background:radial-gradient(circle,rgba(255,179,0,.26),transparent 70%); filter:blur(10px);"></div>
+    <div style="position:relative; max-width:1200px; margin:0 auto;">
+      <div style="text-align:center; margin-bottom:clamp(36px,5vw,60px);">
+        <div data-reveal="up" style="font-weight:700; letter-spacing:3px; text-transform:uppercase; font-size:13px; color:#0E7A84; margin-bottom:14px;">Explore by need</div>
+        <h2 data-reveal="up" data-delay="80" style="font-family:'Caveat',cursive; font-weight:700; font-size:clamp(2.7rem,6vw,4.8rem); line-height:1; letter-spacing:.5px; margin:0 auto; max-width:760px;">Where does your child need a little help?</h2>
+        <p data-reveal="up" data-delay="160" style="max-width:560px; margin:18px auto 0; color:#5A5466; font-size:clamp(1rem,1.6vw,1.15rem); line-height:1.6;">Tap a world below. We'll show you exactly how AAKAR helps — and what's possible.</p>
+      </div>
+
+      <div data-reveal="up" data-delay="200" class="ak-exp-shell" style="display:grid; grid-template-columns:300px 1fr; gap:30px; background:#fff; border:1px solid rgba(43,37,53,.07); border-radius:32px; box-shadow:0 24px 60px rgba(43,37,53,.08); padding:clamp(18px,2.4vw,30px);">
+        <!-- tabs -->
+        <div class="ak-exp-tabs" style="display:flex; flex-direction:column; gap:8px;">
+          <button data-exp-tab="0" data-col="#16A3AF" style="display:flex; align-items:center; gap:13px; background:rgba(22,163,175,.14); border:1px solid rgba(22,163,175,.45); color:#0E7A84; padding:15px 17px; border-radius:16px; font-family:inherit; font-weight:600; font-size:15px; cursor:pointer; text-align:left; transition:background .3s, border-color .3s;"><span style="width:12px; height:12px; border-radius:50%; background:#16A3AF; flex:none;"></span>Communication</button>
+          <button data-exp-tab="1" data-col="#F58A1F" style="display:flex; align-items:center; gap:13px; background:transparent; border:1px solid rgba(43,37,53,.1); color:#6A6478; padding:15px 17px; border-radius:16px; font-family:inherit; font-weight:600; font-size:15px; cursor:pointer; text-align:left; transition:background .3s, border-color .3s;"><span style="width:12px; height:12px; border-radius:50%; background:#F58A1F; flex:none;"></span>Movement</button>
+          <button data-exp-tab="2" data-col="#7DB72C" style="display:flex; align-items:center; gap:13px; background:transparent; border:1px solid rgba(43,37,53,.1); color:#6A6478; padding:15px 17px; border-radius:16px; font-family:inherit; font-weight:600; font-size:15px; cursor:pointer; text-align:left; transition:background .3s, border-color .3s;"><span style="width:12px; height:12px; border-radius:50%; background:#7DB72C; flex:none;"></span>Learning</button>
+          <button data-exp-tab="3" data-col="#E6A700" style="display:flex; align-items:center; gap:13px; background:transparent; border:1px solid rgba(43,37,53,.1); color:#6A6478; padding:15px 17px; border-radius:16px; font-family:inherit; font-weight:600; font-size:15px; cursor:pointer; text-align:left; transition:background .3s, border-color .3s;"><span style="width:12px; height:12px; border-radius:50%; background:#FFD54F; flex:none;"></span>Behaviour</button>
+          <button data-exp-tab="4" data-col="#ED1A5F" style="display:flex; align-items:center; gap:13px; background:transparent; border:1px solid rgba(43,37,53,.1); color:#6A6478; padding:15px 17px; border-radius:16px; font-family:inherit; font-weight:600; font-size:15px; cursor:pointer; text-align:left; transition:background .3s, border-color .3s;"><span style="width:12px; height:12px; border-radius:50%; background:#ED1A5F; flex:none;"></span>Social Skills</button>
+          <button data-exp-tab="5" data-col="#2BC4D0" style="display:flex; align-items:center; gap:13px; background:transparent; border:1px solid rgba(43,37,53,.1); color:#6A6478; padding:15px 17px; border-radius:16px; font-family:inherit; font-weight:600; font-size:15px; cursor:pointer; text-align:left; transition:background .3s, border-color .3s;"><span style="width:12px; height:12px; border-radius:50%; background:#2BC4D0; flex:none;"></span>Daily Living</button>
+          <button data-exp-tab="6" data-col="#9BD64A" style="display:flex; align-items:center; gap:13px; background:transparent; border:1px solid rgba(43,37,53,.1); color:#6A6478; padding:15px 17px; border-radius:16px; font-family:inherit; font-weight:600; font-size:15px; cursor:pointer; text-align:left; transition:background .3s, border-color .3s;"><span style="width:12px; height:12px; border-radius:50%; background:#9BD64A; flex:none;"></span>Sensory Development</button>
+        </div>
+
+        <!-- panel stage -->
+        <div style="position:relative; min-height:380px;">
+          <div data-exp-panel="0" style="display:grid; grid-template-columns:1.2fr 1fr; gap:26px; align-items:center;">
+            <div>
+              <h3 style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:clamp(1.6rem,3vw,2.3rem); margin:0 0 12px; color:#2B2535;">Helping every child be heard.</h3>
+              <p style="color:#5A5466; line-height:1.7; margin:0 0 20px;">Whether it's a first word at three or a confident conversation at ten, communication unlocks everything else. We meet your child wherever their voice is today.</p>
+              <div style="display:flex; flex-wrap:wrap; gap:9px; margin-bottom:24px;">
+                <span style="background:rgba(237,26,95,.1); color:#C2134B; font-weight:600; font-size:.86rem; padding:8px 14px; border-radius:30px;">Speech Therapy</span>
+                <span style="background:rgba(237,26,95,.1); color:#C2134B; font-weight:600; font-size:.86rem; padding:8px 14px; border-radius:30px;">Language Therapy</span>
+                <span style="background:rgba(237,26,95,.1); color:#C2134B; font-weight:600; font-size:.86rem; padding:8px 14px; border-radius:30px;">Communication Development</span>
+                <span style="background:rgba(237,26,95,.1); color:#C2134B; font-weight:600; font-size:.86rem; padding:8px 14px; border-radius:30px;">Teletherapy</span>
+              </div>
+              <a href="#ak-contact" data-magnetic style="display:inline-flex; align-items:center; gap:9px; background:#ED1A5F; color:#fff; padding:13px 22px; border-radius:40px; font-weight:700;">Talk to a speech expert →</a>
+            </div>
+            <div style="position:relative; aspect-ratio:1; display:flex; align-items:center; justify-content:center;">
+              <div style="position:absolute; inset:14%; background:linear-gradient(135deg,#ED1A5F,#FFB300); animation:ak-morph 9s ease-in-out infinite; box-shadow:0 30px 70px rgba(237,26,95,.4);"></div>
+              <div style="position:absolute; inset:6%; border-radius:50%; border:2px dashed rgba(255,255,255,.18); animation:ak-spin 30s linear infinite;"><span style="position:absolute; top:-6px; left:50%; width:12px; height:12px; border-radius:50%; background:#fff;"></span></div>
+              <span style="position:relative; width:30%; height:24%; background:#fff; border-radius:18px 18px 18px 4px;"></span>
+            </div>
+          </div>
+
+          <div data-exp-panel="1" style="display:none; grid-template-columns:1.2fr 1fr; gap:26px; align-items:center;">
+            <div>
+              <h3 style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:clamp(1.6rem,3vw,2.3rem); margin:0 0 12px; color:#2B2535;">Bodies that keep up with big dreams.</h3>
+              <p style="color:#5A5466; line-height:1.7; margin:0 0 20px;">From gripping a spoon to running in the playground, movement is freedom. We build the strength, balance and coordination that confidence grows from.</p>
+              <div style="display:flex; flex-wrap:wrap; gap:9px; margin-bottom:24px;">
+                <span style="background:rgba(245,138,31,.14); color:#B65F07; font-weight:600; font-size:.86rem; padding:8px 14px; border-radius:30px;">Occupational Therapy</span>
+                <span style="background:rgba(245,138,31,.14); color:#B65F07; font-weight:600; font-size:.86rem; padding:8px 14px; border-radius:30px;">Physiotherapy</span>
+                <span style="background:rgba(245,138,31,.14); color:#B65F07; font-weight:600; font-size:.86rem; padding:8px 14px; border-radius:30px;">Sports Training</span>
+                <span style="background:rgba(245,138,31,.14); color:#B65F07; font-weight:600; font-size:.86rem; padding:8px 14px; border-radius:30px;">Motor Development</span>
+              </div>
+              <a href="#ak-contact" data-magnetic style="display:inline-flex; align-items:center; gap:9px; background:#F58A1F; color:#fff; padding:13px 22px; border-radius:40px; font-weight:700;">Talk to an OT/physio →</a>
+            </div>
+            <div style="position:relative; aspect-ratio:1; display:flex; align-items:center; justify-content:center;">
+              <div style="position:absolute; inset:14%; background:linear-gradient(135deg,#F58A1F,#ED1A5F); animation:ak-morph 10s ease-in-out infinite; box-shadow:0 30px 70px rgba(245,138,31,.4);"></div>
+              <div style="position:absolute; inset:6%; border-radius:50%; border:2px dashed rgba(255,255,255,.18); animation:ak-spin-rev 26s linear infinite;"><span style="position:absolute; top:-6px; left:50%; width:12px; height:12px; border-radius:50%; background:#fff;"></span></div>
+              <span style="position:relative; width:26%; height:26%; border-radius:50%; border:6px solid #fff;"></span>
+            </div>
+          </div>
+
+          <div data-exp-panel="2" style="display:none; grid-template-columns:1.2fr 1fr; gap:26px; align-items:center;">
+            <div>
+              <h3 style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:clamp(1.6rem,3vw,2.3rem); margin:0 0 12px; color:#2B2535;">A path to learning for every mind.</h3>
+              <p style="color:#5A5466; line-height:1.7; margin:0 0 20px;">When the usual classroom doesn't fit, we build a different doorway in — structured, multisensory and paced for how your child actually learns.</p>
+              <div style="display:flex; flex-wrap:wrap; gap:9px; margin-bottom:24px;">
+                <span style="background:rgba(125,183,44,.14); color:#5E9018; font-weight:600; font-size:.86rem; padding:8px 14px; border-radius:30px;">Special Education</span>
+                <span style="background:rgba(125,183,44,.14); color:#5E9018; font-weight:600; font-size:.86rem; padding:8px 14px; border-radius:30px;">Learning Disability Support</span>
+                <span style="background:rgba(125,183,44,.14); color:#5E9018; font-weight:600; font-size:.86rem; padding:8px 14px; border-radius:30px;">Inclusive Education</span>
+              </div>
+              <a href="#ak-contact" data-magnetic style="display:inline-flex; align-items:center; gap:9px; background:#7DB72C; color:#fff; padding:13px 22px; border-radius:40px; font-weight:700;">Talk to an educator →</a>
+            </div>
+            <div style="position:relative; aspect-ratio:1; display:flex; align-items:center; justify-content:center;">
+              <div style="position:absolute; inset:14%; background:linear-gradient(135deg,#7DB72C,#16A3AF); animation:ak-morph 9.5s ease-in-out infinite; box-shadow:0 30px 70px rgba(125,183,44,.4);"></div>
+              <div style="position:absolute; inset:6%; border-radius:50%; border:2px dashed rgba(255,255,255,.18); animation:ak-spin 28s linear infinite;"><span style="position:absolute; top:-6px; left:50%; width:12px; height:12px; border-radius:50%; background:#fff;"></span></div>
+              <span style="position:relative; width:30%; height:22%; background:#fff; border-radius:5px; transform:rotate(-8deg);"></span>
+            </div>
+          </div>
+
+          <div data-exp-panel="3" style="display:none; grid-template-columns:1.2fr 1fr; gap:26px; align-items:center;">
+            <div>
+              <h3 style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:clamp(1.6rem,3vw,2.3rem); margin:0 0 12px; color:#2B2535;">Big feelings, finally understood.</h3>
+              <p style="color:#5A5466; line-height:1.7; margin:0 0 20px;">Behaviour is communication. We help children regulate, cope and grow — with warmth, structure and zero shame — while coaching families every step.</p>
+              <div style="display:flex; flex-wrap:wrap; gap:9px; margin-bottom:24px;">
+                <span style="background:rgba(255,179,0,.1); color:#A86A00; font-weight:600; font-size:.86rem; padding:8px 14px; border-radius:30px;">Behavioural Therapy</span>
+                <span style="background:rgba(255,179,0,.1); color:#A86A00; font-weight:600; font-size:.86rem; padding:8px 14px; border-radius:30px;">Psychological Counselling</span>
+                <span style="background:rgba(255,179,0,.1); color:#A86A00; font-weight:600; font-size:.86rem; padding:8px 14px; border-radius:30px;">Emotional Regulation</span>
+              </div>
+              <a href="#ak-contact" data-magnetic style="display:inline-flex; align-items:center; gap:9px; background:#FFC107; color:#3A2A00; padding:13px 22px; border-radius:40px; font-weight:700;">Talk to a psychologist →</a>
+            </div>
+            <div style="position:relative; aspect-ratio:1; display:flex; align-items:center; justify-content:center;">
+              <div style="position:absolute; inset:14%; background:linear-gradient(135deg,#FFB300,#16A3AF); animation:ak-morph 10.5s ease-in-out infinite; box-shadow:0 30px 70px rgba(255,179,0,.42);"></div>
+              <div style="position:absolute; inset:6%; border-radius:50%; border:2px dashed rgba(255,255,255,.18); animation:ak-spin-rev 30s linear infinite;"><span style="position:absolute; top:-6px; left:50%; width:12px; height:12px; border-radius:50%; background:#fff;"></span></div>
+              <span style="position:relative; width:26%; height:26%; background:#fff; border-radius:50% 50% 50% 4px; transform:rotate(45deg);"></span>
+            </div>
+          </div>
+
+          <div data-exp-panel="4" style="display:none; grid-template-columns:1.2fr 1fr; gap:26px; align-items:center;">
+            <div>
+              <h3 style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:clamp(1.6rem,3vw,2.3rem); margin:0 0 12px; color:#2B2535;">The unwritten rules of friendship.</h3>
+              <p style="color:#5A5466; line-height:1.7; margin:0 0 20px;">Sharing, turn-taking, reading a face, joining a game. In small guided groups, children rehearse the social moments that make childhood joyful.</p>
+              <div style="display:flex; flex-wrap:wrap; gap:9px; margin-bottom:24px;">
+                <span style="background:rgba(237,26,95,.1); color:#C2134B; font-weight:600; font-size:.86rem; padding:8px 14px; border-radius:30px;">Social Skills Training</span>
+                <span style="background:rgba(237,26,95,.1); color:#C2134B; font-weight:600; font-size:.86rem; padding:8px 14px; border-radius:30px;">Group Play</span>
+                <span style="background:rgba(237,26,95,.1); color:#C2134B; font-weight:600; font-size:.86rem; padding:8px 14px; border-radius:30px;">Peer Interaction</span>
+              </div>
+              <a href="#ak-contact" data-magnetic style="display:inline-flex; align-items:center; gap:9px; background:#ED1A5F; color:#fff; padding:13px 22px; border-radius:40px; font-weight:700;">Ask about social groups →</a>
+            </div>
+            <div style="position:relative; aspect-ratio:1; display:flex; align-items:center; justify-content:center;">
+              <div style="position:absolute; inset:14%; background:linear-gradient(135deg,#ED1A5F,#F58A1F); animation:ak-morph 9s ease-in-out infinite; box-shadow:0 30px 70px rgba(237,26,95,.4);"></div>
+              <div style="position:absolute; inset:6%; border-radius:50%; border:2px dashed rgba(255,255,255,.18); animation:ak-spin 32s linear infinite;"><span style="position:absolute; top:-6px; left:50%; width:12px; height:12px; border-radius:50%; background:#fff;"></span></div>
+              <span style="position:relative; display:flex; gap:7px;"><span style="width:18px; height:18px; border-radius:50%; background:#fff;"></span><span style="width:18px; height:18px; border-radius:50%; background:#fff;"></span></span>
+            </div>
+          </div>
+
+          <div data-exp-panel="5" style="display:none; grid-template-columns:1.2fr 1fr; gap:26px; align-items:center;">
+            <div>
+              <h3 style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:clamp(1.6rem,3vw,2.3rem); margin:0 0 12px; color:#2B2535;">Independence, one skill at a time.</h3>
+              <p style="color:#5A5466; line-height:1.7; margin:0 0 20px;">Dressing, eating, brushing, getting ready for school. We break daily routines into achievable wins, so your child can do more — for themselves.</p>
+              <div style="display:flex; flex-wrap:wrap; gap:9px; margin-bottom:24px;">
+                <span style="background:rgba(22,163,175,.12); color:#0E7A84; font-weight:600; font-size:.86rem; padding:8px 14px; border-radius:30px;">ADL Training</span>
+                <span style="background:rgba(22,163,175,.12); color:#0E7A84; font-weight:600; font-size:.86rem; padding:8px 14px; border-radius:30px;">Life Skills Programmes</span>
+                <span style="background:rgba(22,163,175,.12); color:#0E7A84; font-weight:600; font-size:.86rem; padding:8px 14px; border-radius:30px;">Rehabilitation</span>
+              </div>
+              <a href="#ak-contact" data-magnetic style="display:inline-flex; align-items:center; gap:9px; background:#16A3AF; color:#fff; padding:13px 22px; border-radius:40px; font-weight:700;">Build a life-skills plan →</a>
+            </div>
+            <div style="position:relative; aspect-ratio:1; display:flex; align-items:center; justify-content:center;">
+              <div style="position:absolute; inset:14%; background:linear-gradient(135deg,#16A3AF,#2BC4D0); animation:ak-morph 10s ease-in-out infinite; box-shadow:0 30px 70px rgba(22,163,175,.4);"></div>
+              <div style="position:absolute; inset:6%; border-radius:50%; border:2px dashed rgba(255,255,255,.18); animation:ak-spin-rev 28s linear infinite;"><span style="position:absolute; top:-6px; left:50%; width:12px; height:12px; border-radius:50%; background:#fff;"></span></div>
+              <span style="position:relative; width:24%; height:24%; background:#fff; border-radius:8px;"></span>
+            </div>
+          </div>
+
+          <div data-exp-panel="6" style="display:none; grid-template-columns:1.2fr 1fr; gap:26px; align-items:center;">
+            <div>
+              <h3 style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:clamp(1.6rem,3vw,2.3rem); margin:0 0 12px; color:#2B2535;">Making the world feel manageable.</h3>
+              <p style="color:#5A5466; line-height:1.7; margin:0 0 20px;">When sound, touch or movement feel overwhelming, everyday life is hard. Sensory integration helps your child's nervous system find calm and focus.</p>
+              <div style="display:flex; flex-wrap:wrap; gap:9px; margin-bottom:24px;">
+                <span style="background:rgba(125,183,44,.14); color:#52800F; font-weight:600; font-size:.86rem; padding:8px 14px; border-radius:30px;">Sensory Integration</span>
+                <span style="background:rgba(125,183,44,.14); color:#52800F; font-weight:600; font-size:.86rem; padding:8px 14px; border-radius:30px;">Self-regulation</span>
+                <span style="background:rgba(125,183,44,.14); color:#52800F; font-weight:600; font-size:.86rem; padding:8px 14px; border-radius:30px;">Calming Strategies</span>
+              </div>
+              <a href="#ak-contact" data-magnetic style="display:inline-flex; align-items:center; gap:9px; background:#7DB72C; color:#fff; padding:13px 22px; border-radius:40px; font-weight:700;">Ask about sensory support →</a>
+            </div>
+            <div style="position:relative; aspect-ratio:1; display:flex; align-items:center; justify-content:center;">
+              <div style="position:absolute; inset:14%; background:linear-gradient(135deg,#9BD64A,#FFB300); animation:ak-morph 9.5s ease-in-out infinite; box-shadow:0 30px 70px rgba(125,183,44,.4);"></div>
+              <div style="position:absolute; inset:6%; border-radius:50%; border:2px dashed rgba(255,255,255,.18); animation:ak-spin 34s linear infinite;"><span style="position:absolute; top:-6px; left:50%; width:12px; height:12px; border-radius:50%; background:#fff;"></span></div>
+              <span style="position:relative; width:26%; height:26%; background:#fff; border-radius:42% 58% 63% 37% / 47% 42% 58% 53%; animation:ak-morph 7s ease-in-out infinite;"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONDITIONS WE SUPPORT -->
+  <section id="ak-conditions" data-screen-label="Conditions" style="position:relative; overflow:hidden; background:radial-gradient(115% 95% at 14% 0%, #FFD7E6 0%, #FFEDBC 50%, #CFE6FF 100%); padding:clamp(70px,9vw,130px) clamp(20px,5vw,80px);">
+    <div data-parallax="0.07" style="position:absolute; top:6%; right:-5%; width:380px; height:380px; background:radial-gradient(circle,rgba(237,26,95,.22),transparent 70%); filter:blur(8px);"></div>
+    <div style="position:relative; max-width:1100px; margin:0 auto; text-align:center; margin-bottom:clamp(34px,4vw,52px);">
+      <div data-reveal="up" style="font-weight:700; letter-spacing:3px; text-transform:uppercase; font-size:13px; color:#ED1A5F; margin-bottom:14px;">We're here for this</div>
+      <h2 data-reveal="up" data-delay="80" style="font-family:'Caveat',cursive; font-weight:700; font-size:clamp(2.7rem,6vw,4.8rem); line-height:1; letter-spacing:.5px; margin:0 auto; max-width:760px;">Conditions &amp; needs we support.</h2>
+      <p data-reveal="up" data-delay="160" style="max-width:600px; margin:18px auto 0; color:#5A5466; font-size:clamp(1rem,1.6vw,1.18rem); line-height:1.6;">Tap any card to learn more. Whatever the label, we see the child first.</p>
+    </div>
+
+    <div class="ak-cond-grid" style="position:relative; max-width:1100px; margin:0 auto; display:grid; grid-template-columns:repeat(2,1fr); gap:16px;">
+      <div data-reveal="up" data-cond data-col="#16A3AF" style="background:#fff; border-radius:22px; padding:24px 26px; box-shadow:0 12px 30px rgba(43,37,53,.06); cursor:pointer; border-left:5px solid #16A3AF; transition:box-shadow .3s;">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:14px;"><h3 style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.2rem; margin:0;">Autism Spectrum Disorder</h3><span data-cond-icon style="flex:none; width:30px; height:30px; border-radius:50%; background:rgba(22,163,175,.12); color:#0E7A84; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:600; transition:transform .35s;">+</span></div>
+        <div data-cond-body style="max-height:0; overflow:hidden; transition:max-height .45s cubic-bezier(.16,1,.3,1);"><p style="color:#5A5466; line-height:1.65; margin:14px 0 0;">Strengths-based support for communication, sensory needs, social skills and routines — with therapy that feels like play and a plan that fits your child.</p></div>
+      </div>
+      <div data-reveal="up" data-delay="60" data-cond data-col="#ED1A5F" style="background:#fff; border-radius:22px; padding:24px 26px; box-shadow:0 12px 30px rgba(43,37,53,.06); cursor:pointer; border-left:5px solid #ED1A5F; transition:box-shadow .3s;">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:14px;"><h3 style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.2rem; margin:0;">ADHD &amp; Attention</h3><span data-cond-icon style="flex:none; width:30px; height:30px; border-radius:50%; background:rgba(237,26,95,.1); color:#C2134B; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:600; transition:transform .35s;">+</span></div>
+        <div data-cond-body style="max-height:0; overflow:hidden; transition:max-height .45s cubic-bezier(.16,1,.3,1);"><p style="color:#5A5466; line-height:1.65; margin:14px 0 0;">Practical strategies for focus, impulse control and self-regulation — at home and at school — alongside confidence-building and parent coaching.</p></div>
+      </div>
+      <div data-reveal="up" data-cond data-col="#F58A1F" style="background:#fff; border-radius:22px; padding:24px 26px; box-shadow:0 12px 30px rgba(43,37,53,.06); cursor:pointer; border-left:5px solid #F58A1F; transition:box-shadow .3s;">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:14px;"><h3 style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.2rem; margin:0;">Speech &amp; Language Delay</h3><span data-cond-icon style="flex:none; width:30px; height:30px; border-radius:50%; background:rgba(245,138,31,.12); color:#B65F07; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:600; transition:transform .35s;">+</span></div>
+        <div data-cond-body style="max-height:0; overflow:hidden; transition:max-height .45s cubic-bezier(.16,1,.3,1);"><p style="color:#5A5466; line-height:1.65; margin:14px 0 0;">From late talkers to unclear speech, we build understanding and expression step by step — so your child can finally say what they mean.</p></div>
+      </div>
+      <div data-reveal="up" data-delay="60" data-cond data-col="#7DB72C" style="background:#fff; border-radius:22px; padding:24px 26px; box-shadow:0 12px 30px rgba(43,37,53,.06); cursor:pointer; border-left:5px solid #7DB72C; transition:box-shadow .3s;">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:14px;"><h3 style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.2rem; margin:0;">Learning Disabilities</h3><span data-cond-icon style="flex:none; width:30px; height:30px; border-radius:50%; background:rgba(125,183,44,.13); color:#5E9018; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:600; transition:transform .35s;">+</span></div>
+        <div data-cond-body style="max-height:0; overflow:hidden; transition:max-height .45s cubic-bezier(.16,1,.3,1);"><p style="color:#5A5466; line-height:1.65; margin:14px 0 0;">Dyslexia, dysgraphia, dyscalculia and more — taught through a structured, multisensory approach matched to how your child learns best.</p></div>
+      </div>
+      <div data-reveal="up" data-cond data-col="#E6A700" style="background:#fff; border-radius:22px; padding:24px 26px; box-shadow:0 12px 30px rgba(43,37,53,.06); cursor:pointer; border-left:5px solid #FFB300; transition:box-shadow .3s;">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:14px;"><h3 style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.2rem; margin:0;">Developmental Delay</h3><span data-cond-icon style="flex:none; width:30px; height:30px; border-radius:50%; background:rgba(255,179,0,.1); color:#A86A00; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:600; transition:transform .35s;">+</span></div>
+        <div data-cond-body style="max-height:0; overflow:hidden; transition:max-height .45s cubic-bezier(.16,1,.3,1);"><p style="color:#5A5466; line-height:1.65; margin:14px 0 0;">When milestones are slower to arrive, early, coordinated intervention makes the biggest difference. We help your child catch their stride.</p></div>
+      </div>
+      <div data-reveal="up" data-delay="60" data-cond data-col="#16A3AF" style="background:#fff; border-radius:22px; padding:24px 26px; box-shadow:0 12px 30px rgba(43,37,53,.06); cursor:pointer; border-left:5px solid #16A3AF; transition:box-shadow .3s;">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:14px;"><h3 style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.2rem; margin:0;">Sensory Processing</h3><span data-cond-icon style="flex:none; width:30px; height:30px; border-radius:50%; background:rgba(22,163,175,.12); color:#0E7A84; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:600; transition:transform .35s;">+</span></div>
+        <div data-cond-body style="max-height:0; overflow:hidden; transition:max-height .45s cubic-bezier(.16,1,.3,1);"><p style="color:#5A5466; line-height:1.65; margin:14px 0 0;">For children overwhelmed or under-responsive to sound, touch and movement, sensory integration brings calm, focus and comfort in daily life.</p></div>
+      </div>
+      <div data-reveal="up" data-cond data-col="#ED1A5F" style="background:#fff; border-radius:22px; padding:24px 26px; box-shadow:0 12px 30px rgba(43,37,53,.06); cursor:pointer; border-left:5px solid #ED1A5F; transition:box-shadow .3s;">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:14px;"><h3 style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.2rem; margin:0;">Motor &amp; Coordination</h3><span data-cond-icon style="flex:none; width:30px; height:30px; border-radius:50%; background:rgba(237,26,95,.1); color:#C2134B; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:600; transition:transform .35s;">+</span></div>
+        <div data-cond-body style="max-height:0; overflow:hidden; transition:max-height .45s cubic-bezier(.16,1,.3,1);"><p style="color:#5A5466; line-height:1.65; margin:14px 0 0;">Gross and fine motor challenges affect everything from handwriting to play. Physiotherapy and OT build strength, balance and coordination.</p></div>
+      </div>
+      <div data-reveal="up" data-delay="60" data-cond data-col="#E6A700" style="background:#fff; border-radius:22px; padding:24px 26px; box-shadow:0 12px 30px rgba(43,37,53,.06); cursor:pointer; border-left:5px solid #FFB300; transition:box-shadow .3s;">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:14px;"><h3 style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.2rem; margin:0;">Behavioural &amp; Emotional</h3><span data-cond-icon style="flex:none; width:30px; height:30px; border-radius:50%; background:rgba(255,179,0,.1); color:#A86A00; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:600; transition:transform .35s;">+</span></div>
+        <div data-cond-body style="max-height:0; overflow:hidden; transition:max-height .45s cubic-bezier(.16,1,.3,1);"><p style="color:#5A5466; line-height:1.65; margin:14px 0 0;">Big feelings, meltdowns, anxiety and rigidity are forms of communication. We help children regulate and cope — with warmth, never shame.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOUNDER / TRUST -->
+  <section id="ak-founder" data-screen-label="Founder" style="position:relative; overflow:hidden; background:radial-gradient(115% 95% at 18% 8%, #FFE3BC 0%, #FFD9DB 46%, #FFEFC2 100%); padding:clamp(70px,9vw,130px) clamp(20px,5vw,80px);">
+    <div data-parallax="0.07" style="position:absolute; top:8%; right:-5%; width:400px; height:400px; background:radial-gradient(circle,rgba(245,138,31,.28),transparent 70%); filter:blur(8px);"></div>
+    <div data-parallax="0.1" style="position:absolute; bottom:-8%; left:-6%; width:420px; height:420px; background:radial-gradient(circle,rgba(22,163,175,.26),transparent 70%); filter:blur(8px);"></div>
+
+    <div style="position:relative; max-width:1160px; margin:0 auto; text-align:center; margin-bottom:clamp(40px,5vw,64px);">
+      <div data-reveal="up" style="font-weight:700; letter-spacing:3px; text-transform:uppercase; font-size:13px; color:#F58A1F; margin-bottom:14px;">The heart behind AAKAR</div>
+      <h2 data-reveal="up" data-delay="80" class="ak-crayon" style="font-size:clamp(2.9rem,6.6vw,5.4rem); line-height:1; letter-spacing:.5px; margin:0 auto; max-width:760px;"><span style="display:inline-block; position:relative;">Meet Dr Khushboo Gour<svg class="ak-underline" data-crayon-underline viewBox="0 0 300 14" preserveAspectRatio="none" style="--len:320; position:absolute; left:0; right:0; bottom:-8px;"><path d="M4 9 C 60 2, 120 14, 180 7 S 260 3, 296 8" fill="none" stroke="#F58A1F" stroke-width="4" stroke-linecap="round"></path></svg></span></h2>
+      <p data-reveal="up" data-delay="160" style="max-width:600px; margin:18px auto 0; color:#5A5466; font-size:clamp(1rem,1.6vw,1.18rem); line-height:1.6;">Parents don't choose a centre. They choose a person they can trust with their child.</p>
+    </div>
+
+    <div class="ak-founder-grid" style="position:relative; max-width:1160px; margin:0 auto; display:grid; grid-template-columns:0.9fr 1.1fr; gap:clamp(36px,5vw,72px); align-items:center;">
+      <!-- artistic photo -->
+      <div data-reveal="left" style="position:relative; justify-self:center; width:min(82vw,380px);">
+        <div style="position:absolute; inset:-7% -9% -11% -7%; background:linear-gradient(135deg,#16A3AF,#7DB72C); border-radius:46% 54% 60% 40% / 52% 44% 56% 48%; animation:ak-morph 11s ease-in-out infinite; box-shadow:0 36px 80px rgba(22,163,175,.26);"></div>
+        <div style="position:absolute; inset:1% -3% -5% 1%; background:linear-gradient(135deg,#F58A1F,#ED1A5F); border-radius:54% 46% 40% 60% / 44% 56% 48% 52%; animation:ak-morph 13s ease-in-out infinite reverse; opacity:.5;"></div>
+        <div style="position:relative; aspect-ratio:0.82; border-radius:44% 56% 54% 46% / 47% 47% 53% 53%; overflow:hidden; box-shadow:0 24px 60px rgba(43,37,53,.22); border:6px solid #fff;">
+          <img src="images/dr-khushboo-gour.png" alt="Dr Khushboo Gour, Founder of AAKAR" style="width:100%; height:100%; object-fit:cover; object-position:center 12%;">
+        </div>
+        <div style="position:absolute; bottom:-6px; left:-12px; background:#fff; padding:13px 18px; border-radius:18px; box-shadow:0 16px 36px rgba(43,37,53,.16); display:flex; align-items:center; gap:11px;">
+          <img src="images/aakar-emblem.png" alt="" style="width:34px; height:34px; object-fit:contain;">
+          <div style="text-align:left;"><div style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:15px; line-height:1.1;">Dr Khushboo Gour</div><div style="font-size:12px; color:#8A8494;">Founder &amp; Clinical Director</div></div>
+        </div>
+        <div style="position:absolute; top:-12px; right:-6px; width:46px; height:46px; border-radius:50%; background:#7DB72C; opacity:.9; animation:ak-bob 5s ease-in-out infinite;"></div>
+      </div>
+
+      <!-- story + chips -->
+      <div data-reveal="right">
+        <p style="font-size:1.12rem; line-height:1.75; color:#3A3446; margin:0 0 18px;">Dr Khushboo founded AAKAR with one conviction, earned over years of working with children and their families: <strong style="color:#0E7A84;">no child is broken</strong>. Every child simply has their own pace, their own path, and their own extraordinary way of growing.</p>
+        <p style="font-size:1.12rem; line-height:1.75; color:#3A3446; margin:0 0 26px;">She built AAKAR to be the place she always wished existed — where assessments feel like understanding, not labelling; where therapy feels like play; and where parents are partners, never spectators.</p>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:26px;">
+          <div data-hover style="background:#fff; border-radius:18px; padding:18px 20px; box-shadow:0 10px 26px rgba(43,37,53,.06); transition:transform .35s;">
+            <div style="font-family:'Fredoka',sans-serif; font-weight:600; color:#16A3AF; font-size:1.05rem; margin-bottom:4px;">Years of experience</div>
+            <div style="color:#5A5466; font-size:.94rem; line-height:1.5;">Hands-on work across assessment, therapy and family guidance.</div>
+          </div>
+          <div data-hover style="background:#fff; border-radius:18px; padding:18px 20px; box-shadow:0 10px 26px rgba(43,37,53,.06); transition:transform .35s;">
+            <div style="font-family:'Fredoka',sans-serif; font-weight:600; color:#ED1A5F; font-size:1.05rem; margin-bottom:4px;">Child-first philosophy</div>
+            <div style="color:#5A5466; font-size:.94rem; line-height:1.5;">Plans built around the child — never the other way around.</div>
+          </div>
+          <div data-hover style="background:#fff; border-radius:18px; padding:18px 20px; box-shadow:0 10px 26px rgba(43,37,53,.06); transition:transform .35s;">
+            <div style="font-family:'Fredoka',sans-serif; font-weight:600; color:#F58A1F; font-size:1.05rem; margin-bottom:4px;">Multidisciplinary lens</div>
+            <div style="color:#5A5466; font-size:.94rem; line-height:1.5;">Speech, OT, psychology &amp; education, working as one team.</div>
+          </div>
+          <div data-hover style="background:#fff; border-radius:18px; padding:18px 20px; box-shadow:0 10px 26px rgba(43,37,53,.06); transition:transform .35s;">
+            <div style="font-family:'Fredoka',sans-serif; font-weight:600; color:#B57400; font-size:1.05rem; margin-bottom:4px;">Families as partners</div>
+            <div style="color:#5A5466; font-size:.94rem; line-height:1.5;">Coaching parents so progress continues at home, too.</div>
+          </div>
+        </div>
+        <a href="#ak-contact" data-magnetic style="display:inline-flex; align-items:center; gap:10px; background:#16A3AF; color:#fff; padding:15px 26px; border-radius:44px; font-weight:700; font-size:16px; box-shadow:0 14px 30px rgba(22,163,175,.3);">Talk to Dr Khushboo →</a>
+      </div>
+    </div>
+
+    <!-- personal message -->
+    <div data-reveal="up" style="position:relative; max-width:920px; margin:clamp(48px,6vw,80px) auto 0; background:linear-gradient(135deg,#1C1726,#2A2138); border-radius:30px; padding:clamp(34px,5vw,56px); color:#F1ECF7; overflow:hidden;">
+      <div style="position:absolute; top:-30%; right:-6%; width:320px; height:320px; background:radial-gradient(circle,rgba(245,138,31,.28),transparent 70%); filter:blur(8px);"></div>
+      <div style="position:relative;">
+        <div style="font-family:'Fredoka',sans-serif; font-size:64px; line-height:.6; color:#F58A1F; margin-bottom:8px;">&ldquo;</div>
+        <p style="font-family:'Fredoka',sans-serif; font-weight:500; font-size:clamp(1.3rem,2.6vw,1.95rem); line-height:1.4; margin:0 0 22px; letter-spacing:-.3px;">If your heart whispers that something feels different about your child — listen to it, then come talk to me. Earlier is kinder. And there is so much hope.</p>
+        <div style="display:flex; align-items:center; gap:13px;">
+          <img src="images/dr-khushboo-gour.png" alt="" style="width:52px; height:52px; border-radius:50%; object-fit:cover; object-position:center 12%; border:2px solid rgba(255,255,255,.3);">
+          <div><div style="font-family:'Fredoka',sans-serif; font-weight:600;">Dr Khushboo Gour</div><div style="font-size:13px; color:#B7AFC4;">Founder, AAKAR Child Development Centre</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHILD DEVELOPMENT JOURNEY -->
+  <section id="ak-journey" data-screen-label="Journey" style="position:relative; overflow:hidden; background:radial-gradient(115% 95% at 82% 0%, #C9EEE2 0%, #FFEDBC 54%, #FFD7E6 100%); padding:clamp(70px,9vw,130px) clamp(20px,5vw,80px);">
+    <div data-parallax="0.07" style="position:absolute; top:6%; left:-5%; width:380px; height:380px; background:radial-gradient(circle,rgba(125,183,44,.26),transparent 70%); filter:blur(8px);"></div>
+    <div data-parallax="0.1" style="position:absolute; bottom:-8%; right:-6%; width:420px; height:420px; background:radial-gradient(circle,rgba(255,179,0,.22),transparent 70%); filter:blur(8px);"></div>
+
+    <div style="position:relative; max-width:1100px; margin:0 auto; text-align:center; margin-bottom:clamp(34px,4vw,52px);">
+      <div data-reveal="up" style="font-weight:700; letter-spacing:3px; text-transform:uppercase; font-size:13px; color:#7DB72C; margin-bottom:14px;">Where is your child?</div>
+      <h2 data-reveal="up" data-delay="80" style="font-family:'Caveat',cursive; font-weight:700; font-size:clamp(2.7rem,6vw,4.8rem); line-height:1; letter-spacing:.5px; margin:0 auto; max-width:760px;">Every age has its own milestones.</h2>
+      <p data-reveal="up" data-delay="160" style="max-width:600px; margin:18px auto 0; color:#5A5466; font-size:clamp(1rem,1.6vw,1.18rem); line-height:1.6;">Find your child's stage to see what's typical, what's worth watching, and how AAKAR helps.</p>
+    </div>
+
+    <div data-reveal="up" data-delay="200" style="position:relative; max-width:980px; margin:0 auto;">
+      <div class="ak-journey-tabs" style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:26px;">
+        <button data-jtab="0" data-col="#16A3AF" style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:16px; background:#16A3AF; color:#fff; border:none; padding:14px 26px; border-radius:40px; cursor:pointer; box-shadow:0 10px 24px rgba(22,163,175,.28); transition:all .3s;">0–3 years</button>
+        <button data-jtab="1" data-col="#ED1A5F" style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:16px; background:#fff; color:#2B2535; border:1px solid rgba(43,37,53,.1); padding:14px 26px; border-radius:40px; cursor:pointer; transition:all .3s;">3–6 years</button>
+        <button data-jtab="2" data-col="#F58A1F" style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:16px; background:#fff; color:#2B2535; border:1px solid rgba(43,37,53,.1); padding:14px 26px; border-radius:40px; cursor:pointer; transition:all .3s;">6–12 years</button>
+        <button data-jtab="3" data-col="#E6A700" style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:16px; background:#fff; color:#2B2535; border:1px solid rgba(43,37,53,.1); padding:14px 26px; border-radius:40px; cursor:pointer; transition:all .3s;">12+ years</button>
+      </div>
+
+      <div style="position:relative;">
+        <div data-jpanel="0" class="ak-jp" style="display:grid; grid-template-columns:1.2fr 1fr; gap:24px; background:#fff; border-radius:28px; padding:clamp(26px,3.4vw,40px); box-shadow:0 20px 50px rgba(43,37,53,.08);">
+          <div>
+            <h3 style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.5rem; color:#0E7A84; margin:0 0 6px;">The foundation years</h3>
+            <p style="color:#8A8494; margin:0 0 18px;">Babbling, first words, pointing, walking, simple play.</p>
+            <div style="font-weight:700; font-size:14px; color:#2B2535; margin-bottom:8px;">Worth watching for</div>
+            <ul style="margin:0 0 18px; padding-left:18px; color:#5A5466; line-height:1.8;"><li>Few or no words by 18–24 months</li><li>Little eye contact or response to name</li><li>Not pointing, waving or imitating</li><li>Delays in sitting, crawling or walking</li></ul>
+            <div style="font-weight:700; font-size:14px; color:#2B2535; margin-bottom:8px;">How AAKAR helps</div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;"><span style="background:rgba(22,163,175,.1); color:#0E7A84; font-weight:600; font-size:.84rem; padding:7px 13px; border-radius:30px;">Early Intervention</span><span style="background:rgba(22,163,175,.1); color:#0E7A84; font-weight:600; font-size:.84rem; padding:7px 13px; border-radius:30px;">Developmental Assessment</span><span style="background:rgba(22,163,175,.1); color:#0E7A84; font-weight:600; font-size:.84rem; padding:7px 13px; border-radius:30px;">Parent Coaching</span></div>
+          </div>
+          <div style="position:relative; display:flex; align-items:center; justify-content:center; min-height:200px;"><div style="width:70%; aspect-ratio:1; background:linear-gradient(135deg,#16A3AF,#7DB72C); border-radius:42% 58% 63% 37% / 47% 42% 58% 53%; animation:ak-morph 9s ease-in-out infinite; box-shadow:0 24px 50px rgba(22,163,175,.3); display:flex; align-items:center; justify-content:center; font-family:'Fredoka',sans-serif; color:#fff; font-weight:600; font-size:2.4rem;">0–3</div></div>
+        </div>
+
+        <div data-jpanel="1" class="ak-jp" style="display:none; grid-template-columns:1.2fr 1fr; gap:24px; background:#fff; border-radius:28px; padding:clamp(26px,3.4vw,40px); box-shadow:0 20px 50px rgba(43,37,53,.08);">
+          <div>
+            <h3 style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.5rem; color:#C2134B; margin:0 0 6px;">The discovery years</h3>
+            <p style="color:#8A8494; margin:0 0 18px;">Sentences, pretend play, sharing, early independence.</p>
+            <div style="font-weight:700; font-size:14px; color:#2B2535; margin-bottom:8px;">Worth watching for</div>
+            <ul style="margin:0 0 18px; padding-left:18px; color:#5A5466; line-height:1.8;"><li>Speech that's hard to understand</li><li>Trouble following simple instructions</li><li>Difficulty playing or sharing with peers</li><li>Big, frequent meltdowns or rigidity</li></ul>
+            <div style="font-weight:700; font-size:14px; color:#2B2535; margin-bottom:8px;">How AAKAR helps</div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;"><span style="background:rgba(237,26,95,.09); color:#C2134B; font-weight:600; font-size:.84rem; padding:7px 13px; border-radius:30px;">Speech Therapy</span><span style="background:rgba(237,26,95,.09); color:#C2134B; font-weight:600; font-size:.84rem; padding:7px 13px; border-radius:30px;">Occupational Therapy</span><span style="background:rgba(237,26,95,.09); color:#C2134B; font-weight:600; font-size:.84rem; padding:7px 13px; border-radius:30px;">School Readiness</span></div>
+          </div>
+          <div style="position:relative; display:flex; align-items:center; justify-content:center; min-height:200px;"><div style="width:70%; aspect-ratio:1; background:linear-gradient(135deg,#ED1A5F,#F58A1F); border-radius:58% 42% 37% 63% / 42% 53% 47% 58%; animation:ak-morph 10s ease-in-out infinite; box-shadow:0 24px 50px rgba(237,26,95,.3); display:flex; align-items:center; justify-content:center; font-family:'Fredoka',sans-serif; color:#fff; font-weight:600; font-size:2.4rem;">3–6</div></div>
+        </div>
+
+        <div data-jpanel="2" class="ak-jp" style="display:none; grid-template-columns:1.2fr 1fr; gap:24px; background:#fff; border-radius:28px; padding:clamp(26px,3.4vw,40px); box-shadow:0 20px 50px rgba(43,37,53,.08);">
+          <div>
+            <h3 style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.5rem; color:#B65F07; margin:0 0 6px;">The school years</h3>
+            <p style="color:#8A8494; margin:0 0 18px;">Reading, writing, friendships, focus, confidence.</p>
+            <div style="font-weight:700; font-size:14px; color:#2B2535; margin-bottom:8px;">Worth watching for</div>
+            <ul style="margin:0 0 18px; padding-left:18px; color:#5A5466; line-height:1.8;"><li>Struggles with reading, writing or maths</li><li>Trouble sitting still or paying attention</li><li>Few friendships or social difficulties</li><li>Low confidence or school refusal</li></ul>
+            <div style="font-weight:700; font-size:14px; color:#2B2535; margin-bottom:8px;">How AAKAR helps</div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;"><span style="background:rgba(245,138,31,.12); color:#B65F07; font-weight:600; font-size:.84rem; padding:7px 13px; border-radius:30px;">Special Education</span><span style="background:rgba(245,138,31,.12); color:#B65F07; font-weight:600; font-size:.84rem; padding:7px 13px; border-radius:30px;">ADHD Support</span><span style="background:rgba(245,138,31,.12); color:#B65F07; font-weight:600; font-size:.84rem; padding:7px 13px; border-radius:30px;">Social Skills</span></div>
+          </div>
+          <div style="position:relative; display:flex; align-items:center; justify-content:center; min-height:200px;"><div style="width:70%; aspect-ratio:1; background:linear-gradient(135deg,#F58A1F,#7DB72C); border-radius:50% 50% 42% 58% / 55% 45% 55% 45%; animation:ak-morph 11s ease-in-out infinite; box-shadow:0 24px 50px rgba(245,138,31,.3); display:flex; align-items:center; justify-content:center; font-family:'Fredoka',sans-serif; color:#fff; font-weight:600; font-size:2.2rem;">6–12</div></div>
+        </div>
+
+        <div data-jpanel="3" class="ak-jp" style="display:none; grid-template-columns:1.2fr 1fr; gap:24px; background:#fff; border-radius:28px; padding:clamp(26px,3.4vw,40px); box-shadow:0 20px 50px rgba(43,37,53,.08);">
+          <div>
+            <h3 style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.5rem; color:#A86A00; margin:0 0 6px;">The independence years</h3>
+            <p style="color:#8A8494; margin:0 0 18px;">Self-care, life skills, identity, planning for the future.</p>
+            <div style="font-weight:700; font-size:14px; color:#2B2535; margin-bottom:8px;">Worth watching for</div>
+            <ul style="margin:0 0 18px; padding-left:18px; color:#5A5466; line-height:1.8;"><li>Difficulty with daily living &amp; self-care</li><li>Social or emotional struggles</li><li>Trouble with organisation &amp; independence</li><li>Anxiety about the future or transitions</li></ul>
+            <div style="font-weight:700; font-size:14px; color:#2B2535; margin-bottom:8px;">How AAKAR helps</div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;"><span style="background:rgba(255,179,0,.1); color:#A86A00; font-weight:600; font-size:.84rem; padding:7px 13px; border-radius:30px;">Life Skills</span><span style="background:rgba(255,179,0,.1); color:#A86A00; font-weight:600; font-size:.84rem; padding:7px 13px; border-radius:30px;">ADL Training</span><span style="background:rgba(255,179,0,.1); color:#A86A00; font-weight:600; font-size:.84rem; padding:7px 13px; border-radius:30px;">Counselling</span></div>
+          </div>
+          <div style="position:relative; display:flex; align-items:center; justify-content:center; min-height:200px;"><div style="width:70%; aspect-ratio:1; background:linear-gradient(135deg,#FFB300,#16A3AF); border-radius:46% 54% 60% 40% / 52% 44% 56% 48%; animation:ak-morph 9.5s ease-in-out infinite; box-shadow:0 24px 50px rgba(255,179,0,.32); display:flex; align-items:center; justify-content:center; font-family:'Fredoka',sans-serif; color:#fff; font-weight:600; font-size:2.4rem;">12+</div></div>
+        </div>
+      </div>
+      <p data-reveal="up" style="text-align:center; margin:22px auto 0; color:#8A8494; font-size:.95rem;">Every child is different — these are gentle guides, not a diagnosis. When in doubt, just ask us.</p>
+    </div>
+  </section>
+
+  <!-- WHY AAKAR IS DIFFERENT -->
+  <section id="ak-why" data-screen-label="Why AAKAR" style="position:relative; overflow:hidden; background:radial-gradient(110% 90% at 85% 0%, #EFF6F1 0%, #FBF3E6 55%, #FCEFF4 100%); padding:clamp(70px,9vw,130px) clamp(20px,5vw,80px);">
+    <div data-parallax="0.07" style="position:absolute; bottom:-8%; left:-5%; width:400px; height:400px; background:radial-gradient(circle,rgba(125,183,44,.24),transparent 70%); filter:blur(8px);"></div>
+    <div style="position:relative; max-width:1000px; margin:0 auto; text-align:center; margin-bottom:clamp(34px,4vw,52px);">
+      <div data-reveal="up" style="font-weight:700; letter-spacing:3px; text-transform:uppercase; font-size:13px; color:#7DB72C; margin-bottom:14px;">The AAKAR difference</div>
+      <h2 data-reveal="up" data-delay="80" style="font-family:'Caveat',cursive; font-weight:700; font-size:clamp(2.7rem,6vw,4.8rem); line-height:1; letter-spacing:.5px; margin:0 auto; max-width:720px;">Not a clinic. A second family.</h2>
+    </div>
+    <div class="ak-why-grid" style="position:relative; max-width:1000px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:22px;">
+      <div data-reveal="left" style="background:#fff; border-radius:26px; padding:clamp(26px,3vw,38px); box-shadow:0 12px 30px rgba(43,37,53,.05); opacity:.92;">
+        <div style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.3rem; color:#8A8494; margin-bottom:20px;">A typical centre</div>
+        <div style="display:flex; flex-direction:column; gap:15px; color:#7A7488;">
+          <div style="display:flex; gap:12px; align-items:flex-start;"><span style="flex:none; width:22px; height:22px; border-radius:50%; background:#EEE9EF; color:#9A93A2; display:flex; align-items:center; justify-content:center; font-weight:700;">×</span>One therapy in isolation</div>
+          <div style="display:flex; gap:12px; align-items:flex-start;"><span style="flex:none; width:22px; height:22px; border-radius:50%; background:#EEE9EF; color:#9A93A2; display:flex; align-items:center; justify-content:center; font-weight:700;">×</span>Parents wait outside</div>
+          <div style="display:flex; gap:12px; align-items:flex-start;"><span style="flex:none; width:22px; height:22px; border-radius:50%; background:#EEE9EF; color:#9A93A2; display:flex; align-items:center; justify-content:center; font-weight:700;">×</span>Generic, one-size plans</div>
+          <div style="display:flex; gap:12px; align-items:flex-start;"><span style="flex:none; width:22px; height:22px; border-radius:50%; background:#EEE9EF; color:#9A93A2; display:flex; align-items:center; justify-content:center; font-weight:700;">×</span>Focus on the diagnosis</div>
+          <div style="display:flex; gap:12px; align-items:flex-start;"><span style="flex:none; width:22px; height:22px; border-radius:50%; background:#EEE9EF; color:#9A93A2; display:flex; align-items:center; justify-content:center; font-weight:700;">×</span>Clinical &amp; intimidating</div>
+          <div style="display:flex; gap:12px; align-items:flex-start;"><span style="flex:none; width:22px; height:22px; border-radius:50%; background:#EEE9EF; color:#9A93A2; display:flex; align-items:center; justify-content:center; font-weight:700;">×</span>Progress is a mystery</div>
+        </div>
+      </div>
+      <div data-reveal="right" style="position:relative; background:linear-gradient(150deg,#16A3AF,#0E7A84); border-radius:26px; padding:clamp(26px,3vw,38px); box-shadow:0 26px 60px rgba(22,163,175,.34); color:#fff; overflow:hidden;">
+        <div style="position:absolute; top:-30%; right:-8%; width:240px; height:240px; background:radial-gradient(circle,rgba(255,255,255,.3),transparent 70%);"></div>
+        <div style="position:relative; display:flex; align-items:center; gap:10px; font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.3rem; margin-bottom:20px;"><img src="images/aakar-emblem.png" alt="" style="width:34px; height:34px; object-fit:contain; background:#fff; border-radius:50%; padding:2px;">The AAKAR way</div>
+        <div style="position:relative; display:flex; flex-direction:column; gap:15px;">
+          <div style="display:flex; gap:12px; align-items:flex-start;"><span style="flex:none; width:22px; height:22px; border-radius:50%; background:rgba(255,255,255,.25); display:flex; align-items:center; justify-content:center; font-weight:700;">✓</span>Multidisciplinary team, one plan</div>
+          <div style="display:flex; gap:12px; align-items:flex-start;"><span style="flex:none; width:22px; height:22px; border-radius:50%; background:rgba(255,255,255,.25); display:flex; align-items:center; justify-content:center; font-weight:700;">✓</span>Parents are partners &amp; coached</div>
+          <div style="display:flex; gap:12px; align-items:flex-start;"><span style="flex:none; width:22px; height:22px; border-radius:50%; background:rgba(255,255,255,.25); display:flex; align-items:center; justify-content:center; font-weight:700;">✓</span>Personalised, child-led goals</div>
+          <div style="display:flex; gap:12px; align-items:flex-start;"><span style="flex:none; width:22px; height:22px; border-radius:50%; background:rgba(255,255,255,.25); display:flex; align-items:center; justify-content:center; font-weight:700;">✓</span>Focus on the whole child</div>
+          <div style="display:flex; gap:12px; align-items:flex-start;"><span style="flex:none; width:22px; height:22px; border-radius:50%; background:rgba(255,255,255,.25); display:flex; align-items:center; justify-content:center; font-weight:700;">✓</span>Warm, playful, child-first space</div>
+          <div style="display:flex; gap:12px; align-items:flex-start;"><span style="flex:none; width:22px; height:22px; border-radius:50%; background:rgba(255,255,255,.25); display:flex; align-items:center; justify-content:center; font-weight:700;">✓</span>Progress tracked &amp; shared openly</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TELETHERAPY -->
+  <section id="ak-tele" data-screen-label="Teletherapy" style="position:relative; overflow:hidden; background:radial-gradient(115% 95% at 14% 0%, #C6EEE8 0%, #CFE6FF 46%, #FFEFC2 100%); padding:clamp(70px,9vw,130px) clamp(20px,5vw,80px);">
+    <div data-parallax="0.08" style="position:absolute; top:8%; right:-5%; width:380px; height:380px; background:radial-gradient(circle,rgba(22,163,175,.28),transparent 70%); filter:blur(8px);"></div>
+    <div class="ak-tele-grid" style="position:relative; max-width:1140px; margin:0 auto; display:grid; grid-template-columns:1fr 1.05fr; gap:clamp(36px,5vw,64px); align-items:center;">
+      <div data-reveal="left">
+        <div style="font-weight:700; letter-spacing:3px; text-transform:uppercase; font-size:13px; color:#0E7A84; margin-bottom:14px;">Care without distance</div>
+        <h2 style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:clamp(1.9rem,4vw,3.2rem); line-height:1.06; letter-spacing:-.5px; margin:0 0 16px;">Expert support, right from your living room.</h2>
+        <p style="color:#5A5466; font-size:1.1rem; line-height:1.7; margin:0 0 24px; max-width:480px;">Can't travel? No problem. Through secure <strong style="color:#0E7A84;">teletherapy</strong> and <strong style="color:#0E7A84;">virtual consultations</strong>, AAKAR comes to you — with the same warmth, the same team, and progress you can actually see.</p>
+        <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:26px;">
+          <div style="display:flex; gap:12px; align-items:center;"><span style="flex:none; width:26px; height:26px; border-radius:50%; background:rgba(22,163,175,.14); color:#0E7A84; display:flex; align-items:center; justify-content:center; font-weight:700;">✓</span><span style="color:#3A3446; font-weight:500;">Online assessments &amp; live therapy sessions</span></div>
+          <div style="display:flex; gap:12px; align-items:center;"><span style="flex:none; width:26px; height:26px; border-radius:50%; background:rgba(22,163,175,.14); color:#0E7A84; display:flex; align-items:center; justify-content:center; font-weight:700;">✓</span><span style="color:#3A3446; font-weight:500;">Home-programme guidance for parents</span></div>
+          <div style="display:flex; gap:12px; align-items:center;"><span style="flex:none; width:26px; height:26px; border-radius:50%; background:rgba(22,163,175,.14); color:#0E7A84; display:flex; align-items:center; justify-content:center; font-weight:700;">✓</span><span style="color:#3A3446; font-weight:500;">Digital progress tracking, shared with you</span></div>
+        </div>
+        <a href="#ak-contact" data-magnetic style="display:inline-flex; align-items:center; gap:10px; background:#16A3AF; color:#fff; padding:15px 26px; border-radius:44px; font-weight:700; font-size:16px; box-shadow:0 14px 30px rgba(22,163,175,.3);">Book a virtual consultation →</a>
+      </div>
+      <!-- dashboard mockup -->
+      <div data-reveal="right" style="position:relative;">
+        <div style="position:absolute; inset:-6%; background:linear-gradient(135deg,rgba(22,163,175,.18),rgba(125,183,44,.14)); border-radius:32px; filter:blur(4px);"></div>
+        <div style="position:relative; background:#fff; border-radius:24px; box-shadow:0 30px 70px rgba(43,37,53,.16); padding:22px; overflow:hidden;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:18px;">
+            <div style="display:flex; align-items:center; gap:9px;"><img src="images/aakar-emblem.png" alt="" style="width:30px; height:30px; object-fit:contain;"><span style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:15px;">Aarav's Progress</span></div>
+            <span style="background:rgba(125,183,44,.14); color:#5E9018; font-weight:700; font-size:12px; padding:5px 11px; border-radius:20px;">On track</span>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:18px;">
+            <div style="background:#F8FBFB; border-radius:16px; padding:14px; text-align:center;"><div style="width:54px; height:54px; margin:0 auto 8px; border-radius:50%; background:conic-gradient(#16A3AF 78%, #E4EFEF 0); display:flex; align-items:center; justify-content:center;"><span style="width:38px; height:38px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; font-family:'Fredoka',sans-serif; font-weight:600; font-size:13px; color:#0E7A84;">78%</span></div><div style="font-size:11px; color:#8A8494; font-weight:600;">Speech</div></div>
+            <div style="background:#F8FBFB; border-radius:16px; padding:14px; text-align:center;"><div style="width:54px; height:54px; margin:0 auto 8px; border-radius:50%; background:conic-gradient(#F58A1F 64%, #F1E8DD 0); display:flex; align-items:center; justify-content:center;"><span style="width:38px; height:38px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; font-family:'Fredoka',sans-serif; font-weight:600; font-size:13px; color:#B65F07;">64%</span></div><div style="font-size:11px; color:#8A8494; font-weight:600;">Motor</div></div>
+            <div style="background:#F8FBFB; border-radius:16px; padding:14px; text-align:center;"><div style="width:54px; height:54px; margin:0 auto 8px; border-radius:50%; background:conic-gradient(#ED1A5F 71%, #F4E2E8 0); display:flex; align-items:center; justify-content:center;"><span style="width:38px; height:38px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; font-family:'Fredoka',sans-serif; font-weight:600; font-size:13px; color:#C2134B;">71%</span></div><div style="font-size:11px; color:#8A8494; font-weight:600;">Social</div></div>
+          </div>
+          <div style="background:#F8FBFB; border-radius:16px; padding:16px;">
+            <div style="font-size:12px; font-weight:700; color:#2B2535; margin-bottom:12px;">This week</div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div style="display:flex; align-items:center; justify-content:space-between;"><span style="display:flex; align-items:center; gap:9px; font-size:13px; color:#3A3446;"><span style="width:9px; height:9px; border-radius:50%; background:#16A3AF;"></span>Speech Therapy · Mon</span><span style="font-size:11px; color:#8A8494;">4:00 PM</span></div>
+              <div style="display:flex; align-items:center; justify-content:space-between;"><span style="display:flex; align-items:center; gap:9px; font-size:13px; color:#3A3446;"><span style="width:9px; height:9px; border-radius:50%; background:#F58A1F;"></span>Occupational Therapy · Wed</span><span style="font-size:11px; color:#8A8494;">5:00 PM</span></div>
+              <div style="display:flex; align-items:center; justify-content:space-between; background:rgba(22,163,175,.08); margin:-4px -8px; padding:8px; border-radius:10px;"><span style="display:flex; align-items:center; gap:9px; font-size:13px; color:#0E7A84; font-weight:700;"><span style="width:9px; height:9px; border-radius:50%; background:#7DB72C; animation:ak-twinkle 1.8s ease-in-out infinite;"></span>Parent Coaching · Fri</span><span style="font-size:11px; color:#0E7A84; font-weight:700;">Live soon</span></div>
+            </div>
+          </div>
+        </div>
+        <div style="position:absolute; top:-16px; right:-10px; width:50px; height:50px; border-radius:50%; background:#7DB72C; opacity:.9; animation:ak-bob 4.5s ease-in-out infinite;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SPORTS & ADL -->
+  <section id="ak-sports" data-screen-label="Sports & ADL" style="position:relative; overflow:hidden; background:radial-gradient(115% 95% at 80% 0%, #FFE3BC 0%, #FFD9DB 48%, #C9EEE2 100%); padding:clamp(64px,8vw,110px) clamp(20px,5vw,80px); color:#2B2535;">
+    <div data-parallax="0.06" style="position:absolute; top:6%; left:-5%; width:400px; height:400px; background:radial-gradient(circle,rgba(245,138,31,.26),transparent 70%); filter:blur(8px);"></div>
+    <div data-parallax="0.09" style="position:absolute; bottom:-8%; right:-6%; width:420px; height:420px; background:radial-gradient(circle,rgba(22,163,175,.24),transparent 70%); filter:blur(8px);"></div>
+    <div data-parallax="0.12" style="position:absolute; top:14%; left:8%; width:54px; height:54px; border-radius:50%; border:5px solid rgba(245,138,31,.4); animation:ak-bob 5s ease-in-out infinite;"></div>
+    <div data-parallax="0.16" style="position:absolute; bottom:16%; right:10%; width:42px; height:42px; border-radius:12px; background:rgba(22,163,175,.3); transform:rotate(20deg); animation:ak-bob 4s ease-in-out infinite;"></div>
+    <div style="position:relative; max-width:1100px; margin:0 auto; text-align:center;">
+      <div data-reveal="up" style="font-weight:700; letter-spacing:3px; text-transform:uppercase; font-size:13px; color:#B65F07; margin-bottom:14px;">Move · Balance · Belong</div>
+      <h2 data-reveal="up" data-delay="80" class="ak-crayon" style="font-size:clamp(2.9rem,6.6vw,5.4rem); line-height:1; letter-spacing:.5px; margin:0 auto 16px; max-width:880px; color:#2B2535;"><span style="display:inline-block; position:relative;">Confidence is built in motion<svg class="ak-underline" data-crayon-underline viewBox="0 0 300 14" preserveAspectRatio="none" style="--len:320; position:absolute; left:0; right:0; bottom:-8px;"><path d="M4 9 C 60 2, 120 14, 180 7 S 260 3, 296 8" fill="none" stroke="#F58A1F" stroke-width="4" stroke-linecap="round"></path></svg></span></h2>
+      <p data-reveal="up" data-delay="160" style="max-width:620px; margin:0 auto clamp(34px,4vw,48px); font-size:clamp(1rem,1.6vw,1.18rem); line-height:1.6; color:#5A5466;">Our sports training &amp; ADL programmes turn everyday movement into independence — and independence into self-belief.</p>
+      <div class="ak-sports-grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px;">
+        <div data-reveal="up" data-hover style="background:#fff; border:1px solid rgba(43,37,53,.05); border-radius:22px; padding:26px 20px; box-shadow:0 14px 34px rgba(43,37,53,.07); transition:transform .35s;"><div style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.15rem; margin-bottom:6px; color:#B65F07;">Sports Training</div><div style="font-size:.92rem; color:#5A5466; line-height:1.5;">Strength, stamina &amp; team play in a joyful, structured setting.</div></div>
+        <div data-reveal="up" data-delay="60" data-hover style="background:#fff; border:1px solid rgba(43,37,53,.05); border-radius:22px; padding:26px 20px; box-shadow:0 14px 34px rgba(43,37,53,.07); transition:transform .35s;"><div style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.15rem; margin-bottom:6px; color:#C2134B;">ADL Training</div><div style="font-size:.92rem; color:#5A5466; line-height:1.5;">Dressing, eating, grooming — daily living, mastered step by step.</div></div>
+        <div data-reveal="up" data-delay="120" data-hover style="background:#fff; border:1px solid rgba(43,37,53,.05); border-radius:22px; padding:26px 20px; box-shadow:0 14px 34px rgba(43,37,53,.07); transition:transform .35s;"><div style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.15rem; margin-bottom:6px; color:#0E7A84;">Balance &amp; Coordination</div><div style="font-size:.92rem; color:#5A5466; line-height:1.5;">Core motor skills that make play — and the playground — possible.</div></div>
+        <div data-reveal="up" data-delay="180" data-hover style="background:#fff; border:1px solid rgba(43,37,53,.05); border-radius:22px; padding:26px 20px; box-shadow:0 14px 34px rgba(43,37,53,.07); transition:transform .35s;"><div style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.15rem; margin-bottom:6px; color:#5E9018;">Independence</div><div style="font-size:.92rem; color:#5A5466; line-height:1.5;">The quiet pride of doing it themselves, for the very first time.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- IMPACT (capability-framed) -->
+  <section id="ak-impact" data-screen-label="Impact" style="position:relative; overflow:hidden; background:radial-gradient(115% 95% at 50% 0%, #FFE7BE 0%, #FFD7E6 50%, #C9EEE2 100%); padding:clamp(70px,9vw,120px) clamp(20px,5vw,80px);">
+    <div data-parallax="0.06" style="position:absolute; top:0; left:-5%; width:380px; height:380px; background:radial-gradient(circle,rgba(22,163,175,.24),transparent 70%); filter:blur(8px);"></div>
+    <div data-parallax="0.09" style="position:absolute; bottom:-8%; right:-5%; width:400px; height:400px; background:radial-gradient(circle,rgba(255,179,0,.22),transparent 70%); filter:blur(8px);"></div>
+    <div style="position:relative; max-width:1100px; margin:0 auto; text-align:center; margin-bottom:clamp(34px,4vw,52px);">
+      <div data-reveal="up" style="font-weight:700; letter-spacing:3px; text-transform:uppercase; font-size:13px; color:#B57400; margin-bottom:14px;">Built to go the distance</div>
+      <h2 data-reveal="up" data-delay="80" style="font-family:'Caveat',cursive; font-weight:700; font-size:clamp(2.7rem,6vw,4.8rem); line-height:1; letter-spacing:.5px; margin:0 auto; max-width:760px;">A new centre, built on real experience.</h2>
+      <p data-reveal="up" data-delay="160" style="max-width:620px; margin:18px auto 0; color:#5A5466; font-size:clamp(1rem,1.6vw,1.18rem); line-height:1.6;">We're just beginning our story — but our care is grounded in years of hands-on work and a genuinely complete approach.</p>
+    </div>
+    <div class="ak-impact-grid" style="position:relative; max-width:1000px; margin:0 auto; display:grid; grid-template-columns:repeat(4,1fr); gap:18px;">
+      <div data-reveal="scale" style="background:#fff; border-radius:24px; padding:30px 20px; text-align:center; box-shadow:0 14px 36px rgba(43,37,53,.06);"><div data-count="25" data-suffix="+" style="font-family:'Fredoka',sans-serif; font-weight:700; font-size:clamp(2.4rem,5vw,3.4rem); color:#16A3AF; line-height:1;">25+</div><div style="color:#5A5466; font-weight:600; margin-top:8px;">Services under one roof</div></div>
+      <div data-reveal="scale" data-delay="80" style="background:#fff; border-radius:24px; padding:30px 20px; text-align:center; box-shadow:0 14px 36px rgba(43,37,53,.06);"><div data-count="7" style="font-family:'Fredoka',sans-serif; font-weight:700; font-size:clamp(2.4rem,5vw,3.4rem); color:#ED1A5F; line-height:1;">7</div><div style="color:#5A5466; font-weight:600; margin-top:8px;">Development domains</div></div>
+      <div data-reveal="scale" data-delay="160" style="background:#fff; border-radius:24px; padding:30px 20px; text-align:center; box-shadow:0 14px 36px rgba(43,37,53,.06);"><div style="font-family:'Fredoka',sans-serif; font-weight:700; font-size:clamp(2.4rem,5vw,3.4rem); color:#F58A1F; line-height:1;">0–18</div><div style="color:#5A5466; font-weight:600; margin-top:8px;">Ages we support</div></div>
+      <div data-reveal="scale" data-delay="240" style="background:#fff; border-radius:24px; padding:30px 20px; text-align:center; box-shadow:0 14px 36px rgba(43,37,53,.06);"><div style="font-family:'Fredoka',sans-serif; font-weight:700; font-size:clamp(2.4rem,5vw,3.4rem); color:#7DB72C; line-height:1;">1</div><div style="color:#5A5466; font-weight:600; margin-top:8px;">United, caring team</div></div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="ak-contact" data-screen-label="Contact" style="position:relative; overflow:hidden; background:radial-gradient(120% 100% at 50% 0%, #FFEFC2 0%, #FFD7E6 46%, #CFE6FF 100%); padding:clamp(70px,9vw,130px) clamp(20px,5vw,80px);">
+    <div data-parallax="0.08" style="position:absolute; top:6%; left:-5%; width:400px; height:400px; background:radial-gradient(circle,rgba(22,163,175,.3),transparent 70%); filter:blur(8px);"></div>
+    <div data-parallax="0.11" style="position:absolute; bottom:-10%; right:-6%; width:440px; height:440px; background:radial-gradient(circle,rgba(245,138,31,.28),transparent 70%); filter:blur(8px);"></div>
+    <div data-parallax="0.14" style="position:absolute; top:20%; right:12%; width:50px; height:50px; border-radius:50%; background:#ED1A5F; opacity:.16; animation:ak-bob 5s ease-in-out infinite;"></div>
+
+    <div class="ak-contact-grid" style="position:relative; max-width:1100px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr; gap:clamp(34px,5vw,60px); align-items:center;">
+      <div data-reveal="left">
+        <div style="font-weight:700; letter-spacing:3px; text-transform:uppercase; font-size:13px; color:#0E7A84; margin-bottom:14px;">Let's begin, gently</div>
+        <h2 class="ak-crayon" style="font-size:clamp(2.7rem,6vw,4.8rem); line-height:1; letter-spacing:.5px; margin:0 0 16px;"><span style="display:inline-block; position:relative;">Reach out to people who genuinely care<svg class="ak-underline" data-crayon-underline viewBox="0 0 300 14" preserveAspectRatio="none" style="--len:320; position:absolute; left:0; right:0; bottom:-8px;"><path d="M4 9 C 60 2, 120 14, 180 7 S 260 3, 296 8" fill="none" stroke="#16A3AF" stroke-width="4" stroke-linecap="round"></path></svg></span></h2>
+        <p style="color:#5A5466; font-size:1.1rem; line-height:1.7; margin:0 0 28px; max-width:460px;">No pressure, no jargon — just a warm conversation about your child. Tell us a little, and we'll take it from there.</p>
+
+        <div style="display:flex; flex-direction:column; gap:14px;">
+          <a href="https://wa.me/917838778825?text=Hi%20AAKAR%2C%20I%27d%20like%20to%20know%20more%20about%20a%20developmental%20assessment%20for%20my%20child.%20%F0%9F%98%8A" target="_blank" rel="noopener" data-hover style="display:flex; align-items:center; gap:14px; background:#fff; border-radius:18px; padding:16px 20px; box-shadow:0 10px 26px rgba(43,37,53,.06); transition:transform .3s;">
+            <span style="flex:none; width:46px; height:46px; border-radius:14px; background:#25D366; display:flex; align-items:center; justify-content:center;"><svg width="24" height="24" viewBox="0 0 32 32" fill="#fff"><path d="M16.04 4C9.93 4 4.98 8.95 4.98 15.06c0 1.96.51 3.87 1.49 5.56L4.8 27.2l6.74-1.64a11 11 0 0 0 4.5.96h.01c6.11 0 11.06-4.95 11.06-11.06C27.11 8.95 22.15 4 16.04 4Zm6.05 15.38c-.28-.14-1.64-.81-1.89-.9-.25-.09-.43-.14-.62.14-.18.28-.71.9-.87 1.08-.16.18-.32.2-.6.07-1.66-.83-2.75-1.48-3.85-3.36-.29-.5.29-.46.83-1.54.09-.18.05-.35-.02-.49-.07-.14-.62-1.5-.85-2.05-.22-.54-.45-.47-.62-.48l-.53-.01c-.18 0-.48.07-.73.35-.25.28-.96.94-.96 2.3s.98 2.67 1.12 2.85c.14.18 1.94 2.96 4.7 4.15 1.75.76 2.44.82 3.32.69.53-.08 1.64-.67 1.87-1.32.23-.65.23-1.2.16-1.32-.07-.12-.25-.19-.53-.33Z"/></svg></span>
+            <div><div style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.05rem;">WhatsApp us</div><div style="color:#8A8494; font-size:.9rem;">Fastest way to reach us — tap to chat</div></div>
+          </a>
+          <a href="tel:+917838778825" data-hover style="display:flex; align-items:center; gap:14px; background:#fff; border-radius:18px; padding:16px 20px; box-shadow:0 10px 26px rgba(43,37,53,.06); transition:transform .3s;">
+            <span style="flex:none; width:46px; height:46px; border-radius:14px; background:linear-gradient(135deg,#16A3AF,#0E7A84); display:flex; align-items:center; justify-content:center; color:#fff; font-size:22px;">✆</span>
+            <div><div style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.05rem;">+91 78387 78825</div><div style="color:#8A8494; font-size:.9rem;">Mon–Sat · 9:30am – 6:30pm</div></div>
+          </a>
+        </div>
+      </div>
+
+      <!-- friendly form -->
+      <div data-reveal="right" style="position:relative;">
+        <div style="position:absolute; inset:-5%; background:linear-gradient(135deg,rgba(22,163,175,.16),rgba(237,26,95,.12)); border-radius:32px; filter:blur(4px);"></div>
+        <form data-contact-form style="position:relative; background:#fff; border-radius:26px; padding:clamp(26px,3vw,38px); box-shadow:0 28px 64px rgba(43,37,53,.14);">
+          <div style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:1.35rem; margin-bottom:18px;">Book a free first conversation</div>
+          <div style="display:flex; flex-direction:column; gap:13px;">
+            <input data-cf="name" type="text" placeholder="Your name" style="font-family:inherit; font-size:15px; padding:14px 16px; border:1.5px solid #E7E1EC; border-radius:14px; outline:none; transition:border-color .2s;">
+            <div style="display:flex; gap:13px;">
+              <input data-cf="age" type="text" placeholder="Child's age" style="font-family:inherit; font-size:15px; padding:14px 16px; border:1.5px solid #E7E1EC; border-radius:14px; outline:none; width:50%; transition:border-color .2s;">
+              <input data-cf="phone" type="tel" placeholder="Phone (optional)" style="font-family:inherit; font-size:15px; padding:14px 16px; border:1.5px solid #E7E1EC; border-radius:14px; outline:none; width:50%; transition:border-color .2s;">
+            </div>
+            <textarea data-cf="msg" rows="3" placeholder="What's on your mind? (optional)" style="font-family:inherit; font-size:15px; padding:14px 16px; border:1.5px solid #E7E1EC; border-radius:14px; outline:none; resize:vertical; transition:border-color .2s;"></textarea>
+            <button type="submit" data-magnetic style="display:inline-flex; align-items:center; justify-content:center; gap:10px; background:#25D366; color:#fff; padding:16px; border:none; border-radius:14px; font-family:inherit; font-weight:700; font-size:16px; cursor:pointer; box-shadow:0 14px 30px rgba(37,211,102,.34);">
+              <svg width="20" height="20" viewBox="0 0 32 32" fill="#fff"><path d="M16.04 4C9.93 4 4.98 8.95 4.98 15.06c0 1.96.51 3.87 1.49 5.56L4.8 27.2l6.74-1.64a11 11 0 0 0 4.5.96h.01c6.11 0 11.06-4.95 11.06-11.06C27.11 8.95 22.15 4 16.04 4Z"/></svg>
+              Send on WhatsApp
+            </button>
+            <p style="text-align:center; color:#9A93A2; font-size:12px; margin:2px 0 0;">Opens WhatsApp with your details ready to send. We reply personally.</p>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!--AK-SECTIONS-->
+
+  <!-- FOOTER -->
+  <footer id="ak-footer" style="position:relative; background:#1C1726; color:#EDE8F0; padding:80px clamp(20px,5vw,80px) 40px; overflow:hidden;">
+    <div style="position:absolute; top:-30%; right:-5%; width:480px; height:480px; background:radial-gradient(circle, rgba(22,163,175,.22), transparent 70%); filter:blur(10px);"></div>
+    <div style="position:relative; max-width:1200px; margin:0 auto; display:grid; grid-template-columns:1.4fr 1fr 1fr; gap:40px;">
+      <div>
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:18px;">
+          <img src="images/aakar-emblem.png" alt="AAKAR" style="width:54px; height:54px; object-fit:contain;">
+          <span style="font-family:'Fredoka',sans-serif; font-weight:700; font-size:30px;"><span style="color:#2BC4D0">A</span><span style="color:#FF477E">A</span><span style="color:#FF9F43">K</span><span style="color:#9BD64A">A</span><span style="color:#FFD54F">R</span></span>
+        </div>
+        <p style="color:#B7AFC4; max-width:340px; line-height:1.6; margin:0 0 18px;">Shaping every child's tomorrow. A place where potential is discovered, nurtured and transformed.</p>
+        <a href="https://wa.me/917838778825?text=Hi%20AAKAR%2C%20I%27d%20like%20to%20know%20more%20about%20a%20developmental%20assessment%20for%20my%20child." target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:9px; color:#9BD64A; font-weight:700;">Chat on WhatsApp →</a>
+      </div>
+      <div>
+        <h4 style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:18px; margin:0 0 16px;">Explore</h4>
+        <div style="display:flex; flex-direction:column; gap:11px; color:#B7AFC4; font-weight:500;">
+          <a href="#ak-explorer" style="transition:color .2s;">Services</a>
+          <a href="#ak-journey" style="transition:color .2s;">Development Journey</a>
+          <a href="#ak-conditions" style="transition:color .2s;">Conditions We Support</a>
+          <a href="#ak-founder" style="transition:color .2s;">About Dr Khushboo</a>
+          <a href="Gallery.dc.html" style="transition:color .2s;">Gallery</a>
+          <a href="Workshops & Training.dc.html" style="transition:color .2s;">Workshops &amp; Training</a>
+        </div>
+      </div>
+      <div>
+        <h4 style="font-family:'Fredoka',sans-serif; font-weight:600; font-size:18px; margin:0 0 16px;">Reach us</h4>
+        <div style="display:flex; flex-direction:column; gap:11px; color:#B7AFC4; font-weight:500;">
+          <a href="tel:+917838778825">+91 78387 78825</a>
+          <span>Mon–Sat · 9:30am–6:30pm</span>
+          <a href="#ak-contact" style="color:#2BC4D0; font-weight:700;">Book an assessment →</a>
+        </div>
+      </div>
+    </div>
+    <div style="position:relative; max-width:1200px; margin:48px auto 0; padding-top:24px; border-top:1px solid rgba(255,255,255,.1); display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px; color:#7E7790; font-size:13px;">
+      <span>© 2026 AAKAR Child Development Centre. All rights reserved.</span>
+      <span>Every child has potential. AAKAR helps it flourish.</span>
+    </div>
+  </footer>
+
+  <!-- FLOATING WHATSAPP -->
+  <a id="ak-wa" href="https://wa.me/917838778825?text=Hi%20AAKAR%2C%20I%27d%20like%20to%20know%20more%20about%20a%20developmental%20assessment%20for%20my%20child.%20%F0%9F%98%8A" target="_blank" rel="noopener" aria-label="Chat with AAKAR on WhatsApp" style="position:fixed; bottom:24px; right:24px; z-index:950; width:62px; height:62px; border-radius:50%; background:#25D366; display:flex; align-items:center; justify-content:center; box-shadow:0 12px 30px rgba(37,211,102,.45); transition:transform .25s;">
+    <span style="position:absolute; inset:0; border-radius:50%; background:#25D366; animation:ak-pulse 2.4s ease-out infinite; z-index:-1;"></span>
+    <svg width="32" height="32" viewBox="0 0 32 32" fill="#fff" aria-hidden="true"><path d="M16.04 4C9.93 4 4.98 8.95 4.98 15.06c0 1.96.51 3.87 1.49 5.56L4.8 27.2l6.74-1.64a11 11 0 0 0 4.5.96h.01c6.11 0 11.06-4.95 11.06-11.06C27.11 8.95 22.15 4 16.04 4Zm0 20.27h-.01a9.2 9.2 0 0 1-4.68-1.28l-.34-.2-3.49.85.93-3.4-.22-.35a9.16 9.16 0 0 1-1.41-4.9c0-5.07 4.13-9.2 9.21-9.2 2.46 0 4.77.96 6.5 2.7a9.13 9.13 0 0 1 2.7 6.51c0 5.08-4.13 9.21-9.2 9.21Zm5.05-6.89c-.28-.14-1.64-.81-1.89-.9-.25-.09-.43-.14-.62.14-.18.28-.71.9-.87 1.08-.16.18-.32.2-.6.07-.28-.14-1.17-.43-2.23-1.38-.82-.74-1.38-1.65-1.54-1.93-.16-.28-.02-.43.12-.57.13-.13.28-.32.41-.49.14-.16.18-.28.28-.46.09-.18.05-.35-.02-.49-.07-.14-.62-1.5-.85-2.05-.22-.54-.45-.47-.62-.48l-.53-.01c-.18 0-.48.07-.73.35-.25.28-.96.94-.96 2.3s.98 2.67 1.12 2.85c.14.18 1.94 2.96 4.7 4.15.66.28 1.17.45 1.57.58.66.21 1.26.18 1.74.11.53-.08 1.64-.67 1.87-1.32.23-.65.23-1.2.16-1.32-.07-.12-.25-.19-.53-.33Z"/></svg>
+  </a>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:820},&quot;showFloatingToys&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;toyDensity&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:7,&quot;min&quot;:0,&quot;max&quot;:12,&quot;tsType&quot;:&quot;number&quot;},&quot;crayonHeadings&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  componentDidMount(){
+    this._raf = null;
+    this._poll(0);
+  }
+  _poll(t){
+    // give CDN scripts a moment; init regardless after ~2.4s
+    if ((window.gsap && window.ScrollTrigger && window.Lenis) || t > 24){
+      this._init();
+    } else {
+      setTimeout(() => this._poll(t + 1), 100);
+    }
+  }
+  _init(){
+    const D = document;
+    const hasGSAP = !!(window.gsap && window.ScrollTrigger);
+    if (hasGSAP) gsap.registerPlugin(ScrollTrigger);
+
+    /* ---- Lenis smooth scroll ---- */
+    let lenis = null;
+    try {
+      if (window.Lenis && !window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+        lenis = new Lenis({ duration:1.15, smoothWheel:true, easing:(x)=>Math.min(1,1.001-Math.pow(2,-10*x)) });
+        if (hasGSAP){
+          lenis.on('scroll', ScrollTrigger.update);
+          gsap.ticker.add((time)=> lenis.raf(time*1000));
+          gsap.ticker.lagSmoothing(0);
+        } else {
+          const raf=(time)=>{ lenis.raf(time); requestAnimationFrame(raf); }; requestAnimationFrame(raf);
+        }
+      }
+    } catch(e){ lenis = null; }
+    this._lenis = lenis;
+
+    /* ---- anchor smooth scrolling ---- */
+    D.querySelectorAll('a[href^="#ak-"]').forEach(a=>{
+      a.addEventListener('click', (e)=>{
+        const id = a.getAttribute('href');
+        const tgt = D.querySelector(id);
+        if (!tgt) return;
+        e.preventDefault();
+        if (lenis) lenis.scrollTo(tgt, { offset:-70, duration:1.3 });
+        else tgt.scrollIntoView({ behavior:'smooth' });
+      });
+    });
+
+    /* ---- reveal on scroll (IntersectionObserver, GSAP-independent) ---- */
+    const startFor = (el)=>{
+      const k = el.getAttribute('data-reveal');
+      if (k==='left') return 'translateX(-46px)';
+      if (k==='right') return 'translateX(46px)';
+      if (k==='scale') return 'scale(.9)';
+      if (k==='fade') return 'translateY(0)';
+      return 'translateY(42px)';
+    };
+    const reveals = [...D.querySelectorAll('[data-reveal]')];
+    reveals.forEach(el=>{
+      el.style.opacity = '0';
+      el.style.transform = startFor(el);
+      el.style.transition = 'opacity .9s cubic-bezier(.16,1,.3,1), transform .9s cubic-bezier(.16,1,.3,1)';
+      el.style.willChange = 'opacity, transform';
+    });
+    if ('IntersectionObserver' in window){
+      const io = new IntersectionObserver((ents)=>{
+        ents.forEach(ent=>{
+          if (ent.isIntersecting){
+            const el = ent.target;
+            const d = parseFloat(el.getAttribute('data-delay')||0);
+            setTimeout(()=>{ el.style.opacity='1'; el.style.transform='none'; }, d);
+            io.unobserve(el);
+          }
+        });
+      }, { threshold:0.12, rootMargin:'0px 0px -7% 0px' });
+      reveals.forEach(el=>io.observe(el));
+    } else {
+      reveals.forEach(el=>{ el.style.opacity='1'; el.style.transform='none'; });
+    }
+
+    /* ---- counters ---- */
+    const counters = [...D.querySelectorAll('[data-count]')];
+    if (counters.length && 'IntersectionObserver' in window){
+      const cio = new IntersectionObserver((ents)=>{
+        ents.forEach(ent=>{
+          if (!ent.isIntersecting) return;
+          const el = ent.target;
+          const end = parseFloat(el.getAttribute('data-count'));
+          const suf = el.getAttribute('data-suffix')||'';
+          const pre = el.getAttribute('data-prefix')||'';
+          const dur = 1700; const t0 = performance.now();
+          const tick = (now)=>{
+            const p = Math.min(1,(now-t0)/dur);
+            const e = 1-Math.pow(1-p,3);
+            el.textContent = pre + Math.round(end*e).toLocaleString('en-IN') + suf;
+            if (p<1) requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+          cio.unobserve(el);
+        });
+      }, { threshold:0.5 });
+      counters.forEach(el=>cio.observe(el));
+    }
+
+    /* ---- magnetic buttons ---- */
+    if (!('ontouchstart' in window)){
+      D.querySelectorAll('[data-magnetic]').forEach(el=>{
+        el.style.transition = 'transform .25s cubic-bezier(.16,1,.3,1)';
+        el.addEventListener('mousemove', (e)=>{
+          const r = el.getBoundingClientRect();
+          const mx = e.clientX - (r.left + r.width/2);
+          const my = e.clientY - (r.top + r.height/2);
+          el.style.transform = `translate(${mx*0.28}px, ${my*0.4}px)`;
+        });
+        el.addEventListener('mouseleave', ()=>{ el.style.transform='translate(0,0)'; });
+      });
+    }
+
+    /* ---- nav scroll state ---- */
+    const nav = D.getElementById('ak-nav');
+    const onScroll = ()=>{
+      const y = window.scrollY || window.pageYOffset;
+      if (y > 40){
+        nav.style.background = 'rgba(253,247,239,.82)';
+        nav.style.backdropFilter = 'blur(14px)';
+        nav.style.boxShadow = '0 6px 26px rgba(43,37,53,.07)';
+        nav.style.paddingTop = '12px'; nav.style.paddingBottom = '12px';
+      } else {
+        nav.style.background = 'transparent';
+        nav.style.backdropFilter = 'none';
+        nav.style.boxShadow = 'none';
+        nav.style.paddingTop = '18px'; nav.style.paddingBottom = '18px';
+      }
+    };
+    onScroll(); window.addEventListener('scroll', onScroll, { passive:true });
+
+    /* ---- custom cursor (desktop only) ---- */
+    if (window.matchMedia('(pointer:fine)').matches){
+      const cur = D.getElementById('ak-cursor');
+      cur.style.display = 'block';
+      let cx=window.innerWidth/2, cy=window.innerHeight/2, tx=cx, ty=cy;
+      window.addEventListener('mousemove',(e)=>{ tx=e.clientX; ty=e.clientY; });
+      const loop=()=>{ cx+=(tx-cx)*0.18; cy+=(ty-cy)*0.18; cur.style.transform=`translate(${cx}px,${cy}px) translate(-50%,-50%)`; requestAnimationFrame(loop); };
+      loop();
+      D.querySelectorAll('a, button, [data-magnetic], [data-hover]').forEach(el=>{
+        el.addEventListener('mouseenter',()=>{ cur.style.width='54px'; cur.style.height='54px'; cur.style.background='rgba(22,163,175,.14)'; cur.style.borderColor='rgba(22,163,175,.45)'; });
+        el.addEventListener('mouseleave',()=>{ cur.style.width='34px'; cur.style.height='34px'; cur.style.background='transparent'; cur.style.borderColor='rgba(22,163,175,.6)'; });
+      });
+    }
+
+    /* ---- hero floating particles ---- */
+    const pc = D.getElementById('ak-hero-particles');
+    if (pc){
+      const cols = ['#16A3AF','#ED1A5F','#F58A1F','#7DB72C','#FFB300'];
+      const n = window.innerWidth < 760 ? 14 : 26;
+      for (let i=0;i<n;i++){
+        const s = 6 + Math.random()*16;
+        const d = D.createElement('div');
+        const star = Math.random() > 0.7;
+        d.style.cssText = `position:absolute; left:${Math.random()*100}%; top:${Math.random()*100}%; width:${s}px; height:${s}px; background:${cols[i%cols.length]}; opacity:${0.25+Math.random()*0.4}; border-radius:${star?'2px':'50%'}; transform:rotate(${Math.random()*45}deg); animation:ak-twinkle ${2.4+Math.random()*3}s ease-in-out ${Math.random()*3}s infinite, ak-float-${['a','b','c'][i%3]} ${9+Math.random()*8}s ease-in-out infinite;`;
+        pc.appendChild(d);
+      }
+    }
+
+    /* ---- floating learning toys + crayon toggle ---- */
+    this._D = D;
+    this._spawnToys(D);
+    this._applyCrayon(D);
+
+    /* ---- lightweight parallax ---- */
+    const px = [...D.querySelectorAll('[data-parallax]')];
+    if (px.length && !('ontouchstart' in window)){
+      let ticking=false;
+      const apply=()=>{
+        const y = window.scrollY||window.pageYOffset;
+        px.forEach(el=>{
+          const sp = parseFloat(el.getAttribute('data-parallax'))||0.1;
+          el.style.transform = `translate3d(0, ${-(y*sp)}px, 0)`;
+        });
+        ticking=false;
+      };
+      window.addEventListener('scroll',()=>{ if(!ticking){ requestAnimationFrame(apply); ticking=true; } }, { passive:true });
+    }
+
+    /* ---- section-specific interactions (filled as sections are added) ---- */
+    if (this._wireInteractions) this._wireInteractions(D, hasGSAP);
+  }
+
+  componentDidUpdate(){
+    if(this._D){ this._spawnToys(this._D); this._applyCrayon(this._D); }
+  }
+
+  _applyCrayon(D){
+    const on = !(this.props && this.props.crayonHeadings === false);
+    let s = D.getElementById('ak-crayon-off');
+    if(on){ if(s) s.remove(); return; }
+    if(!s){
+      s = D.createElement('style');
+      s.id = 'ak-crayon-off';
+      s.textContent = ".ak-crayon{ font-family:'Fredoka',sans-serif !important; font-weight:600 !important; letter-spacing:-.5px !important; } [style*='Caveat']{ font-family:'Fredoka',sans-serif !important; font-weight:600 !important; letter-spacing:-.5px !important; } .ak-underline{ display:none !important; }";
+      D.head.appendChild(s);
+    }
+  }
+
+  _spawnToys(D){
+    const TOYS = [
+      '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M6 30 58 8 44 56 32 40 6 30Z"></path><path d="M32 40 44 56"></path></svg>',
+      '<svg viewBox="0 0 64 64" fill="currentColor"><rect x="23" y="14" width="18" height="32" rx="6"></rect><path d="M23 46 32 60 41 46Z"></path><rect x="23" y="9" width="18" height="8" rx="4" opacity=".55"></rect></svg>',
+      '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3"><rect x="11" y="11" width="42" height="42" rx="10"></rect><text x="32" y="42" font-size="24" font-family="Fredoka,sans-serif" font-weight="700" text-anchor="middle" fill="currentColor" stroke="none">A</text></svg>',
+      '<svg viewBox="0 0 64 64" fill="currentColor"><path d="M32 6 40 24 60 26 45 39 50 59 32 48 14 59 19 39 4 26 24 24Z"></path></svg>',
+      '<svg viewBox="0 0 80 48" fill="currentColor"><path d="M22 40h40a13 13 0 0 0 2-26 17 17 0 0 0-33-4 11 11 0 0 0-9 30Z"></path></svg>',
+      '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M14 16h12a5 5 0 0 1 10 0h12v12a5 5 0 0 1 0 10v12H38a5 5 0 0 0-10 0H14V38a5 5 0 0 1 0-10Z"></path></svg>',
+      '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"><path d="M32 6 56 19v26L32 58 8 45V19Z"></path><path d="M32 6v52M8 19l24 13 24-13"></path></svg>',
+      '<svg viewBox="0 0 48 64" fill="currentColor"><ellipse cx="24" cy="21" rx="16" ry="19"></ellipse></svg>'
+    ];
+    const COLS = ['#16A3AF','#ED1A5F','#F58A1F','#7DB72C','#FFB300','#FFC107','#0E7A84'];
+    const PLACE = [{top:'14%',left:'5%'},{top:'19%',right:'7%'},{bottom:'15%',left:'8%'},{bottom:'21%',right:'5%'},{top:'46%',left:'3%'},{top:'58%',right:'3%'},{top:'30%',left:'12%'}];
+    const IDS = ['ak-hero','ak-story','ak-founder','ak-journey','ak-conditions','ak-explorer','ak-process','ak-impact','ak-contact'];
+    const small = window.innerWidth < 760;
+    D.querySelectorAll('[data-ak-toylayer]').forEach(l=>l.remove());
+    if(this.props && this.props.showFloatingToys === false) return;
+    const dens = (this.props && this.props.toyDensity != null) ? this.props.toyDensity : 7;
+    IDS.forEach((id,si)=>{
+      const sec = D.getElementById(id); if(!sec) return;
+      const layer = D.createElement('div');
+      layer.setAttribute('data-ak-toylayer','');
+      layer.style.cssText = 'position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0;';
+      const count = small ? Math.max(0, Math.round(dens*0.6)) : dens;
+      for(let i=0;i<count;i++){
+        const p = PLACE[(i+si)%PLACE.length];
+        const size = (small?34:48) + Math.random()*34;
+        const col = COLS[(i*2+si)%COLS.length];
+        const toy = TOYS[(i*3+si)%TOYS.length];
+        const rot = (Math.random()*40-20);
+        const outer = D.createElement('div');
+        outer.className = 'ak-toy';
+        outer.style.cssText += `width:${size}px; height:${size}px; ${Object.entries(p).map(([k,v])=>k+':'+v).join(';')}; opacity:${(0.2+Math.random()*0.16).toFixed(2)}; color:${col};`;
+        const inner = D.createElement('div');
+        inner.style.cssText = `width:100%; height:100%; --r:${rot}deg; transform:rotate(${rot}deg); animation:ak-${Math.random()>0.5?'drift':'sway'} ${10+Math.random()*8}s ease-in-out ${Math.random()*4}s infinite;`;
+        inner.innerHTML = toy;
+        const svg = inner.firstChild; if(svg && svg.setAttribute){ svg.setAttribute('width','100%'); svg.setAttribute('height','100%'); svg.style.display='block'; }
+        outer.appendChild(inner); layer.appendChild(outer);
+      }
+      sec.insertBefore(layer, sec.firstChild);
+    });
+  }
+
+  _wireInteractions(D, hasGSAP){
+    /* ---- crayon underline draw-in ---- */
+    const uls = [...D.querySelectorAll('[data-crayon-underline]')];
+    if(uls.length && 'IntersectionObserver' in window){
+      const uio = new IntersectionObserver((es)=>{
+        es.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('ak-drawn'); uio.unobserve(e.target); } });
+      }, { threshold:0.55 });
+      uls.forEach(u=>uio.observe(u));
+    }
+    /* ---- storytelling scene swapping ---- */
+    const scenes = [...D.querySelectorAll('[data-story-scene]')];
+    const panels = [...D.querySelectorAll('[data-story-panel]')];
+    if (scenes.length && panels.length && 'IntersectionObserver' in window){
+      const setScene = (i)=>{ scenes.forEach(s=>{ s.style.opacity = (+s.getAttribute('data-story-scene')===i)?'1':'0'; }); };
+      const sio = new IntersectionObserver((ents)=>{
+        ents.forEach(ent=>{ if (ent.isIntersecting) setScene(+ent.target.getAttribute('data-story-panel')); });
+      }, { threshold:0.5 });
+      panels.forEach(p=>sio.observe(p));
+    }
+
+    /* ---- interactive service explorer ---- */
+    const tabs = [...D.querySelectorAll('[data-exp-tab]')];
+    const epanels = [...D.querySelectorAll('[data-exp-panel]')];
+    if (tabs.length && epanels.length){
+      const activate = (i)=>{
+        tabs.forEach(t=>{
+          const on = +t.getAttribute('data-exp-tab')===i;
+          const col = t.getAttribute('data-col');
+          t.style.background = on ? this._hexA(col,.14) : 'transparent';
+          t.style.borderColor = on ? this._hexA(col,.45) : 'rgba(43,37,53,.1)';
+          t.style.color = on ? '#1B1622' : '#6A6478';
+        });
+        epanels.forEach(p=>{
+          const on = +p.getAttribute('data-exp-panel')===i;
+          if (on){ p.style.display='grid'; p.style.opacity='0'; p.style.transform='translateY(12px)'; p.style.transition='opacity .5s ease, transform .5s ease'; requestAnimationFrame(()=>{ p.style.opacity='1'; p.style.transform='none'; }); }
+          else { p.style.display='none'; }
+        });
+      };
+      tabs.forEach(t=> t.addEventListener('click', ()=> activate(+t.getAttribute('data-exp-tab')) ));
+    }
+
+    /* ---- journey age tabs ---- */
+    const jtabs = [...D.querySelectorAll('[data-jtab]')];
+    const jpanels = [...D.querySelectorAll('[data-jpanel]')];
+    if (jtabs.length && jpanels.length){
+      const jact = (i)=>{
+        jtabs.forEach(t=>{
+          const on = +t.getAttribute('data-jtab')===i;
+          const col = t.getAttribute('data-col');
+          t.style.background = on ? col : '#fff';
+          t.style.color = on ? '#fff' : '#2B2535';
+          t.style.border = on ? 'none' : '1px solid rgba(43,37,53,.1)';
+          t.style.boxShadow = on ? `0 10px 24px ${this._hexA(col,.28)}` : 'none';
+        });
+        jpanels.forEach(p=>{
+          const on = +p.getAttribute('data-jpanel')===i;
+          if (on){ p.style.display='grid'; p.style.opacity='0'; p.style.transform='translateY(10px)'; p.style.transition='opacity .45s ease, transform .45s ease'; requestAnimationFrame(()=>{ p.style.opacity='1'; p.style.transform='none'; }); }
+          else p.style.display='none';
+        });
+      };
+      jtabs.forEach(t=> t.addEventListener('click', ()=> jact(+t.getAttribute('data-jtab')) ));
+    }
+
+    /* ---- conditions accordion ---- */
+    D.querySelectorAll('[data-cond]').forEach(card=>{
+      const body = card.querySelector('[data-cond-body]');
+      const icon = card.querySelector('[data-cond-icon]');
+      const col = card.getAttribute('data-col');
+      card.addEventListener('click', ()=>{
+        const open = body.style.maxHeight && body.style.maxHeight !== '0px';
+        if (open){
+          body.style.maxHeight = '0px'; icon.textContent='+'; icon.style.transform='rotate(0deg)';
+          card.style.boxShadow='0 12px 30px rgba(43,37,53,.06)'; card.style.background='#fff';
+        } else {
+          body.style.maxHeight = body.scrollHeight + 'px'; icon.textContent='–'; icon.style.transform='rotate(180deg)';
+          card.style.boxShadow=`0 20px 44px ${this._hexA(col,.18)}`; card.style.background='#fff';
+        }
+      });
+    });
+
+    /* ---- contact form -> WhatsApp ---- */
+    const form = D.querySelector('[data-contact-form]');
+    if (form){
+      form.querySelectorAll('input,textarea').forEach(f=>{
+        f.addEventListener('focus', ()=>{ f.style.borderColor='#16A3AF'; });
+        f.addEventListener('blur', ()=>{ f.style.borderColor='#E7E1EC'; });
+      });
+      form.addEventListener('submit', (e)=>{
+        e.preventDefault();
+        const g = (k)=> (form.querySelector(`[data-cf="${k}"]`)||{}).value || '';
+        const name = g('name').trim(), age = g('age').trim(), phone = g('phone').trim(), msg = g('msg').trim();
+        let t = 'Hi AAKAR! 😊 I would love to book a first conversation about my child.';
+        if (name) t += `\n\nMy name: ${name}`;
+        if (age) t += `\nChild's age: ${age}`;
+        if (phone) t += `\nPhone: ${phone}`;
+        if (msg) t += `\n\nWhat's on my mind: ${msg}`;
+        window.open('https://wa.me/917838778825?text=' + encodeURIComponent(t), '_blank');
+      });
+    }
+  }
+
+  _hexA(hex, a){
+    const h = hex.replace('#','');
+    const r = parseInt(h.substring(0,2),16), g = parseInt(h.substring(2,4),16), b = parseInt(h.substring(4,6),16);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+}
+</script>
+</body>
+</html>

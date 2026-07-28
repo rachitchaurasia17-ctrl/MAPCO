@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Area Pulse - PlotMap CRM</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+                "tertiary-fixed-dim": "#b7c8e1",
+                "on-primary-fixed-variant": "#544600",
+                "on-tertiary": "#ffffff",
+                "tertiary-container": "#cadbf5",
+                "surface-container-highest": "#e2e2e2",
+                "tertiary-fixed": "#d3e4fe",
+                "surface-bright": "#f9f9f9",
+                "on-error-container": "#93000a",
+                "on-secondary-fixed-variant": "#3f465c",
+                "on-tertiary-fixed": "#0b1c30",
+                "inverse-surface": "#2f3131",
+                "on-surface": "#1a1c1c",
+                "on-primary-fixed": "#221b00",
+                "secondary-fixed": "#dae2fd",
+                "on-secondary": "#ffffff",
+                "surface-container-high": "#e8e8e8",
+                "on-error": "#ffffff",
+                "inverse-on-surface": "#f0f1f1",
+                "surface-tint": "#705d00",
+                "surface-variant": "#e2e2e2",
+                "on-tertiary-fixed-variant": "#38485d",
+                "background": "#f9f9f9",
+                "on-secondary-container": "#5c647a",
+                "surface-dim": "#dadada",
+                "error-container": "#ffdad6",
+                "secondary-container": "#dae2fd",
+                "on-background": "#1a1c1c",
+                "error": "#ba1a1a",
+                "secondary": "#565e74",
+                "inverse-primary": "#e9c400",
+                "surface-container-low": "#f3f3f3",
+                "primary-fixed-dim": "#e9c400",
+                "outline": "#7e775f",
+                "tertiary": "#505f76",
+                "surface": "#f9f9f9",
+                "primary-container": "#ffd700",
+                "surface-container": "#eeeeee",
+                "surface-container-lowest": "#ffffff",
+                "on-tertiary-container": "#506076",
+                "primary": "#705d00",
+                "on-surface-variant": "#4d4732",
+                "on-primary-container": "#705e00",
+                "secondary-fixed-dim": "#bec6e0",
+                "on-secondary-fixed": "#131b2e",
+                "primary-fixed": "#ffe16d",
+                "on-primary": "#ffffff",
+                "outline-variant": "#d0c6ab"
+        },
+        "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+        },
+        "spacing": {
+                "unit": "8px",
+                "margin-desktop": "64px",
+                "margin-mobile": "20px",
+                "gutter": "24px",
+                "container-max": "1440px"
+        },
+        "fontFamily": {
+                "headline-xl": [
+                        "Inter"
+                ],
+                "headline-md": [
+                        "Inter"
+                ],
+                "label-sm": [
+                        "Inter"
+                ],
+                "label-md": [
+                        "Inter"
+                ],
+                "body-md": [
+                        "Inter"
+                ],
+                "headline-lg-mobile": [
+                        "Inter"
+                ],
+                "headline-lg": [
+                        "Inter"
+                ],
+                "body-lg": [
+                        "Inter"
+                ]
+        },
+        "fontSize": {
+                "headline-xl": [
+                        "48px",
+                        {
+                                "lineHeight": "56px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "headline-md": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "label-sm": [
+                        "12px",
+                        {
+                                "lineHeight": "16px",
+                                "letterSpacing": "0",
+                                "fontWeight": "500"
+                        }
+                ],
+                "label-md": [
+                        "14px",
+                        {
+                                "lineHeight": "20px",
+                                "letterSpacing": "0.05em",
+                                "fontWeight": "600"
+                        }
+                ],
+                "body-md": [
+                        "16px",
+                        {
+                                "lineHeight": "24px",
+                                "letterSpacing": "0",
+                                "fontWeight": "400"
+                        }
+                ],
+                "headline-lg-mobile": [
+                        "24px",
+                        {
+                                "lineHeight": "32px",
+                                "letterSpacing": "-0.01em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "headline-lg": [
+                        "32px",
+                        {
+                                "lineHeight": "40px",
+                                "letterSpacing": "-0.02em",
+                                "fontWeight": "700"
+                        }
+                ],
+                "body-lg": [
+                        "18px",
+                        {
+                                "lineHeight": "28px",
+                                "letterSpacing": "0",
+                                "fontWeight": "400"
+                        }
+                ]
+        }
+},
+    },
+  }
+</script>
+<style>.material-symbols-outlined {
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24
+    }
+.icon-fill {
+    font-variation-settings: "FILL" 1
+    }
+/* Map Background Simulation */
+.map-bg {
+    background-image: url(https://lh3.googleusercontent.com/aida-public/AB6AXuBaMWw6KPbzg7U3AuOFVkpzCu0PsXxVzt-gVjibwIWxM8UV_fdfXvQ3TQbuxwlYAmiAb3Golk6H1n2DuhE17ehYTyrIBXTGjxt5BpqXYEY21jAVUcpEOaQVyXsTsMdSfuBYUFRCfOqiOBJ9nhwSQBPG6lDDGlQUBbYRcgmywVQyOhCGu4w4VGvlWBsJiX15KQ4e1ggfOP1TrpCHCWvc_epfuRYCrZRapMP2YWJ2eKXi_cdcjaFcPWJLRSQK8oWMozNc1A1bkNbr3YI);
+    background-size: cover;
+    background-position: center
+    }
+.glass-panel {
+    background-color: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(208, 198, 171, 0.4)
+    }
+.pulse-dot {
+    animation: pulse 2s infinite
+    }
+@keyframes pulse {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7);
+        } 70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 10px rgba(255, 215, 0, 0);
+        } 100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
+        }
+    }</style>
+</head>
+<body class="bg-background text-on-background font-body-md min-h-screen flex flex-col overflow-hidden">
+<!-- Top Navigation -->
+<nav class="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 h-[72px] bg-surface/80 backdrop-blur-xl border-b border-outline-variant/30 shadow-sm transition-all">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-3">
+<img alt="Dealer Command Center Logo" class="w-10 h-10 rounded-lg object-cover" data-alt="A minimalist, premium logo for a property management command center." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmku4gQ1kiRfyaRXw7FmaAP_A3fUXFmI2Yiw8bdS6Czqua0hW2Vh_0-bZcoTA-p1_XMu9sL7t5hxfHAYynkJZU-_tLfjA8lPZJxU7bU36faapmm4Dw57o3RmU7VaMywm_JmPwIyrCgo87wDhQ89HX6SO7tkFspK9n11SP41z3WLmAWrg6q8JR3E6VKTKB7wNOfoOtIyIsgSvhWb6u-ti5IeB7HcMWX39_WRS_m4HpD_lvt2Ob7ziCKKQQsRdyBdyjUh2v_C_4F_d0"/>
+<div class="hidden md:block">
+<h1 class="font-headline-md text-[18px] font-bold text-primary leading-tight">Dealer Command</h1>
+</div>
+</div>
+<div class="hidden lg:flex items-center gap-2">
+<a class="text-on-surface-variant flex items-center px-4 py-2 hover:bg-surface-container-high rounded-full transition-all" href="#">
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<a class="bg-primary-container text-on-primary-container rounded-full font-bold flex items-center px-4 py-2 transition-all shadow-sm" href="#">
+<span class="font-label-md text-label-md">Area Intelligence</span>
+</a>
+<a class="text-on-surface-variant flex items-center px-4 py-2 hover:bg-surface-container-high rounded-full transition-all" href="#">
+<span class="font-label-md text-label-md">Client Details</span>
+</a>
+<a class="text-on-surface-variant flex items-center px-4 py-2 hover:bg-surface-container-high rounded-full transition-all" href="#">
+<span class="font-label-md text-label-md">Property Insights</span>
+</a>
+<a class="text-on-surface-variant flex items-center px-4 py-2 hover:bg-surface-container-high rounded-full transition-all" href="#">
+<span class="font-label-md text-label-md">Workspace</span>
+</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-primary hover:bg-primary-container/50 px-4 py-2 rounded-full transition-colors duration-200 font-label-md text-label-md border border-primary/20 hidden md:flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]" data-icon="map">map</span>
+            Map Studio
+        </button>
+<button class="bg-primary text-on-primary font-label-md text-label-md px-6 py-2 rounded-full hover:opacity-90 transition-opacity flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px]" data-icon="add">add</span>
+            Add Property
+        </button>
+<button class="lg:hidden text-on-surface-variant hover:text-primary transition-colors duration-200">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 relative mt-[72px] h-[calc(100vh-72px)]">
+<!-- Map Background Layer (Level 0) -->
+<div class="absolute inset-0 map-bg z-0" data-alt="A high-resolution, stylized digital map of Chandigarh region, viewed from a top-down perspective." data-location="Chandigarh" style="">
+<!-- Simulated Map Overlay/Tint to ensure readability -->
+<div class="absolute inset-0 bg-surface/30"></div>
+</div>
+<!-- Scrollable Content Canvas (Level 1) -->
+<div class="relative z-10 h-full overflow-y-auto px-6 md:px-margin-desktop py-8 space-y-8">
+<!-- Page Header -->
+<div class="glass-panel rounded-xl p-6 shadow-sm inline-block">
+<h2 class="font-headline-xl text-headline-xl text-primary mb-2">Area Intelligence</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-fixed-dim" data-icon="info">info</span>
+                    Based on your business activity
+                </p>
+</div>
+<!-- Intelligence Cards Bento Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+<!-- Card 1: Aerocity -->
+<div class="glass-panel rounded-xl p-6 shadow-md border border-outline-variant/30 flex flex-col relative overflow-hidden group hover:shadow-lg transition-shadow">
+<div class="absolute top-0 left-0 w-1 h-full bg-primary-container"></div>
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="font-headline-md text-headline-md text-primary">Aerocity</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Mohali South</p>
+</div>
+<div class="flex items-center gap-1 bg-primary-container/20 px-3 py-1 rounded-full border border-primary-container/30">
+<div class="w-2 h-2 rounded-full bg-primary pulse-dot"></div>
+<span class="font-label-sm text-label-sm text-primary">High Interest</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-6">
+<div class="bg-surface-container-low p-3 rounded-lg border border-outline-variant/20">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-outline text-[16px]" data-icon="person">person</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Client Reqs</span>
+</div>
+<div class="font-headline-lg text-headline-lg text-primary">24</div>
+</div>
+<div class="bg-surface-container-low p-3 rounded-lg border border-outline-variant/20">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-outline text-[16px]" data-icon="map">map</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Map Opens</span>
+</div>
+<div class="font-headline-lg text-headline-lg text-primary">156</div>
+</div>
+</div>
+<div class="space-y-3 flex-grow">
+<div class="flex justify-between items-center text-sm">
+<span class="text-on-surface-variant flex items-center gap-2 font-body-md">
+<span class="material-symbols-outlined text-[18px]" data-icon="visibility">visibility</span> Property Views
+                            </span>
+<span class="font-label-md text-primary">342</span>
+</div>
+<div class="flex justify-between items-center text-sm">
+<span class="text-on-surface-variant flex items-center gap-2 font-body-md">
+<span class="material-symbols-outlined text-[18px]" data-icon="share">share</span> WhatsApp Shares
+                            </span>
+<span class="font-label-md text-primary">89</span>
+</div>
+<div class="flex justify-between items-center text-sm">
+<span class="text-on-surface-variant flex items-center gap-2 font-body-md">
+<span class="material-symbols-outlined text-[18px]" data-icon="inventory">inventory</span> Inventory Matches
+                            </span>
+<span class="font-label-md text-primary-fixed-dim">12</span>
+</div>
+</div>
+<button class="mt-6 w-full py-3 bg-primary-container text-on-primary-container rounded-lg font-label-md text-label-md hover:bg-primary hover:text-on-primary transition-colors flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-[20px]" data-icon="explore">explore</span> Explore Map
+                    </button>
+</div>
+<!-- Card 2: IT City -->
+<div class="glass-panel rounded-xl p-6 shadow-md border border-outline-variant/30 flex flex-col relative overflow-hidden group hover:shadow-lg transition-shadow">
+<div class="absolute top-0 left-0 w-1 h-full bg-secondary-fixed"></div>
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="font-headline-md text-headline-md text-primary">IT City</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Airport Road</p>
+</div>
+<div class="flex items-center gap-1 bg-secondary-fixed/30 px-3 py-1 rounded-full border border-secondary-fixed/50">
+<span class="material-symbols-outlined text-secondary text-[16px]" data-icon="trending_up">trending_up</span>
+<span class="font-label-sm text-label-sm text-secondary">Rising</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-6">
+<div class="bg-surface-container-low p-3 rounded-lg border border-outline-variant/20">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-outline text-[16px]" data-icon="person">person</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Client Reqs</span>
+</div>
+<div class="font-headline-lg text-headline-lg text-primary">18</div>
+</div>
+<div class="bg-surface-container-low p-3 rounded-lg border border-outline-variant/20">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-outline text-[16px]" data-icon="map">map</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Map Opens</span>
+</div>
+<div class="font-headline-lg text-headline-lg text-primary">94</div>
+</div>
+</div>
+<div class="space-y-3 flex-grow">
+<div class="flex justify-between items-center text-sm">
+<span class="text-on-surface-variant flex items-center gap-2 font-body-md">
+<span class="material-symbols-outlined text-[18px]" data-icon="visibility">visibility</span> Property Views
+                            </span>
+<span class="font-label-md text-primary">187</span>
+</div>
+<div class="flex justify-between items-center text-sm">
+<span class="text-on-surface-variant flex items-center gap-2 font-body-md">
+<span class="material-symbols-outlined text-[18px]" data-icon="share">share</span> WhatsApp Shares
+                            </span>
+<span class="font-label-md text-primary">42</span>
+</div>
+<div class="flex justify-between items-center text-sm">
+<span class="text-on-surface-variant flex items-center gap-2 font-body-md">
+<span class="material-symbols-outlined text-[18px]" data-icon="inventory">inventory</span> Inventory Matches
+                            </span>
+<span class="font-label-md text-primary-fixed-dim">8</span>
+</div>
+</div>
+<button class="mt-6 w-full py-3 border border-outline-variant text-on-surface rounded-lg font-label-md text-label-md hover:bg-surface-container transition-colors flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-[20px]" data-icon="explore">explore</span> Explore Map
+                    </button>
+</div>
+<!-- Card 3: New Chandigarh -->
+<div class="glass-panel rounded-xl p-6 shadow-md border border-outline-variant/30 flex flex-col relative overflow-hidden group hover:shadow-lg transition-shadow">
+<div class="absolute top-0 left-0 w-1 h-full bg-outline-variant"></div>
+<div class="flex justify-between items-start mb-4">
+<div>
+<h3 class="font-headline-md text-headline-md text-primary">New Chandigarh</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Eco City Area</p>
+</div>
+<div class="flex items-center gap-1 bg-surface-container px-3 py-1 rounded-full border border-outline-variant/30">
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]" data-icon="horizontal_rule">horizontal_rule</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Stable</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 mb-6">
+<div class="bg-surface-container-low p-3 rounded-lg border border-outline-variant/20">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-outline text-[16px]" data-icon="person">person</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Client Reqs</span>
+</div>
+<div class="font-headline-lg text-headline-lg text-primary">12</div>
+</div>
+<div class="bg-surface-container-low p-3 rounded-lg border border-outline-variant/20">
+<div class="flex items-center gap-2 mb-1">
+<span class="material-symbols-outlined text-outline text-[16px]" data-icon="map">map</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Map Opens</span>
+</div>
+<div class="font-headline-lg text-headline-lg text-primary">62</div>
+</div>
+</div>
+<div class="space-y-3 flex-grow">
+<div class="flex justify-between items-center text-sm">
+<span class="text-on-surface-variant flex items-center gap-2 font-body-md">
+<span class="material-symbols-outlined text-[18px]" data-icon="visibility">visibility</span> Property Views
+                            </span>
+<span class="font-label-md text-primary">105</span>
+</div>
+<div class="flex justify-between items-center text-sm">
+<span class="text-on-surface-variant flex items-center gap-2 font-body-md">
+<span class="material-symbols-outlined text-[18px]" data-icon="share">share</span> WhatsApp Shares
+                            </span>
+<span class="font-label-md text-primary">28</span>
+</div>
+<div class="flex justify-between items-center text-sm">
+<span class="text-on-surface-variant flex items-center gap-2 font-body-md">
+<span class="material-symbols-outlined text-[18px]" data-icon="inventory">inventory</span> Inventory Matches
+                            </span>
+<span class="font-label-md text-primary-fixed-dim">4</span>
+</div>
+</div>
+<button class="mt-6 w-full py-3 border border-outline-variant text-on-surface rounded-lg font-label-md text-label-md hover:bg-surface-container transition-colors flex justify-center items-center gap-2">
+<span class="material-symbols-outlined text-[20px]" data-icon="explore">explore</span> Explore Map
+                    </button>
+</div>
+</div>
+<!-- Map Activity Insights Section -->
+<div class="mt-8 pb-12">
+<div class="glass-panel rounded-xl p-6 shadow-sm border border-outline-variant/30">
+<h3 class="font-headline-md text-headline-md text-primary mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined icon-fill text-primary-container" data-icon="insights">insights</span>
+                        Map Activity Insights
+                    </h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Most Opened Map Areas -->
+<div class="bg-surface-container-lowest rounded-lg p-5 border border-outline-variant/20 shadow-sm">
+<h4 class="font-label-sm text-label-sm text-on-surface-variant mb-4 uppercase tracking-wider">Most Opened Zones</h4>
+<ul class="space-y-3">
+<li class="flex justify-between items-center">
+<span class="font-body-md text-on-surface flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-primary-container"></span> Block C, Aerocity
+                                    </span>
+<span class="font-label-md text-primary">45%</span>
+</li>
+<li class="flex justify-between items-center">
+<span class="font-body-md text-on-surface flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-secondary-fixed"></span> IT Park Sec 82
+                                    </span>
+<span class="font-label-md text-primary">30%</span>
+</li>
+<li class="flex justify-between items-center">
+<span class="font-body-md text-on-surface flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-outline-variant"></span> Omaxe Phase 2
+                                    </span>
+<span class="font-label-md text-primary">15%</span>
+</li>
+</ul>
+<div class="mt-4 pt-4 border-t border-outline-variant/20">
+<div class="w-full h-3 bg-surface-variant rounded-full overflow-hidden flex">
+<div class="h-full bg-primary-container" style="width: 45%"></div>
+<div class="h-full bg-secondary-fixed" style="width: 30%"></div>
+<div class="h-full bg-outline-variant" style="width: 15%"></div>
+<div class="h-full bg-surface-tint" style="width: 10%"></div>
+</div>
+</div>
+</div>
+<!-- 3D vs Original Proof -->
+<div class="bg-surface-container-lowest rounded-lg p-5 border border-outline-variant/20 shadow-sm flex flex-col justify-between">
+<h4 class="font-label-sm text-label-sm text-on-surface-variant mb-4 uppercase tracking-wider">View Mode Preference</h4>
+<div class="flex justify-center items-end gap-8 h-32 mb-4">
+<!-- Bar 1 -->
+<div class="flex flex-col items-center gap-2 w-16">
+<span class="font-label-md text-primary">68%</span>
+<div class="w-full bg-primary-container rounded-t-md transition-all duration-500" style="height: 68%;"></div>
+<span class="font-label-sm text-on-surface-variant text-center">3D Proof</span>
+</div>
+<!-- Bar 2 -->
+<div class="flex flex-col items-center gap-2 w-16">
+<span class="font-label-md text-primary">32%</span>
+<div class="w-full bg-surface-tint rounded-t-md transition-all duration-500" style="height: 32%;"></div>
+<span class="font-label-sm text-on-surface-variant text-center">Original</span>
+</div>
+</div>
+<p class="font-body-md text-on-surface-variant text-center mt-2">Clients prefer 3D immersive views for high-value plots.</p>
+</div>
+<!-- Direct Map Opens -->
+<div class="bg-surface-container-lowest rounded-lg p-5 border border-outline-variant/20 shadow-sm">
+<h4 class="font-label-sm text-label-sm text-on-surface-variant mb-4 uppercase tracking-wider">Direct Map Interactions</h4>
+<div class="flex flex-col items-center justify-center h-full pb-4">
+<div class="relative mb-4">
+<span class="material-symbols-outlined text-[56px] text-primary" data-icon="location_on">location_on</span>
+<span class="absolute top-1 right-1 w-4 h-4 bg-primary-container rounded-full border-2 border-white pulse-dot"></span>
+</div>
+<div class="font-headline-xl text-headline-xl text-primary mb-2">1,204</div>
+<p class="font-body-md text-on-surface-variant text-center px-4">Properties opened directly via map pins this month.</p>
+<span class="font-label-sm text-primary-fixed-dim mt-3 flex items-center gap-1 bg-primary-container/10 px-3 py-1 rounded-full">
+<span class="material-symbols-outlined text-[16px]" data-icon="arrow_upward">arrow_upward</span> 12% vs last month
+                                </span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

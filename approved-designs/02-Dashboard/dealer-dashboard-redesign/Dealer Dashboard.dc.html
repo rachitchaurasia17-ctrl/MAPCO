@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:#f4f1ea;color:#211d17;font-family:'Hanken Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  a{color:#175c43;text-decoration:none}
+  a:hover{color:#0f4a35}
+  ::selection{background:#e7c877;color:#211d17}
+  button{font-family:inherit;cursor:pointer;border:none;background:none}
+  input,select{font-family:inherit}
+  [data-scroll]::-webkit-scrollbar{width:10px;height:10px}
+  [data-scroll]::-webkit-scrollbar-thumb{background:#d7cfbe;border-radius:9px;border:3px solid transparent;background-clip:content-box}
+  [data-scroll]::-webkit-scrollbar-track{background:transparent}
+  @keyframes omFade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  @keyframes omSlide{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:none}}
+  @keyframes omPop{from{opacity:0;transform:scale(.975)}to{opacity:1;transform:none}}
+  @keyframes omVeil{from{opacity:0}to{opacity:1}}
+</style>
+</helmet>
+<div style="display:flex;min-height:100vh;width:100%;background:#f4f1ea">
+
+  <aside style="width:266px;flex:none;position:sticky;top:0;height:100vh;background:#123f2e;background-image:linear-gradient(180deg,#164a37 0%,#123f2e 55%,#0f3728 100%);display:flex;flex-direction:column;border-right:1px solid #0c2f22">
+    <div style="display:flex;align-items:center;gap:12px;padding:26px 24px 8px">
+      <div style="width:36px;height:36px;border-radius:50%;border:2.5px solid #e7c877;display:grid;place-items:center;flex:none">
+        <div style="width:12px;height:12px;border-radius:50%;background:#e7c877"></div>
+      </div>
+      <div style="font-weight:800;font-size:21px;letter-spacing:-.015em;color:#f3f6f1">PlotMap</div>
+    </div>
+    <div style="padding:8px 20px 4px;font-size:11px;font-weight:700;letter-spacing:.16em;color:#5f8a76;text-transform:uppercase">Your business</div>
+    <nav style="display:flex;flex-direction:column;gap:3px;padding:6px 16px 0">
+      <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="5">
+        <button onClick="{{ n.go }}" style="{{ n.style }}" style-hover="background:#1b5641;color:#f3f6f1">
+          <i class="{{ n.icon }}" style="font-size:21px;line-height:1"></i>
+          <span style="font-size:15.5px;font-weight:600;letter-spacing:-.01em">{{ n.label }}</span>
+          <span style="{{ n.badgeStyle }}">{{ n.badge }}</span>
+        </button>
+      </sc-for>
+    </nav>
+    <div style="flex:1"></div>
+    <div style="padding:16px 18px 8px">
+      <button style="width:100%;display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:15px;background:#e7c877;color:#173a2b;text-align:left;box-shadow:0 8px 22px -12px rgba(0,0,0,.6)" style-hover="background:#eecf85">
+        <i class="ph-fill ph-projector-screen-chart" style="font-size:23px"></i>
+        <span style="display:block">
+          <span style="display:block;font-size:15px;font-weight:800;letter-spacing:-.01em">Open Presentation</span>
+          <span style="display:block;font-size:12px;font-weight:600;color:#5c6f2a;opacity:.85">Show a buyer the map</span>
+        </span>
+      </button>
+    </div>
+    <div style="display:flex;align-items:center;gap:11px;padding:12px 20px 20px;margin-top:6px;border-top:1px solid #1c4d3a">
+      <div style="width:38px;height:38px;border-radius:50%;background:#e7c877;color:#173a2b;display:grid;place-items:center;font-weight:800;font-size:15px;flex:none">{{ ownerInitials }}</div>
+      <div style="min-width:0;flex:1">
+        <div style="font-size:14px;font-weight:700;color:#eef3ef;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ ownerName }}</div>
+        <div style="font-size:12px;color:#6d9784;font-weight:600">Owner · {{ bizName }}</div>
+      </div>
+      <i class="ph ph-gear-six" style="font-size:19px;color:#6d9784"></i>
+    </div>
+  </aside>
+
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+    <header style="display:flex;align-items:center;gap:18px;padding:16px 34px;border-bottom:1px solid #e6e0d3;background:rgba(244,241,234,.86);backdrop-filter:blur(8px);position:sticky;top:0;z-index:30">
+      <label style="display:flex;align-items:center;gap:10px;flex:1;max-width:440px;background:#fffdf9;border:1px solid #e6e0d3;border-radius:12px;padding:10px 14px">
+        <i class="ph ph-magnifying-glass" style="font-size:18px;color:#9a9384"></i>
+        <input placeholder="Search clients, plots, sectors, deals…" style="border:none;outline:none;background:none;width:100%;font-size:14.5px;color:#211d17"/>
+      </label>
+      <div style="flex:1"></div>
+      <div style="display:flex;align-items:center;gap:8px;color:#6f6a5c;font-size:14px;font-weight:600"><i class="ph ph-calendar-blank" style="font-size:17px"></i>{{ dateStr }}</div>
+      <div style="width:1px;height:22px;background:#ddd6c7"></div>
+      <div style="display:flex;align-items:center;gap:7px;background:#efe7d3;color:#8a6a1f;border-radius:999px;padding:6px 13px;font-size:12.5px;font-weight:700"><i class="ph-fill ph-seal-check" style="font-size:15px"></i>Trial · 12 days left</div>
+    </header>
+
+    <div data-scroll style="flex:1;overflow:auto">
+      <sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ true }}">
+      <div style="max-width:1200px;margin:0 auto;padding:30px 34px 64px;animation:omFade .45s ease both">
+
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:24px">
+          <div style="min-width:0">
+            <h1 style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:33px;line-height:1.12;letter-spacing:-.015em;color:#1c1a15;text-wrap:balance">{{ greeting }}, {{ ownerFirst }}.</h1>
+            <p style="margin:9px 0 0;font-size:16px;color:#6f6a5c">Here is where your property business stands today.</p>
+          </div>
+          <div style="display:flex;gap:10px;flex:none">
+            <button style="display:flex;align-items:center;gap:9px;padding:12px 18px;border-radius:13px;background:#175c43;color:#fff;font-size:14.5px;font-weight:700;white-space:nowrap;box-shadow:0 10px 24px -14px rgba(23,92,67,.9)" style-hover="background:#0f4a35"><i class="ph-fill ph-projector-screen-chart" style="font-size:18px"></i>Open Presentation</button>
+            <button onClick="{{ openAdd }}" style="display:flex;align-items:center;gap:8px;padding:12px 18px;border-radius:13px;background:#fffdf9;border:1px solid #e0dacc;color:#3a352a;font-size:14.5px;font-weight:700;white-space:nowrap" style-hover="border-color:#175c43;color:#175c43"><i class="ph ph-plus" style="font-size:17px"></i>Record a deal</button>
+          </div>
+        </div>
+
+        <section style="border-radius:24px;padding:30px 34px;background:#123f2e;background-image:radial-gradient(120% 140% at 100% 0,#1c5c43 0,#123f2e 55%,#0e3527 100%);color:#eaf2ec;position:relative;overflow:hidden;box-shadow:0 26px 60px -34px rgba(15,55,40,.85)">
+          <div style="position:absolute;right:-40px;top:-60px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(231,200,119,.16),transparent 70%)"></div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:36px;flex-wrap:wrap;position:relative">
+            <div style="min-width:230px">
+              <div style="font-size:12px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:#8fb6a3">In your pipeline</div>
+              <div style="font-family:'Newsreader',serif;font-weight:500;font-size:62px;line-height:1.02;letter-spacing:-.02em;color:#fff;margin-top:8px">{{ pipelineFmt }}</div>
+              <div style="font-size:15.5px;color:#a9c6b8;margin-top:8px">Across <b style="color:#e7c877;font-weight:700">{{ activeCount }} live deals</b> in negotiation, token & registry.</div>
+              <div style="display:inline-flex;align-items:center;gap:8px;margin-top:16px;background:rgba(231,200,119,.14);border:1px solid rgba(231,200,119,.3);color:#eecf85;border-radius:999px;padding:7px 14px;font-size:13.5px;font-weight:700"><i class="ph-fill ph-coins" style="font-size:16px"></i>{{ expCommFmt }} commission expected</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;min-width:300px;flex:1;max-width:440px">
+              <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:16px 18px">
+                <div style="font-size:12.5px;color:#9fbfae;font-weight:600">At registry stage</div>
+                <div style="font-family:'Newsreader',serif;font-size:32px;color:#fff;margin-top:2px">{{ registryCount }} <span style="font-size:15px;color:#9fbfae;font-family:'Hanken Grotesk'">deal</span></div>
+                <div style="font-size:12.5px;color:#e7c877;font-weight:600;margin-top:2px">Almost closed</div>
+              </div>
+              <div style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:16px 18px">
+                <div style="font-size:12.5px;color:#9fbfae;font-weight:600">Closed this month</div>
+                <div style="font-family:'Newsreader',serif;font-size:32px;color:#fff;margin-top:2px">{{ closedValFmt }}</div>
+                <div style="font-size:12.5px;color:#8fb6a3;font-weight:600;margin-top:2px">{{ closedCommFmt }} earned</div>
+              </div>
+              <div style="grid-column:1/3;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between">
+                <div style="font-size:13.5px;color:#c7ddd1">Full deal register with seller & paperwork</div>
+                <button onClick="{{ goDeals }}" style="display:flex;align-items:center;gap:6px;color:#e7c877;font-size:13.5px;font-weight:700" style-hover="color:#fff">Open Deals<i class="ph-bold ph-arrow-right" style="font-size:14px"></i></button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin:30px 0 14px">
+          <div style="display:flex;align-items:center;gap:10px;font-size:12.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#9a9384">Today from your presentations</div>
+          <div style="display:flex;align-items:center;gap:7px;font-size:12.5px;color:#8a8578;font-weight:600"><span style="width:7px;height:7px;border-radius:50%;background:#4a9e78;box-shadow:0 0 0 4px rgba(74,158,120,.18)"></span>Live · updates automatically</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px">
+          <div style="background:#fffdf9;border:1px solid #e8e3d6;border-radius:18px;padding:20px 22px;box-shadow:0 1px 2px rgba(30,28,22,.03),0 12px 30px -24px rgba(30,28,22,.5)">
+            <div style="display:flex;align-items:center;gap:8px;color:#6f6a5c;font-size:14px;font-weight:600"><i class="ph ph-users-three" style="font-size:18px;color:#175c43"></i>Client sessions</div>
+            <div style="font-family:'Newsreader',serif;font-weight:500;font-size:46px;line-height:1;color:#175c43;margin-top:10px">{{ tSessions }}</div>
+            <div style="font-size:13px;color:#9a9384;margin-top:6px">buyers seen today</div>
+          </div>
+          <div style="background:#fffdf9;border:1px solid #e8e3d6;border-radius:18px;padding:20px 22px;box-shadow:0 1px 2px rgba(30,28,22,.03),0 12px 30px -24px rgba(30,28,22,.5)">
+            <div style="display:flex;align-items:center;gap:8px;color:#6f6a5c;font-size:14px;font-weight:600"><i class="ph ph-map-trifold" style="font-size:18px;color:#2e5f86"></i>Map opens</div>
+            <div style="font-family:'Newsreader',serif;font-weight:500;font-size:46px;line-height:1;color:#2e5f86;margin-top:10px">{{ tMapOpens }}</div>
+            <div style="font-size:13px;color:#9a9384;margin-top:6px">areas explored on screen</div>
+          </div>
+          <div style="background:#fffdf9;border:1px solid #e8e3d6;border-radius:18px;padding:20px 22px;box-shadow:0 1px 2px rgba(30,28,22,.03),0 12px 30px -24px rgba(30,28,22,.5)">
+            <div style="display:flex;align-items:center;gap:8px;color:#6f6a5c;font-size:14px;font-weight:600"><i class="ph ph-eye" style="font-size:18px;color:#a97d24"></i>Property views</div>
+            <div style="font-family:'Newsreader',serif;font-weight:500;font-size:46px;line-height:1;color:#a97d24;margin-top:10px">{{ tPropViews }}</div>
+            <div style="font-size:13px;color:#9a9384;margin-top:6px">plots opened for buyers</div>
+          </div>
+          <div style="background:#fffdf9;border:1px solid #e8e3d6;border-radius:18px;padding:20px 22px;box-shadow:0 1px 2px rgba(30,28,22,.03),0 12px 30px -24px rgba(30,28,22,.5)">
+            <div style="display:flex;align-items:center;gap:8px;color:#6f6a5c;font-size:14px;font-weight:600"><i class="ph ph-fire" style="font-size:18px;color:#a8482f"></i>Hottest area</div>
+            <div style="font-family:'Newsreader',serif;font-weight:500;font-size:27px;line-height:1.05;color:#1c1a15;margin-top:14px">{{ tTopArea }}</div>
+            <div style="font-size:13px;color:#9a9384;margin-top:6px">most attention today</div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1.35fr 1fr;gap:20px;margin-top:24px">
+          <div style="background:#fffdf9;border:1px solid #e8e3d6;border-radius:20px;padding:24px;box-shadow:0 1px 2px rgba(30,28,22,.03),0 12px 30px -24px rgba(30,28,22,.5)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+              <h3 style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:21px;color:#1c1a15">Where clients are looking</h3>
+              <button onClick="{{ goAreas }}" style="display:flex;align-items:center;gap:5px;color:#175c43;font-size:13.5px;font-weight:700">All areas<i class="ph-bold ph-arrow-right" style="font-size:13px"></i></button>
+            </div>
+            <p style="margin:0 0 16px;font-size:13.5px;color:#9a9384">Straight from what buyers open in your presentations.</p>
+            <div style="display:flex;flex-direction:column;gap:14px">
+              <sc-for list="{{ topAreas }}" as="a" hint-placeholder-count="4">
+                <div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                    <div style="display:flex;align-items:center;gap:9px">
+                      <span style="font-size:15px;font-weight:700;color:#2b2820">{{ a.name }}</span>
+                      <span style="{{ a.flagStyle }}">{{ a.flag }}</span>
+                    </div>
+                    <span style="font-size:13px;color:#8a8578;font-weight:600">{{ a.opens }} opens</span>
+                  </div>
+                  <div style="height:9px;border-radius:999px;background:#efece3;overflow:hidden"><div style="{{ a.barStyle }}"></div></div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="background:#fffdf9;border:1px solid #e8e3d6;border-radius:20px;padding:24px;box-shadow:0 1px 2px rgba(30,28,22,.03),0 12px 30px -24px rgba(30,28,22,.5)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+              <h3 style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:21px;color:#1c1a15">Your inventory</h3>
+              <button onClick="{{ goProps }}" style="display:flex;align-items:center;gap:5px;color:#175c43;font-size:13.5px;font-weight:700">Details<i class="ph-bold ph-arrow-right" style="font-size:13px"></i></button>
+            </div>
+            <div style="display:flex;align-items:baseline;gap:8px">
+              <span style="font-family:'Newsreader',serif;font-weight:500;font-size:40px;color:#175c43;line-height:1">{{ portfolioFmt }}</span>
+            </div>
+            <div style="font-size:13.5px;color:#9a9384;margin-top:2px">live portfolio value · {{ availCount }} plots ready to show</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px">
+              <div style="background:#f4f7f2;border:1px solid #e3ece5;border-radius:13px;padding:12px 14px"><div style="font-size:13px;color:#5b7a6a;font-weight:600">Available</div><div style="font-size:24px;font-weight:800;color:#175c43">{{ availCount }}</div></div>
+              <div style="background:#f8f3e8;border:1px solid #eee2c9;border-radius:13px;padding:12px 14px"><div style="font-size:13px;color:#8a6a1f;font-weight:600">On hold</div><div style="font-size:24px;font-weight:800;color:#a97d24">{{ holdCount }}</div></div>
+              <div style="background:#eef2f6;border:1px solid #dde7ef;border-radius:13px;padding:12px 14px"><div style="font-size:13px;color:#3f6285;font-weight:600">Sold</div><div style="font-size:24px;font-weight:800;color:#2e5f86">{{ soldCount }}</div></div>
+              <div style="background:#f7efec;border:1px solid #efe2d4;border-radius:13px;padding:12px 14px"><div style="font-size:13px;color:#8a6f52;font-weight:600">Needs work</div><div style="font-size:24px;font-weight:800;color:#9a3b2b">{{ needsWorkCount }}</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#fffdf9;border:1px solid #e8e3d6;border-radius:20px;padding:24px;margin-top:24px;box-shadow:0 1px 2px rgba(30,28,22,.03),0 12px 30px -24px rgba(30,28,22,.5)">
+          <h3 style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:21px;color:#1c1a15">Recent client journeys</h3>
+          <p style="margin:6px 0 18px;font-size:13.5px;color:#9a9384">What each buyer walked through on screen — so you remember the conversation.</p>
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <sc-for list="{{ journeys }}" as="j" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:16px;padding:14px 16px;border:1px solid #ece7db;border-radius:15px;background:#fdfbf5" style-hover="border-color:#d8d0bd">
+                <div style="width:42px;height:42px;border-radius:50%;background:#e7ede8;color:#175c43;display:grid;place-items:center;font-weight:800;font-size:15px;flex:none">{{ j.initials }}</div>
+                <div style="min-width:150px">
+                  <div style="font-size:15px;font-weight:700;color:#2b2820">{{ j.client }}</div>
+                  <div style="font-size:12.5px;color:#9a9384">{{ j.when }}</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;flex:1">
+                  <sc-for list="{{ j.chips }}" as="c" hint-placeholder-count="4">
+                    <span style="{{ c.style }}">{{ c.label }}</span>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+      </div>
+      </sc-if>
+      <sc-if value="{{ isDeals }}">
+      <div style="max-width:1200px;margin:0 auto;padding:30px 34px 64px;animation:omFade .4s ease both">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:20px">
+          <div>
+            <h1 style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:34px;letter-spacing:-.015em;color:#1c1a15">Deals</h1>
+            <p style="margin:7px 0 0;font-size:15.5px;color:#6f6a5c">Your deal register — value, commission, seller & paperwork, all in one book.</p>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="display:inline-flex;background:#efece3;border-radius:12px;padding:4px">
+              <button onClick="{{ setRegister }}" style="{{ regBtnStyle }}"><i class="ph ph-list-bullets" style="font-size:17px"></i>Register</button>
+              <button onClick="{{ setBoard }}" style="{{ boardBtnStyle }}"><i class="ph ph-kanban" style="font-size:17px"></i>Board</button>
+            </div>
+            <button onClick="{{ openAdd }}" style="display:flex;align-items:center;gap:8px;padding:11px 18px;border-radius:12px;background:#175c43;color:#fff;font-size:14.5px;font-weight:700;box-shadow:0 10px 24px -14px rgba(23,92,67,.9)" style-hover="background:#0f4a35"><i class="ph-bold ph-plus" style="font-size:16px"></i>Record a deal</button>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:9px;flex-wrap:wrap;margin-bottom:20px">
+          <sc-for list="{{ dealFilters }}" as="f" hint-placeholder-count="7">
+            <button onClick="{{ f.go }}" style="{{ f.style }}">{{ f.label }}<span style="{{ f.cstyle }}">{{ f.count }}</span></button>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ dealsRegister }}">
+        <div style="background:#fffdf9;border:1px solid #e8e3d6;border-radius:20px;overflow:hidden;box-shadow:0 1px 2px rgba(30,28,22,.03),0 12px 30px -24px rgba(30,28,22,.5)">
+          <div style="display:grid;grid-template-columns:1.5fr 1.6fr 150px 150px 140px 30px;gap:14px;padding:14px 22px;border-bottom:1px solid #ece7db;background:#faf7f0;font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9a9384">
+            <div>Client</div><div>Property</div><div>Deal value</div><div>Your commission</div><div>Stage</div><div></div>
+          </div>
+          <sc-for list="{{ registerDeals }}" as="d" hint-placeholder-count="6">
+            <div onClick="{{ d.open }}" style="display:grid;grid-template-columns:1.5fr 1.6fr 150px 150px 140px 30px;gap:14px;align-items:center;padding:16px 22px;border-bottom:1px solid #f1ede3;cursor:pointer;transition:background .12s" style-hover="background:#faf7ef">
+              <div style="display:flex;align-items:center;gap:12px;min-width:0">
+                <div style="width:40px;height:40px;border-radius:50%;background:#e7ede8;color:#175c43;display:grid;place-items:center;font-weight:800;font-size:14px;flex:none">{{ d.initials }}</div>
+                <div style="min-width:0"><div style="font-size:15px;font-weight:700;color:#2b2820;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ d.client }}</div><div style="font-size:12.5px;color:#9a9384">{{ d.area }}</div></div>
+              </div>
+              <div style="min-width:0"><div style="font-size:14.5px;font-weight:600;color:#3a352a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ d.prop }}</div><div style="font-size:12.5px;color:#9a9384">{{ d.propSub }}</div></div>
+              <div style="font-size:17px;font-weight:800;color:#1c1a15;font-family:'Newsreader',serif">{{ d.valueFmt }}</div>
+              <div style="font-size:15px;font-weight:700;color:#a97d24">{{ d.commFmt }}</div>
+              <div><span style="{{ d.pill }}"><span style="{{ d.dot }}"></span>{{ d.stageLabel }}</span></div>
+              <div style="text-align:right;color:#c2bba9"><i class="ph-bold ph-caret-right" style="font-size:15px"></i></div>
+            </div>
+          </sc-for>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ dealsBoard }}">
+        <div data-scroll style="display:flex;gap:16px;overflow-x:auto;padding-bottom:14px">
+          <sc-for list="{{ boardColumns }}" as="col" hint-placeholder-count="5">
+            <div style="width:296px;flex:none;background:#f1ede3;border:1px solid #e6e0d3;border-radius:18px;padding:14px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+                <div style="{{ col.headStyle }}"><span style="{{ col.dot }}"></span>{{ col.label }}<span style="color:#a39c8a;font-weight:700">{{ col.count }}</span></div>
+              </div>
+              <div style="font-size:12.5px;color:#9a9384;font-weight:600;margin-bottom:12px">{{ col.sum }}</div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <sc-for list="{{ col.deals }}" as="d" hint-placeholder-count="2">
+                  <div onClick="{{ d.open }}" style="background:#fffdf9;border:1px solid #e8e3d6;border-radius:14px;padding:14px;cursor:pointer;box-shadow:0 1px 2px rgba(30,28,22,.04)" style-hover="border-color:#175c43;transform:translateY(-1px)">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
+                      <div style="width:34px;height:34px;border-radius:50%;background:#e7ede8;color:#175c43;display:grid;place-items:center;font-weight:800;font-size:13px">{{ d.initials }}</div>
+                      <div style="font-size:16px;font-weight:800;color:#1c1a15;font-family:'Newsreader',serif">{{ d.valueFmt }}</div>
+                    </div>
+                    <div style="font-size:14.5px;font-weight:700;color:#2b2820">{{ d.client }}</div>
+                    <div style="font-size:12.5px;color:#9a9384;margin-top:1px">{{ d.propSub }}</div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:11px;padding-top:11px;border-top:1px solid #f1ede3">
+                      <span style="font-size:12.5px;color:#8a8578">Commission</span>
+                      <span style="font-size:13.5px;font-weight:800;color:#a97d24">{{ d.commFmt }}</span>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        </sc-if>
+      </div>
+      </sc-if>
+      <sc-if value="{{ isProperties }}">
+      <div style="max-width:1200px;margin:0 auto;padding:30px 34px 64px;animation:omFade .4s ease both">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:22px">
+          <div>
+            <h1 style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:34px;letter-spacing:-.015em;color:#1c1a15">Property Insights</h1>
+            <p style="margin:7px 0 0;font-size:15.5px;color:#6f6a5c">What's ready to show, what buyers are opening, and what still needs work.</p>
+          </div>
+          <button style="display:flex;align-items:center;gap:8px;padding:11px 18px;border-radius:12px;background:#175c43;color:#fff;font-size:14.5px;font-weight:700;box-shadow:0 10px 24px -14px rgba(23,92,67,.9)" style-hover="background:#0f4a35"><i class="ph-bold ph-plus" style="font-size:16px"></i>Add property</button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;gap:16px">
+          <div style="background:#123f2e;background-image:linear-gradient(135deg,#1c5c43,#123f2e);border-radius:18px;padding:22px 24px;color:#eaf2ec;box-shadow:0 20px 44px -28px rgba(15,55,40,.9)">
+            <div style="font-size:13px;color:#9fbfae;font-weight:600">Live portfolio value</div>
+            <div style="font-family:'Newsreader',serif;font-weight:500;font-size:40px;line-height:1.05;color:#fff;margin-top:8px">{{ propPortfolioFmt }}</div>
+            <div style="font-size:13px;color:#8fb6a3;margin-top:4px">{{ propAvail }} available plots</div>
+          </div>
+          <div style="background:#fffdf9;border:1px solid #e8e3d6;border-radius:18px;padding:22px 24px;box-shadow:0 1px 2px rgba(30,28,22,.03),0 12px 30px -24px rgba(30,28,22,.5)">
+            <div style="font-size:13.5px;color:#6f6a5c;font-weight:600">Ready to show</div>
+            <div style="font-family:'Newsreader',serif;font-weight:500;font-size:42px;line-height:1;color:#175c43;margin-top:8px">{{ propReadyCount }}</div>
+            <div style="font-size:12.5px;color:#9a9384;margin-top:4px">client-safe · photo & map</div>
+          </div>
+          <div style="background:#fffdf9;border:1px solid #e8e3d6;border-radius:18px;padding:22px 24px;box-shadow:0 1px 2px rgba(30,28,22,.03),0 12px 30px -24px rgba(30,28,22,.5)">
+            <div style="font-size:13.5px;color:#6f6a5c;font-weight:600">Needs work</div>
+            <div style="font-family:'Newsreader',serif;font-weight:500;font-size:42px;line-height:1;color:#a8482f;margin-top:8px">{{ propNeedsWork }}</div>
+            <div style="font-size:12.5px;color:#9a9384;margin-top:4px">missing photo or map</div>
+          </div>
+          <div style="background:#fffdf9;border:1px solid #e8e3d6;border-radius:18px;padding:22px 24px;box-shadow:0 1px 2px rgba(30,28,22,.03),0 12px 30px -24px rgba(30,28,22,.5)">
+            <div style="font-size:13.5px;color:#6f6a5c;font-weight:600">Portfolio health</div>
+            <div style="font-family:'Newsreader',serif;font-weight:500;font-size:42px;line-height:1;color:#a97d24;margin-top:8px">{{ propHealthPct }}</div>
+            <div style="height:7px;border-radius:999px;background:#efece3;overflow:hidden;margin-top:10px"><div style="{{ propHealthBar }}"></div></div>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:22px">
+          <div style="background:#fffdf9;border:1px solid #e8e3d6;border-radius:20px;padding:24px;box-shadow:0 1px 2px rgba(30,28,22,.03),0 12px 30px -24px rgba(30,28,22,.5)">
+            <h3 style="margin:0 0 4px;font-family:'Newsreader',serif;font-weight:500;font-size:20px;color:#1c1a15">Getting the most attention</h3>
+            <p style="margin:0 0 16px;font-size:13px;color:#9a9384">Plots buyers opened most in your presentations.</p>
+            <div style="display:flex;flex-direction:column;gap:15px">
+              <sc-for list="{{ attentionList }}" as="p" hint-placeholder-count="5">
+                <div style="display:flex;align-items:center;gap:14px">
+                  <div style="width:26px;height:26px;border-radius:8px;background:#f0ece2;color:#8a8578;display:grid;place-items:center;font-size:13px;font-weight:800;flex:none">{{ p.rank }}</div>
+                  <div style="flex:1;min-width:0">
+                    <div style="display:flex;justify-content:space-between;gap:10px;margin-bottom:5px"><span style="font-size:14px;font-weight:700;color:#2b2820;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.title }} · {{ p.loc }}</span><span style="font-size:13px;font-weight:700;color:#175c43;flex:none">{{ p.views }} views</span></div>
+                    <div style="height:7px;border-radius:999px;background:#efece3;overflow:hidden"><div style="{{ p.barStyle }}"></div></div>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="background:#fffdf9;border:1px solid #e8e3d6;border-radius:20px;padding:24px;box-shadow:0 1px 2px rgba(30,28,22,.03),0 12px 30px -24px rgba(30,28,22,.5)">
+            <h3 style="margin:0 0 4px;font-family:'Newsreader',serif;font-weight:500;font-size:20px;color:#1c1a15">Needs your attention</h3>
+            <p style="margin:0 0 16px;font-size:13px;color:#9a9384">Fix these before you can show them to a buyer.</p>
+            <div style="display:flex;flex-direction:column;gap:11px">
+              <sc-for list="{{ needsWorkList }}" as="p" hint-placeholder-count="3">
+                <div style="display:flex;align-items:center;gap:13px;padding:13px 15px;border:1px solid #efe2d4;background:#fdf7f1;border-radius:13px">
+                  <i class="ph-fill ph-warning-circle" style="font-size:22px;color:#a8482f;flex:none"></i>
+                  <div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:700;color:#2b2820">{{ p.title }} · {{ p.loc }}</div><div style="font-size:12.5px;color:#a8482f;font-weight:600">{{ p.gap }}</div></div>
+                  <span style="font-size:12.5px;font-weight:700;color:#8a6f52">Fix →</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin:30px 0 16px;flex-wrap:wrap;gap:14px">
+          <h3 style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:22px;color:#1c1a15">Your inventory</h3>
+          <div style="display:flex;gap:9px;flex-wrap:wrap">
+            <sc-for list="{{ propFilters }}" as="f" hint-placeholder-count="5">
+              <button onClick="{{ f.go }}" style="{{ f.style }}">{{ f.label }}<span style="{{ f.cstyle }}">{{ f.count }}</span></button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
+          <sc-for list="{{ propItems }}" as="p" hint-placeholder-count="6">
+            <div style="background:#fffdf9;border:1px solid #e8e3d6;border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(30,28,22,.03),0 12px 30px -24px rgba(30,28,22,.5)" style-hover="border-color:#d3ccba">
+              <div style="height:148px;position:relative;background:repeating-linear-gradient(135deg,#eee9de,#eee9de 11px,#e7e1d4 11px,#e7e1d4 22px)">
+                <span style="position:absolute;top:12px;right:12px;{{ p.statusStyle }}">{{ p.statusLabel }}</span>
+                <span style="position:absolute;left:14px;bottom:12px;font-family:ui-monospace,'SF Mono',Menlo,monospace;font-size:11.5px;letter-spacing:.03em;color:#9a9078;background:rgba(255,253,249,.7);padding:3px 8px;border-radius:6px">{{ p.photoLabel }}</span>
+              </div>
+              <div style="padding:16px 18px">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+                  <div style="font-size:16px;font-weight:800;color:#1c1a15">{{ p.title }}</div>
+                  <span style="{{ p.readyStyle }}"><i class="{{ p.readyIco }}" style="font-size:15px"></i>{{ p.readyTxt }}</span>
+                </div>
+                <div style="font-size:13.5px;color:#6f6a5c;margin-top:2px">{{ p.loc }}</div>
+                <div style="display:flex;gap:7px;flex-wrap:wrap;margin-top:12px">
+                  <span style="font-size:12.5px;font-weight:600;color:#4a4638;background:#f0ece2;border-radius:8px;padding:4px 10px">{{ p.size }}</span>
+                  <span style="font-size:12.5px;font-weight:600;color:#4a4638;background:#f0ece2;border-radius:8px;padding:4px 10px"><i class="ph ph-compass" style="font-size:13px;vertical-align:-1px"></i> {{ p.facing }}</span>
+                  <span style="font-size:12.5px;font-weight:600;color:#4a4638;background:#f0ece2;border-radius:8px;padding:4px 10px"><i class="ph ph-eye" style="font-size:13px;vertical-align:-1px"></i> {{ p.views }}</span>
+                </div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:14px;border-top:1px solid #f1ede3">
+                  <div style="font-family:'Newsreader',serif;font-weight:600;font-size:22px;color:#175c43">{{ p.priceFmt }}</div>
+                  <button style="display:flex;align-items:center;gap:6px;color:#2e5f86;font-size:13.5px;font-weight:700" style-hover="color:#1e4360"><i class="ph ph-map-pin-line" style="font-size:16px"></i>View on map</button>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+      <sc-if value="{{ isClients }}">
+      <div style="max-width:1200px;margin:0 auto;padding:30px 34px 64px;animation:omFade .4s ease both">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:22px">
+          <div>
+            <h1 style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:34px;letter-spacing:-.015em;color:#1c1a15">Client Details</h1>
+            <p style="margin:7px 0 0;font-size:15.5px;color:#6f6a5c">Your client book — every buyer, what they want, and where they're looking.</p>
+          </div>
+          <button style="display:flex;align-items:center;gap:8px;padding:11px 18px;border-radius:12px;background:#175c43;color:#fff;font-size:14.5px;font-weight:700;box-shadow:0 10px 24px -14px rgba(23,92,67,.9)" style-hover="background:#0f4a35"><i class="ph-bold ph-plus" style="font-size:16px"></i>Add client</button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px">
+          <div style="background:#fffdf9;border:1px solid #e8e3d6;border-radius:18px;padding:20px 22px;box-shadow:0 1px 2px rgba(30,28,22,.03),0 12px 30px -24px rgba(30,28,22,.5)"><div style="display:flex;align-items:center;gap:8px;color:#6f6a5c;font-size:14px;font-weight:600"><i class="ph ph-users-three" style="font-size:18px;color:#175c43"></i>Total clients</div><div style="font-family:'Newsreader',serif;font-weight:500;font-size:44px;line-height:1;color:#1c1a15;margin-top:10px">{{ cTotal }}</div></div>
+          <div style="background:#fffdf9;border:1px solid #e8e3d6;border-radius:18px;padding:20px 22px;box-shadow:0 1px 2px rgba(30,28,22,.03),0 12px 30px -24px rgba(30,28,22,.5)"><div style="display:flex;align-items:center;gap:8px;color:#6f6a5c;font-size:14px;font-weight:600"><i class="ph-fill ph-circle" style="font-size:12px;color:#175c43"></i>Active</div><div style="font-family:'Newsreader',serif;font-weight:500;font-size:44px;line-height:1;color:#175c43;margin-top:10px">{{ cActive }}</div></div>
+          <div style="background:#fffdf9;border:1px solid #e8e3d6;border-radius:18px;padding:20px 22px;box-shadow:0 1px 2px rgba(30,28,22,.03),0 12px 30px -24px rgba(30,28,22,.5)"><div style="display:flex;align-items:center;gap:8px;color:#6f6a5c;font-size:14px;font-weight:600"><i class="ph-fill ph-circle" style="font-size:12px;color:#a97d24"></i>Warm</div><div style="font-family:'Newsreader',serif;font-weight:500;font-size:44px;line-height:1;color:#a97d24;margin-top:10px">{{ cWarm }}</div></div>
+          <div style="background:#fffdf9;border:1px solid #e8e3d6;border-radius:18px;padding:20px 22px;box-shadow:0 1px 2px rgba(30,28,22,.03),0 12px 30px -24px rgba(30,28,22,.5)"><div style="display:flex;align-items:center;gap:8px;color:#6f6a5c;font-size:14px;font-weight:600"><i class="ph ph-sparkle" style="font-size:17px;color:#2e5f86"></i>New this week</div><div style="font-family:'Newsreader',serif;font-weight:500;font-size:44px;line-height:1;color:#2e5f86;margin-top:10px">{{ cNew }}</div></div>
+        </div>
+
+        <label style="display:flex;align-items:center;gap:11px;background:#fffdf9;border:1px solid #e8e3d6;border-radius:14px;padding:13px 16px;margin-bottom:18px;box-shadow:0 1px 2px rgba(30,28,22,.03)">
+          <i class="ph ph-magnifying-glass" style="font-size:19px;color:#9a9384"></i>
+          <input value="{{ clientSearch }}" onInput="{{ onSearch }}" placeholder="Search by name, area, budget or property type…" style="border:none;outline:none;background:none;width:100%;font-size:15px;color:#211d17"/>
+        </label>
+
+        <div style="background:#fffdf9;border:1px solid #e8e3d6;border-radius:20px;overflow:hidden;box-shadow:0 1px 2px rgba(30,28,22,.03),0 12px 30px -24px rgba(30,28,22,.5)">
+          <div style="display:grid;grid-template-columns:1.6fr 1.2fr 1fr 130px 40px;gap:14px;padding:14px 22px;border-bottom:1px solid #ece7db;background:#faf7f0;font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9a9384"><div>Client</div><div>Looking for</div><div>Budget</div><div>Status</div><div></div></div>
+          <sc-for list="{{ clientItems }}" as="c" hint-placeholder-count="8">
+            <div onClick="{{ c.open }}" style="display:grid;grid-template-columns:1.6fr 1.2fr 1fr 130px 40px;gap:14px;align-items:center;padding:15px 22px;border-bottom:1px solid #f1ede3;cursor:pointer;transition:background .12s" style-hover="background:#faf7ef">
+              <div style="display:flex;align-items:center;gap:13px;min-width:0">
+                <div style="width:42px;height:42px;border-radius:50%;background:#e7ede8;color:#175c43;display:grid;place-items:center;font-weight:800;font-size:15px;flex:none">{{ c.initials }}</div>
+                <div style="min-width:0"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:15.5px;font-weight:700;color:#2b2820;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</span><sc-if value="{{ c.isNew }}"><span style="font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#2e5f86;background:#e2ebf2;padding:1px 7px;border-radius:999px">New</span></sc-if></div><div style="font-size:12.5px;color:#9a9384">Last seen {{ c.seen }}</div></div>
+              </div>
+              <div style="min-width:0"><div style="font-size:14px;font-weight:600;color:#3a352a">{{ c.type }}</div><div style="font-size:12.5px;color:#9a9384;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.area }}</div></div>
+              <div style="font-size:14.5px;font-weight:700;color:#175c43">{{ c.budget }}</div>
+              <div><span style="{{ c.statusStyle }}">{{ c.statusLabel }}</span></div>
+              <div style="text-align:right;color:#c2bba9"><i class="ph-bold ph-caret-right" style="font-size:15px"></i></div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+      <sc-if value="{{ isAreas }}">
+      <div style="max-width:1200px;margin:0 auto;padding:30px 34px 64px;animation:omFade .4s ease both">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:22px">
+          <div>
+            <h1 style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:34px;letter-spacing:-.015em;color:#1c1a15">Area Intelligence</h1>
+            <p style="margin:7px 0 0;font-size:15.5px;color:#6f6a5c">Which areas your buyers care about most — measured from your presentations.</p>
+          </div>
+          <button style="display:flex;align-items:center;gap:9px;padding:12px 18px;border-radius:13px;background:#175c43;color:#fff;font-size:14.5px;font-weight:700;box-shadow:0 10px 24px -14px rgba(23,92,67,.9)" style-hover="background:#0f4a35"><i class="ph-fill ph-projector-screen-chart" style="font-size:18px"></i>Open Client Presentation</button>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;font-size:12.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:#9a9384;margin-bottom:14px">Hot &amp; rising areas</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+          <sc-for list="{{ areaCards }}" as="a" hint-placeholder-count="6">
+            <div style="background:#fffdf9;border:1px solid #e8e3d6;border-radius:18px;padding:20px 22px;box-shadow:0 1px 2px rgba(30,28,22,.03),0 12px 30px -24px rgba(30,28,22,.5)">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+                <h3 style="margin:0;font-family:'Newsreader',serif;font-weight:600;font-size:21px;color:#1c1a15">{{ a.name }}</h3>
+                <span style="{{ a.tagStyle }}">{{ a.tag }}</span>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px">
+                <div style="background:#f7f4ec;border-radius:12px;padding:11px 12px;text-align:center"><div style="font-family:'Newsreader',serif;font-size:26px;color:#175c43;line-height:1">{{ a.opens }}</div><div style="font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#9a9384;margin-top:3px">Opens</div></div>
+                <div style="background:#f7f4ec;border-radius:12px;padding:11px 12px;text-align:center"><div style="font-family:'Newsreader',serif;font-size:26px;color:#a97d24;line-height:1">{{ a.views }}</div><div style="font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#9a9384;margin-top:3px">Views</div></div>
+                <div style="background:#f7f4ec;border-radius:12px;padding:11px 12px;text-align:center"><div style="font-family:'Newsreader',serif;font-size:26px;color:#2e5f86;line-height:1">{{ a.sessions }}</div><div style="font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#9a9384;margin-top:3px">Sessions</div></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:7px;margin-top:14px"><i class="ph ph-package" style="font-size:16px;color:#9a9384"></i><span style="{{ a.availStyle }}">{{ a.availLabel }}</span><span style="font-size:13px;color:#9a9384">to show here</span></div>
+              <div style="{{ a.insightStyle }}"><i class="ph-fill ph-lightbulb" style="font-size:16px;flex:none;margin-top:1px"></i><span>{{ a.insight }}</span></div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:20px;margin-top:24px">
+          <div style="background:#fffdf9;border:1px solid #e8e3d6;border-radius:20px;padding:24px;box-shadow:0 1px 2px rgba(30,28,22,.03),0 12px 30px -24px rgba(30,28,22,.5)">
+            <h3 style="margin:0 0 4px;font-family:'Newsreader',serif;font-weight:500;font-size:21px;color:#1c1a15">Client attention vs your inventory</h3>
+            <p style="margin:0 0 18px;font-size:13.5px;color:#9a9384">Where the interest is, and whether you have stock to match it.</p>
+            <div style="display:flex;flex-direction:column;gap:16px">
+              <sc-for list="{{ attentionBars }}" as="a" hint-placeholder-count="6">
+                <div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:7px"><span style="font-size:15px;font-weight:700;color:#2b2820">{{ a.name }}</span><span style="{{ a.flagStyle }}">{{ a.flag }}</span></div>
+                  <div style="height:10px;border-radius:999px;background:#efece3;overflow:hidden"><div style="{{ a.barStyle }}"></div></div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+          <div style="background:#fffdf9;border:1px solid #e8e3d6;border-radius:20px;padding:24px;box-shadow:0 1px 2px rgba(30,28,22,.03),0 12px 30px -24px rgba(30,28,22,.5)">
+            <h3 style="margin:0 0 18px;font-family:'Newsreader',serif;font-weight:500;font-size:21px;color:#1c1a15">Map activity</h3>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div style="background:#f4f7f2;border:1px solid #e3ece5;border-radius:15px;padding:16px 18px">
+                <div style="font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8a8578">Most opened map</div>
+                <div style="font-family:'Newsreader',serif;font-weight:600;font-size:22px;color:#175c43;margin-top:4px">{{ mostOpenedName }}</div>
+                <div style="font-size:13px;color:#8a8578;margin-top:2px">{{ mostOpenedOpens }}</div>
+              </div>
+              <div style="background:#f7f4ec;border:1px solid #ece5d5;border-radius:15px;padding:16px 18px">
+                <div style="font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8a8578">Most viewed properties</div>
+                <div style="font-family:'Newsreader',serif;font-weight:600;font-size:22px;color:#a97d24;margin-top:4px">{{ mostViewedName }}</div>
+                <div style="font-size:13px;color:#8a8578;margin-top:2px">{{ mostViewedViews }}</div>
+              </div>
+              <div style="background:#f7f4ec;border:1px solid #ece5d5;border-radius:15px;padding:16px 18px">
+                <div style="font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8a8578">Shared with clients</div>
+                <div style="font-family:'Newsreader',serif;font-weight:600;font-size:22px;color:#2e5f86;margin-top:4px">0 areas</div>
+                <div style="font-size:13px;color:#8a8578;margin-top:2px">sharing turns on next update</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      </sc-if>
+      <div data-content-end></div>
+    </div>
+  </main>
+  <sc-if value="{{ dealDetail }}">
+  <div style="position:fixed;inset:0;z-index:60">
+    <div onClick="{{ closeDeal }}" style="position:absolute;inset:0;background:rgba(28,24,16,.42);animation:omVeil .25s ease both"></div>
+    <div data-scroll style="position:absolute;right:0;top:0;height:100vh;width:472px;max-width:92vw;background:#f6f2ea;box-shadow:-24px 0 60px -30px rgba(0,0,0,.5);overflow:auto;animation:omSlide .3s cubic-bezier(.2,.8,.2,1) both">
+      <div style="position:sticky;top:0;background:#123f2e;background-image:linear-gradient(180deg,#1a5340,#123f2e);color:#eaf2ec;padding:22px 24px 20px;z-index:2">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8fb6a3">Deal {{ dealDetail.id }}</span>
+          <button onClick="{{ closeDeal }}" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.12);color:#eaf2ec;display:grid;place-items:center" style-hover="background:rgba(255,255,255,.22)"><i class="ph-bold ph-x" style="font-size:16px"></i></button>
+        </div>
+        <div style="display:flex;align-items:center;gap:13px;margin-top:14px">
+          <div style="width:52px;height:52px;border-radius:50%;background:#e7c877;color:#173a2b;display:grid;place-items:center;font-weight:800;font-size:19px;flex:none">{{ dealDetail.initials }}</div>
+          <div><div style="font-size:22px;font-weight:800;letter-spacing:-.01em;color:#fff">{{ dealDetail.client }}</div><div style="font-size:14px;color:#a9c6b8">{{ dealDetail.prop }} · {{ dealDetail.propSub }}</div></div>
+        </div>
+        <div style="margin-top:14px"><span style="{{ dealDetail.pill }}"><span style="{{ dealDetail.dot }}"></span>{{ dealDetail.stageLabel }}</span></div>
+      </div>
+
+      <div style="padding:22px 24px 40px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div style="background:#fffdf9;border:1px solid #e8e3d6;border-radius:15px;padding:16px 18px;grid-column:1/3">
+            <div style="font-size:12.5px;color:#8a8578;font-weight:700;letter-spacing:.05em;text-transform:uppercase">Deal value</div>
+            <div style="font-family:'Newsreader',serif;font-weight:500;font-size:40px;color:#175c43;line-height:1;margin-top:6px">{{ dealDetail.valueFmt }}</div>
+          </div>
+          <div style="background:#fdf6e8;border:1px solid #eee2c9;border-radius:15px;padding:15px 17px">
+            <div style="font-size:12.5px;color:#8a6a1f;font-weight:700">Your commission</div>
+            <div style="font-size:24px;font-weight:800;color:#a97d24;margin-top:4px">{{ dealDetail.commFmt }}</div>
+          </div>
+          <div style="background:#eef2f6;border:1px solid #dde7ef;border-radius:15px;padding:15px 17px">
+            <div style="font-size:12.5px;color:#3f6285;font-weight:700">Token received</div>
+            <div style="font-size:24px;font-weight:800;color:#2e5f86;margin-top:4px">{{ dealDetail.tokenFmt }}</div>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;margin:26px 0 12px"><i class="ph-fill ph-lock-key" style="font-size:18px;color:#a8482f"></i><span style="font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8a6f52">Seller — private to you</span></div>
+        <div style="background:#fff;border:1px solid #efe2d4;border-radius:15px;padding:4px 18px">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid #f1ede3"><span style="font-size:14px;color:#8a8578">Seller name</span><span style="font-size:15px;font-weight:700;color:#2b2820">{{ dealDetail.seller.name }}</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:13px 0"><span style="font-size:14px;color:#8a8578">Seller phone</span><span style="font-size:15px;font-weight:700;color:#2b2820">{{ dealDetail.seller.phone }}</span></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:7px;margin-top:8px;font-size:12.5px;color:#a8482f"><i class="ph ph-eye-slash" style="font-size:15px"></i>Never shown in Client Presentation.</div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin:26px 0 12px"><span style="font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8a8578">Paperwork</span><span style="font-size:13px;font-weight:700;color:#175c43">{{ dealDetail.docDone }} of {{ dealDetail.docTotal }} done</span></div>
+        <div style="background:#fffdf9;border:1px solid #e8e3d6;border-radius:15px;padding:6px 18px">
+          <sc-for list="{{ dealDetail.docs }}" as="doc" hint-placeholder-count="4">
+            <div style="display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px solid #f1ede3"><i class="{{ doc.ico }}" style="{{ doc.icoStyle }}"></i><span style="{{ doc.txt }}">{{ doc.name }}</span></div>
+          </sc-for>
+        </div>
+
+        <button onClick="{{ goClients }}" style="width:100%;margin-top:22px;display:flex;align-items:center;justify-content:center;gap:9px;padding:14px;border-radius:13px;background:#fffdf9;border:1px solid #e0dacc;color:#3a352a;font-size:14.5px;font-weight:700" style-hover="border-color:#175c43;color:#175c43"><i class="ph ph-address-book" style="font-size:17px"></i>Open client in your book</button>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ addOpen }}">
+  <div style="position:fixed;inset:0;z-index:70;display:grid;place-items:center;padding:24px">
+    <div onClick="{{ closeAdd }}" style="position:absolute;inset:0;background:rgba(28,24,16,.46);animation:omVeil .2s ease both"></div>
+    <div data-scroll style="position:relative;width:560px;max-width:100%;max-height:90vh;overflow:auto;background:#f6f2ea;border-radius:22px;box-shadow:0 40px 90px -30px rgba(0,0,0,.6);animation:omPop .26s cubic-bezier(.2,.8,.2,1) both">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:22px 26px 16px;border-bottom:1px solid #e8e3d6">
+        <div><h2 style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:25px;color:#1c1a15">Record a deal</h2><p style="margin:4px 0 0;font-size:13.5px;color:#8a8578">Just the basics — you can open it later to add paperwork.</p></div>
+        <button onClick="{{ closeAdd }}" style="width:36px;height:36px;border-radius:11px;background:#efece3;color:#6f6a5c;display:grid;place-items:center" style-hover="background:#e6e0d3"><i class="ph-bold ph-x" style="font-size:16px"></i></button>
+      </div>
+      <div style="padding:22px 26px 8px;display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <label style="display:block;grid-column:1/3"><span style="display:block;font-size:13px;font-weight:700;color:#4a4638;margin-bottom:6px">Client name</span><input name="client" value="{{ form.client }}" onInput="{{ onForm }}" placeholder="e.g. Harpreet Singh Gill" style="width:100%;padding:12px 14px;border:1px solid #e0dacc;border-radius:11px;background:#fffdf9;font-size:15px;color:#211d17;outline:none" style-focus="border-color:#175c43"/></label>
+        <label style="display:block;grid-column:1/3"><span style="display:block;font-size:13px;font-weight:700;color:#4a4638;margin-bottom:6px">Property / plot</span><input name="prop" value="{{ form.prop }}" onInput="{{ onForm }}" placeholder="e.g. Residential Plot · 250 sq yd" style="width:100%;padding:12px 14px;border:1px solid #e0dacc;border-radius:11px;background:#fffdf9;font-size:15px;color:#211d17;outline:none" style-focus="border-color:#175c43"/></label>
+        <label style="display:block"><span style="display:block;font-size:13px;font-weight:700;color:#4a4638;margin-bottom:6px">Area / sector</span><select name="area" value="{{ form.area }}" onChange="{{ onForm }}" style="width:100%;padding:12px 14px;border:1px solid #e0dacc;border-radius:11px;background:#fffdf9;font-size:15px;color:#211d17;outline:none"><option>Mohali</option><option>New Chandigarh</option><option>Aerocity</option><option>Chandigarh</option><option>Panchkula</option><option>Zirakpur</option><option>Kharar</option><option>Derabassi</option><option>Mullanpur</option></select></label>
+        <label style="display:block"><span style="display:block;font-size:13px;font-weight:700;color:#4a4638;margin-bottom:6px">Stage</span><select name="stage" value="{{ form.stage }}" onChange="{{ onForm }}" style="width:100%;padding:12px 14px;border:1px solid #e0dacc;border-radius:11px;background:#fffdf9;font-size:15px;color:#211d17;outline:none"><option value="enquiry">Enquiry</option><option value="negotiating">Negotiating</option><option value="token">Token</option><option value="registry">Registry</option><option value="closed">Closed</option></select></label>
+        <label style="display:block"><span style="display:block;font-size:13px;font-weight:700;color:#4a4638;margin-bottom:6px">Deal value (Cr)</span><input name="value" value="{{ form.value }}" onInput="{{ onForm }}" inputmode="decimal" placeholder="1.65" style="width:100%;padding:12px 14px;border:1px solid #e0dacc;border-radius:11px;background:#fffdf9;font-size:15px;color:#211d17;outline:none" style-focus="border-color:#175c43"/></label>
+        <label style="display:block"><span style="display:block;font-size:13px;font-weight:700;color:#4a4638;margin-bottom:6px">Your commission (L)</span><input name="comm" value="{{ form.comm }}" onInput="{{ onForm }}" inputmode="decimal" placeholder="2.5" style="width:100%;padding:12px 14px;border:1px solid #e0dacc;border-radius:11px;background:#fffdf9;font-size:15px;color:#211d17;outline:none" style-focus="border-color:#175c43"/></label>
+        <div style="grid-column:1/3;display:flex;align-items:center;gap:10px;margin-top:2px"><div style="flex:1;height:1px;background:#e8e3d6"></div><span style="font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#a8482f;display:flex;align-items:center;gap:6px"><i class="ph-fill ph-lock-key" style="font-size:14px"></i>Private to you</span><div style="flex:1;height:1px;background:#e8e3d6"></div></div>
+        <label style="display:block"><span style="display:block;font-size:13px;font-weight:700;color:#4a4638;margin-bottom:6px">Seller name</span><input name="sellerName" value="{{ form.sellerName }}" onInput="{{ onForm }}" placeholder="Seller / owner" style="width:100%;padding:12px 14px;border:1px solid #e0dacc;border-radius:11px;background:#fffdf9;font-size:15px;color:#211d17;outline:none" style-focus="border-color:#175c43"/></label>
+        <label style="display:block"><span style="display:block;font-size:13px;font-weight:700;color:#4a4638;margin-bottom:6px">Seller phone</span><input name="sellerPhone" value="{{ form.sellerPhone }}" onInput="{{ onForm }}" placeholder="+91 …" style="width:100%;padding:12px 14px;border:1px solid #e0dacc;border-radius:11px;background:#fffdf9;font-size:15px;color:#211d17;outline:none" style-focus="border-color:#175c43"/></label>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:12px;padding:16px 26px 24px">
+        <button onClick="{{ closeAdd }}" style="padding:12px 20px;border-radius:12px;background:#efece3;color:#4a4638;font-size:14.5px;font-weight:700" style-hover="background:#e6e0d3">Cancel</button>
+        <button onClick="{{ doAdd }}" style="padding:12px 24px;border-radius:12px;background:#175c43;color:#fff;font-size:14.5px;font-weight:700;box-shadow:0 10px 24px -14px rgba(23,92,67,.9)" style-hover="background:#0f4a35">Save deal</button>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+  <sc-if value="{{ clientDetail }}">
+  <div style="position:fixed;inset:0;z-index:60">
+    <div onClick="{{ closeClient }}" style="position:absolute;inset:0;background:rgba(28,24,16,.42);animation:omVeil .25s ease both"></div>
+    <div data-scroll style="position:absolute;right:0;top:0;height:100vh;width:472px;max-width:92vw;background:#f6f2ea;box-shadow:-24px 0 60px -30px rgba(0,0,0,.5);overflow:auto;animation:omSlide .3s cubic-bezier(.2,.8,.2,1) both">
+      <div style="position:sticky;top:0;background:#123f2e;background-image:linear-gradient(180deg,#1a5340,#123f2e);color:#eaf2ec;padding:22px 24px 22px;z-index:2">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <span style="font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8fb6a3">Client</span>
+          <button onClick="{{ closeClient }}" style="width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.12);color:#eaf2ec;display:grid;place-items:center" style-hover="background:rgba(255,255,255,.22)"><i class="ph-bold ph-x" style="font-size:16px"></i></button>
+        </div>
+        <div style="display:flex;align-items:center;gap:13px;margin-top:14px">
+          <div style="width:56px;height:56px;border-radius:50%;background:#e7c877;color:#173a2b;display:grid;place-items:center;font-weight:800;font-size:20px;flex:none">{{ clientDetail.initials }}</div>
+          <div><div style="font-size:23px;font-weight:800;letter-spacing:-.01em;color:#fff">{{ clientDetail.name }}</div><div style="display:flex;align-items:center;gap:7px;font-size:14px;color:#a9c6b8;margin-top:2px"><i class="ph ph-phone" style="font-size:15px"></i>{{ clientDetail.phone }}</div></div>
+        </div>
+      </div>
+      <div style="padding:22px 24px 40px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div style="background:#fffdf9;border:1px solid #e8e3d6;border-radius:14px;padding:14px 16px"><div style="font-size:12px;color:#8a8578;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Budget</div><div style="font-size:19px;font-weight:800;color:#175c43;margin-top:4px">{{ clientDetail.budget }}</div></div>
+          <div style="background:#fffdf9;border:1px solid #e8e3d6;border-radius:14px;padding:14px 16px"><div style="font-size:12px;color:#8a8578;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Looking for</div><div style="font-size:19px;font-weight:800;color:#1c1a15;margin-top:4px">{{ clientDetail.type }}</div></div>
+          <div style="grid-column:1/3;background:#fffdf9;border:1px solid #e8e3d6;border-radius:14px;padding:14px 16px"><div style="font-size:12px;color:#8a8578;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Preferred area</div><div style="font-size:16px;font-weight:700;color:#1c1a15;margin-top:4px">{{ clientDetail.area }}</div></div>
+        </div>
+        <div style="background:#f4f7f2;border:1px solid #e3ece5;border-radius:14px;padding:14px 16px;margin-top:12px;font-size:14px;color:#3a4a42;line-height:1.5"><i class="ph-fill ph-note" style="font-size:16px;color:#175c43;vertical-align:-2px;margin-right:6px"></i>{{ clientDetail.note }}</div>
+
+        <div style="font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8a8578;margin:24px 0 10px">Explored on screen</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <sc-for list="{{ clientDetail.chips }}" as="v" hint-placeholder-count="3"><span style="{{ v.style }}">{{ v.label }}</span></sc-for>
+        </div>
+
+        <div style="font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8a8578;margin:24px 0 10px">Deals with this client</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ clientDetail.deals }}" as="d" hint-placeholder-count="1">
+            <div onClick="{{ d.open }}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fffdf9;border:1px solid #e8e3d6;border-radius:13px;padding:14px 16px;cursor:pointer" style-hover="border-color:#175c43">
+              <div style="min-width:0"><div style="font-size:14.5px;font-weight:700;color:#2b2820">{{ d.prop }}</div><div style="font-size:16px;font-weight:800;color:#175c43;font-family:'Newsreader',serif;margin-top:2px">{{ d.valueFmt }}</div></div>
+              <span style="{{ d.pill }}"><span style="{{ d.dot }}"></span>{{ d.stageLabel }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+  <div data-overlays></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:940},&quot;privateVisible&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Privacy&quot;,&quot;label&quot;:&quot;Show private seller info&quot;},&quot;dealsDefaultView&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;register&quot;,&quot;options&quot;:[&quot;register&quot;,&quot;board&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Deals&quot;,&quot;label&quot;:&quot;Default deals view&quot;}}">
+class Component extends DCLogic {
+  state = {
+    section:'dashboard', dealsView:null, dealStage:'all', selectedDeal:null,
+    clientSearch:'', selectedClient:null, propFilter:'all', addOpen:false,
+    form:{client:'',prop:'',area:'Mohali',value:'',comm:'',token:'',stage:'enquiry',sellerName:'',sellerPhone:''}
+  };
+
+  NAV=[
+    {key:'dashboard',label:'Dashboard',icon:'ph-squares-four'},
+    {key:'deals',label:'Deals',icon:'ph-handshake',badge:'7'},
+    {key:'properties',label:'Property Insights',icon:'ph-buildings'},
+    {key:'clients',label:'Client Details',icon:'ph-address-book'},
+    {key:'areas',label:'Area Intelligence',icon:'ph-map-trifold'},
+  ];
+  STAGES=[
+    {key:'enquiry',label:'Enquiry',color:'#6f6a5c',bg:'#efece3'},
+    {key:'negotiating',label:'Negotiating',color:'#a97d24',bg:'#f6ead2'},
+    {key:'token',label:'Token',color:'#2e5f86',bg:'#e2ebf2'},
+    {key:'registry',label:'Registry',color:'#175c43',bg:'#e0ece5'},
+    {key:'closed',label:'Closed',color:'#0f4a35',bg:'#d3e5d9'},
+    {key:'lost',label:'Lost',color:'#9a3b2b',bg:'#f2e1dc'},
+  ];
+  DOCS=['Agreement to Sell','Token Receipt','ID / Address Proof','Sale Deed / Registry'];
+  ownerName='Rajinder Singh'; bizName='Rajinder Estates'; ownerInitials='RS';
+
+  deals=[
+    {id:'D1',client:'Harpreet Singh Gill',prop:'Residential Plot · 250 sq yd',propSub:'Sector 79, Mohali',area:'Mohali',value:16500000,comm:248000,token:500000,stage:'registry',seller:{name:'Balwinder Singh',phone:'+91 98146 22107'}},
+    {id:'D2',client:'Simarjeet Kaur',prop:'Residential Plot · 300 sq yd',propSub:'Aerocity, Mohali',area:'Aerocity',value:27500000,comm:410000,token:800000,stage:'token',seller:{name:'Karnail Singh Brar',phone:'+91 99885 31220'}},
+    {id:'D3',client:'Dr. Neeraj Verma',prop:'Kothi · 300 sq yd',propSub:'Sector 9, Panchkula',area:'Panchkula',value:32000000,comm:480000,token:0,stage:'negotiating',seller:{name:'Verma family (direct)',phone:'+91 98720 55014'}},
+    {id:'D4',client:'Vikram Ahluwalia',prop:'Residential Plot · 200 sq yd',propSub:'Sector 88, Mohali',area:'Mohali',value:12800000,comm:192000,token:200000,stage:'token',seller:{name:'GMADA allottee',phone:'+91 98159 74430'}},
+    {id:'D5',client:'Baldev Raj Jindal',prop:'Villa · 400 sq yd',propSub:'Omaxe, New Chandigarh',area:'New Chandigarh',value:48000000,comm:720000,token:0,stage:'negotiating',seller:{name:'Omaxe (builder)',phone:'+91 172 400 1200'}},
+    {id:'D6',client:'Sunita Rani',prop:'3 BHK Flat · 1650 sq ft',propSub:'Aerocity, Mohali',area:'Aerocity',value:10500000,comm:158000,token:10500000,stage:'closed',seller:{name:'Resale · owner',phone:'+91 98550 09912'}},
+    {id:'D7',client:'Rajesh Bansal',prop:'Residential Plot · 500 sq yd',propSub:'Eco City, New Chandigarh',area:'New Chandigarh',value:23500000,comm:350000,token:0,stage:'enquiry',seller:{name:'Jaswant Rai',phone:'+91 94170 88231'}},
+    {id:'D8',client:'Anil Mehta',prop:'Builder Floor · 1450 sq ft',propSub:'VIP Road, Zirakpur',area:'Zirakpur',value:7800000,comm:117000,token:0,stage:'enquiry',seller:{name:'Motia Group',phone:'+91 98723 11900'}},
+    {id:'D9',client:'Manpreet Sethi',prop:'Kothi · 500 sq yd',propSub:'Sector 22, Chandigarh',area:'Chandigarh',value:41000000,comm:0,token:0,stage:'lost',seller:{name:'—',phone:'—'}},
+  ];
+
+  clients=[
+    {id:'C1',name:'Harpreet Singh Gill',phone:'+91 98146 22107',area:'Sector 79, Mohali',budget:'₹1.5–1.8 Cr',type:'Plot',status:'active',seen:'Today, 4:20 PM',sessions:3,note:'Wants East-facing, ready for registry.',viewed:['Mohali','Sector 79','Plot 250 sq yd']},
+    {id:'C2',name:'Simarjeet Kaur',phone:'+91 99885 31220',area:'Aerocity, Mohali',budget:'₹2.5–3 Cr',type:'Plot',status:'active',seen:'Today, 12:05 PM',sessions:2,note:'Comparing Aerocity vs New Chandigarh.',viewed:['Aerocity','Sector map','Plot 300 sq yd']},
+    {id:'C3',name:'Dr. Neeraj Verma',phone:'+91 98720 55014',area:'Sector 9, Panchkula',budget:'₹3–3.5 Cr',type:'Kothi',status:'active',seen:'Yesterday',sessions:4,note:'Kothi buyer, decision this month.',viewed:['Panchkula','Sector 9','Kothi 300 sq yd']},
+    {id:'C4',name:'Anil Mehta',phone:'+91 98723 11900',area:'VIP Road, Zirakpur',budget:'₹70–90 L',type:'Flat',status:'warm',seen:'2 days ago',sessions:1,note:'Budget-conscious, first enquiry.',viewed:['Zirakpur','Builder Floor']},
+    {id:'C5',name:'Baldev Raj Jindal',phone:'+91 98555 71220',area:'New Chandigarh',budget:'₹4.5–5 Cr',type:'Villa',status:'active',seen:'Today, 11:10 AM',sessions:2,note:'Premium villa, wants gated society.',viewed:['New Chandigarh','Omaxe','Villa 400 sq yd']},
+    {id:'C6',name:'Rajesh Bansal',phone:'+91 94170 88231',area:'Eco City, New Chandigarh',budget:'₹2–2.5 Cr',type:'Plot',status:'warm',seen:'3 days ago',sessions:1,note:'Investor, comparing sectors.',viewed:['New Chandigarh','Eco City']},
+    {id:'C7',name:'Vikram Ahluwalia',phone:'+91 98159 74430',area:'Sector 88, Mohali',budget:'₹1.2–1.4 Cr',type:'Plot',status:'active',seen:'Yesterday',sessions:2,note:'Token discussed, close to token.',viewed:['Mohali','Sector 88']},
+    {id:'C8',name:'Sunita Rani',phone:'+91 98550 09912',area:'Aerocity, Mohali',budget:'₹1 Cr',type:'Flat',status:'closed',seen:'Last week',sessions:3,note:'Deal closed — registry done.',viewed:['Aerocity','3 BHK Flat']},
+    {id:'C9',name:'Gurdeep Singh Sandhu',phone:'+91 98761 30022',area:'Kharar',budget:'₹55–70 L',type:'Plot',status:'cold',seen:'2 weeks ago',sessions:1,note:'Just browsing for now.',viewed:['Kharar']},
+    {id:'C10',name:'Manpreet Sethi',phone:'+91 98140 66710',area:'Sector 22, Chandigarh',budget:'₹4 Cr+',type:'Kothi',status:'cold',seen:'This week',sessions:2,note:'Went with another dealer — keep warm.',viewed:['Chandigarh','Sector 22']},
+  ];
+  newClients=['C5','C7'];
+
+  properties=[
+    {id:'P1',type:'Residential Plot',size:'250 sq yd',loc:'Sector 79, Mohali',area:'Mohali',facing:'East',price:16500000,status:'available',ready:true,views:24},
+    {id:'P2',type:'Residential Plot',size:'500 sq yd',loc:'Eco City, New Chandigarh',area:'New Chandigarh',facing:'North-East',price:23500000,status:'available',ready:true,views:31},
+    {id:'P3',type:'3 BHK Flat',size:'1650 sq ft',loc:'Aerocity, Mohali',area:'Aerocity',facing:'East',price:10500000,status:'onhold',ready:true,views:12},
+    {id:'P4',type:'Kothi',size:'300 sq yd',loc:'Sector 9, Panchkula',area:'Panchkula',facing:'West',price:32000000,status:'available',ready:true,views:18},
+    {id:'P5',type:'Commercial SCO',size:'120 sq yd',loc:'Sector 82, Mohali',area:'Mohali',facing:'—',price:45000000,status:'available',ready:false,views:7,gap:'No client photo yet'},
+    {id:'P6',type:'Residential Plot',size:'200 sq yd',loc:'Sector 88, Mohali',area:'Mohali',facing:'South',price:12800000,status:'available',ready:true,views:15},
+    {id:'P7',type:'Builder Floor',size:'1450 sq ft',loc:'VIP Road, Zirakpur',area:'Zirakpur',facing:'East',price:7800000,status:'available',ready:true,views:9},
+    {id:'P8',type:'Residential Plot',size:'350 sq yd',loc:'Sector 91, Mohali',area:'Mohali',facing:'North',price:21000000,status:'sold',ready:true,views:40},
+    {id:'P9',type:'Residential Plot',size:'150 sq yd',loc:'Sunny Enclave, Kharar',area:'Kharar',facing:'East',price:6200000,status:'available',ready:false,views:4,gap:'Sector map not linked'},
+    {id:'P10',type:'Villa',size:'400 sq yd',loc:'Omaxe, New Chandigarh',area:'New Chandigarh',facing:'North-East',price:48000000,status:'onhold',ready:true,views:21},
+    {id:'P11',type:'Commercial Booth',size:'60 sq yd',loc:'Sector 20, Panchkula',area:'Panchkula',facing:'—',price:19500000,status:'available',ready:false,views:3,gap:'No photo, no sector map'},
+    {id:'P12',type:'Residential Plot',size:'300 sq yd',loc:'Aerocity, Mohali',area:'Aerocity',facing:'West',price:27500000,status:'available',ready:true,views:27},
+    {id:'P13',type:'3 BHK Flat',size:'1800 sq ft',loc:'Sector 66, Mohali',area:'Mohali',facing:'East',price:13500000,status:'available',ready:true,views:11},
+    {id:'P14',type:'Residential Plot',size:'250 sq yd',loc:'Dhakoli, Zirakpur',area:'Zirakpur',facing:'North',price:9800000,status:'sold',ready:true,views:33},
+  ];
+
+  areas=[
+    {name:'New Chandigarh',tag:'Hot',opens:42,views:3,sessions:4,avail:2},
+    {name:'Aerocity',tag:'Rising',opens:38,views:5,sessions:3,avail:3},
+    {name:'Mohali',tag:'Rising',opens:31,views:6,sessions:3,avail:5},
+    {name:'Chandigarh',tag:'Steady',opens:26,views:4,sessions:2,avail:1},
+    {name:'Zirakpur',tag:'Rising',opens:19,views:2,sessions:2,avail:3},
+    {name:'Panchkula',tag:'Steady',opens:14,views:3,sessions:1,avail:2},
+    {name:'Kharar',tag:'Rising',opens:9,views:0,sessions:1,avail:1},
+    {name:'Derabassi',tag:'Steady',opens:6,views:0,sessions:1,avail:0},
+    {name:'Mullanpur',tag:'Rising',opens:5,views:0,sessions:1,avail:0},
+  ];
+
+  journeys=[
+    {client:'Harpreet Singh Gill',when:'Today, 4:20 PM',steps:['Mohali','Masterplan','Sector 79','Plot 250 sq yd','3D Map']},
+    {client:'Simarjeet Kaur',when:'Today, 12:05 PM',steps:['Aerocity','Masterplan','Sector map','Plot 300 sq yd']},
+    {client:'Baldev Raj Jindal',when:'Today, 11:10 AM',steps:['New Chandigarh','Masterplan','Omaxe','Villa 400 sq yd','Original']},
+  ];
+  today={sessions:3,mapOpens:128,propViews:14,topArea:'New Chandigarh'};
+
+  inr(v){ if(v>=1e7) return '₹'+(+(v/1e7).toFixed(2))+' Cr'; if(v>=1e5) return '₹'+(+(v/1e5).toFixed(2))+' L'; return '₹'+Math.round(v).toLocaleString('en-IN'); }
+  stageMeta(k){ return this.STAGES.find(s=>s.key===k)||this.STAGES[0]; }
+  go(k){ this.setState({section:k,selectedDeal:null,selectedClient:null}); if(this.scrollTop) this.scrollTop(); }
+  priv(){ return this.props.privateVisible!==undefined ? this.props.privateVisible : true; }
+
+  submitAdd(){
+    const f=this.state.form; if(!f.client){ this.setState({addOpen:false}); return; }
+    const d={id:'D'+(this.deals.length+1),client:f.client,prop:f.prop||'Property',propSub:f.area,area:f.area,
+      value:(parseFloat(f.value)||0)*1e7, comm:(parseFloat(f.comm)||0)*1e5, token:(parseFloat(f.token)||0)*1e5,
+      stage:f.stage, seller:{name:f.sellerName||'—',phone:f.sellerPhone||'—'}};
+    this.deals.unshift(d);
+    this.setState({addOpen:false,section:'deals',selectedDeal:d.id,form:{client:'',prop:'',area:'Mohali',value:'',comm:'',token:'',stage:'enquiry',sellerName:'',sellerPhone:''}});
+  }
+  onForm(e){ const f={...this.state.form,[e.target.name]:e.target.value}; this.setState({form:f}); }
+
+  dealVM(d){
+    const m=this.stageMeta(d.stage);
+    const doneN={enquiry:0,negotiating:1,token:2,registry:3,closed:4,lost:1}[d.stage];
+    const p=this.priv();
+    return { id:d.id, client:d.client, prop:d.prop, propSub:d.propSub, area:d.area,
+      value:d.value, valueFmt:this.inr(d.value), commFmt:d.comm?this.inr(d.comm):'—', tokenFmt:d.token?this.inr(d.token):'—',
+      balanceFmt:this.inr(Math.max(0,d.value-d.token)),
+      stageKey:d.stage, stageLabel:m.label,
+      pill:`display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:999px;font-size:12.5px;font-weight:700;background:${m.bg};color:${m.color}`,
+      dot:`width:7px;height:7px;border-radius:50%;background:${m.color};flex:none`,
+      initials:d.client.split(' ').map(x=>x[0]).slice(0,2).join(''),
+      docs:this.DOCS.map((n,i)=>({name:n,done:i<doneN, ico:i<doneN?'ph-fill ph-check-circle':'ph ph-circle', icoStyle:i<doneN?'font-size:19px;color:#175c43':'font-size:19px;color:#c9c2b2', txt:i<doneN?'font-size:14px;color:#3a352a;font-weight:600':'font-size:14px;color:#9a9384'})),
+      docDone:doneN, docTotal:this.DOCS.length,
+      seller:{ name:p?d.seller.name:'Hidden (private)', phone:p?d.seller.phone:'•• •••• ••••' },
+      open:()=>this.setState({selectedDeal:d.id}) };
+  }
+
+  renderVals(){
+    const s=this.state;
+    const now=new Date();
+    const h=now.getHours();
+    const greeting=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+    const dateStr=now.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+    const navItems=this.NAV.map(n=>{ const on=s.section===n.key; return {
+      label:n.label, icon:(on?'ph-fill ':'ph ')+n.icon, go:()=>this.go(n.key),
+      style:`width:100%;display:flex;align-items:center;gap:13px;padding:12px 15px;border-radius:13px;text-align:left;transition:background .15s;${on?'background:#1f6349;color:#fff;box-shadow:inset 3px 0 0 #e7c877':'background:transparent;color:#bcd2c6'}`,
+      badge:n.badge||'', badgeStyle:n.badge?`margin-left:auto;background:${on?'#e7c877':'rgba(231,200,119,.22)'};color:${on?'#173a2b':'#e7c877'};font-size:12px;font-weight:800;border-radius:999px;padding:2px 9px`:'display:none' };
+    });
+
+    const active=this.deals.filter(d=>['enquiry','negotiating','token','registry'].includes(d.stage));
+    const closed=this.deals.filter(d=>d.stage==='closed');
+    const pipeline=active.reduce((a,d)=>a+d.value,0);
+    const expComm=active.reduce((a,d)=>a+d.comm,0);
+    const closedVal=closed.reduce((a,d)=>a+d.value,0);
+    const closedComm=closed.reduce((a,d)=>a+d.comm,0);
+
+    const maxOpens=Math.max(...this.areas.map(a=>a.opens));
+    const barColor=(a)=> a.avail===0 && a.opens>=20 ? '#a97d24' : a.avail>0 && a.opens>=20 ? '#175c43' : '#8aa596';
+    const topAreas=this.areas.slice(0,4).map(a=>{
+      const noStock=a.avail===0, hot=a.opens>=20;
+      const flag=noStock?'no stock':hot?'in stock':'steady';
+      const c=noStock?'#a97d24':hot?'#175c43':'#8a8578';
+      const bg=noStock?'#f6ead2':hot?'#e0ece5':'#efece3';
+      return { name:a.name, opens:a.opens,
+        flag, flagStyle:`font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:${c};background:${bg};padding:2px 8px;border-radius:999px`,
+        barStyle:`height:100%;width:${Math.round(a.opens/maxOpens*100)}%;background:${barColor(a)};border-radius:999px` };
+    });
+
+    const availCount=this.properties.filter(p=>p.status==='available').length;
+    const holdCount=this.properties.filter(p=>p.status==='onhold').length;
+    const soldCount=this.properties.filter(p=>p.status==='sold').length;
+    const needsWorkCount=this.properties.filter(p=>!p.ready).length;
+    const portfolio=this.properties.filter(p=>p.status==='available').reduce((a,p)=>a+p.price,0);
+
+    const chip=(label,i,n)=>({label, style:`font-size:12.5px;font-weight:600;color:#3a352a;background:#f0ece2;border:1px solid #e6ded0;border-radius:8px;padding:4px 9px${i<n-1?';margin-right:2px':''}`});
+    const journeys=this.journeys.map(j=>({ client:j.client, when:j.when,
+      initials:j.client.split(' ').map(x=>x[0]).slice(0,2).join(''),
+      chips:j.steps.map((st,i)=>({label:(i>0?'→ ':'')+st, style:`font-size:12.5px;font-weight:600;color:${i===0?'#175c43':'#4a4638'};background:${i===0?'#e7ede8':'#f0ece2'};border:1px solid ${i===0?'#d3e0d7':'#e6ded0'};border-radius:8px;padding:4px 10px`})) }));
+
+    // ---- deals ----
+    const dv = s.dealsView || (this.props.dealsDefaultView||'register');
+    const segBase='padding:9px 18px;border-radius:10px;font-size:14px;font-weight:700;transition:all .15s;display:flex;align-items:center;gap:7px';
+    const segOn='background:#fff;color:#175c43;box-shadow:0 1px 3px rgba(30,28,22,.1)';
+    const segOff='background:transparent;color:#7a7565';
+    const dealFilters=[{key:'all',label:'All'},...this.STAGES].map(f=>({
+      label:f.label, count: f.key==='all'?this.deals.length:this.deals.filter(d=>d.stage===f.key).length,
+      go:()=>this.setState({dealStage:f.key}),
+      style:`display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:11px;font-size:14px;font-weight:700;cursor:pointer;border:1px solid ${s.dealStage===f.key?'#175c43':'#e6e0d3'};background:${s.dealStage===f.key?'#175c43':'#fffdf9'};color:${s.dealStage===f.key?'#fff':'#4a4638'}`,
+      cstyle:`font-size:12px;font-weight:800;border-radius:999px;padding:1px 8px;background:${s.dealStage===f.key?'rgba(255,255,255,.22)':'#efece3'};color:${s.dealStage===f.key?'#fff':'#8a8578'}`,
+    }));
+    const orderIdx={enquiry:0,negotiating:1,token:2,registry:3,closed:4,lost:5};
+    const registerDeals=this.deals.filter(d=> s.dealStage==='all' || d.stage===s.dealStage)
+      .sort((a,b)=>(orderIdx[a.stage]-orderIdx[b.stage])||(b.value-a.value)).map(d=>this.dealVM(d));
+    const boardColumns=this.STAGES.filter(x=>x.key!=='lost').map(st=>({
+      label:st.label, headStyle:`display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:800;color:${st.color}`,
+      dot:`width:9px;height:9px;border-radius:50%;background:${st.color};flex:none`,
+      count:this.deals.filter(d=>d.stage===st.key).length,
+      sum:this.inr(this.deals.filter(d=>d.stage===st.key).reduce((a,d)=>a+d.value,0)),
+      deals:this.deals.filter(d=>d.stage===st.key).map(d=>this.dealVM(d)),
+    }));
+    const dealDetail = s.selectedDeal ? this.dealVM(this.deals.find(d=>d.id===s.selectedDeal)) : null;
+
+    // ---- properties ----
+    const stMeta={available:{l:'Available',c:'#175c43',b:'#e0ece5'},onhold:{l:'On hold',c:'#a97d24',b:'#f6ead2'},sold:{l:'Sold',c:'#2e5f86',b:'#e2ebf2'}};
+    const maxViews=Math.max(...this.properties.map(p=>p.views));
+    const propVM=(p)=>{ const m=stMeta[p.status]; return {
+      title:p.type, size:p.size, loc:p.loc, facing:p.facing, priceFmt:this.inr(p.price), views:p.views, area:p.area,
+      statusLabel:m.l, statusStyle:`display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:999px;font-size:12px;font-weight:800;background:${m.b};color:${m.c}`,
+      ready:p.ready, gap:p.gap||'',
+      readyStyle:p.ready?'display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:#175c43':'display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;color:#a8482f',
+      readyIco:p.ready?'ph-fill ph-check-circle':'ph-fill ph-warning-circle', readyTxt:p.ready?'Ready to show':'Needs work',
+      photoLabel:(p.type.split(' ')[0]+' photo').toLowerCase() };};
+    const pf=s.propFilter;
+    const propItems=this.properties.filter(p=> pf==='all'?true:(pf==='needswork'?!p.ready:p.status===pf)).map(propVM);
+    const propFilters=[['all','All'],['available','Available'],['onhold','On hold'],['sold','Sold'],['needswork','Needs work']].map(([k,l])=>({
+      label:l, count:k==='all'?this.properties.length:(k==='needswork'?this.properties.filter(p=>!p.ready).length:this.properties.filter(p=>p.status===k).length),
+      go:()=>this.setState({propFilter:k}),
+      style:`display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:11px;font-size:14px;font-weight:700;cursor:pointer;border:1px solid ${pf===k?'#175c43':'#e6e0d3'};background:${pf===k?'#175c43':'#fffdf9'};color:${pf===k?'#fff':'#4a4638'}`,
+      cstyle:`font-size:12px;font-weight:800;border-radius:999px;padding:1px 8px;background:${pf===k?'rgba(255,255,255,.22)':'#efece3'};color:${pf===k?'#fff':'#8a8578'}` }));
+    const readyCount=this.properties.filter(p=>p.ready).length;
+    const healthPct=Math.round(readyCount/this.properties.length*100);
+    const attentionList=[...this.properties].sort((a,b)=>b.views-a.views).slice(0,5).map((p,i)=>({rank:i+1,title:p.type,loc:p.loc,views:p.views,barStyle:`height:100%;width:${Math.round(p.views/maxViews*100)}%;background:#175c43;border-radius:999px`}));
+    const needsWorkList=this.properties.filter(p=>!p.ready).map(propVM);
+
+    // ---- clients ----
+    const cstMeta={active:{l:'Active',c:'#175c43',b:'#e0ece5'},warm:{l:'Warm',c:'#a97d24',b:'#f6ead2'},cold:{l:'Cold',c:'#6f6a5c',b:'#efece3'},closed:{l:'Closed',c:'#2e5f86',b:'#e2ebf2'}};
+    const clientVM=(c)=>({ id:c.id, name:c.name, phone:c.phone, area:c.area, budget:c.budget, type:c.type, seen:c.seen, sessions:c.sessions, note:c.note, viewed:c.viewed||[],
+      initials:c.name.split(' ').map(x=>x[0]).slice(0,2).join(''), isNew:this.newClients.includes(c.id),
+      statusLabel:cstMeta[c.status].l, statusStyle:`display:inline-flex;align-items:center;padding:4px 11px;border-radius:999px;font-size:12px;font-weight:800;background:${cstMeta[c.status].b};color:${cstMeta[c.status].c}`,
+      open:()=>this.setState({selectedClient:c.id}) });
+    const q=(s.clientSearch||'').toLowerCase();
+    const clientItems=this.clients.filter(c=> !q || (c.name+' '+c.area+' '+c.type+' '+c.budget).toLowerCase().includes(q)).map(clientVM);
+    let clientDetail=null;
+    if(s.selectedClient){ const c=this.clients.find(x=>x.id===s.selectedClient); const vm=clientVM(c);
+      vm.chips=(c.viewed||[]).map(v=>({label:v, style:'font-size:12.5px;font-weight:600;color:#4a4638;background:#f0ece2;border:1px solid #e6ded0;border-radius:8px;padding:5px 11px'}));
+      vm.deals=this.deals.filter(d=>d.client===c.name).map(d=>{ const m=this.stageMeta(d.stage); return {prop:d.prop, valueFmt:this.inr(d.value), stageLabel:m.label,
+        pill:`display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:999px;font-size:12px;font-weight:700;background:${m.bg};color:${m.color}`, dot:`width:7px;height:7px;border-radius:50%;background:${m.color}`,
+        open:()=>this.setState({selectedClient:null,selectedDeal:d.id,section:'deals'})}; });
+      clientDetail=vm; }
+
+    // ---- area intelligence ----
+    const tagMeta={Hot:{c:'#a8482f',b:'#f3e2dc'},Rising:{c:'#2e5f86',b:'#e2ebf2'},Steady:{c:'#6f6a5c',b:'#efece3'}};
+    const maxO=Math.max(...this.areas.map(a=>a.opens));
+    const areaCards=this.areas.map(a=>{
+      const noStock=a.avail===0, hi=a.opens>=18;
+      const insight = hi&&noStock ? 'Strong interest but no stock here — worth sourcing.' : (hi&&!noStock ? 'Strong interest and you have stock — lead with this.' : (noStock ? 'Early interest, nothing to show here yet.' : 'Steady interest. Keep an eye on it.'));
+      const insC = noStock?'#8a6f52':'#3a4a42', insB = noStock?'#fdf7f1':'#f4f7f2', insBd = noStock?'#efe2d4':'#e3ece5';
+      return { name:a.name, tag:a.tag, opens:a.opens, views:a.views, sessions:a.sessions,
+        tagStyle:`font-size:11.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;padding:3px 10px;border-radius:999px;background:${tagMeta[a.tag].b};color:${tagMeta[a.tag].c}`,
+        availLabel:a.avail>0?a.avail+' available':'No stock', availStyle:a.avail>0?'font-size:13px;font-weight:700;color:#175c43':'font-size:13px;font-weight:700;color:#a97d24',
+        insight, insightStyle:`display:flex;gap:9px;font-size:13px;line-height:1.45;color:${insC};background:${insB};border:1px solid ${insBd};border-radius:12px;padding:11px 13px;margin-top:14px` };
+    });
+    const attentionBars=this.areas.map(a=>{
+      const noStock=a.avail===0, hi=a.opens>=18;
+      const flag=hi&&noStock?'High attention · no stock':hi?'High attention · in stock':a.avail>0?'Steady · in stock':'Low · no stock';
+      const c=noStock&&hi?'#a97d24':hi?'#175c43':'#8a8578', b=noStock&&hi?'#f6ead2':hi?'#e0ece5':'#efece3';
+      return { name:a.name, avail:a.avail, barStyle:`height:100%;width:${Math.round(a.opens/maxO*100)}%;background:${hi?(noStock?'#c79333':'#175c43'):'#a9b8ae'};border-radius:999px`,
+        flag, flagStyle:`font-size:12px;font-weight:800;color:${c};background:${b};padding:5px 11px;border-radius:999px;white-space:nowrap` };
+    });
+    const mostOpened=[...this.areas].sort((x,y)=>y.opens-x.opens)[0];
+    const mostViewed=[...this.areas].sort((x,y)=>y.views-x.views)[0];
+
+    return {
+      navItems, ownerName:this.ownerName, ownerFirst:this.ownerName.split(' ')[0], ownerInitials:this.ownerInitials, bizName:this.bizName,
+      greeting, dateStr,
+      isDashboard:s.section==='dashboard', isDeals:s.section==='deals', isProperties:s.section==='properties', isClients:s.section==='clients', isAreas:s.section==='areas',
+      goDeals:()=>this.go('deals'), goProps:()=>this.go('properties'), goClients:()=>this.go('clients'), goAreas:()=>this.go('areas'),
+      openAdd:()=>this.setState({addOpen:true}),
+      pipelineFmt:this.inr(pipeline), activeCount:active.length, expCommFmt:this.inr(expComm),
+      registryCount:this.deals.filter(d=>d.stage==='registry').length, closedValFmt:this.inr(closedVal), closedCommFmt:this.inr(closedComm),
+      tSessions:this.today.sessions, tMapOpens:this.today.mapOpens, tPropViews:this.today.propViews, tTopArea:this.today.topArea,
+      topAreas, availCount, holdCount, soldCount, needsWorkCount, portfolioFmt:this.inr(portfolio), journeys,
+      dealsRegister:dv==='register', dealsBoard:dv==='board',
+      regBtnStyle:`${segBase};${dv==='register'?segOn:segOff}`, boardBtnStyle:`${segBase};${dv==='board'?segOn:segOff}`,
+      setRegister:()=>this.setState({dealsView:'register'}), setBoard:()=>this.setState({dealsView:'board'}),
+      dealFilters, registerDeals, boardColumns, dealDetail, closeDeal:()=>this.setState({selectedDeal:null}),
+      addOpen:s.addOpen, closeAdd:()=>this.setState({addOpen:false}), doAdd:()=>this.submitAdd(), onForm:(e)=>this.onForm(e), form:s.form,
+      propItems, propFilters, propReadyCount:readyCount, propNeedsWork:this.properties.filter(p=>!p.ready).length,
+      propHealthPct:healthPct+'%', propHealthBar:`height:100%;width:${healthPct}%;background:#175c43;border-radius:999px`,
+      propPortfolioFmt:this.inr(portfolio), propAvail:availCount, propHold:holdCount, propSold:soldCount, propTotal:this.properties.length,
+      attentionList, needsWorkList,
+      clientItems, clientDetail, cTotal:this.clients.length,
+      cActive:this.clients.filter(c=>c.status==='active').length, cWarm:this.clients.filter(c=>c.status==='warm').length, cNew:this.newClients.length,
+      onSearch:(e)=>this.setState({clientSearch:e.target.value}), clientSearch:s.clientSearch||'', closeClient:()=>this.setState({selectedClient:null}),
+      areaCards, attentionBars, mostOpenedName:mostOpened.name, mostOpenedOpens:mostOpened.opens+' opens in Client Presentation',
+      mostViewedName:mostViewed.name, mostViewedViews:mostViewed.views+' detailed property views',
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1978 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style data-omelette-print-defaults>
+@media print {
+  @page { margin: 0.5in; }
+  h1, h2, h3, h4, h5, h6 { break-after: avoid; }
+  figure, table, pre, blockquote, img, svg, tr, [class~="card" i] { break-inside: avoid; }
+  img, svg { max-width: 100%; }
+  p { orphans: 3; widows: 3; }
+}
+</style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+  * { box-sizing:border-box; }
+  html, body { margin:0; padding:0; }
+  body { background:#F3F1EB; font-family:'Plus Jakarta Sans',system-ui,sans-serif; -webkit-font-smoothing:antialiased; color:#1C1E1B; }
+  ::selection { background:#CFE2D7; color:#13402F; }
+  ::-webkit-scrollbar { width:11px; height:11px; }
+  ::-webkit-scrollbar-thumb { background:#D8D3C8; border-radius:9px; border:3px solid #F3F1EB; }
+  button { font-family:inherit; }
+  .pm-serif { font-family:'Fraunces',serif; }
+  .pm-tab { font-variant-numeric:tabular-nums; font-feature-settings:'tnum'; }
+  @keyframes pmPulse { 0%,100% { box-shadow:0 0 0 0 rgba(31,94,71,.30);} 50% { box-shadow:0 0 0 11px rgba(31,94,71,0);} }
+  @keyframes pmCardIn { from { opacity:0; transform:translateX(20px);} to { opacity:1; transform:translateX(0);} }
+  @keyframes pmFadeIn { from { opacity:0; transform:scale(.98);} to { opacity:1; transform:scale(1);} }
+  @keyframes pmFlow { to { stroke-dashoffset:-66; } }
+</style>
+</helmet>
+
+<div style="height:100vh; display:flex; flex-direction:column; background:#F3F1EB; overflow:hidden;">
+
+  <!-- ===================== TOP NAV ===================== -->
+  <div style="display:{{ navShow }}; position:relative; z-index:40; flex:none; height:66px; align-items:center; gap:20px; padding:0 24px; background:#fff; border-bottom:1px solid #E7E3D9;">
+    <button onClick="{{ goHome }}" style="display:flex; align-items:center; gap:11px; flex:none; background:transparent; border:0; cursor:pointer; padding:0;">
+      <div style="width:32px; height:32px; border-radius:10px; background:#E7F0EB; display:flex; align-items:center; justify-content:center;">
+        <div style="width:14px; height:14px; border-radius:50%; border:3.5px solid #1F5E47;"></div>
+      </div>
+      <span style="font-weight:800; font-size:18px; letter-spacing:-0.02em; color:#1C1E1B;">PlotMap</span>
+    </button>
+
+    <div style="display:flex; gap:3px; flex:1;">
+      <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="5">
+        <button onClick="{{ t.go }}" style="background:{{ t.bg }}; color:{{ t.col }}; border:0; border-radius:11px; padding:11px 16px; font-size:15px; font-weight:{{ t.fw }}; cursor:pointer;">{{ t.label }}</button>
+      </sc-for>
+    </div>
+
+    <div style="position:relative; display:{{ mpNavShow }}; flex:none;">
+      <button onClick="{{ toggleMp }}" style="display:flex; align-items:center; gap:10px; background:#FAF8F3; border:1px solid #E7E3D9; border-radius:13px; padding:7px 12px; cursor:pointer;" style-hover="background:#F1EFE8;">
+        <span style="width:9px; height:9px; border-radius:50%; background:#1F5E47;"></span>
+        <div style="text-align:left; line-height:1;">
+          <div style="font-weight:700; font-size:14.5px; color:#1C1E1B;">{{ mpName }}</div>
+          <div style="font-size:11px; color:#9A9D96; margin-top:3px;">{{ mpSub }}</div>
+        </div>
+        <span style="color:#B0ADA2; font-size:11px; margin-left:2px;">▾</span>
+      </button>
+      <div style="display:{{ mpOpenShow }}; position:absolute; top:calc(100% + 8px); left:0; width:288px; background:#fff; border:1px solid #E7E3D9; border-radius:16px; box-shadow:0 18px 44px rgba(40,40,25,.16); overflow:hidden; z-index:60;">
+        <div style="padding:13px 14px 11px;">
+          <div style="font-size:10.5px; letter-spacing:0.14em; color:#9A9D96; font-weight:700;">MAP STYLE</div>
+          <div style="display:flex; gap:4px; margin-top:9px; background:#F4F2EC; border-radius:11px; padding:4px;">
+            <sc-for list="{{ mapTypes }}" as="m" hint-placeholder-count="3">
+              <button onClick="{{ m.go }}" title="{{ m.sub }}" style="flex:1; cursor:pointer; border:0; background:{{ m.bg }}; color:{{ m.col }}; border-radius:8px; padding:8px 4px; font-size:12.5px; font-weight:700; box-shadow:{{ m.sh }};">{{ m.short }}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="border-top:1px solid #EFEBE2; padding:11px 14px 5px;">
+          <div style="font-size:10.5px; letter-spacing:0.14em; color:#9A9D96; font-weight:700;">CHANGE MASTERPLAN</div>
+        </div>
+        <div style="max-height:262px; overflow:auto; padding:2px 6px 8px;">
+          <sc-for list="{{ masterplans }}" as="mp" hint-placeholder-count="9">
+            <button onClick="{{ mp.go }}" style="width:100%; display:flex; align-items:center; gap:11px; background:{{ mp.bg }}; border:0; border-radius:10px; padding:10px 10px; cursor:pointer; text-align:left;" style-hover="background:#F4F2EC;">
+              <span style="width:8px; height:8px; border-radius:50%; background:{{ mp.dot }}; flex:none;"></span>
+              <div style="flex:1;"><div style="font-size:14px; font-weight:{{ mp.fw }}; color:#1C1E1B;">{{ mp.name }}</div><div style="font-size:11px; color:#9A9D96; margin-top:2px;">{{ mp.sub }}</div></div>
+              <span style="color:#1F5E47; font-weight:800; font-size:13px; display:{{ mp.checkShow }};">✓</span>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <div style="position:relative; display:{{ photoBtnShow }}; flex:none;">
+      <button onClick="{{ togglePhoto }}" title="Property photo" style="width:44px; height:44px; border-radius:13px; border:1px solid #E7E3D9; background:#FAF8F3; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#6A6E68;" style-hover="background:#F1EFE8; color:#1F5E47; border-color:#C9DED4;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"></rect><circle cx="8.5" cy="8.5" r="1.6"></circle><path d="M21 15l-5-5L5 21"></path></svg>
+      </button>
+      <div style="display:{{ photoOpenShow }}; position:absolute; top:calc(100% + 8px); right:0; width:320px; background:#fff; border:1px solid #E7E3D9; border-radius:18px; box-shadow:0 18px 44px rgba(40,40,25,.16); overflow:hidden; z-index:60;">
+        <div style="height:190px; position:relative; background:linear-gradient(180deg,#AEC9DF 0%,#CADBD0 44%,#A9C083 47%,#7E9A52 100%);">
+          <span style="position:absolute; left:12px; bottom:12px; background:rgba(255,255,255,.94); color:#5A564A; font-size:12px; font-weight:700; padding:5px 11px; border-radius:9px;">East-facing · Corner</span>
+        </div>
+        <div style="padding:13px 15px; display:flex; align-items:center; justify-content:space-between;">
+          <div><div style="font-size:14px; font-weight:700; color:#1C1E1B;">Plot C-114</div><div style="font-size:11.5px; color:#9A9D96; margin-top:2px;">Aerocity · Block C</div></div>
+          <span style="font-size:10px; letter-spacing:0.06em; color:#9A9D96; font-weight:700;">PROPERTY PHOTO</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="flex:none; display:flex; align-items:center; gap:11px; background:#FAF8F3; border:1px solid #E7E3D9; border-radius:13px; padding:6px 8px 6px 14px;">
+      <div style="text-align:right;">
+        <div style="font-size:13.5px; font-weight:700; color:#1C1E1B; line-height:1;">{{ roleName }}</div>
+        <div style="font-size:11.5px; color:#9A9D96; margin-top:3px;">{{ roleKind }}</div>
+      </div>
+      <div style="width:34px; height:34px; border-radius:10px; background:{{ roleColor }}; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px;">{{ roleInitial }}</div>
+    </div>
+  </div>
+
+  <!-- ===================== STAGE ===================== -->
+  <div style="flex:1; position:relative; overflow:hidden;">
+
+    <!-- ============ 0 · LANDING (elegant luxe) ============ -->
+    <div style="display:{{ landingShow }};">
+    <section data-screen-label="Landing" style="position:absolute; inset:0; overflow:auto; background:#F5EFE2;">
+      <div style="position:absolute; inset:0; background:radial-gradient(120% 82% at 50% -8%, #FCF8EF 0%, #F4EDDE 46%, #ECE3CF 100%);"></div>
+      <div style="position:absolute; left:50%; top:-170px; transform:translateX(-50%); width:860px; height:560px; border-radius:50%; background:radial-gradient(circle, rgba(193,150,74,0.20), transparent 64%);"></div>
+      <div style="position:absolute; left:50%; top:30%; transform:translateX(-50%); width:560px; height:380px; border-radius:50%; background:radial-gradient(circle, rgba(31,94,71,0.08), transparent 66%);"></div>
+      <div style="position:absolute; left:0; right:0; top:0; height:3px; background:linear-gradient(90deg,transparent,rgba(168,124,61,.6),transparent);"></div>
+
+      <div style="position:relative; min-height:100%; max-width:1080px; margin:0 auto; padding:32px 48px 40px; display:flex; flex-direction:column;">
+
+        <!-- top bar -->
+        <div style="display:flex; align-items:center; justify-content:space-between; flex:none;">
+          <div style="display:flex; align-items:center; gap:9px; color:#5C7A6B; font-size:12px; letter-spacing:0.2em; font-weight:700;"><span style="width:7px; height:7px; border-radius:50%; background:#2E8B66; box-shadow:0 0 0 4px rgba(46,139,102,.16);"></span>TRICITY · LIVE</div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:11px; letter-spacing:0.16em; color:#9A8C6E;">POWERED BY</span>
+            <span style="width:13px; height:13px; border-radius:50%; border:2.5px solid #1F5E47;"></span>
+            <span style="font-size:14px; font-weight:800; letter-spacing:-0.01em; color:#1C2B22;">PlotMap</span>
+          </div>
+        </div>
+
+        <!-- centered brand -->
+        <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;">
+          <div style="width:78px; height:78px; border-radius:22px; border:1px solid rgba(168,124,61,.5); background:linear-gradient(155deg,#FFFCF4,#F1E7D0); display:flex; align-items:center; justify-content:center; box-shadow:0 20px 44px rgba(120,90,30,.18), inset 0 1px 0 rgba(255,255,255,.7); margin-bottom:30px;">
+            <div style="width:28px; height:28px; border-radius:50%; border:3px solid #1F5E47;"></div>
+          </div>
+          <h1 class="pm-serif" style="font-weight:500; font-size:78px; line-height:1; letter-spacing:0.04em; margin:0; color:#15281F;">GANAPATI</h1>
+          <div class="pm-serif" style="font-weight:400; font-size:26px; letter-spacing:0.52em; margin:14px 0 0; padding-left:0.52em; color:#A87C3D;">PROPERTY</div>
+          <div style="display:flex; align-items:center; gap:14px; margin:30px 0 0;">
+            <span style="height:1px; width:44px; background:linear-gradient(90deg,transparent,rgba(168,124,61,.7));"></span>
+            <span style="font-size:11.5px; letter-spacing:0.34em; color:#8A7C60; font-weight:700;">ESTD · TRICITY · SINCE 2009</span>
+            <span style="height:1px; width:44px; background:linear-gradient(90deg,rgba(168,124,61,.7),transparent);"></span>
+          </div>
+          <p style="font-size:17.5px; line-height:1.6; color:#5F6B61; max-width:48ch; margin:26px 0 0;">The whole property business — presented on a living map, run from one calm, premium command system.</p>
+        </div>
+
+        <!-- entry options -->
+        <div style="flex:none; display:grid; grid-template-columns:repeat(3,1fr); gap:14px;">
+          <sc-for list="{{ doors }}" as="d" hint-placeholder-count="3">
+            <button onClick="{{ d.go }}" style="text-align:left; cursor:pointer; background:#FFFDF8; border:1px solid #E8DFC9; border-radius:20px; padding:24px 22px 22px; display:flex; flex-direction:column; min-height:184px; box-shadow:0 2px 4px rgba(120,90,30,.04), 0 16px 36px rgba(120,90,30,.07); transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;" style-hover="transform:translateY(-4px); box-shadow:0 10px 22px rgba(120,90,30,.1), 0 28px 56px rgba(120,90,30,.15); border-color:{{ d.accent }};">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                <div style="width:46px; height:46px; border-radius:14px; background:{{ d.tint }}; color:{{ d.accent }}; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:800;">{{ d.icon }}</div>
+                <span class="pm-serif" style="font-size:15px; color:#C8BFA8;">{{ d.num }}</span>
+              </div>
+              <div style="font-size:10.5px; letter-spacing:0.18em; text-transform:uppercase; color:{{ d.accent }}; font-weight:700; margin-top:20px;">{{ d.tag }}</div>
+              <div class="pm-serif" style="font-size:24px; font-weight:500; letter-spacing:-0.01em; color:#1C2B22; margin-top:5px;">{{ d.title }}</div>
+              <div style="font-size:13px; color:#6B7268; line-height:1.5; margin-top:8px;">{{ d.desc }}</div>
+              <div style="display:flex; align-items:center; gap:7px; margin-top:auto; padding-top:16px; font-size:13.5px; font-weight:700; color:{{ d.accent }};">{{ d.cta }} <span style="font-size:15px;">→</span></div>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+    </div>
+
+    <!-- ============ 1 · MAP (client view) ============ -->
+    <div style="display:{{ mapShow }};">
+    <section data-screen-label="Map" style="position:absolute; inset:0; overflow:hidden; background:#E9E6DD;">
+      <!-- real masterplan -->
+      <div style="position:absolute; inset:0; background:#DFE8DE;">
+        <img src="assets/masterplan.jpg" alt="Aerocity masterplan" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0.96;"></img>
+      </div>
+      <!-- dim scrim when something is selected -->
+      <div style="position:absolute; inset:0; background:rgba(26,32,26,{{ dimOpacity }}); transition:background .32s ease; pointer-events:none;"></div>
+
+      <!-- interactive overlay layer -->
+      <svg viewBox="0 0 1366 792" preserveAspectRatio="none" style="position:absolute; inset:0; width:100%; height:100%;">
+        <defs>
+          <filter id="pmSoft" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2"></feGaussianBlur></filter>
+        </defs>
+        <sc-for list="{{ polyOverlays }}" as="p" hint-placeholder-count="3">
+          <polygon points="{{ p.points }}" fill="{{ p.fill }}" stroke="{{ p.stroke }}" stroke-width="{{ p.sw }}" stroke-linejoin="round" opacity="{{ p.op }}" onClick="{{ p.go }}" style="cursor:pointer; filter:{{ p.filter }}; transition:all .3s cubic-bezier(.4,0,.2,1);"></polygon>
+        </sc-for>
+        <sc-for list="{{ roadOverlays }}" as="r" hint-placeholder-count="1">
+          <g style="transition:opacity .3s ease;" opacity="{{ r.op }}">
+            <path d="{{ r.d }}" fill="none" stroke="{{ r.stroke }}" stroke-width="{{ r.sw }}" stroke-linecap="round" stroke-linejoin="round" onClick="{{ r.go }}" style="cursor:pointer; filter:{{ r.glow }}; transition:all .3s cubic-bezier(.4,0,.2,1);"></path>
+            <path d="{{ r.d }}" fill="none" stroke="#DCEBF5" stroke-width="{{ r.flowSw }}" stroke-linecap="round" stroke-dasharray="6 24" opacity="{{ r.flowOp }}" style="animation:{{ r.flowAnim }}; pointer-events:none;"></path>
+          </g>
+        </sc-for>
+        <sc-for list="{{ pinOverlays }}" as="pn" hint-placeholder-count="1">
+          <g onClick="{{ pn.go }}" style="cursor:pointer;" opacity="{{ pn.op }}">
+            <circle cx="{{ pn.cx }}" cy="{{ pn.cy }}" r="{{ pn.ringR }}" fill="none" stroke="#2E8B66" stroke-width="2.5" opacity="{{ pn.ringOp }}" style="transition:all .3s cubic-bezier(.4,0,.2,1);"></circle>
+            <circle cx="{{ pn.cx }}" cy="{{ pn.cy }}" r="{{ pn.r }}" fill="{{ pn.fill }}" stroke="#fff" stroke-width="3" style="transition:all .3s cubic-bezier(.4,0,.2,1); filter:drop-shadow(0 4px 8px rgba(20,50,35,.4));"></circle>
+          </g>
+        </sc-for>
+      </svg>
+
+      <!-- floating labels -->
+      <sc-for list="{{ mapLabels }}" as="l" hint-placeholder-count="3">
+        <div style="position:absolute; left:{{ l.left }}; top:{{ l.top }}; transform:{{ l.tf }}; z-index:{{ l.z }}; background:{{ l.bg }}; color:{{ l.color }}; font-size:12.5px; font-weight:{{ l.fw }}; padding:5px 12px; border-radius:10px; box-shadow:{{ l.shadow }}; white-space:nowrap; pointer-events:none; transition:all .3s cubic-bezier(.4,0,.2,1);">{{ l.text }}</div>
+      </sc-for>
+
+      <!-- legend -->
+      <div style="position:absolute; left:24px; bottom:24px; z-index:8; background:rgba(255,255,255,.94); border:1px solid #E2DCCB; border-radius:16px; padding:13px 16px; box-shadow:0 10px 26px rgba(50,45,25,.14);">
+        <div style="font-size:10px; letter-spacing:.13em; font-weight:800; color:#9A9D96; margin-bottom:9px;">TAP THE MAP TO EXPLORE</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:7px 18px;">
+          <sc-for list="{{ mapLegend }}" as="lg" hint-placeholder-count="4">
+            <div style="display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:600; color:#4A4E46;"><span style="width:11px; height:11px; border-radius:3px; background:{{ lg.c }};"></span>{{ lg.t }}</div>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- SIDE CARD -->
+      <div style="display:{{ sideShow }}; position:absolute; right:24px; top:24px; bottom:24px; width:372px; z-index:20;">
+        <!-- empty prompt -->
+        <div style="display:{{ mcEmptyShow }}; height:100%; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:40px; background:rgba(255,255,255,.72); border:1px dashed #D6D0C1; border-radius:24px;">
+          <div style="width:56px; height:56px; border-radius:16px; background:#EEEAE0; display:flex; align-items:center; justify-content:center; color:#B0ADA2; font-size:26px;">◎</div>
+          <div class="pm-serif" style="font-size:22px; font-weight:500; color:#4A4E46; margin-top:16px;">Tap any road, block or plot</div>
+          <div style="font-size:14px; color:#9A9D96; line-height:1.55; margin-top:8px;">Select something on the map to see its client-safe details here.</div>
+        </div>
+
+        <!-- generic (block / sector / road / landmark / zone) -->
+        <div style="display:{{ mcGenericShow }}; height:100%; flex-direction:column; background:#fff; border:1px solid #E7E3D9; border-radius:24px; box-shadow:0 24px 56px rgba(40,38,20,.18); overflow:hidden; animation:pmCardIn .3s cubic-bezier(.4,0,.2,1);">
+          <div style="padding:20px 22px 16px; border-bottom:1px solid #F0ECE3;">
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px;">
+              <div style="font-size:12px; font-weight:800; letter-spacing:.02em; color:{{ mcAccent }}; background:{{ mcAccentBg }}; padding:5px 11px; border-radius:8px;">{{ mcEyebrow }}</div>
+              <button onClick="{{ clearSel }}" title="Close" style="flex:none; width:30px; height:30px; border-radius:9px; border:1px solid #ECE8DF; background:#FAF8F3; color:#9A9D96; cursor:pointer; font-size:16px;" style-hover="background:#F1EFE8; color:#56544A;">×</button>
+            </div>
+            <div class="pm-serif" style="font-size:30px; font-weight:500; letter-spacing:-0.01em; color:#1C1E1B; margin:12px 0 5px;">{{ mcTitle }}</div>
+            <div style="font-size:14.5px; color:#6A6E68; line-height:1.5;">{{ mcSub }}</div>
+          </div>
+          <div style="flex:1; overflow:auto; padding:8px 22px;">
+            <sc-for list="{{ mcRows }}" as="row" hint-placeholder-count="3">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 0; border-bottom:1px solid #F3EFE6;">
+                <span style="font-size:13.5px; color:#9A9D96; font-weight:600;">{{ row.k }}</span>
+                <span style="font-size:14.5px; color:#2B2A25; font-weight:700; text-align:right;">{{ row.v }}</span>
+              </div>
+            </sc-for>
+            <div style="display:{{ mcProofShow }}; align-items:center; gap:11px; margin-top:16px; background:#F3EAD8; border:1px solid #E7D4A6; border-radius:13px; padding:12px 14px;">
+              <div style="width:26px; height:26px; border-radius:8px; background:#C1963B; display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px; flex:none; font-weight:800;">✓</div>
+              <div style="font-size:13.5px; font-weight:700; color:#8A6224;">Sector Proof available</div>
+            </div>
+          </div>
+          <div style="padding:15px 18px; border-top:1px solid #EFEBE2; display:flex; gap:10px;">
+            <button style="display:{{ mcSecondaryShow }}; cursor:pointer; flex:1; align-items:center; justify-content:center; border:1px solid #E0DCD2; background:#fff; color:#2B2A25; font-weight:700; font-size:14.5px; padding:13px; border-radius:13px;" style-hover="background:#F4F2EA;">{{ mcSecondaryLabel }}</button>
+            <button onClick="{{ mcPrimaryGo }}" style="cursor:pointer; flex:1.3; border:0; background:#1F5E47; color:#fff; font-weight:700; font-size:14.5px; padding:13px; border-radius:13px; box-shadow:0 8px 18px rgba(31,94,71,.24);" style-hover="background:#184E3B;">{{ mcPrimaryLabel }}</button>
+          </div>
+        </div>
+
+        <!-- property pin card -->
+        <div style="display:{{ mcPinShow }}; height:100%; flex-direction:column; background:#fff; border:1px solid #E7E3D9; border-radius:24px; box-shadow:0 24px 56px rgba(40,38,20,.18); overflow:hidden; animation:pmCardIn .3s cubic-bezier(.4,0,.2,1);">
+          <div style="padding:20px 22px 16px;">
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px;">
+              <div>
+                <div style="font-size:13px; color:#1F5E47; font-weight:700;">{{ pinArea }}</div>
+                <div class="pm-serif" style="font-size:30px; font-weight:500; letter-spacing:-0.01em; color:#1C1E1B; margin:4px 0 4px;">{{ pinName }}</div>
+                <div style="font-size:14.5px; color:#6A6E68; font-weight:500;">{{ pinSize }}</div>
+              </div>
+              <div style="display:flex; gap:8px; flex:none;">
+                <button onClick="{{ togglePhoto }}" title="Photo" style="width:40px; height:40px; border-radius:12px; border:1px solid #E0DCD2; background:#FAF8F3; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#6A6E68;" style-hover="background:#F1EFE8; color:#1F5E47;"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"></rect><circle cx="8.5" cy="8.5" r="1.6"></circle><path d="M21 15l-5-5L5 21"></path></svg></button>
+                <button onClick="{{ clearSel }}" title="Close" style="width:40px; height:40px; border-radius:12px; border:1px solid #ECE8DF; background:#FAF8F3; color:#9A9D96; cursor:pointer; font-size:17px;" style-hover="background:#F1EFE8; color:#56544A;">×</button>
+              </div>
+            </div>
+            <div style="display:{{ photoOpenShow }}; margin-top:14px; height:150px; border-radius:14px; overflow:hidden; position:relative; background:linear-gradient(180deg,#AEC9DF 0%,#CADBD0 44%,#A9C083 47%,#7E9A52 100%); animation:pmFadeIn .3s ease;">
+              <span style="position:absolute; left:12px; bottom:12px; background:rgba(255,255,255,.94); color:#5A564A; font-size:12px; font-weight:700; padding:5px 11px; border-radius:9px;">East-facing · Corner</span>
+            </div>
+          </div>
+          <div style="flex:1; overflow:auto; padding:0 22px;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+              <div style="background:#FAF8F3; border:1px solid #EFEBE2; border-radius:13px; padding:13px 14px;"><div style="font-size:12px; color:#9A9D96; font-weight:600;">Sector</div><div class="pm-serif" style="font-size:20px; font-weight:500; margin-top:3px;">{{ pinSector }}</div></div>
+              <div style="background:#FAF8F3; border:1px solid #EFEBE2; border-radius:13px; padding:13px 14px;"><div style="font-size:12px; color:#9A9D96; font-weight:600;">Block</div><div class="pm-serif" style="font-size:20px; font-weight:500; margin-top:3px;">{{ pinBlock }}</div></div>
+              <div style="background:#FAF8F3; border:1px solid #EFEBE2; border-radius:13px; padding:13px 14px;"><div style="font-size:12px; color:#9A9D96; font-weight:600;">Road width</div><div class="pm-serif" style="font-size:20px; font-weight:500; margin-top:3px;">{{ pinRoadW }}</div></div>
+              <div style="background:#FAF8F3; border:1px solid #EFEBE2; border-radius:13px; padding:13px 14px;"><div style="font-size:12px; color:#9A9D96; font-weight:600;">Facing</div><div class="pm-serif" style="font-size:20px; font-weight:500; margin-top:3px;">Road</div></div>
+            </div>
+            <div style="display:flex; align-items:center; gap:11px; margin-top:14px; background:#EAF3EE; border:1px solid #CDE6DA; border-radius:13px; padding:12px 14px;">
+              <div style="width:26px; height:26px; border-radius:8px; background:#2E8B66; display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px; flex:none; font-weight:800;">✓</div>
+              <div style="font-size:13.5px; font-weight:700; color:#216B4E;">Verified on official masterplan</div>
+            </div>
+          </div>
+          <div style="padding:15px 18px; border-top:1px solid #EFEBE2; display:flex; gap:10px;">
+            <button onClick="{{ goDetail }}" style="cursor:pointer; flex:1; border:1px solid #E0DCD2; background:#fff; color:#2B2A25; font-weight:700; font-size:14.5px; padding:13px; border-radius:13px;" style-hover="background:#F4F2EA;">View on Sector Proof</button>
+            <button style="cursor:pointer; flex:1; border:0; background:#1F5E47; color:#fff; font-weight:700; font-size:14.5px; padding:13px; border-radius:13px; box-shadow:0 8px 18px rgba(31,94,71,.24);" style-hover="background:#184E3B;">Share Brochure</button>
+          </div>
+        </div>
+      </div>
+    </section>
+    </div>
+
+    <!-- ============ 2 · PROPERTY DETAIL ============ -->
+    <div style="display:{{ detailShow }};">
+    <section data-screen-label="Property Detail" style="position:absolute; inset:0; overflow:auto; background:#F3F1EB;">
+      <div style="max-width:1180px; margin:0 auto; padding:22px 30px 40px;">
+        <button onClick="{{ backFromDetail }}" style="display:flex; align-items:center; gap:8px; background:transparent; border:0; cursor:pointer; color:#6A6E68; font-size:14.5px; font-weight:600; padding:0; margin-bottom:18px;" style-hover="color:#1C1E1B;">‹ Back</button>
+
+        <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:14px; margin-bottom:14px;">
+          <div style="position:relative; height:360px; border-radius:24px; overflow:hidden; background:linear-gradient(180deg,#A4C6DF 0%,#C6D9CF 42%,#A7BE80 46%,#789552 100%); border:1px solid #E7E3D9;">
+            <span style="position:absolute; inset:0; display:flex; align-items:flex-start; justify-content:center; padding-top:86px; color:rgba(255,255,255,.78); font-size:11px; font-weight:600; letter-spacing:.06em;">DRONE SHOT · DROP PHOTO</span>
+            <span style="position:absolute; left:18px; top:18px; background:rgba(31,94,71,.92); color:#fff; font-size:12.5px; font-weight:700; padding:6px 13px; border-radius:999px;">Available</span>
+            <span style="position:absolute; left:18px; bottom:18px; background:rgba(255,255,255,.94); color:#56544A; font-size:12.5px; font-weight:700; padding:6px 12px; border-radius:9px;">East-facing · Corner · Park-facing</span>
+          </div>
+          <div style="display:grid; grid-template-rows:1fr 1fr; gap:14px;">
+            <div style="border-radius:24px; background:linear-gradient(140deg,#C7D8E0 0%,#CBD6C2 52%,#A9BE86 100%); border:1px solid #E7E3D9; display:flex; align-items:center; justify-content:center; color:#B0A78E; font-size:12px; font-weight:600;">Street view</div>
+            <div style="border-radius:24px; background:linear-gradient(140deg,#C7D8E0 0%,#CBD6C2 52%,#A9BE86 100%); border:1px solid #E7E3D9; display:flex; align-items:center; justify-content:center; color:#B0A78E; font-size:12px; font-weight:600;">Sector layout</div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1.5fr 1fr; gap:24px; align-items:start; margin-top:10px;">
+          <div>
+            <div style="font-size:13px; color:#1F5E47; font-weight:700;">Aerocity · Sector 82 · Block C</div>
+            <div class="pm-serif" style="font-size:46px; font-weight:500; letter-spacing:-0.02em; margin:5px 0 6px;">Plot C-114</div>
+            <div style="font-size:17px; color:#6A6E68; font-weight:500;">200 sq yd · 30 × 60 ft · Residential · Freehold</div>
+
+            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:26px 0;">
+              <sc-for list="{{ detailFacts }}" as="f" hint-placeholder-count="4">
+                <div style="background:#fff; border:1px solid #E7E3D9; border-radius:16px; padding:16px;">
+                  <div style="font-size:12px; color:#9A9D96; font-weight:600;">{{ f.k }}</div>
+                  <div class="pm-serif" style="font-size:23px; font-weight:500; margin-top:5px;">{{ f.v }}</div>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="font-size:18px; font-weight:800; margin-bottom:12px;">Why this location</div>
+            <div style="background:#fff; border:1px solid #E7E3D9; border-radius:18px; padding:6px 20px; margin-bottom:24px;">
+              <sc-for list="{{ detailNearby }}" as="n" hint-placeholder-count="4">
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid #F0ECE3;">
+                  <span style="display:flex; align-items:center; gap:11px; font-size:15px; color:#3A3F39; font-weight:500;"><span style="width:9px; height:9px; border-radius:50%; background:{{ n.col }};"></span>{{ n.place }}</span>
+                  <span style="font-size:15px; font-weight:700;">{{ n.dist }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="position:sticky; top:14px; display:flex; flex-direction:column; gap:14px;">
+            <div style="background:#fff; border:1px solid #E7E3D9; border-radius:20px; padding:20px;">
+              <div style="display:flex; align-items:center; gap:11px; background:#EAF3EE; border:1px solid #CDE6DA; border-radius:13px; padding:12px 14px; margin-bottom:16px;">
+                <div style="width:26px; height:26px; border-radius:8px; background:#2E8B66; color:#fff; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:800; flex:none;">✓</div>
+                <div style="font-size:13.5px; font-weight:700; color:#216B4E;">Verified on official Aerocity masterplan</div>
+              </div>
+              <div style="position:relative; height:150px; border-radius:14px; overflow:hidden; background:radial-gradient(120% 100% at 60% 30%, #F2F0E8, #E1DED3); border:1px solid #E7E3D9; margin-bottom:16px;">
+                <div style="position:absolute; inset:0; background-image:linear-gradient(rgba(110,108,90,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(110,108,90,0.06) 1px,transparent 1px); background-size:26px 26px;"></div>
+                <div style="position:absolute; left:46%; top:42%; width:22px; height:22px; border-radius:50% 50% 50% 0; transform:rotate(-45deg); background:#1F5E47; border:2.5px solid #fff; box-shadow:0 6px 14px rgba(20,60,45,.35);"></div>
+                <span style="position:absolute; left:11px; bottom:11px; font-size:11px; font-weight:600; color:#56544A; background:rgba(255,255,255,.9); padding:4px 9px; border-radius:7px;">Block C · plot 114</span>
+              </div>
+              <button style="cursor:pointer; width:100%; border:0; background:#1F5E47; color:#fff; font-weight:700; font-size:15px; padding:14px; border-radius:13px; box-shadow:0 8px 18px rgba(31,94,71,.24); margin-bottom:10px;" style-hover="background:#184E3B;">Share Brochure</button>
+              <button style="cursor:pointer; width:100%; border:1px solid #E0DCD2; background:#fff; color:#2B2A25; font-weight:700; font-size:15px; padding:13px; border-radius:13px;" style-hover="background:#F4F2EA;">View Sector Map</button>
+            </div>
+            <div style="background:#fff; border:1px solid #E7E3D9; border-radius:20px; padding:18px 20px;">
+              <div style="font-size:14px; font-weight:800; margin-bottom:10px;">Similar nearby</div>
+              <sc-for list="{{ detailSimilar }}" as="s" hint-placeholder-count="2">
+                <div style="display:flex; align-items:center; gap:12px; padding:9px 0; border-top:1px solid #F0ECE3;">
+                  <div style="width:42px; height:42px; border-radius:11px; background:linear-gradient(140deg,#C7D8E0,#B6CB9A); flex:none;"></div>
+                  <div style="flex:1;"><div style="font-size:14px; font-weight:700;">{{ s.name }}</div><div style="font-size:12px; color:#9A9D96;">{{ s.meta }}</div></div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    </div>
+
+    <!-- ============ 3 · SECTOR MAPS (client) ============ -->
+    <div style="display:{{ sectorShow }};">
+    <section data-screen-label="Sector Maps" style="position:absolute; inset:0; overflow:auto; background:#F3F1EB;">
+      <div style="max-width:1240px; margin:0 auto; padding:28px 30px 40px;">
+        <div style="display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:6px;">
+          <div>
+            <div class="pm-serif" style="font-size:32px; font-weight:500; letter-spacing:-0.01em;">Sector Maps</div>
+            <div style="display:{{ helpShow }}; font-size:15px; color:#6A6E68; margin-top:4px;">All <b>180 sector maps</b> across Tricity — verified and ready to show.</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:9px; background:#fff; border:1px solid #E7E3D9; border-radius:12px; padding:11px 15px;"><span style="color:#B0ADA2;">⌕</span><span style="color:#A6A399; font-size:14px;">Search sector…</span></div>
+        </div>
+        <div style="display:flex; gap:8px; margin:20px 0;">
+          <sc-for list="{{ sectorChips }}" as="c" hint-placeholder-count="5">
+            <button style="cursor:pointer; background:{{ c.bg }}; border:1px solid {{ c.bd }}; color:{{ c.fg }}; font-size:13.5px; font-weight:600; padding:9px 15px; border-radius:999px;">{{ c.label }}</button>
+          </sc-for>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px;">
+          <sc-for list="{{ sectors }}" as="s" hint-placeholder-count="12">
+            <div style="background:#fff; border:1px solid #E7E3D9; border-radius:18px; overflow:hidden; cursor:pointer;" style-hover="border-color:#D6D1C6; transform:translateY(-2px);">
+              <div style="position:relative; height:128px; background:radial-gradient(120% 100% at 60% 30%, #F2F0E8, #E1DED3);">
+                <div style="position:absolute; inset:0; background-image:linear-gradient(rgba(110,108,90,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(110,108,90,0.06) 1px,transparent 1px); background-size:22px 22px;"></div>
+                <svg viewBox="0 0 240 128" preserveAspectRatio="none" style="position:absolute; inset:0; width:100%; height:100%;"><polyline points="-8,86 70,64 150,74 250,40" fill="none" stroke="#9FBFC4" stroke-width="6" stroke-linecap="round"></polyline></svg>
+                <div style="position:absolute; left:30%; top:42%; width:32px; height:24px; border-radius:5px; background:{{ s.tint }}; border:1.5px solid {{ s.col }};"></div>
+                <span style="position:absolute; right:11px; top:11px; background:{{ s.badgeBg }}; color:{{ s.badgeFg }}; font-size:10.5px; font-weight:700; padding:4px 9px; border-radius:999px;">{{ s.status }}</span>
+              </div>
+              <div style="padding:13px 15px 14px;">
+                <div style="font-size:16px; font-weight:800;">{{ s.name }}</div>
+                <div style="font-size:12.5px; color:#9A9D96; margin-top:2px;">{{ s.area }} · {{ s.plots }} plots</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="text-align:center; margin-top:26px;">
+          <button style="cursor:pointer; border:1px solid #E0DCD2; background:#fff; color:#2B2A25; font-weight:700; font-size:14.5px; padding:13px 24px; border-radius:13px;" style-hover="background:#F4F2EA;">Load all 180 sectors</button>
+        </div>
+      </div>
+    </section>
+    </div>
+
+    <!-- ============ 4 · DASHBOARD (owner) ============ -->
+    <div style="display:{{ dashShow }};">
+    <section data-screen-label="Dashboard" style="position:absolute; inset:0; overflow:auto; background:#F3F1EB;">
+      <div style="max-width:1280px; margin:0 auto; padding:36px 44px 52px;">
+        <div style="display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:26px;">
+          <div>
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+              <span style="display:inline-flex; align-items:center; gap:7px; background:#E7F0EB; border:1px solid #CADED3; color:#1F5E47; font-size:12.5px; font-weight:700; padding:6px 13px; border-radius:999px;"><span style="width:7px; height:7px; border-radius:50%; background:#2E8B66;"></span>12-day streak · opened daily</span>
+              <span style="font-size:13px; color:#9A9D96; font-weight:600;">Saturday, 28 June 2026</span>
+            </div>
+            <div class="pm-serif" style="font-size:46px; font-weight:500; letter-spacing:-0.02em; line-height:1.04;">Good morning, Karan.</div>
+            <div style="display:{{ helpShow }}; font-size:16px; color:#6A6E68; margin-top:8px;">3 things need you today, and ₹4.0L is ready to recover this week.</div>
+          </div>
+          <div style="display:flex; gap:3px; background:#fff; border:1px solid #E7E3D9; border-radius:13px; padding:5px;">
+            <span style="background:#1F5E47; color:#fff; font-size:13.5px; font-weight:700; padding:10px 18px; border-radius:9px;">Week</span>
+            <span style="color:#6A6E68; font-size:13.5px; font-weight:600; padding:10px 18px;">Month</span>
+            <span style="color:#6A6E68; font-size:13.5px; font-weight:600; padding:10px 18px;">Year</span>
+          </div>
+        </div>
+
+        <div style="position:relative; overflow:hidden; background:linear-gradient(135deg,#1F5E47 0%,#27735A 52%,#2E8B66 100%); border-radius:24px; padding:28px 32px; margin-bottom:24px; box-shadow:0 18px 44px rgba(31,94,71,.22);">
+          <div style="position:absolute; right:-70px; top:-70px; width:280px; height:280px; border-radius:50%; background:radial-gradient(circle,rgba(214,176,116,.30),transparent 64%);"></div>
+          <div style="position:relative; display:flex; align-items:center; justify-content:space-between; gap:32px; flex-wrap:wrap;">
+            <div style="flex:1; min-width:340px;">
+              <div style="font-size:11.5px; letter-spacing:0.18em; color:#BFE0D0; font-weight:700;">TODAY'S BRIEFING</div>
+              <div class="pm-serif" style="font-size:26px; font-weight:500; line-height:1.42; color:#fff; margin-top:10px; max-width:52ch;">Your pipeline grew <span style="color:#FFE3AE;">+₹42L</span> this week. <span style="color:#FFE3AE;">3 hot clients</span> are waiting on you, and <span style="color:#FFE3AE;">₹4.0L</span> is safe to recover.</div>
+              <button style="cursor:pointer; border:0; background:#fff; color:#1F5E47; font-weight:700; font-size:14px; padding:12px 22px; border-radius:12px; margin-top:20px;" style-hover="background:#F0F6F2;">Start my day →</button>
+            </div>
+            <div style="flex:none; display:grid; grid-template-columns:repeat(3,1fr); gap:12px; min-width:400px;">
+              <sc-for list="{{ briefing }}" as="b" hint-placeholder-count="3">
+                <div style="background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); border-radius:16px; padding:16px 17px;">
+                  <div class="pm-serif" style="font-size:28px; font-weight:600; color:#fff; line-height:1;">{{ b.v }}</div>
+                  <div style="font-size:12px; color:#CFE6DB; margin-top:7px; font-weight:600; line-height:1.3;">{{ b.k }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:20px; margin-bottom:24px;">
+          <sc-for list="{{ stats }}" as="s" hint-placeholder-count="4">
+            <div style="background:#fff; border:1px solid #E7E3D9; border-radius:22px; padding:24px 26px; box-shadow:0 1px 2px rgba(20,18,12,.03), 0 12px 26px rgba(40,32,15,.04);">
+              <div style="display:flex; align-items:center; justify-content:space-between;">
+                <span style="font-size:14px; color:#6A6E68; font-weight:600;">{{ s.k }}</span>
+                <span style="font-size:12.5px; font-weight:700; color:{{ s.delCol }}; background:{{ s.delBg }}; padding:4px 10px; border-radius:999px;">{{ s.delta }}</span>
+              </div>
+              <div class="pm-serif" style="font-size:46px; font-weight:500; letter-spacing:-0.01em; margin-top:12px; line-height:1;">{{ s.v }}</div>
+              <div style="display:flex; align-items:flex-end; gap:3px; height:30px; margin-top:16px;">
+                <sc-for list="{{ s.spark }}" as="b" hint-placeholder-count="7">
+                  <span style="flex:1; height:{{ b.h }}; background:{{ b.c }}; border-radius:2px;"></span>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+
+        <!-- recommended today (soft) -->
+        
+
+        <div style="display:grid; grid-template-columns:1.4fr 1fr; gap:20px; margin-bottom:24px; align-items:start;">
+          <div style="background:#fff; border:1px solid #E7E3D9; border-radius:22px; padding:24px 26px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:22px;">
+              <div style="flex:none;"><div style="font-size:20px; font-weight:800; white-space:nowrap;">Business momentum</div><div style="font-size:13.5px; color:#9A9D96; margin-top:3px; white-space:nowrap;">Client activity, last 14 days</div></div>
+              <div style="display:flex; gap:14px;">
+                <span style="display:flex; align-items:center; gap:6px; font-size:12.5px; color:#6A6E68; font-weight:600;"><span style="width:9px; height:9px; border-radius:3px; background:#1F5E47;"></span>Visits</span>
+                <span style="display:flex; align-items:center; gap:6px; font-size:12.5px; color:#6A6E68; font-weight:600;"><span style="width:9px; height:9px; border-radius:3px; background:#C7B083;"></span>Enquiries</span>
+              </div>
+            </div>
+            <div style="display:flex; align-items:flex-end; gap:8px; height:190px;">
+              <sc-for list="{{ momentum }}" as="m" hint-placeholder-count="14">
+                <div style="flex:1; display:flex; flex-direction:column; align-items:center; gap:5px;">
+                  <div style="width:100%; display:flex; flex-direction:column; justify-content:flex-end; gap:3px; height:168px;">
+                    <div style="height:{{ m.a }}; background:#C7B083; border-radius:3px 3px 0 0;"></div>
+                    <div style="height:{{ m.b }}; background:#1F5E47; border-radius:3px 3px 0 0;"></div>
+                  </div>
+                  <span style="font-size:9.5px; color:#B0ADA2;">{{ m.d }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="background:#fff; border:1px solid #E7E3D9; border-radius:22px; padding:24px 26px;">
+            <div style="font-size:20px; font-weight:800; margin-bottom:4px;">Where buyers are looking</div>
+            <div style="font-size:13px; color:#9A9D96; margin-bottom:16px;">Share of attention, based on your activity</div>
+            <sc-for list="{{ areas }}" as="a" hint-placeholder-count="4">
+              <div style="margin-bottom:15px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; gap:10px;">
+                  <span style="font-size:14.5px; font-weight:700; white-space:nowrap;">{{ a.name }}</span>
+                  <span style="font-size:13px; font-weight:700; color:{{ a.col }}; white-space:nowrap;">{{ a.change }}</span>
+                </div>
+                <div style="height:10px; border-radius:6px; background:#F0ECE3; overflow:hidden;"><div style="height:100%; width:{{ a.pct }}; background:{{ a.col }}; border-radius:6px;"></div></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="background:#fff; border:1px solid #E7E3D9; border-radius:24px; padding:26px 28px;">
+          <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div><div style="font-size:21px; font-weight:800;">Top clients right now</div><div style="display:{{ helpShow }}; font-size:13.5px; color:#9A9D96; margin-top:2px;">Your most valuable relationships, by lifetime value.</div></div>
+            <button onClick="{{ goClients }}" style="cursor:pointer; border:0; background:transparent; font-size:13.5px; color:#1F5E47; font-weight:700;">View all clients →</button>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-top:20px;">
+            <sc-for list="{{ clients }}" as="c" hint-placeholder-count="4">
+              <button onClick="{{ c.go }}" style="text-align:left; cursor:pointer; background:#FAF8F3; border:1px solid #ECE8DF; border-radius:18px; padding:18px;" style-hover="border-color:#D9D3C6;">
+                <div style="display:flex; align-items:center; gap:11px;">
+                  <div style="width:40px; height:40px; border-radius:12px; background:{{ c.avBg }}; color:{{ c.avFg }}; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px;">{{ c.initials }}</div>
+                  <div style="flex:1; min-width:0;"><div style="font-size:14.5px; font-weight:700;">{{ c.name }}</div><div style="font-size:11.5px; color:#9A9D96;">{{ c.area }}</div></div>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-top:14px;">
+                  <span style="font-size:10.5px; font-weight:700; color:{{ c.stageCol }}; background:{{ c.stageBg }}; padding:3px 9px; border-radius:999px;">{{ c.stage }}</span>
+                  <span class="pm-serif" style="font-size:19px; font-weight:600; color:#A87C3D;">{{ c.value }}</span>
+                </div>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </section>
+    </div>
+
+    <!-- ============ 5 · PROPERTY INSIGHTS (owner) ============ -->
+    <div style="display:{{ insightsShow }};">
+    <section data-screen-label="Property Insights" style="position:absolute; inset:0; overflow:auto; background:#F3F1EB;">
+      <div style="max-width:1240px; margin:0 auto; padding:28px 30px 40px;">
+        <div class="pm-serif" style="font-size:32px; font-weight:500; letter-spacing:-0.01em;">Property Insights</div>
+        <div style="display:{{ helpShow }}; font-size:15px; color:#6A6E68; margin:4px 0 22px;">How your listed inventory is performing — views, demand and what needs fixing.</div>
+
+        <div style="display:grid; grid-template-columns:repeat(5,1fr); gap:13px; margin-bottom:16px;">
+          <sc-for list="{{ insightKpis }}" as="k" hint-placeholder-count="5">
+            <div style="background:#fff; border:1px solid #E7E3D9; border-radius:18px; padding:18px 18px;">
+              <div style="font-size:12.5px; color:#9A9D96; font-weight:600;">{{ k.k }}</div>
+              <div class="pm-serif" style="font-size:32px; font-weight:500; margin-top:6px; line-height:1; color:{{ k.col }};">{{ k.v }}</div>
+              <div style="font-size:11.5px; color:#B0ADA2; margin-top:7px;">{{ k.sub }}</div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1.3fr 1fr; gap:16px; align-items:start; margin-bottom:16px;">
+          <!-- most viewed / attention score -->
+          <div style="background:#fff; border:1px solid #E7E3D9; border-radius:20px; padding:20px 22px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;"><span style="font-size:18px; font-weight:800;">Getting the most attention</span><span style="font-size:12px; color:#9A9D96; font-weight:600;">Views · shares</span></div>
+            <sc-for list="{{ attention }}" as="p" hint-placeholder-count="5">
+              <div style="display:flex; align-items:center; gap:14px; padding:13px 0; border-top:1px solid #F0ECE3;">
+                <div style="width:46px; height:46px; border-radius:12px; background:linear-gradient(140deg,#C7D8E0,#B6CB9A); flex:none;"></div>
+                <div style="flex:1; min-width:0;"><div style="font-size:15px; font-weight:700;">{{ p.name }}</div><div style="font-size:12.5px; color:#9A9D96;">{{ p.area }}</div></div>
+                <div style="flex:none; width:140px;">
+                  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:5px;"><span style="font-size:12px; color:#7C8076; font-weight:600;">{{ p.views }} views</span><span style="font-size:12px; font-weight:700; color:#A87C3D;">{{ p.score }}</span></div>
+                  <div style="height:7px; border-radius:5px; background:#F0ECE3; overflow:hidden;"><div style="height:100%; width:{{ p.pct }}; background:#A87C3D; border-radius:5px;"></div></div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <!-- inventory health -->
+          <div style="background:#fff; border:1px solid #E7E3D9; border-radius:20px; padding:20px 22px;">
+            <div style="font-size:18px; font-weight:800; margin-bottom:4px;">Needs attention</div>
+            <div style="display:{{ helpShow }}; font-size:13px; color:#9A9D96; margin-bottom:8px;">Fix these so every plot is ready to show.</div>
+            <sc-for list="{{ invHealth }}" as="h" hint-placeholder-count="4">
+              <div style="display:flex; align-items:center; gap:12px; padding:13px 0; border-top:1px solid #F0ECE3;">
+                <span style="width:10px; height:10px; border-radius:50%; background:{{ h.col }}; flex:none;"></span>
+                <span style="flex:1; font-size:14.5px; color:#3A3F39; font-weight:500;">{{ h.t }}</span>
+                <span class="pm-serif" style="font-size:22px; font-weight:600; color:{{ h.col }};">{{ h.n }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr 1.2fr; gap:16px; align-items:start;">
+          <div style="background:#fff; border:1px solid #E7E3D9; border-radius:20px; padding:20px 22px;">
+            <div style="font-size:16px; font-weight:800; margin-bottom:16px;">Inventory by area</div>
+            <sc-for list="{{ invArea }}" as="a" hint-placeholder-count="4">
+              <div style="display:flex; align-items:center; gap:12px; margin-bottom:13px;"><span style="width:74px; font-size:13px; font-weight:600; color:#56544A;">{{ a.area }}</span><div style="flex:1; height:9px; border-radius:5px; background:#F0ECE3; overflow:hidden;"><div style="width:{{ a.pct }}; height:100%; background:#1F5E47; border-radius:5px;"></div></div><span style="font-size:13.5px; font-weight:700; width:28px; text-align:right;">{{ a.n }}</span></div>
+            </sc-for>
+          </div>
+          <div style="background:#fff; border:1px solid #E7E3D9; border-radius:20px; padding:20px 22px;">
+            <div style="font-size:16px; font-weight:800; margin-bottom:16px;">By type</div>
+            <sc-for list="{{ invType }}" as="a" hint-placeholder-count="4">
+              <div style="display:flex; align-items:center; gap:12px; margin-bottom:13px;"><span style="width:84px; font-size:13px; font-weight:600; color:#56544A;">{{ a.area }}</span><div style="flex:1; height:9px; border-radius:5px; background:#F0ECE3; overflow:hidden;"><div style="width:{{ a.pct }}; height:100%; background:#3E6E96; border-radius:5px;"></div></div><span style="font-size:13.5px; font-weight:700; width:28px; text-align:right;">{{ a.n }}</span></div>
+            </sc-for>
+          </div>
+          <!-- demand vs supply signal -->
+          <div style="background:linear-gradient(160deg,#1F5E47,#2A7458); border-radius:20px; padding:20px 22px; color:#fff;">
+            <div style="font-size:16px; font-weight:800; margin-bottom:4px;">Inventory signals</div>
+            <div style="font-size:13px; color:#BFD7CC; margin-bottom:14px;">Where buyers want more than you have.</div>
+            <sc-for list="{{ signals }}" as="s" hint-placeholder-count="3">
+              <div style="display:flex; align-items:flex-start; gap:11px; padding:11px 0; border-top:1px solid rgba(255,255,255,.12);">
+                <span style="margin-top:4px; width:8px; height:8px; border-radius:50%; flex:none; background:#D9BE8C;"></span>
+                <span style="font-size:13.5px; color:#EAF3EE; font-weight:500; line-height:1.45;">{{ s.t }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </section>
+    </div>
+
+    <!-- ============ 6 · CLIENTS (owner) ============ -->
+    <div style="display:{{ clientsShow }};">
+    <section data-screen-label="Clients" style="position:absolute; inset:0; overflow:auto; background:#F3F1EB;">
+      <div style="max-width:1180px; margin:0 auto; padding:28px 30px 40px;">
+        <div style="display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:6px;">
+          <div>
+            <div class="pm-serif" style="font-size:32px; font-weight:500; letter-spacing:-0.01em;">Clients</div>
+            <div style="display:{{ helpShow }}; font-size:15px; color:#6A6E68; margin-top:4px;"><b>128 active clients</b> — tap any name to open their full history.</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:9px; background:#fff; border:1px solid #E7E3D9; border-radius:12px; padding:11px 15px;"><span style="color:#B0ADA2;">⌕</span><span style="color:#A6A399; font-size:14px;">Search clients…</span></div>
+        </div>
+        <div style="display:flex; gap:8px; margin:20px 0;">
+          <sc-for list="{{ clientChips }}" as="c" hint-placeholder-count="5">
+            <button style="cursor:pointer; background:{{ c.bg }}; border:1px solid {{ c.bd }}; color:{{ c.fg }}; font-size:13.5px; font-weight:600; padding:9px 15px; border-radius:999px;">{{ c.label }}</button>
+          </sc-for>
+        </div>
+        <div style="background:#fff; border:1px solid #E7E3D9; border-radius:20px; overflow:hidden;">
+          <div style="display:grid; grid-template-columns:1.5fr 1fr 1fr 0.9fr 0.8fr; padding:13px 22px; font-size:11.5px; color:#9A9D96; font-weight:700; border-bottom:1px solid #F0ECE3;"><span>Client</span><span>Area / Budget</span><span>Stage</span><span>Lifetime</span><span style="text-align:right;">Activity</span></div>
+          <sc-for list="{{ clientRows }}" as="c" hint-placeholder-count="6">
+            <button onClick="{{ c.go }}" style="width:100%; text-align:left; cursor:pointer; border:0; background:transparent; display:grid; grid-template-columns:1.5fr 1fr 1fr 0.9fr 0.8fr; align-items:center; padding:15px 22px; border-bottom:1px solid #F4F0E8;" style-hover="background:#FAF8F3;">
+              <span style="display:flex; align-items:center; gap:13px;"><span style="width:40px; height:40px; border-radius:12px; background:{{ c.avBg }}; color:{{ c.avFg }}; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px;">{{ c.initials }}</span><span><span style="display:block; font-size:15px; font-weight:700;">{{ c.name }}</span><span style="display:block; font-size:12px; color:#9A9D96;">{{ c.phone }}</span></span></span>
+              <span style="font-size:13.5px; color:#3A3F39; font-weight:500;">{{ c.area }}<span style="display:block; font-size:12px; color:#9A9D96;">{{ c.budget }}</span></span>
+              <span><span style="font-size:11px; font-weight:700; color:{{ c.stageCol }}; background:{{ c.stageBg }}; padding:4px 10px; border-radius:999px;">{{ c.stage }}</span></span>
+              <span class="pm-serif" style="font-size:18px; font-weight:600; color:#A87C3D;">{{ c.value }}</span>
+              <span style="text-align:right; font-size:12.5px; color:#9A9D96; font-weight:600;">{{ c.last }}</span>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+    </div>
+
+    <!-- ============ 7 · CLIENT PROFILE / THREAD ============ -->
+    <div style="display:{{ clientShow }};">
+    <section data-screen-label="Client Profile" style="position:absolute; inset:0; overflow:auto; background:#F3F1EB;">
+      <div style="max-width:1180px; margin:0 auto; padding:22px 30px 40px;">
+        <button onClick="{{ goClients }}" style="display:flex; align-items:center; gap:8px; background:transparent; border:0; cursor:pointer; color:#6A6E68; font-size:14.5px; font-weight:600; padding:0; margin-bottom:18px;" style-hover="color:#1C1E1B;">‹ All clients</button>
+
+        <div style="background:#fff; border:1px solid #E7E3D9; border-radius:22px; padding:24px 26px; margin-bottom:16px;">
+          <div style="display:flex; align-items:center; gap:18px;">
+            <div style="width:66px; height:66px; border-radius:18px; background:{{ sel.avBg }}; color:{{ sel.avFg }}; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:23px;">{{ sel.initials }}</div>
+            <div style="flex:1;">
+              <div style="display:flex; align-items:center; gap:11px;"><span class="pm-serif" style="font-size:30px; font-weight:600; letter-spacing:-0.01em;">{{ sel.name }}</span><span style="font-size:11.5px; font-weight:700; color:{{ sel.stageCol }}; background:{{ sel.stageBg }}; padding:5px 11px; border-radius:999px;">{{ sel.stage }}</span></div>
+              <div style="font-size:14px; color:#6A6E68; margin-top:3px;">{{ sel.phone }} · {{ sel.email }} · client since {{ sel.since }}</div>
+            </div>
+            <div style="display:flex; gap:9px;">
+              <button style="cursor:pointer; border:1px solid #E0DCD2; background:#fff; color:#2B2A25; font-weight:700; font-size:14px; padding:11px 16px; border-radius:12px;" style-hover="background:#F4F2EA;">Call</button>
+              <button style="cursor:pointer; border:0; background:#1F5E47; color:#fff; font-weight:700; font-size:14px; padding:11px 18px; border-radius:12px;" style-hover="background:#184E3B;">Share a property</button>
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:20px;">
+            <div style="background:#FAF8F3; border:1px solid #ECE8DF; border-radius:14px; padding:15px;"><div style="font-size:12px; color:#9A9D96; font-weight:600;">Lifetime value</div><div class="pm-serif" style="font-size:24px; font-weight:600; color:#A87C3D; margin-top:4px;">{{ sel.value }}</div></div>
+            <div style="background:#FAF8F3; border:1px solid #ECE8DF; border-radius:14px; padding:15px;"><div style="font-size:12px; color:#9A9D96; font-weight:600;">Deals closed</div><div class="pm-serif" style="font-size:24px; font-weight:600; margin-top:4px;">{{ sel.deals }}</div></div>
+            <div style="background:#FAF8F3; border:1px solid #ECE8DF; border-radius:14px; padding:15px;"><div style="font-size:12px; color:#9A9D96; font-weight:600;">Engagement</div><div class="pm-serif" style="font-size:24px; font-weight:600; color:#2E8B66; margin-top:4px;">{{ sel.score }}</div></div>
+            <div style="background:#FAF8F3; border:1px solid #ECE8DF; border-radius:14px; padding:15px;"><div style="font-size:12px; color:#9A9D96; font-weight:600;">Referrals</div><div class="pm-serif" style="font-size:24px; font-weight:600; margin-top:4px;">{{ sel.referrals }}</div></div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1.4fr 1fr; gap:16px; align-items:start;">
+          <!-- thread -->
+          <div style="background:#fff; border:1px solid #E7E3D9; border-radius:20px; padding:22px 24px;">
+            <div style="font-size:18px; font-weight:800; margin-bottom:18px;">Full history</div>
+            <div style="position:relative; padding-left:24px;">
+              <div style="position:absolute; left:5px; top:4px; bottom:4px; width:2px; background:#ECE8DF;"></div>
+              <sc-for list="{{ sel.thread }}" as="e" hint-placeholder-count="6">
+                <div style="position:relative; padding-bottom:20px;">
+                  <span style="position:absolute; left:-23px; top:3px; width:12px; height:12px; border-radius:50%; background:{{ e.col }}; border:2.5px solid #fff; box-shadow:0 0 0 1.5px {{ e.col }};"></span>
+                  <div style="display:flex; align-items:baseline; gap:10px;"><span style="font-size:14.5px; font-weight:700;">{{ e.t }}</span><span style="font-size:12px; color:#B0ADA2;">{{ e.when }}</span></div>
+                  <div style="font-size:13px; color:#7C8076; margin-top:2px;">{{ e.sub }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:16px;">
+            <!-- personal details -->
+            <div style="background:#fff; border:1px solid #E7E3D9; border-radius:20px; padding:20px 22px;">
+              <div style="font-size:16px; font-weight:800; margin-bottom:14px;">Personal details</div>
+              <sc-for list="{{ sel.details }}" as="d" hint-placeholder-count="5">
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-top:1px solid #F0ECE3;"><span style="font-size:13.5px; color:#9A9D96; font-weight:600;">{{ d.k }}</span><span style="font-size:13.5px; color:#2B2A25; font-weight:700;">{{ d.v }}</span></div>
+              </sc-for>
+            </div>
+            <!-- interested -->
+            <div style="background:#fff; border:1px solid #E7E3D9; border-radius:20px; padding:20px 22px;">
+              <div style="font-size:16px; font-weight:800; margin-bottom:12px;">Looking for</div>
+              <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px;">
+                <sc-for list="{{ sel.tags }}" as="tg" hint-placeholder-count="3">
+                  <span style="background:#FAF8F3; border:1px solid #E7E3D9; color:#56544A; font-size:13px; font-weight:600; padding:7px 12px; border-radius:9px;">{{ tg }}</span>
+                </sc-for>
+              </div>
+              <div style="font-size:13px; font-weight:700; color:#56544A; margin-bottom:10px;">Properties shown</div>
+              <sc-for list="{{ sel.shown }}" as="sh" hint-placeholder-count="2">
+                <div style="display:flex; align-items:center; gap:12px; padding:9px 0; border-top:1px solid #F0ECE3;">
+                  <div style="width:40px; height:40px; border-radius:11px; background:linear-gradient(140deg,#C7D8E0,#B6CB9A); flex:none;"></div>
+                  <div style="flex:1;"><div style="font-size:14px; font-weight:700;">{{ sh.name }}</div><div style="font-size:12px; color:#9A9D96;">{{ sh.meta }}</div></div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    </div>
+
+    <!-- ============ 9 · PROPERTIES (client browse / team inventory) ============ -->
+    <div style="display:{{ propsShow }};">
+    <section data-screen-label="Properties" style="position:absolute; inset:0; overflow:auto; background:#F3F1EB;">
+      <div style="max-width:1240px; margin:0 auto; padding:28px 30px 40px;">
+        <div style="display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:6px;">
+          <div>
+            <div class="pm-serif" style="font-size:32px; font-weight:500; letter-spacing:-0.01em;">Properties</div>
+            <div style="display:{{ helpShow }}; font-size:15px; color:#6A6E68; margin-top:4px;">{{ propsSub }}</div>
+          </div>
+          <button onClick="{{ goAddProperty }}" style="display:{{ addPropBtn }}; cursor:pointer; border:0; background:#1F5E47; color:#fff; font-weight:700; font-size:15px; padding:13px 20px; border-radius:13px; box-shadow:0 8px 18px rgba(31,94,71,.22);" style-hover="background:#184E3B;">+ Add Property</button>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; margin:22px 0; flex-wrap:wrap;">
+          <div style="display:flex; align-items:center; gap:10px; background:#fff; border:1px solid #E7E3D9; border-radius:13px; padding:12px 15px; flex:1; min-width:230px; max-width:330px;"><span style="color:#B0ADA2; font-size:16px;">⌕</span><span style="color:#A6A399; font-size:14.5px;">Search area, sector or block…</span></div>
+          <sc-for list="{{ filters }}" as="f" hint-placeholder-count="3">
+            <button style="cursor:pointer; background:{{ f.bg }}; border:1px solid {{ f.bd }}; color:{{ f.fg }}; font-size:14px; font-weight:600; padding:12px 16px; border-radius:13px; display:flex; align-items:center; gap:8px;">{{ f.label }}<span style="color:#B0ADA2; font-size:11px;">▾</span></button>
+          </sc-for>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:18px;">
+          <sc-for list="{{ inv }}" as="p" hint-placeholder-count="6">
+            <div onClick="{{ p.goDetail }}" style="background:#fff; border:1px solid #E7E3D9; border-radius:20px; overflow:hidden; box-shadow:0 1px 2px rgba(20,18,12,.03), 0 10px 22px rgba(40,32,15,.035); cursor:pointer;" style-hover="border-color:#D6D1C6;">
+              <div style="height:142px; position:relative; background:{{ p.hero }}; box-shadow:inset 0 -40px 60px -30px rgba(20,30,20,.35), inset 0 0 0 1px rgba(255,255,255,.12);">
+                <span style="position:absolute; left:13px; top:13px; background:{{ p.sBg }}; color:{{ p.sFg }}; font-size:12px; font-weight:700; padding:5px 12px; border-radius:999px; box-shadow:0 2px 6px rgba(0,0,0,.12);">{{ p.status }}</span>
+                <span style="display:{{ p.flagShow }}; position:absolute; right:13px; top:13px; background:rgba(255,250,240,.94); color:#8A6224; font-size:11.5px; font-weight:700; padding:5px 11px; border-radius:999px;">{{ p.flag }}</span>
+              </div>
+              <div style="padding:16px 17px 17px;">
+                <div style="font-size:13px; color:#9A9D96; font-weight:600;">{{ p.area }}</div>
+                <div style="font-size:21px; font-weight:800; letter-spacing:-0.01em; margin:3px 0 3px;">{{ p.name }}</div>
+                <div style="font-size:13.5px; color:#6A6E68; font-weight:500;">{{ p.size }}</div>
+                <div style="display:{{ p.actionsShow }}; gap:8px; margin-top:14px;">
+                  <button onClick="{{ p.openRemove }}" style="flex:1; cursor:pointer; border:1px solid #E0DCD2; background:#fff; color:#9A4A2C; font-weight:700; font-size:12.5px; padding:9px; border-radius:10px;" style-hover="background:#FBF1EC; border-color:#EED7CB;">Close / Remove</button>
+                  <button onClick="{{ p.openRemove }}" style="flex:1; cursor:pointer; border:1px solid #E0DCD2; background:#fff; color:#2B2A25; font-weight:700; font-size:12.5px; padding:9px; border-radius:10px;" style-hover="background:#F4F2EA;">Mark sold</button>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+    </div>
+
+    <!-- ============ 10 · TEAM WORKSPACE (recommendations) ============ -->
+    <div style="display:{{ teamShow }};">
+    <section data-screen-label="Team" style="position:absolute; inset:0; overflow:auto; background:#F3F1EB;">
+      <div style="max-width:1180px; margin:0 auto; padding:28px 30px 40px;">
+        <div class="pm-serif" style="font-size:32px; font-weight:500; letter-spacing:-0.01em; margin-bottom:4px;">Welcome, Priya.</div>
+        <div style="display:{{ helpShow }}; font-size:15px; color:#6A6E68; margin-bottom:18px;">Your work table for today.</div>
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px;">
+          <sc-for list="{{ weekStats }}" as="w" hint-placeholder-count="4">
+            <div style="background:#fff; border:1px solid #E7E3D9; border-radius:16px; padding:15px 18px;">
+              <div style="font-size:12.5px; color:#9A9D96; font-weight:600;">{{ w.k }}</div>
+              <div class="pm-serif" style="font-size:28px; font-weight:600; margin-top:4px; line-height:1;">{{ w.v }}<span style="font-size:13px; color:#B0ADA2; font-weight:500; margin-left:5px;">{{ w.unit }}</span></div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px;">
+          <sc-for list="{{ actions }}" as="ac" hint-placeholder-count="4">
+            <button onClick="{{ ac.go }}" style="cursor:pointer; background:#fff; border:1px solid #E7E3D9; border-radius:18px; padding:22px 18px; display:flex; flex-direction:column; align-items:flex-start; gap:15px; text-align:left; box-shadow:0 1px 2px rgba(20,18,12,.03), 0 8px 18px rgba(40,32,15,.03);" style-hover="border-color:#D6D1C6; transform:translateY(-2px);">
+              <span style="width:48px; height:48px; border-radius:14px; background:{{ ac.tint }}; color:{{ ac.col }}; display:flex; align-items:center; justify-content:center; font-size:23px; font-weight:800;">{{ ac.mark }}</span>
+              <span style="font-size:16px; font-weight:700; color:#2B2A25; line-height:1.25;">{{ ac.label }}</span>
+            </button>
+          </sc-for>
+        </div>
+        <div style="display:grid; grid-template-columns:1.55fr 1fr; gap:18px; align-items:start;">
+          <!-- my clients -->
+          <div style="background:#fff; border:1px solid #E7E3D9; border-radius:20px; padding:20px 22px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+              <span style="font-size:18px; font-weight:800;">My clients</span>
+              <span style="font-size:12.5px; color:#9A9D96; font-weight:600;">{{ myClientsCount }} assigned to me</span>
+            </div>
+            <sc-for list="{{ myClients }}" as="c" hint-placeholder-count="5">
+              <div style="display:flex; align-items:center; gap:14px; padding:13px 0; border-top:1px solid #F0ECE3;">
+                <div style="flex:none; width:40px; height:40px; border-radius:12px; background:{{ c.avBg }}; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px;">{{ c.initials }}</div>
+                <div style="flex:1; min-width:0;"><div style="font-size:14.5px; font-weight:700;">{{ c.name }}</div><div style="font-size:12px; color:#9A9D96; margin-top:1px;">{{ c.meta }}</div></div>
+                <span style="font-size:11px; font-weight:700; color:{{ c.stageCol }}; background:{{ c.stageBg }}; padding:4px 10px; border-radius:999px;">{{ c.stage }}</span>
+                <button style="flex:none; cursor:pointer; border:1px solid #E0DCD2; background:#fff; color:#2B2A25; font-weight:700; font-size:12.5px; padding:9px 14px; border-radius:10px;" style-hover="background:#F4F2EA;">Update</button>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:18px;">
+            <div style="background:#fff; border:1px solid #E7E3D9; border-radius:20px; padding:20px 22px;">
+              <div style="font-size:18px; font-weight:800; margin-bottom:10px;">Recent activity</div>
+              <sc-for list="{{ recent }}" as="r" hint-placeholder-count="3">
+                <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-top:1px solid #F0ECE3;"><div><div style="font-size:14.5px; font-weight:700;">{{ r.name }}</div><div style="font-size:12.5px; color:#9A9D96; margin-top:1px;">{{ r.meta }}</div></div><span style="font-size:12.5px; color:#B0ADA2; font-weight:600;">{{ r.when }}</span></div>
+              </sc-for>
+            </div>
+            <div style="background:#fff; border:1px solid #E7E3D9; border-radius:20px; padding:20px 22px;">
+              <div style="font-size:16px; font-weight:800; margin-bottom:3px;">Map Studio</div>
+              <div style="display:{{ helpShow }}; font-size:13.5px; color:#9A9D96; margin-bottom:14px; line-height:1.5;">Draw roads and mark plots yourself — no designer needed.</div>
+              <button onClick="{{ goStudio }}" style="cursor:pointer; width:100%; border:0; background:#3E6E96; color:#fff; font-weight:700; font-size:14.5px; padding:13px; border-radius:13px;" style-hover="background:#345D80;">Open Map Studio →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    </div>
+
+    <!-- ============ 11 · ADD CLIENT ============ -->
+    <div style="display:{{ addClientShow }};">
+    <section data-screen-label="Add Client" style="position:absolute; inset:0; overflow:auto; background:#F3F1EB;">
+      <div style="max-width:760px; margin:0 auto; padding:28px 30px 40px;">
+        <button onClick="{{ goTeam }}" style="display:flex; align-items:center; gap:8px; background:transparent; border:0; cursor:pointer; color:#6A6E68; font-size:14.5px; font-weight:600; padding:0; margin-bottom:16px;" style-hover="color:#1C1E1B;">‹ Back</button>
+        <div class="pm-serif" style="font-size:32px; font-weight:500; letter-spacing:-0.01em;">Add a client</div>
+        <div style="display:{{ helpShow }}; font-size:15px; color:#6A6E68; margin:4px 0 24px;">Just the basics — you can add more later.</div>
+        <div style="background:#fff; border:1px solid #E7E3D9; border-radius:22px; padding:26px 28px;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px;">
+            <div style="grid-column:span 2;"><div style="font-size:13.5px; font-weight:700; color:#56544A; margin-bottom:8px;">Full name</div><div style="background:#FAF8F3; border:1px solid #E7E3D9; border-radius:13px; padding:14px 15px; font-size:15px; color:#A6A399;">e.g. Rajdeep Singh</div></div>
+            <div><div style="font-size:13.5px; font-weight:700; color:#56544A; margin-bottom:8px;">Phone</div><div style="background:#FAF8F3; border:1px solid #E7E3D9; border-radius:13px; padding:14px 15px; font-size:15px; color:#A6A399;">+91 …</div></div>
+            <div><div style="font-size:13.5px; font-weight:700; color:#56544A; margin-bottom:8px;">Budget</div><div style="background:#FAF8F3; border:1px solid #E7E3D9; border-radius:13px; padding:14px 15px; font-size:15px; color:#A6A399;">₹ …</div></div>
+            <div><div style="font-size:13.5px; font-weight:700; color:#56544A; margin-bottom:8px;">Area interested in</div><div style="background:#FAF8F3; border:1px solid #E7E3D9; border-radius:13px; padding:14px 15px; font-size:15px; color:#56544A; display:flex; justify-content:space-between;">Aerocity <span style="color:#B0ADA2;">▾</span></div></div>
+            <div><div style="font-size:13.5px; font-weight:700; color:#56544A; margin-bottom:8px;">Property type</div><div style="background:#FAF8F3; border:1px solid #E7E3D9; border-radius:13px; padding:14px 15px; font-size:15px; color:#56544A; display:flex; justify-content:space-between;">Residential plot <span style="color:#B0ADA2;">▾</span></div></div>
+          </div>
+          <div style="margin-top:18px;"><div style="font-size:13.5px; font-weight:700; color:#56544A; margin-bottom:8px;">How did they reach you?</div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <span style="background:#E7F0EB; border:1px solid #C9DED4; color:#1F5E47; font-size:13.5px; font-weight:700; padding:9px 15px; border-radius:999px;">Walk-in</span>
+              <span style="background:#FAF8F3; border:1px solid #E7E3D9; color:#6A6E68; font-size:13.5px; font-weight:600; padding:9px 15px; border-radius:999px;">Referral</span>
+              <span style="background:#FAF8F3; border:1px solid #E7E3D9; color:#6A6E68; font-size:13.5px; font-weight:600; padding:9px 15px; border-radius:999px;">WhatsApp</span>
+              <span style="background:#FAF8F3; border:1px solid #E7E3D9; color:#6A6E68; font-size:13.5px; font-weight:600; padding:9px 15px; border-radius:999px;">Online</span>
+            </div>
+          </div>
+          <div style="display:flex; gap:12px; margin-top:26px;">
+            <button onClick="{{ goTeam }}" style="cursor:pointer; border:1px solid #E0DCD2; background:#fff; color:#2B2A25; font-weight:700; font-size:15px; padding:14px 22px; border-radius:13px;" style-hover="background:#F4F2EA;">Cancel</button>
+            <button onClick="{{ goTeam }}" style="cursor:pointer; flex:1; border:0; background:#1F5E47; color:#fff; font-weight:700; font-size:15px; padding:14px; border-radius:13px; box-shadow:0 8px 18px rgba(31,94,71,.24);" style-hover="background:#184E3B;">Add Client</button>
+          </div>
+        </div>
+      </div>
+    </section>
+    </div>
+
+    <!-- ============ 12 · ADD PROPERTY (inline studio) ============ -->
+    <div style="display:{{ addPropShow }};">
+    <section data-screen-label="Add Property" style="position:absolute; inset:0; overflow:auto; background:#F3F1EB;">
+      <div style="max-width:900px; margin:0 auto; padding:28px 30px 40px;">
+        <button onClick="{{ goTeam }}" style="display:flex; align-items:center; gap:8px; background:transparent; border:0; cursor:pointer; color:#6A6E68; font-size:14.5px; font-weight:600; padding:0; margin-bottom:16px;" style-hover="color:#1C1E1B;">‹ Back</button>
+        <div class="pm-serif" style="font-size:32px; font-weight:500; letter-spacing:-0.01em;">Add a property</div>
+        <div style="display:{{ helpShow }}; font-size:15px; color:#6A6E68; margin:4px 0 24px;">Fill the details, place it on the map, then publish.</div>
+        <div style="background:#fff; border:1px solid #E7E3D9; border-radius:22px; padding:26px 28px;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:18px;">
+            <div style="grid-column:span 2;"><div style="font-size:13.5px; font-weight:700; color:#56544A; margin-bottom:8px;">Property name</div><div style="background:#FAF8F3; border:1px solid #E7E3D9; border-radius:13px; padding:14px 15px; font-size:15px; color:#A6A399;">e.g. Plot C-114</div></div>
+            <div><div style="font-size:13.5px; font-weight:700; color:#56544A; margin-bottom:8px;">Area</div><div style="background:#FAF8F3; border:1px solid #E7E3D9; border-radius:13px; padding:14px 15px; font-size:15px; color:#56544A; display:flex; justify-content:space-between;">Aerocity <span style="color:#B0ADA2;">▾</span></div></div>
+            <div><div style="font-size:13.5px; font-weight:700; color:#56544A; margin-bottom:8px;">Sector / Block</div><div style="background:#FAF8F3; border:1px solid #E7E3D9; border-radius:13px; padding:14px 15px; font-size:15px; color:#A6A399;">Sector 82 · Block C</div></div>
+            <div><div style="font-size:13.5px; font-weight:700; color:#56544A; margin-bottom:8px;">Type</div><div style="background:#FAF8F3; border:1px solid #E7E3D9; border-radius:13px; padding:14px 15px; font-size:15px; color:#56544A; display:flex; justify-content:space-between;">Residential <span style="color:#B0ADA2;">▾</span></div></div>
+            <div><div style="font-size:13.5px; font-weight:700; color:#56544A; margin-bottom:8px;">Size</div><div style="background:#FAF8F3; border:1px solid #E7E3D9; border-radius:13px; padding:14px 15px; font-size:15px; color:#A6A399;">200 sq yd</div></div>
+          </div>
+          <div style="font-size:13.5px; font-weight:700; color:#56544A; margin:22px 0 10px;">Photos</div>
+          <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:12px;">
+            <div style="height:84px; border-radius:13px; border:1.5px dashed #D6D1C6; background:#FAF8F3; display:flex; align-items:center; justify-content:center; color:#B0ADA2; font-size:22px;">＋</div>
+            <div style="height:84px; border-radius:13px; background:linear-gradient(140deg,#E6DECF,#D2C8B4);"></div>
+            <div style="height:84px; border-radius:13px; background:linear-gradient(140deg,#E6DECF,#D2C8B4);"></div>
+            <div style="height:84px; border-radius:13px; background:linear-gradient(140deg,#E6DECF,#D2C8B4);"></div>
+          </div>
+          <div style="margin-top:24px; border:1px solid {{ studioBd }}; border-radius:18px; overflow:hidden;">
+            <button onClick="{{ toggleStudio }}" style="width:100%; cursor:pointer; display:flex; align-items:center; gap:14px; background:{{ studioHeadBg }}; border:0; padding:16px 18px; text-align:left;">
+              <span style="width:40px; height:40px; border-radius:12px; background:#E7F0EB; color:#1F5E47; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:800; flex:none;">⌖</span>
+              <span style="flex:1;"><span style="display:block; font-size:16px; font-weight:800;">Add this property on the map</span><span style="display:block; font-size:13px; color:#7C8076; margin-top:2px;">{{ studioHint }}</span></span>
+              <span style="font-size:13px; font-weight:700; color:#1F5E47;">{{ studioToggleLabel }}</span>
+            </button>
+            <div style="display:{{ studioPanelShow }}; border-top:1px solid #E7E3D9;">
+              <div style="display:flex; gap:14px; padding:16px;">
+                <div style="flex:1; position:relative; height:280px; background:#EEEDE6; border:1px solid #E5E2D9; border-radius:16px; overflow:hidden;">
+                  <div style="position:absolute; inset:0; background-image:linear-gradient(rgba(110,108,90,0.06) 1px,transparent 1px),linear-gradient(90deg,rgba(110,108,90,0.06) 1px,transparent 1px); background-size:34px 34px;"></div>
+                  <div style="position:absolute; left:14%; top:24%; width:120px; height:88px; border-radius:10px; border:1.5px dashed #C9C3B5; background:rgba(62,110,150,.06);"></div>
+                  <div style="position:absolute; left:58%; top:22%; width:110px; height:92px; border-radius:10px; border:1.5px dashed #C9C3B5; background:rgba(46,139,102,.06);"></div>
+                  <svg viewBox="0 0 760 280" preserveAspectRatio="none" style="position:absolute; inset:0; width:100%; height:100%;"><path d="M90 230 L 280 170 L 440 140 L 640 80" fill="none" stroke="#1F5E47" stroke-width="3.5"></path></svg>
+                  <div style="position:absolute; left:55%; top:46%; width:22px; height:22px; border-radius:50% 50% 50% 0; transform:rotate(-45deg); background:#1F5E47; border:2.5px solid #fff; box-shadow:0 6px 14px rgba(20,60,45,.35);"></div>
+                  <div style="position:absolute; left:50%; bottom:14px; transform:translateX(-50%); background:#fff; border:1px solid #E7E3D9; border-radius:11px; padding:9px 14px; font-size:13px; font-weight:600; color:#3A3F39; box-shadow:0 10px 24px rgba(40,32,15,.12);">Tap to drop the plot pin</div>
+                </div>
+                <div style="flex:none; width:220px; display:flex; flex-direction:column;">
+                  <div style="font-size:13px; color:#56544A; font-weight:700; margin-bottom:8px;">Group</div>
+                  <div style="display:flex; gap:7px; margin-bottom:16px;">
+                    <span style="flex:1; text-align:center; border:1.5px solid #1F5E47; background:#E7F0EB; border-radius:11px; padding:10px 0; font-size:14px; font-weight:800; color:#1F5E47;">A</span>
+                    <span style="flex:1; text-align:center; border:1px solid #E0DCD2; border-radius:11px; padding:10px 0; font-size:14px; font-weight:800; color:#9A9D96;">B</span>
+                    <span style="flex:1; text-align:center; border:1px solid #E0DCD2; border-radius:11px; padding:10px 0; font-size:14px; font-weight:800; color:#9A9D96;">C</span>
+                    <span style="flex:1; text-align:center; border:1px solid #E0DCD2; border-radius:11px; padding:10px 0; font-size:14px; font-weight:800; color:#9A9D96;">D</span>
+                  </div>
+                  <div style="font-size:13px; color:#56544A; font-weight:700; margin-bottom:8px;">Link sector map</div>
+                  <div style="display:flex; align-items:center; gap:10px; background:#FAF8F3; border:1px solid #E7E3D9; border-radius:12px; padding:11px 13px; margin-bottom:16px;"><span style="width:20px; height:20px; border-radius:6px; background:#E9EFF4; color:#3E6E96; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800;">＋</span><span style="font-size:13.5px; color:#3A3F39; font-weight:600;">Sector 82 · Pocket B</span></div>
+                  <div style="display:flex; align-items:center; gap:9px; background:#EAF3EE; border:1px solid #CDE6DA; border-radius:11px; padding:10px 12px;"><span style="width:20px; height:20px; border-radius:6px; background:#2E8B66; color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800;">✓</span><span style="font-size:12.5px; color:#216B4E; font-weight:600;">Snapped to masterplan</span></div>
+                  <button style="margin-top:auto; cursor:pointer; border:1px solid #E0DCD2; background:#fff; color:#2B2A25; font-weight:700; font-size:14px; padding:12px; border-radius:12px;" style-hover="background:#F4F2EA;">Save pin</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex; gap:12px; margin-top:24px;">
+            <button onClick="{{ goTeam }}" style="cursor:pointer; border:1px solid #E0DCD2; background:#fff; color:#2B2A25; font-weight:700; font-size:15px; padding:14px 22px; border-radius:13px;" style-hover="background:#F4F2EA;">Save draft</button>
+            <button onClick="{{ goProps }}" style="cursor:pointer; flex:1; border:0; background:#1F5E47; color:#fff; font-weight:700; font-size:15px; padding:14px; border-radius:13px; box-shadow:0 8px 18px rgba(31,94,71,.24);" style-hover="background:#184E3B;">Publish property</button>
+          </div>
+        </div>
+      </div>
+    </section>
+    </div>
+
+    <!-- ============ 13 · MAP STUDIO (simple) ============ -->
+    <div style="display:{{ studioShow }};">
+    <section data-screen-label="Map Studio" style="position:absolute; inset:0; overflow:hidden; background:#F3F1EB; display:flex; flex-direction:column;">
+      <!-- header + step bar -->
+      <div style="flex:none; padding:20px 28px 14px; display:flex; align-items:center; justify-content:space-between; gap:20px;">
+        <div>
+          <div class="pm-serif" style="font-size:26px; font-weight:500; letter-spacing:-0.01em;">Map Studio</div>
+          <div style="display:{{ helpShow }}; font-size:14px; color:#6A6E68; margin-top:2px;">Pick a map, mark one thing, name it, preview, publish.</div>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <sc-for list="{{ studioStepList }}" as="st" hint-placeholder-count="3">
+            <div style="display:flex; align-items:center; gap:10px; background:{{ st.bg }}; border:1.5px solid {{ st.bd }}; border-radius:13px; padding:9px 15px 9px 10px;">
+              <span style="flex:none; width:26px; height:26px; border-radius:50%; background:{{ st.numBg }}; color:{{ st.numCol }}; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800;">{{ st.num }}</span>
+              <span style="font-size:14px; font-weight:700; color:{{ st.txt }};">{{ st.label }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="flex:1; display:flex; gap:16px; padding:0 28px 22px; min-height:0;">
+        <!-- LEFT tools -->
+        <div style="flex:none; width:184px; display:flex; flex-direction:column; gap:7px; overflow:auto;">
+          <div style="font-size:10.5px; letter-spacing:.12em; font-weight:800; color:#9A9D96; padding:2px 4px 4px;">TOOLS</div>
+          <sc-for list="{{ studioToolList }}" as="t" hint-placeholder-count="8">
+            <button onClick="{{ t.go }}" style="cursor:pointer; display:flex; align-items:center; gap:12px; background:{{ t.bg }}; border:1.5px solid {{ t.bd }}; border-radius:13px; padding:11px 13px; text-align:left;" style-hover="border-color:#1F5E47;">
+              <span style="flex:none; width:34px; height:34px; border-radius:10px; background:{{ t.iconBg }}; color:{{ t.iconCol }}; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:800;">{{ t.icon }}</span>
+              <span style="font-size:14px; font-weight:700; color:{{ t.txt }};">{{ t.label }}</span>
+            </button>
+          </sc-for>
+        </div>
+
+        <!-- CENTER canvas -->
+        <div style="flex:1; position:relative; border:1px solid #E1DCCF; border-radius:20px; overflow:hidden; background:#DFE8DE; min-width:0;">
+          <img src="assets/masterplan.jpg" alt="masterplan" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;"></img>
+
+          <!-- zoom/pan controls -->
+          <div style="position:absolute; right:16px; top:16px; z-index:6; display:flex; flex-direction:column; background:#fff; border:1px solid #E2DCCB; border-radius:13px; box-shadow:0 8px 22px rgba(50,45,25,.16); overflow:hidden;">
+            <button style="cursor:pointer; border:0; background:#fff; width:40px; height:40px; font-size:20px; font-weight:700; color:#56544A; border-bottom:1px solid #EFEBE2;" style-hover="background:#F4F2EA;">+</button>
+            <button style="cursor:pointer; border:0; background:#fff; width:40px; height:40px; font-size:20px; font-weight:700; color:#56544A; border-bottom:1px solid #EFEBE2;" style-hover="background:#F4F2EA;">−</button>
+            <button title="Fit" style="cursor:pointer; border:0; background:#fff; width:40px; height:40px; font-size:14px; font-weight:700; color:#56544A;" style-hover="background:#F4F2EA;">⤢</button>
+          </div>
+
+          <!-- work-in-progress marking (matches selected tool) -->
+          <svg viewBox="0 0 1366 792" preserveAspectRatio="none" style="position:absolute; inset:0; width:100%; height:100%;">
+            <g style="display:{{ studioDrawRoadDisp }};">
+              <path d="M 700 645 L 870 600 L 1015 560" fill="none" stroke="#1F5E47" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"></path>
+              <circle cx="700" cy="645" r="8" fill="#fff" stroke="#1F5E47" stroke-width="3.5"></circle>
+              <circle cx="870" cy="600" r="8" fill="#fff" stroke="#1F5E47" stroke-width="3.5"></circle>
+              <circle cx="1015" cy="560" r="10" fill="#1F5E47" stroke="#fff" stroke-width="3"></circle>
+            </g>
+            <g style="display:{{ studioDrawPolyDisp }};">
+              <polygon points="540,300 690,300 700,455 545,455" fill="rgba(193,150,59,0.2)" stroke="{{ studioDrawColor }}" stroke-width="4" stroke-linejoin="round"></polygon>
+              <circle cx="540" cy="300" r="8" fill="#fff" stroke="{{ studioDrawColor }}" stroke-width="3.5"></circle>
+              <circle cx="690" cy="300" r="8" fill="#fff" stroke="{{ studioDrawColor }}" stroke-width="3.5"></circle>
+              <circle cx="700" cy="455" r="8" fill="#fff" stroke="{{ studioDrawColor }}" stroke-width="3.5"></circle>
+              <circle cx="545" cy="455" r="8" fill="#fff" stroke="{{ studioDrawColor }}" stroke-width="3.5"></circle>
+            </g>
+            <g style="display:{{ studioDrawPinDisp }};">
+              <circle cx="612" cy="378" r="24" fill="none" stroke="#1F5E47" stroke-width="2.5" opacity="0.6"></circle>
+              <circle cx="612" cy="378" r="12" fill="#1F5E47" stroke="#fff" stroke-width="3"></circle>
+            </g>
+          </svg>
+
+          <!-- instruction bubble -->
+          <div style="position:absolute; left:50%; bottom:64px; transform:translateX(-50%); z-index:6; display:flex; align-items:center; gap:12px; background:#1F5E47; border-radius:14px; padding:13px 20px; box-shadow:0 14px 32px rgba(20,60,45,.3); max-width:80%;">
+            <span style="flex:none; width:9px; height:9px; border-radius:50%; background:#9FE3C0;"></span>
+            <span style="font-size:14.5px; color:#fff; font-weight:600;">{{ studioInstr }}</span>
+          </div>
+
+          <!-- draw controls -->
+          <div style="position:absolute; left:50%; bottom:16px; transform:translateX(-50%); z-index:6; display:flex; gap:9px;">
+            <button style="cursor:pointer; border:1px solid #E2DCCB; background:#fff; color:#56544A; font-size:13.5px; font-weight:700; padding:9px 15px; border-radius:11px; box-shadow:0 6px 16px rgba(50,45,25,.12);" style-hover="background:#F4F2EA;">↶ Undo point</button>
+            <button style="cursor:pointer; border:0; background:#2B2A25; color:#fff; font-size:13.5px; font-weight:700; padding:9px 16px; border-radius:11px; box-shadow:0 6px 16px rgba(40,38,20,.2);" style-hover="background:#3A382F;">Finish</button>
+          </div>
+        </div>
+
+        <!-- RIGHT inspector -->
+        <div style="flex:none; width:296px; background:#fff; border:1px solid #E7E3D9; border-radius:20px; display:flex; flex-direction:column; overflow:hidden;">
+          <div style="flex:1; overflow:auto; padding:20px;">
+            <div style="font-size:10.5px; letter-spacing:.12em; font-weight:800; color:#9A9D96;">MARKING</div>
+            <div style="font-size:13px; font-weight:600; color:#6A6E68; margin:3px 0 14px;">{{ studioTypeLabel }}</div>
+
+            <div style="font-size:13px; font-weight:700; color:#56544A; margin-bottom:7px;">Name</div>
+            <div style="background:#FAF8F3; border:1.5px solid #1F5E47; border-radius:12px; padding:13px 14px; font-size:15px; font-weight:600; color:#1C1E1B;">{{ studioName }}</div>
+
+            <div style="font-size:13px; font-weight:700; color:#56544A; margin:18px 0 8px;">Colour group</div>
+            <div style="display:flex; gap:8px;">
+              <sc-for list="{{ studioGroups }}" as="g" hint-placeholder-count="4">
+                <button onClick="{{ g.go }}" style="cursor:pointer; flex:1; text-align:center; border:1.5px solid {{ g.bd }}; background:{{ g.bg }}; border-radius:11px; padding:11px 0; font-size:15px; font-weight:800; color:{{ g.fg }};">{{ g.g }}</button>
+              </sc-for>
+            </div>
+
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-top:20px; background:#FAF8F3; border:1px solid #EFEBE2; border-radius:13px; padding:13px 15px;">
+              <span style="font-size:14px; font-weight:700; color:{{ cvLabelCol }};">{{ cvLabel }}</span>
+              <button onClick="{{ toggleStudioCV }}" style="cursor:pointer; position:relative; width:44px; height:25px; border-radius:999px; border:0; background:{{ cvToggleBg }}; transition:background .2s ease;">
+                <span style="position:absolute; top:2px; left:{{ cvKnobX }}; width:21px; height:21px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.25); transition:left .2s ease;"></span>
+              </button>
+            </div>
+
+            <div style="font-size:13px; font-weight:700; color:#56544A; margin:20px 0 8px;">Status</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:7px;">
+              <sc-for list="{{ statusChips }}" as="c" hint-placeholder-count="4">
+                <span style="text-align:center; border:1.5px solid {{ c.bd }}; background:{{ c.bg }}; color:{{ c.fg }}; border-radius:10px; padding:9px 0; font-size:13px; font-weight:700;">{{ c.s }}</span>
+              </sc-for>
+            </div>
+
+            <button onClick="{{ toggleStudioMore }}" style="cursor:pointer; display:flex; align-items:center; gap:7px; margin-top:20px; background:transparent; border:0; padding:0; font-size:13px; font-weight:700; color:#6A6E68;">
+              <span style="font-size:11px;">{{ studioMoreCaret }}</span> More details
+            </button>
+            <div style="display:{{ studioMoreShow }}; margin-top:12px; display:flex; flex-direction:column; gap:11px;">
+              <div><div style="font-size:12px; color:#9A9D96; font-weight:600; margin-bottom:5px;">Client-safe description</div><div style="background:#FAF8F3; border:1px solid #EFEBE2; border-radius:10px; padding:10px 12px; font-size:13px; color:#56544A; line-height:1.45;">Well-connected internal link to Sector 82.</div></div>
+              <div><div style="font-size:12px; color:#9A9D96; font-weight:600; margin-bottom:5px;">Linked to</div><div style="display:flex; flex-wrap:wrap; gap:6px;"><span style="background:#EEF3F0; border:1px solid #DCE7E1; color:#3C6E5A; font-size:12px; font-weight:600; padding:4px 9px; border-radius:8px;">Sector 82</span><span style="background:#EEF3F0; border:1px solid #DCE7E1; color:#3C6E5A; font-size:12px; font-weight:600; padding:4px 9px; border-radius:8px;">IT Park</span></div></div>
+              <div><div style="font-size:12px; color:#9A9D96; font-weight:600; margin-bottom:5px;">Internal notes <span style="color:#C77A3A;">· never shown to clients</span></div><div style="background:#FBF3EC; border:1px solid #F0DCC9; border-radius:10px; padding:10px 12px; font-size:13px; color:#8A6224; line-height:1.45;">Owner wants this link highlighted for premium plots.</div></div>
+            </div>
+          </div>
+
+          <div style="flex:none; padding:14px 16px; border-top:1px solid #EFEBE2; display:flex; flex-direction:column; gap:9px;">
+            <button onClick="{{ openStudioPreview }}" style="cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; border:1.5px solid #3E6E96; background:#EEF3F7; color:#2E567C; font-weight:700; font-size:14.5px; padding:13px; border-radius:13px;" style-hover="background:#E3ECF3;">◉ Preview Client Click</button>
+            <div style="display:flex; gap:9px;">
+              <button onClick="{{ studioSaveDraft }}" style="cursor:pointer; flex:1; border:1.5px solid #E0DCD2; background:#fff; color:#2B2A25; font-weight:700; font-size:14px; padding:12px; border-radius:12px;" style-hover="background:#F4F2EA;">Save Draft</button>
+              <button onClick="{{ studioPublish }}" style="cursor:pointer; flex:1.2; border:0; background:#1F5E47; color:#fff; font-weight:700; font-size:14px; padding:12px; border-radius:12px; box-shadow:0 8px 18px rgba(31,94,71,.24);" style-hover="background:#184E3B;">Publish</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PREVIEW CLIENT CLICK overlay -->
+      <div style="display:{{ studioPreviewShow }}; position:absolute; inset:0; z-index:30; background:rgba(20,26,20,.55); backdrop-filter:blur(3px); align-items:center; justify-content:center; padding:28px;">
+        <div style="width:920px; max-width:100%; height:560px; max-height:88%; background:#E9E6DD; border-radius:22px; overflow:hidden; position:relative; box-shadow:0 40px 90px rgba(20,30,22,.45); animation:pmFadeIn .3s ease;">
+          <img src="assets/masterplan.jpg" alt="preview" style="position:absolute; inset:0; width:100%; height:100%; object-fit:cover;"></img>
+          <div style="position:absolute; inset:0; background:rgba(26,32,26,.4);"></div>
+          <svg viewBox="0 0 920 560" preserveAspectRatio="none" style="position:absolute; inset:0; width:100%; height:100%;">
+            <g style="display:{{ pvRoadDisp }};">
+              <path d="M 180 430 L 400 360 L 620 300 L 760 250" fill="none" stroke="#3E6E96" stroke-width="10" stroke-linecap="round" style="filter:drop-shadow(0 0 9px rgba(62,110,150,.6));"></path>
+              <path d="M 180 430 L 400 360 L 620 300 L 760 250" fill="none" stroke="#DCEBF5" stroke-width="4" stroke-linecap="round" stroke-dasharray="6 24" style="animation:pmFlow 2.6s linear infinite;"></path>
+            </g>
+            <g style="display:{{ pvPolyDisp }};">
+              <polygon points="300,200 520,200 530,400 305,400" fill="rgba(193,150,59,0.24)" stroke="#C1963B" stroke-width="4.5" stroke-linejoin="round" style="filter:drop-shadow(0 8px 16px rgba(193,150,59,.4));"></polygon>
+            </g>
+            <g style="display:{{ pvPinDisp }};">
+              <circle cx="460" cy="290" r="30" fill="none" stroke="#2E8B66" stroke-width="2.5" opacity="0.85"></circle>
+              <circle cx="460" cy="290" r="14" fill="#1F5E47" stroke="#fff" stroke-width="3" style="filter:drop-shadow(0 4px 8px rgba(20,50,35,.4));"></circle>
+            </g>
+          </svg>
+          <div style="position:absolute; right:20px; top:20px; bottom:20px; width:290px; background:#fff; border-radius:20px; box-shadow:0 20px 44px rgba(30,30,15,.3); overflow:hidden; display:flex; flex-direction:column; animation:pmCardIn .3s cubic-bezier(.4,0,.2,1);">
+            <div style="padding:18px 20px 14px; border-bottom:1px solid #F0ECE3;">
+              <div style="font-size:12px; font-weight:800; color:{{ pvColor }};">CLIENT PREVIEW</div>
+              <div class="pm-serif" style="font-size:24px; font-weight:500; color:#1C1E1B; margin:8px 0 4px;">{{ studioName }}</div>
+              <div style="font-size:13.5px; color:#6A6E68; line-height:1.5;">{{ pvDesc }}</div>
+            </div>
+            <div style="flex:1; padding:16px 20px; font-size:13px; color:#9A9D96; line-height:1.6;">This is exactly how the marking behaves when a client taps it. No price, status, notes or staff data is ever shown here.</div>
+            <div style="padding:14px 18px; border-top:1px solid #EFEBE2;">
+              <button style="width:100%; cursor:pointer; border:0; background:{{ pvColor }}; color:#fff; font-weight:700; font-size:14px; padding:12px; border-radius:12px;">Client action button</button>
+            </div>
+          </div>
+          <div style="position:absolute; left:20px; top:20px; display:flex; align-items:center; gap:9px; background:rgba(255,255,255,.94); border-radius:12px; padding:8px 14px; box-shadow:0 8px 20px rgba(40,40,20,.18);">
+            <span style="width:8px; height:8px; border-radius:50%; background:#C77A3A;"></span>
+            <span style="font-size:12.5px; font-weight:700; color:#56544A;">Preview mode · not published yet</span>
+          </div>
+          <button onClick="{{ closeStudioPreview }}" style="position:absolute; left:50%; bottom:22px; transform:translateX(-50%); cursor:pointer; border:0; background:#2B2A25; color:#fff; font-weight:700; font-size:14.5px; padding:12px 26px; border-radius:13px; box-shadow:0 12px 28px rgba(20,20,10,.35);" style-hover="background:#3A382F;">Close preview</button>
+        </div>
+      </div>
+    </section>
+    </div>
+
+    <!-- ============ REMOVE / CLOSE-OUT MODAL (team) ============ -->
+    <div style="display:{{ removeModalShow }}; position:fixed; inset:0; z-index:60; background:rgba(12,20,16,.5); backdrop-filter:blur(3px); align-items:center; justify-content:center; padding:24px;">
+      <div style="width:560px; max-width:100%; max-height:90vh; overflow:auto; background:#F7F5F0; border:1px solid #E7E3D9; border-radius:24px; box-shadow:0 40px 90px rgba(20,30,22,.4);">
+        <div style="padding:24px 26px 0; display:flex; align-items:flex-start; justify-content:space-between;">
+          <div>
+            <div style="font-size:12px; letter-spacing:0.14em; text-transform:uppercase; color:#9A4A2C; font-weight:700;">Close out property</div>
+            <div class="pm-serif" style="font-size:27px; font-weight:600; letter-spacing:-0.01em; margin-top:5px;">{{ removeName }}</div>
+            <div style="font-size:13.5px; color:#8A857B; margin-top:2px;">{{ removeArea }}</div>
+          </div>
+          <button onClick="{{ closeRemove }}" style="cursor:pointer; border:0; background:#EEEAE1; color:#6A6E68; width:34px; height:34px; border-radius:11px; font-size:17px; font-weight:700;" style-hover="background:#E4DFD4;">✕</button>
+        </div>
+        <div style="padding:18px 26px 26px;">
+          <div style="font-size:13px; font-weight:700; color:#56544A; margin-bottom:9px;">Why are you closing it?</div>
+          <div style="display:flex; gap:8px; margin-bottom:20px;">
+            <span style="flex:1; text-align:center; background:#E7F0EB; border:1.5px solid #1F5E47; color:#1F5E47; font-size:14px; font-weight:700; padding:11px 0; border-radius:12px;">Sold</span>
+            <span style="flex:1; text-align:center; background:#fff; border:1px solid #E7E3D9; color:#6A6E68; font-size:14px; font-weight:600; padding:11px 0; border-radius:12px;">Cancelled</span>
+            <span style="flex:1; text-align:center; background:#fff; border:1px solid #E7E3D9; color:#6A6E68; font-size:14px; font-weight:600; padding:11px 0; border-radius:12px;">On hold</span>
+          </div>
+          <div style="background:#fff; border:1px solid #E7E3D9; border-radius:16px; padding:18px 20px;">
+            <div style="font-size:13px; font-weight:700; color:#56544A; margin-bottom:13px;">Deal details for the owner</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+              <div><div style="font-size:12px; color:#9A9D96; font-weight:600; margin-bottom:6px;">Final deal value</div><div style="background:#FAF8F3; border:1px solid #E7E3D9; border-radius:11px; padding:12px 13px; font-size:14.5px; font-weight:700;">₹1.4 Cr</div></div>
+              <div><div style="font-size:12px; color:#9A9D96; font-weight:600; margin-bottom:6px;">Commission earned</div><div style="background:#FAF8F3; border:1px solid #E7E3D9; border-radius:11px; padding:12px 13px; font-size:14.5px; font-weight:700; color:#A87C3D;">₹2.5L</div></div>
+              <div><div style="font-size:12px; color:#9A9D96; font-weight:600; margin-bottom:6px;">Buyer / client</div><div style="background:#FAF8F3; border:1px solid #E7E3D9; border-radius:11px; padding:12px 13px; font-size:14.5px; font-weight:600;">Rajat Verma</div></div>
+              <div><div style="font-size:12px; color:#9A9D96; font-weight:600; margin-bottom:6px;">Who owes the money?</div><div style="background:#FAF8F3; border:1px solid #E7E3D9; border-radius:11px; padding:12px 13px; font-size:14.5px; font-weight:600; display:flex; justify-content:space-between;">Buyer <span style="color:#B0ADA2;">▾</span></div></div>
+              <div><div style="font-size:12px; color:#9A9D96; font-weight:600; margin-bottom:6px;">Payment status</div><div style="background:#FAF8F3; border:1px solid #E7E3D9; border-radius:11px; padding:12px 13px; font-size:14.5px; font-weight:600; display:flex; justify-content:space-between;">Pending <span style="color:#B0ADA2;">▾</span></div></div>
+              <div><div style="font-size:12px; color:#9A9D96; font-weight:600; margin-bottom:6px;">Promised by</div><div style="background:#FAF8F3; border:1px solid #E7E3D9; border-radius:11px; padding:12px 13px; font-size:14.5px; font-weight:600;">2 Jul 2026</div></div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px; margin-top:16px; background:#EAF3EE; border:1px solid #CDE6DA; border-radius:12px; padding:11px 14px;">
+            <span style="width:22px; height:22px; border-radius:7px; background:#2E8B66; color:#fff; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; flex:none;">i</span>
+            <span style="font-size:12.5px; color:#216B4E; font-weight:600;">The owner will verify the amount before it's added to Money.</span>
+          </div>
+          <div style="display:flex; gap:12px; margin-top:22px;">
+            <button onClick="{{ closeRemove }}" style="cursor:pointer; border:1px solid #E0DCD2; background:#fff; color:#2B2A25; font-weight:700; font-size:15px; padding:14px 22px; border-radius:13px;" style-hover="background:#F4F2EA;">Cancel</button>
+            <button onClick="{{ submitRemove }}" style="cursor:pointer; flex:1; border:0; background:#1F5E47; color:#fff; font-weight:700; font-size:15px; padding:14px; border-radius:13px; box-shadow:0 8px 18px rgba(31,94,71,.24);" style-hover="background:#184E3B;">Send to owner for approval</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ OWNER VERIFY MODAL ============ -->
+    <div style="display:{{ verifyModalShow }}; position:fixed; inset:0; z-index:61; background:rgba(8,12,10,.6); backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:24px;">
+      <div style="width:520px; max-width:100%; max-height:90vh; overflow:auto; background:#121A15; border:1px solid #2C3D32; border-radius:24px; box-shadow:0 40px 90px rgba(0,0,0,.55);">
+        <div style="padding:24px 26px 0; display:flex; align-items:flex-start; justify-content:space-between;">
+          <div>
+            <div style="display:flex; align-items:center; gap:9px;"><span style="width:26px; height:26px; border-radius:8px; background:#3E6E96; color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:12px;">P</span><span style="font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:#C7A35F; font-weight:700;">Priya needs your approval</span></div>
+            <div class="pm-serif" style="font-size:26px; font-weight:600; letter-spacing:-0.01em; color:#F4F1E8; margin-top:10px;">{{ verifyName }} · marked Sold</div>
+            <div style="font-size:13.5px; color:#7E9488; margin-top:2px;">{{ verifyArea }}</div>
+          </div>
+          <button onClick="{{ closeVerify }}" style="cursor:pointer; border:0; background:#1E2822; color:#9FB0A6; width:34px; height:34px; border-radius:11px; font-size:17px; font-weight:700;" style-hover="background:#243029;">✕</button>
+        </div>
+        <div style="padding:18px 26px 26px;">
+          <div style="background:#0E1612; border:1px solid #243029; border-radius:16px; padding:18px 20px;">
+            <div style="display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid #1E2822;"><span style="font-size:13px; color:#9FB0A6;">Final deal value</span><span class="pm-tab" style="font-size:14px; font-weight:700; color:#F4F1E8;">₹1.4 Cr</span></div>
+            <div style="display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid #1E2822;"><span style="font-size:13px; color:#9FB0A6;">Buyer</span><span style="font-size:14px; font-weight:700; color:#F4F1E8;">Rajat Verma</span></div>
+            <div style="display:flex; justify-content:space-between; padding:9px 0; border-bottom:1px solid #1E2822;"><span style="font-size:13px; color:#9FB0A6;">Who owes</span><span style="font-size:14px; font-weight:700; color:#F4F1E8;">Buyer · Pending</span></div>
+            <div style="display:flex; justify-content:space-between; padding:9px 0 0;"><span style="font-size:13px; color:#9FB0A6;">Promised by</span><span style="font-size:14px; font-weight:700; color:#F4F1E8;">2 Jul 2026</span></div>
+          </div>
+          <div style="margin-top:16px;">
+            <div style="font-size:13px; font-weight:700; color:#C4AF7E; margin-bottom:8px;">Confirm commission amount</div>
+            <div style="display:flex; align-items:center; gap:12px; background:#1A1810; border:1.5px solid #3A3320; border-radius:13px; padding:14px 16px;">
+              <span class="pm-serif" style="font-size:24px; color:#9C8A5E;">₹</span>
+              <span class="pm-serif pm-tab" style="font-size:28px; font-weight:600; color:#E6C684;">2,50,000</span>
+              <span style="margin-left:auto; font-size:12px; color:#7E9488; font-weight:600;">Tap to adjust</span>
+            </div>
+          </div>
+          <div style="display:flex; gap:10px; margin-top:16px;">
+            <div style="flex:1; background:#0E1612; border:1px solid #243029; border-radius:12px; padding:12px 14px;"><div style="font-size:11px; color:#7E9488; font-weight:600;">Updates Money</div><div style="font-size:13px; font-weight:700; color:#E6C684; margin-top:3px;">+₹2.5L pending</div></div>
+            <div style="flex:1; background:#0E1612; border:1px solid #243029; border-radius:12px; padding:12px 14px;"><div style="font-size:11px; color:#7E9488; font-weight:600;">Updates Insights</div><div style="font-size:13px; font-weight:700; color:#7FD3A8; margin-top:3px;">Sold +1</div></div>
+          </div>
+          <div style="display:flex; gap:12px; margin-top:22px;">
+            <button onClick="{{ closeVerify }}" style="cursor:pointer; border:1px solid #2C3D32; background:transparent; color:#CFE0D7; font-weight:700; font-size:15px; padding:14px 20px; border-radius:13px;" style-hover="background:rgba(255,255,255,.04);">Send back</button>
+            <button onClick="{{ confirmVerify }}" style="cursor:pointer; flex:1; border:0; background:#E4C588; color:#1A140A; font-weight:700; font-size:15px; padding:14px; border-radius:13px;" style-hover="background:#D6B074;">Confirm &amp; add to Money</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ TOAST ============ -->
+    <div style="display:{{ toastShow }}; position:fixed; left:50%; bottom:30px; transform:translateX(-50%); z-index:62; align-items:center; gap:13px; background:#121A15; border:1px solid #2C3D32; border-radius:14px; padding:14px 20px; box-shadow:0 20px 50px rgba(0,0,0,.4);">
+      <span style="width:24px; height:24px; border-radius:8px; background:#7FD3A8; color:#0E1612; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800;">✓</span>
+      <span style="font-size:14px; font-weight:600; color:#F4F1E8;">{{ toastText }}</span>
+      <button onClick="{{ dismissToast }}" style="cursor:pointer; border:0; background:transparent; color:#7E9488; font-size:15px; font-weight:700; margin-left:6px;">✕</button>
+    </div>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;startScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Landing&quot;,&quot;Map&quot;,&quot;Dashboard&quot;,&quot;Property Insights&quot;,&quot;Clients&quot;,&quot;Sector Maps&quot;,&quot;Properties&quot;,&quot;Team&quot;,&quot;Map Studio&quot;],&quot;default&quot;:&quot;Landing&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;mapType&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Easy / 3D Map&quot;,&quot;Original Map&quot;,&quot;Sector Map&quot;],&quot;default&quot;:&quot;Easy / 3D Map&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Map&quot;},&quot;showHelp&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;General&quot;}}">
+class Component extends DCLogic {
+  constructor(props){
+    super(props);
+    const sMap = {'Landing':'landing','Map':'map','Properties':'props','Dashboard':'dash','Property Insights':'insights','Clients':'clients','Money':'money','Team':'team','Map Studio':'studio','Sector Maps':'sector'};
+    const mtMap = {'Easy / 3D Map':'easy','Original Map':'original','Sector Map':'sector'};
+    const start = sMap[props.startScreen] || 'landing';
+    let world = 'owner';
+    if (start==='landing') world='landing';
+    else if (start==='map' || start==='sector') world='client';
+    else if (start==='team' || start==='addClient' || start==='addProp') world='team';
+    this.state = { world, screen: start==='landing'?'':start, mapType: mtMap[props.mapType] || 'easy', masterplan:'Aerocity', mpOpen:false, photoOpen:false, mapSel:null, pub:{}, studioTool:'road', studioName:'Airport Road Link', studioGroup:'A', studioCV:false, studioStatus:'Draft', studioPreview:false, studioMore:false, selClient:0, selProp:0, studioOpen:false, detailBack:'map', removeModal:null, verifyModal:null, toast:'' };
+    this.allProps = this.buildProps();
+  }
+  go(world, screen){ this.setState({world, screen, studioOpen:false}); }
+
+  buildProps(){
+    // procedural premium "photo" scenes (layered CSS gradients)
+    const SC = {
+      plot:   'radial-gradient(120% 85% at 68% 16%, rgba(255,248,222,.55), transparent 46%), linear-gradient(180deg,#A6C6DE 0%,#C6DAD4 43%,#B0C588 46%,#809C54 100%)',
+      corner: 'radial-gradient(120% 85% at 30% 18%, rgba(255,242,214,.5), transparent 46%), linear-gradient(180deg,#B4CEE0 0%,#D0DFD2 45%,#C4CB90 48%,#8AA058 100%)',
+      road:   'linear-gradient(180deg,#ADC9E0 0%,#CEDBD3 37%,#BABFB0 39%,#9097906b 39%,#8C938C 40%,#5E655F 100%)',
+      aerial: 'repeating-linear-gradient(46deg,#9DB069 0 24px,#A6B872 24px 48px), repeating-linear-gradient(136deg, rgba(255,255,255,.16) 0 22px, transparent 22px 58px)',
+      skyline:'linear-gradient(180deg,#33406E 0%,#6A5C96 36%,#C0846A 68%,#F0C088 100%)',
+      park:   'radial-gradient(100% 70% at 50% 8%, rgba(255,250,228,.5), transparent 52%), linear-gradient(180deg,#A4C5DC,#84AE78 55%,#5C8850 100%)',
+      market: 'linear-gradient(180deg,#BCD0DE 0%,#E0D2BA 43%,#CFA676 72%,#A67E54 100%)',
+      temple: 'radial-gradient(90% 72% at 50% 28%, rgba(255,234,188,.72), transparent 56%), linear-gradient(180deg,#CDBEE2,#EAD09E 55%,#D6A865 100%)',
+      interior:'linear-gradient(180deg,#E8E1D4 0%,#D8CDBA 50%,#BCAE94 100%)'
+    };
+    const areas=['Aerocity','New Chandigarh','Zirakpur','Mullanpur','Derabassi','IT City','Kharar','Sector 82'];
+    const cities=['Mohali','New Chandigarh','Zirakpur','Mullanpur','Derabassi','Mohali','Kharar','Mohali'];
+    const types=['Residential Plot','Commercial SCO','Showroom','Villa','Industrial Plot','Corner Plot'];
+    const sizes=['150 sq yd','200 sq yd','250 sq yd','300 sq yd','500 sq yd','1 Kanal','SCO unit','200 sq yd'];
+    const facings=['East','West','North-East','Road Facing','Park Facing','Corner'];
+    const blocks=['A','B','C','D','E','F'];
+    const statuses=[
+      {s:'Available',sBg:'#E7F0EB',sFg:'#1F5E47'},
+      {s:'Available',sBg:'#E7F0EB',sFg:'#1F5E47'},
+      {s:'On hold',sBg:'#F3EAD8',sFg:'#8A6224'},
+      {s:'Internal only',sBg:'#EDEAF2',sFg:'#5F5A78'},
+      {s:'Completed',sBg:'#EFEBE2',sFg:'#7C8076'}
+    ];
+    const flagsCycle=['','Add photos','Map pin missing','Sector proof missing','Brochure not ready',''];
+    const scoreLabels=[['High Attention','#1F5E47','#E7F0EB'],['Rising','#8A6224','#F3EAD8'],['Stable','#3E6E96','#E9EFF4'],['Needs Push','#9A4A2C','#F7E7E0'],['Ignored','#7C8076','#EFEBE2']];
+    const caps=['Plot view','Corner & boundary','Road frontage','Aerial · sector','Nearby landmark','Local market'];
+    const out=[];
+    for(let i=0;i<50;i++){
+      const type=types[(i*3+1)%types.length];
+      const commercial=/SCO|Showroom|Industrial/.test(type);
+      const area=areas[i%areas.length];
+      const block=blocks[i%blocks.length];
+      const sector=20+((i*7)%160);
+      const size=commercial?(type==='Showroom'?'200 sq yd':'SCO unit'):sizes[(i*2)%sizes.length];
+      const facing=facings[i%facings.length];
+      const st=statuses[i%statuses.length];
+      const prefix=type==='Showroom'?'Showroom':(commercial?'SCO':'Plot');
+      const name=prefix+' '+block+'-'+(100+i);
+      const views=8+((i*13+7)%118);
+      const shares=1+((i*5)%14);
+      const proofOpens=((i*3)%9);
+      const matches=((i*7)%6);
+      const visits=((i*2)%4);
+      const score=Math.max(22, Math.min(96, 96-((i*9)%70)));
+      const slIdx= score>78?0 : score>62?1 : score>46?2 : score>34?3 : 4;
+      const sl=scoreLabels[slIdx];
+      const flag=flagsCycle[i%flagsCycle.length];
+      const ready = !flag;
+      const pScenes = commercial?['skyline','market','road','aerial']:['plot','corner','road','aerial'];
+      const aScenes = ['temple','market'];
+      const sceneKeys=[...pScenes,...aScenes];
+      const images=sceneKeys.map((k,j)=>({bg:SC[k]||SC.plot, cap:caps[j]||'View'}));
+      out.push({
+        id:'p'+i, name, area, city:cities[i%cities.length], block, sector, size, type, facing,
+        status:st.s, sBg:st.sBg, sFg:st.sFg,
+        views, shares, proofOpens, matches, visits, score,
+        scoreLabel:sl[0], scoreCol:sl[1], scoreBg:sl[2],
+        flag, ready, images, hero:images[0].bg,
+        road:(commercial?'60 ft':'40 ft')
+      });
+    }
+    // anchor the first one to the spec example
+    out[0]={...out[0], name:'Plot C-114', area:'Aerocity', city:'Mohali', block:'C', sector:82, size:'500 sq yd', type:'Residential Plot', facing:'Road Facing', status:'Available', sBg:'#E7F0EB', sFg:'#1F5E47', views:86, shares:12, proofOpens:6, matches:4, visits:1, score:86, scoreLabel:'High Attention', scoreCol:'#1F5E47', scoreBg:'#E7F0EB', flag:'', ready:true, road:'40 ft',
+      images:[{bg:SC.plot,cap:'Plot view'},{bg:SC.corner,cap:'Corner & boundary'},{bg:SC.road,cap:'Road frontage'},{bg:SC.aerial,cap:'Aerial · sector'},{bg:SC.temple,cap:'Nearby landmark'},{bg:SC.market,cap:'Local market'}], hero:SC.plot};
+    return out;
+  }
+
+  renderVals(){
+    const w = this.state.world;
+    const s = this.state.screen;
+    const help = (this.props.showHelp ?? true) ? 'block' : 'none';
+
+    const navDef = {
+      owner: [['Dashboard','dash'],['Property Insights','insights'],['Clients','clients']],
+      team: [['Workspace','team'],['Properties','props'],['Map Studio','studio']],
+      client: [['Map','map'],['Properties','props'],['Sector Maps','sector']]
+    };
+    const tabsList = navDef[w] || [];
+    const activeFor = {detail: (w==='client'?'props':'insights'), client:'clients', addClient:'team', addProp:'props'};
+    const tabs = tabsList.map(([label,id]) => {
+      const on = s===id || activeFor[s]===id;
+      return { label, bg: on?'#E7F0EB':'transparent', col: on?'#1F5E47':'#6A6E68', fw: on?'700':'600', go:()=> this.setState({screen:id, studioOpen:false}) };
+    });
+
+    const roles = {
+      owner: {roleName:'Karan', roleKind:'Owner', roleColor:'#1F5E47', roleInitial:'K'},
+      team: {roleName:'Priya', roleKind:'Staff', roleColor:'#3E6E96', roleInitial:'P'},
+      client: {roleName:'Guest', roleKind:'Client view', roleColor:'#A87C3D', roleInitial:'C'}
+    };
+    const role = roles[w] || roles.owner;
+
+    const doors = [
+      {num:'01', tag:'For your client', title:'Client Presentation', desc:'Walk a buyer through any property, sector and location on a beautiful live map.', cta:'Start presenting', icon:'◑',
+        accent:'#1F5E47', tint:'#E7F0EB', go:()=> this.go('client','map')},
+      {num:'02', tag:'For the owner', title:'Dealer Login', desc:'Your command room — business signals, client movement and all the money in one calm place.', cta:'Enter command', icon:'◆',
+        accent:'#A87C3D', tint:'#F6ECD8', go:()=> this.go('owner','dash')},
+      {num:'03', tag:'For your team', title:'Team Login', desc:'The daily work table — add clients and properties, schedule visits and mark maps.', cta:'Open workspace', icon:'◐',
+        accent:'#3E6E96', tint:'#E9EFF4', go:()=> this.go('team','team')}
+    ];
+
+    const mtDef = [['easy','Easy','Simple, easy to explain'],['original','Original','Official proof map'],['sector','Sector','Exact plot location']];
+    const mapTypes = mtDef.map(([id,short,sub])=>{ const on=this.state.mapType===id; return {short,sub,bg:on?'#fff':'transparent',col:on?'#1F5E47':'#7C8076',sh:on?'0 1px 3px rgba(40,32,15,.12)':'none',go:()=>this.setState({mapType:id})}; });
+
+    const mpSubs = {'Mohali':'Tricity \u00b7 SAS Nagar','Aerocity':'Mohali \u00b7 Airport Road','Derabassi':'Tricity \u00b7 Zirakpur belt','Kharar':'Tricity \u00b7 NH-7','New Chandigarh':'Mullanpur \u00b7 Eco City','Mullanpur':'New Chandigarh belt','Chandigarh':'Tricity \u00b7 City Beautiful','Panchkula':'Tricity \u00b7 Haryana','Zirakpur':'Tricity \u00b7 PR-7'};
+    const mpNames = ['Mohali','Aerocity','Derabassi','Kharar','New Chandigarh','Mullanpur','Chandigarh','Panchkula','Zirakpur'];
+    const curMp = this.state.masterplan || 'Aerocity';
+    const masterplans = mpNames.map(name=>{ const on=name===curMp; return {name, sub:mpSubs[name]||'Tricity', bg:on?'#F1F6F3':'transparent', dot:on?'#1F5E47':'#C4C0B5', fw:on?'700':'600', checkShow:on?'inline':'none', go:()=>this.setState({masterplan:name, mpOpen:false})}; });
+
+    // ===== CLIENT PRESENTATION MAP OVERLAYS =====
+    const pub = this.state.pub || {};
+    const OVL = [
+      {id:'zone-airport',type:'zone',name:'Chandigarh Airport',kind:'Airport & connectivity zone',poly:'995,95 1215,95 1240,240 1010,250',ax:73,ay:15,base:true,cv:true,group:'B',nearSectors:'Aerocity \u00b7 Sector 82',nearRoads:'PR-7 \u00b7 NH-7',why:'Direct airport access supports long-term land value across nearby sectors.',linked:['road-pr7','block-82']},
+      {id:'block-82',type:'block',name:'Sector 82',area:'Aerocity',poly:'540,300 690,300 700,455 545,455',ax:40,ay:37,base:true,cv:true,group:'A',nearRoad:'PR-7 \u00b7 Airport Road',connected:'Sector 83 \u00b7 Sector 66',proof:true,plots:34,linked:['road-pr7','pin-c114']},
+      {id:'lmk-itpark',type:'landmark',name:'IT Park',kind:'Commercial / office belt',poly:'855,505 1000,505 1000,600 855,600',ax:60,ay:54,base:true,cv:true,group:'C',nearSectors:'Sector 66 \u00b7 Sector 82',nearRoads:'PR-7',why:'Major employment hub \u2014 strong rental and resale demand in surrounding plots.',linked:['road-pr7']},
+      {id:'road-pr7',type:'road',name:'PR-7 \u00b7 Airport Road',role:'Main connectivity spine',path:'M 150 790 L 470 705 L 770 615 L 1060 515 L 1300 470',ax:49,ay:60,base:true,cv:true,group:'B',connected:'Sector 82 \u00b7 IT Park',landmarks:'Airport \u00b7 IT Park',entryExit:'PR-1 \u2194 NH-7',linked:['block-82','lmk-itpark','zone-airport']},
+      {id:'pin-c114',type:'pin',name:'Plot C-114',cx:612,cy:378,ax:40,ay:37,base:true,cv:true,group:'A',area:'Aerocity',sector:'82',block:'C',size:'200 sq yd',facing:'Road facing',roadW:'40 ft',linked:['block-82','road-pr7']},
+      {id:'road-link',type:'road',name:'Airport Road Link',role:'Internal access link',path:'M 700 645 L 870 600 L 1015 560',ax:56,ay:59,base:false,cv:false,group:'A',connected:'Sector 82',landmarks:'IT Park',entryExit:'PR-7 access',linked:['block-82']}
+    ];
+    const mapVisible = OVL.filter(o => (o.base && o.cv) || pub[o.id]);
+    const msel = this.state.mapSel;
+    const selObj = OVL.find(o=>o.id===msel) || null;
+    const relSet = {}; if(selObj && selObj.linked) selObj.linked.forEach(id=>{relSet[id]=true;});
+    const stOf = (o)=> o.id===msel ? 'sel' : (relSet[o.id]?'rel':(msel?'dim':'norm'));
+    const RGB = {block:'193,150,59',landmark:'199,122,58',zone:'62,110,150',road:'62,110,150',pin:'31,94,71'};
+    const SOL = {block:'#C1963B',landmark:'#C77A3A',zone:'#3E6E96',road:'#3E6E96',pin:'#1F5E47'};
+    const polyOverlays = mapVisible.filter(o=>o.type==='block'||o.type==='landmark'||o.type==='zone').map(o=>{
+      const s=stOf(o); const c=RGB[o.type]; let fill,stroke,sw,op,filter;
+      if(s==='sel'){fill='rgba('+c+',0.22)';stroke=SOL[o.type];sw=4.5;op=1;filter='drop-shadow(0 8px 16px rgba('+c+',0.4))';}
+      else if(s==='rel'){fill='rgba(46,139,102,0.14)';stroke='rgba(46,139,102,0.9)';sw=3;op=1;filter='none';}
+      else if(s==='dim'){fill='rgba('+c+',0.05)';stroke='rgba('+c+',0.22)';sw=1.5;op=0.55;filter='none';}
+      else {fill='rgba('+c+',0.10)';stroke='rgba('+c+',0.55)';sw=2;op=1;filter='none';}
+      return {points:o.poly,fill,stroke,sw,op,filter,go:()=>this.setState({mapSel:o.id})};
+    });
+    const roadOverlays = mapVisible.filter(o=>o.type==='road').map(o=>{
+      const s=stOf(o); let stroke,sw,op,glow,flowOp;
+      if(s==='sel'){stroke='#3E6E96';sw=10;op=1;glow='drop-shadow(0 0 9px rgba(62,110,150,0.6))';flowOp=1;}
+      else if(s==='rel'){stroke='#2E8B66';sw=8;op=0.95;glow='none';flowOp=0;}
+      else if(s==='dim'){stroke='rgba(62,110,150,0.32)';sw=5;op=0.5;glow='none';flowOp=0;}
+      else {stroke='rgba(62,110,150,0.6)';sw=7;op=1;glow='none';flowOp=0;}
+      return {d:o.path,stroke,sw,op,glow,flowOp,flowSw:Math.max(3,sw*0.42),flowAnim:'pmFlow 2.6s linear infinite',go:()=>this.setState({mapSel:o.id})};
+    });
+    const pinOverlays = mapVisible.filter(o=>o.type==='pin').map(o=>{
+      const s=stOf(o); let r,fill,op,ringR,ringOp;
+      if(s==='sel'){r=13;fill='#1F5E47';op=1;ringR=27;ringOp=0.85;}
+      else if(s==='rel'){r=10;fill='#2E8B66';op=1;ringR=18;ringOp=0.4;}
+      else if(s==='dim'){r=7;fill='#1F5E47';op=0.5;ringR=14;ringOp=0;}
+      else {r=9;fill='#1F5E47';op=1;ringR=16;ringOp=0;}
+      return {cx:o.cx,cy:o.cy,r,fill,op,ringR,ringOp,go:()=>this.setState({mapSel:o.id})};
+    });
+    const mapLabels = mapVisible.filter(o=>o.type!=='pin').map(o=>{
+      const s=stOf(o); let bg,color,fw,scl,shadow,z;
+      if(s==='sel'){bg='#FFFFFF';color=SOL[o.type];fw=800;scl=1.06;shadow='0 8px 20px rgba(40,50,40,.2)';z=6;}
+      else if(s==='rel'){bg='rgba(255,255,255,.96)';color='#216B4E';fw=700;scl=1;shadow='0 4px 12px rgba(40,50,40,.12)';z=4;}
+      else if(s==='dim'){bg='rgba(255,255,255,.62)';color='#9A9D96';fw=600;scl=.92;shadow='none';z=2;}
+      else {bg='rgba(255,255,255,.9)';color='#3A4452';fw=700;scl=1;shadow='0 3px 10px rgba(40,50,40,.1)';z=3;}
+      return {left:o.ax+'%',top:o.ay+'%',text:o.name,bg,color,fw,tf:'translate(-50%,-50%) scale('+scl+')',shadow,z};
+    });
+    const dimOpacity = msel ? 0.4 : 0;
+    const mapLegend = [{c:'#C1963B',t:'Sector / block'},{c:'#3E6E96',t:'Roads & connectivity'},{c:'#1F5E47',t:'Property plots'},{c:'#C77A3A',t:'Landmarks & commercial'}];
+    let mcEmpty=!selObj, mcPin=false, mcGeneric=false;
+    let mcAccent='#1F5E47',mcAccentBg='#E7F0EB',mcEyebrow='',mcTitle='',mcSub='',mcRows=[],mcProof=false,mcPrimaryLabel='',mcSecondaryLabel='';
+    if(selObj){
+      if(selObj.type==='pin'){ mcPin=true; }
+      else { mcGeneric=true;
+        mcAccent={block:'#A87C3D',landmark:'#C77A3A',zone:'#3E6E96',road:'#3E6E96'}[selObj.type];
+        mcAccentBg={block:'#F3EAD8',landmark:'#F6E8DC',zone:'#E9EFF4',road:'#E9EFF4'}[selObj.type];
+        if(selObj.type==='block'){ mcEyebrow=selObj.area+' \u00b7 Sector'; mcTitle=selObj.name; mcSub=selObj.plots+' plots \u00b7 Residential sector'; mcRows=[{k:'Nearby main road',v:selObj.nearRoad},{k:'Connected',v:selObj.connected}]; mcProof=selObj.proof; mcPrimaryLabel='View Sector Proof'; mcSecondaryLabel='View Properties'; }
+        else if(selObj.type==='road'){ mcEyebrow='Connectivity'; mcTitle=selObj.name; mcSub=selObj.role; mcRows=[{k:'Connected areas',v:selObj.connected},{k:'Nearby landmarks',v:selObj.landmarks},{k:'Entry / exit',v:selObj.entryExit}]; mcPrimaryLabel='View Connected Areas'; }
+        else if(selObj.type==='landmark'){ mcEyebrow=selObj.kind; mcTitle=selObj.name; mcSub=selObj.why; mcRows=[{k:'Nearby sectors',v:selObj.nearSectors},{k:'Nearby roads',v:selObj.nearRoads}]; mcPrimaryLabel='View Nearby Properties'; }
+        else if(selObj.type==='zone'){ mcEyebrow=selObj.kind; mcTitle=selObj.name; mcSub=selObj.why; mcRows=[{k:'Nearby sectors',v:selObj.nearSectors},{k:'Nearby roads',v:selObj.nearRoads}]; mcPrimaryLabel='View Nearby Properties'; }
+      }
+    }
+    const pinObj = (selObj && selObj.type==='pin') ? selObj : null;
+
+    // ===== MAP STUDIO =====
+    const stTool = this.state.studioTool;
+    const toolDefs=[['select','Select / Edit','\u2196'],['road','Road','\u2500'],['block','Block','\u25a2'],['sector','Sector','\u2b21'],['pin','Property Pin','\u25c9'],['landmark','Landmark','\u2691'],['commercial','Commercial Area','\u25a4'],['boundary','Boundary / Zone','\u2b1a']];
+    const studioToolList=toolDefs.map(([id,label,icon])=>{const on=stTool===id;return{icon,label,go:()=>this.setState({studioTool:id}),bg:on?'#E7F0EB':'#fff',bd:on?'#1F5E47':'#E7E3D9',iconBg:on?'#1F5E47':'#F4F2EC',iconCol:on?'#fff':'#7C8076',txt:on?'#1F5E47':'#56544A'};});
+    const stStatus=this.state.studioStatus;
+    const stStepActive = stStatus==='Published' ? 3 : 2;
+    const studioStepList=[['1','Pick your map'],['2','Mark it'],['3','Publish']].map(([num,label],i)=>{const on=(i+1)===stStepActive; const done=(i+1)<stStepActive; return{num:done?'\u2713':num,label,bg:on?'#E7F0EB':'#fff',bd:on?'#1F5E47':'#E7E3D9',numBg:(on||done)?'#1F5E47':'#E7E3D9',numCol:(on||done)?'#fff':'#9A9D96',txt:on?'#1C1E1B':'#6A6E68'};});
+    const toolMeta={select:{label:'Select / Edit',kind:'none'},road:{label:'Road',kind:'road'},block:{label:'Block',kind:'poly',c:'#C1963B'},sector:{label:'Sector',kind:'poly',c:'#C1963B'},pin:{label:'Property Pin',kind:'pin'},landmark:{label:'Landmark',kind:'poly',c:'#C77A3A'},commercial:{label:'Commercial Area',kind:'poly',c:'#C77A3A'},boundary:{label:'Boundary / Zone',kind:'poly',c:'#3E6E96'}};
+    const tm=toolMeta[stTool]||toolMeta.road;
+    const stKind=tm.kind;
+    const studioInstr={select:'Tap any marking on the map to edit it.',road:'Tap along the road. Double-tap to finish.',block:'Tap around the block boundary. Close the shape to finish.',sector:'Tap around the sector boundary. Close the shape to finish.',pin:'Tap the exact property location.',landmark:'Tap or draw around the landmark area.',commercial:'Draw around the commercial area.',boundary:'Trace the zone boundary. Close the shape to finish.'}[stTool];
+    const studioGroups=['A','B','C','D'].map(g=>{const on=this.state.studioGroup===g;return{g,go:()=>this.setState({studioGroup:g}),bg:on?'#E7F0EB':'#fff',bd:on?'#1F5E47':'#E0DCD2',fg:on?'#1F5E47':'#9A9D96'};});
+    const statusColors={Draft:['#8A6224','#F3EAD8'],Review:['#3E6E96','#E9EFF4'],Published:['#1F5E47','#E7F0EB'],Hidden:['#7C8076','#EFEBE2']};
+    const statusChips=['Draft','Review','Published','Hidden'].map(s=>{const on=stStatus===s;const c=statusColors[s];return{s,fg:on?c[0]:'#9A9D96',bg:on?c[1]:'#F4F2EC',bd:on?c[0]:'#E7E3D9'};});
+    const pvColor=({road:'#3E6E96',poly:tm.c,pin:'#1F5E47',none:'#3E6E96'})[stKind]||'#3E6E96';
+    const pvDesc=({road:'Selected road glows airport-blue with a gentle flow along the path.',poly:'Selected area lifts with a proof-gold outline and soft fill; the rest of the map dims.',pin:'The pin grows a soft ring and its parent block highlights.',none:'Tap a marking to preview its client behaviour.'})[stKind];
+
+    const detailFacts = [{k:'Size',v:'200 yd²'},{k:'Facing',v:'East'},{k:'Road',v:'40 ft'},{k:'Plot',v:'C-114'}];
+    const detailNearby = [{place:'International Airport',dist:'4 km',col:'#3E6E96'},{place:'IT City',dist:'6 km',col:'#2E8B66'},{place:'Proposed Metro stop',dist:'1.2 km',col:'#A87C3D'},{place:'PR-7 Highway',dist:'2 km',col:'#1F5E47'}];
+    const detailSimilar = [{name:'Plot C-118',meta:'Block C · 250 yd²'},{name:'Plot C-102',meta:'Block C · 200 yd²'}];
+
+    const sChips = ['All Tricity','Aerocity','New Chandigarh','Zirakpur','Mullanpur','Derabassi'];
+    const sectorChips = sChips.map((label,i)=>({label, bg:i===0?'#1F5E47':'#fff', bd:i===0?'#1F5E47':'#E7E3D9', fg:i===0?'#fff':'#56544A'}));
+    const secAreas = ['Aerocity','New Chandigarh','Zirakpur','Mullanpur','Derabassi','IT City'];
+    const sectors = [82,66,115,20,9,127,48,93,5,160,34,71].map((n,i)=>{
+      const verified=i%4!==0; const tints=['rgba(31,94,71,.18)','rgba(62,110,150,.18)','rgba(168,124,61,.2)']; const cols=['#1F5E47','#3E6E96','#A87C3D']; const c=i%3;
+      return {name:'Sector '+n, area:secAreas[i%secAreas.length], plots:(28+(n%40)), status:verified?'Verified':'Draft', badgeBg:verified?'#E7F0EB':'#F3EAD8', badgeFg:verified?'#1F5E47':'#8A6224', tint:tints[c], col:cols[c]};
+    });
+
+    const spark=(arr,c)=>arr.map(h=>({h:h+'%',c}));
+    const stats=[
+      {k:'Active clients',v:'128',delta:'+9',delCol:'#1F5E47',delBg:'#E7F0EB',spark:spark([40,55,48,62,70,66,82],'#1F5E47')},
+      {k:'Site visits',v:'6',delta:'+2',delCol:'#1F5E47',delBg:'#E7F0EB',spark:spark([30,50,40,60,45,70,90],'#C7B083')},
+      {k:'Deals in progress',v:'14',delta:'+3',delCol:'#1F5E47',delBg:'#E7F0EB',spark:spark([55,48,60,52,68,72,80],'#1F5E47')},
+      {k:'Pipeline value',v:'₹3.2Cr',delta:'+18%',delCol:'#8A6224',delBg:'#F3EAD8',spark:spark([35,45,55,50,65,75,88],'#C7B083')}
+    ];
+    const briefing=[
+      {v:'+₹42L', k:'Pipeline this week'},
+      {v:'3', k:'Hot clients waiting'},
+      {v:'₹4.0L', k:'Ready to recover'}
+    ];
+    const momentum=['M','T','W','T','F','S','S','M','T','W','T','F','S','S'].map((d,i)=>{
+      const base=[40,55,48,70,62,80,58,52,66,74,60,88,70,46]; const enq=[55,62,58,80,72,90,64,60,76,84,70,96,80,58];
+      return {d, b:base[i]+'%', a:Math.round((enq[i]-base[i])*0.7)+'%'};
+    });
+    const areas=[{name:'Aerocity',change:'Most active',pct:'92%',col:'#1F5E47'},{name:'New Chandigarh',change:'Rising',pct:'62%',col:'#A87C3D'},{name:'IT City',change:'Steady',pct:'48%',col:'#3E6E96'},{name:'Zirakpur',change:'Quiet',pct:'26%',col:'#A6A199'}];
+    const ownerRecs=[
+      {tag:'Relationships',col:'#9A4A2C',t:'3 high-value clients haven\u2019t heard from you in a week — a quick hello keeps them warm.'},
+      {tag:'Inventory',col:'#1F5E47',t:'Aerocity demand is rising while stock runs low. Worth sourcing 2\u20133 more plots there.'},
+      {tag:'Money',col:'#A87C3D',t:'\u20B92.6L has aged past 30 days. A gentle recovery call could bring it in.'}
+    ];
+
+    const cData=[
+      {initials:'RS',name:'Rajdeep Singh',area:'Aerocity',budget:'\u20B91.2 Cr',value:'\u20B918L',stage:'Hot',stageCol:'#9A4A2C',stageBg:'#F7E7E0',avBg:'#1F5E47',avFg:'#fff',deals:'3',score:'High',referrals:'2',since:'2021',phone:'+91 98xx xx21',email:'rajdeep@email.com',last:'2d ago',
+        tags:['200 yd\u00B2 plot','Aerocity','Corner'],
+        details:[{k:'Occupation',v:'Business owner'},{k:'Family',v:'Married, 2 kids'},{k:'Budget',v:'\u20B91.2 Cr'},{k:'Preferred',v:'Residential plot'},{k:'Source',v:'Referral'}],
+        shown:[{name:'Plot C-114',meta:'Aerocity · 200 yd\u00B2'},{name:'Plot C-118',meta:'Aerocity · 250 yd\u00B2'}],
+        thread:[{t:'Visited Plot C-114',sub:'On-site with Priya · liked the corner',col:'#1F5E47',when:'2d ago'},{t:'Brochure shared',sub:'Aerocity Block C brochure on WhatsApp',col:'#A87C3D',when:'4d ago'},{t:'Phone call',sub:'15 min · serious, wants corner plot',col:'#3E6E96',when:'1w ago'},{t:'Added as client',sub:'Walk-in to Aerocity office',col:'#9A9D96',when:'May 2024'}]},
+      {initials:'AB',name:'Anita Bhatia',area:'New Chandigarh',budget:'\u20B985 L',value:'\u20B911L',stage:'Negotiating',stageCol:'#8A6224',stageBg:'#F3EAD8',avBg:'#A87C3D',avFg:'#fff',deals:'2',score:'High',referrals:'1',since:'2022',phone:'+91 99xx xx07',email:'anita.b@email.com',last:'1d ago',
+        tags:['250 yd\u00B2 plot','New Chandigarh'],
+        details:[{k:'Occupation',v:'Doctor'},{k:'Family',v:'Married'},{k:'Budget',v:'\u20B985 L'},{k:'Preferred',v:'Residential plot'},{k:'Source',v:'Online'}],
+        shown:[{name:'Plot 20-B',meta:'New Chandigarh · 250 yd\u00B2'}],
+        thread:[{t:'Token paid',sub:'\u20B92L token for Plot 20-B',col:'#1F5E47',when:'1d ago'},{t:'Site visit done',sub:'Visited with family',col:'#3E6E96',when:'3d ago'},{t:'Negotiation',sub:'Asked for 5% off',col:'#A87C3D',when:'5d ago'},{t:'Added as client',sub:'Online enquiry',col:'#9A9D96',when:'Jan 2022'}]},
+      {initials:'MK',name:'Mehul Kapoor',area:'IT City',budget:'\u20B91.6 Cr',value:'\u20B99L',stage:'Warm',stageCol:'#345D80',stageBg:'#E9EFF4',avBg:'#3E6E96',avFg:'#fff',deals:'1',score:'Medium',referrals:'0',since:'2023',phone:'+91 98xx xx55',email:'mehul.k@email.com',last:'5h ago',
+        tags:['SCO','Commercial','IT City'],
+        details:[{k:'Occupation',v:'IT professional'},{k:'Family',v:'Single'},{k:'Budget',v:'\u20B91.6 Cr'},{k:'Preferred',v:'Commercial SCO'},{k:'Source',v:'WhatsApp'}],
+        shown:[{name:'SCO F-7',meta:'IT City · 120 yd\u00B2'}],
+        thread:[{t:'Asked for brochure',sub:'SCO F-7 commercial details',col:'#A87C3D',when:'5h ago'},{t:'New enquiry',sub:'Interested in IT City SCO',col:'#1F5E47',when:'2d ago'},{t:'Added as client',sub:'WhatsApp enquiry',col:'#9A9D96',when:'Mar 2023'}]},
+      {initials:'GD',name:'Gurpreet Dhillon',area:'Derabassi',budget:'\u20B92.4 Cr',value:'\u20B924L',stage:'Repeat',stageCol:'#1F5E47',stageBg:'#E7F0EB',avBg:'#1C1E1B',avFg:'#fff',deals:'5',score:'High',referrals:'4',since:'2019',phone:'+91 97xx xx12',email:'gurpreet.d@email.com',last:'Yesterday',
+        tags:['Commercial','Showroom','Derabassi'],
+        details:[{k:'Occupation',v:'Industrialist'},{k:'Family',v:'Married, 3 kids'},{k:'Budget',v:'\u20B92.4 Cr'},{k:'Preferred',v:'Commercial'},{k:'Source',v:'Referral'}],
+        shown:[{name:'SCO D-12',meta:'Derabassi · Commercial'},{name:'Showroom Z-3',meta:'Zirakpur · Showroom'}],
+        thread:[{t:'Deal closed \u20B974L',sub:'SCO D-12 · commission \u20B92.5L',col:'#1F5E47',when:'Yesterday'},{t:'Referred a friend',sub:'Introduced new buyer',col:'#A87C3D',when:'1w ago'},{t:'Repeat purchase',sub:'4th deal with us',col:'#3E6E96',when:'2mo ago'},{t:'Added as client',sub:'Referral from partner',col:'#9A9D96',when:'2019'}]},
+      {initials:'SK',name:'Simran Kaur',area:'Aerocity',budget:'\u20B990 L',value:'\u20B97L',stage:'Warm',stageCol:'#345D80',stageBg:'#E9EFF4',avBg:'#6FA3C9',avFg:'#fff',deals:'1',score:'Medium',referrals:'0',since:'2024',phone:'+91 98xx xx88',email:'simran.k@email.com',last:'2h ago',
+        tags:['Plot','Aerocity'],
+        details:[{k:'Occupation',v:'Architect'},{k:'Family',v:'Married'},{k:'Budget',v:'\u20B990 L'},{k:'Preferred',v:'Residential plot'},{k:'Source',v:'Walk-in'}],
+        shown:[{name:'Plot C-114',meta:'Aerocity · 200 yd\u00B2'}],
+        thread:[{t:'New client added',sub:'Walk-in this morning',col:'#1F5E47',when:'2h ago'},{t:'First enquiry',sub:'Aerocity plots under \u20B91Cr',col:'#A87C3D',when:'2h ago'}]},
+      {initials:'HS',name:'Harman Sodhi',area:'Zirakpur',budget:'\u20B91.1 Cr',value:'\u20B95L',stage:'Cold',stageCol:'#7C8076',stageBg:'#EFEBE2',avBg:'#9A9D96',avFg:'#fff',deals:'1',score:'Low',referrals:'0',since:'2023',phone:'+91 97xx xx34',email:'harman.s@email.com',last:'3w ago',
+        tags:['Showroom','Zirakpur'],
+        details:[{k:'Occupation',v:'Retailer'},{k:'Family',v:'Married, 1 kid'},{k:'Budget',v:'\u20B91.1 Cr'},{k:'Preferred',v:'Showroom'},{k:'Source',v:'Online'}],
+        shown:[{name:'Showroom Z-3',meta:'Zirakpur · Showroom'}],
+        thread:[{t:'Went quiet',sub:'No reply in 3 weeks',col:'#7C8076',when:'3w ago'},{t:'Site visit',sub:'Visited Showroom Z-3',col:'#3E6E96',when:'2mo ago'},{t:'Added as client',sub:'Online enquiry',col:'#9A9D96',when:'2023'}]}
+    ];
+    const sel0=this.state.selClient;
+    const sel=cData[sel0];
+    const clients=cData.slice(0,4).map((c,i)=>({initials:c.initials,name:c.name,area:c.area,value:c.value,stage:c.stage,stageCol:c.stageCol,stageBg:c.stageBg,avBg:c.avBg,avFg:c.avFg,go:()=>this.setState({selClient:i,screen:'client'})}));
+    const clientChips=['All','Hot','Negotiating','Warm','Repeat','Cold'].map((label,i)=>({label,bg:i===0?'#1F5E47':'#fff',bd:i===0?'#1F5E47':'#E7E3D9',fg:i===0?'#fff':'#56544A'}));
+    const clientRows=cData.map((c,i)=>({initials:c.initials,name:c.name,phone:c.phone,area:c.area,budget:c.budget,value:c.value,stage:c.stage,stageCol:c.stageCol,stageBg:c.stageBg,avBg:c.avBg,avFg:c.avFg,last:c.last,go:()=>this.setState({selClient:i,screen:'client'})}));
+
+    // property insights
+    const insightKpis=[
+      {k:'Listed',v:'18',col:'#1C1E1B',sub:'across Tricity'},
+      {k:'Available',v:'12',col:'#1F5E47',sub:'ready to show'},
+      {k:'On hold',v:'3',col:'#A87C3D',sub:'token taken'},
+      {k:'Sold',v:'3',col:'#7C8076',sub:'this quarter'},
+      {k:'Avg days to sell',v:'34',col:'#3E6E96',sub:'down from 41'}
+    ];
+    const attention=[
+      {name:'Plot C-114',area:'Aerocity · Block C',views:'342',score:'A+',pct:'100%'},
+      {name:'SCO D-12',area:'Derabassi · Belt',views:'271',score:'A',pct:'79%'},
+      {name:'Showroom Z-3',area:'Zirakpur',views:'198',score:'B+',pct:'58%'},
+      {name:'Plot 20-B',area:'New Chandigarh',views:'164',score:'B',pct:'48%'},
+      {name:'SCO F-7',area:'IT City · Block F',views:'96',score:'C',pct:'28%'}
+    ];
+    const invHealth=[
+      {t:'Not on the map yet',n:'2',col:'#9A4A2C'},
+      {t:'Missing a photo',n:'2',col:'#A87C3D'},
+      {t:'Missing sector proof',n:'1',col:'#3E6E96'},
+      {t:'No price set internally',n:'1',col:'#C2922F'}
+    ];
+    const invArea=[{area:'Aerocity',n:'6',pct:'100%'},{area:'New Chand.',n:'4',pct:'67%'},{area:'Zirakpur',n:'4',pct:'67%'},{area:'Derabassi',n:'4',pct:'67%'}];
+    const invType=[{area:'Residential',n:'9',pct:'100%'},{area:'Commercial',n:'5',pct:'56%'},{area:'SCO',n:'3',pct:'33%'},{area:'Showroom',n:'1',pct:'11%'}];
+    const signals=[
+      {t:'High demand for 200 yd\u00B2 plots in Aerocity — only 1 left in stock.'},
+      {t:'Buyers asking for commercial SCO in IT City, but you have none listed.'},
+      {t:'New Chandigarh interest rising 60% — consider sourcing more there.'}
+    ];
+
+    // properties / team
+    const isClient = w==='client';
+    const filters=[['All areas',1],['Type',0],['Status',0]].map(([label,a])=>({label,bg:a?'#1C1E1B':'#fff',bd:a?'#1C1E1B':'#E7E3D9',fg:a?'#fff':'#56544A'}));
+    const inv=this.allProps.map((p,i)=>({
+      name:p.name, area:p.area+' · Block '+p.block, size:p.size+' · '+p.type,
+      status:p.status, sBg:p.sBg, sFg:p.sFg, flag:p.flag, hero:p.hero,
+      flagShow:(!isClient && p.flag)?'inline-flex':'none',
+      actionsShow: w==='team' ? 'flex' : 'none',
+      goDetail:()=> this.setState({detailBack:(w==='client'?'map':'props'), selProp:i, screen:'detail'}),
+      openRemove:(e)=>{ if(e&&e.stopPropagation) e.stopPropagation(); this.setState({removeModal:{name:p.name, area:p.area}}); }
+    }));
+    const det=this.allProps[this.state.selProp] || this.allProps[0];
+    const detImages=det.images.map(im=>({bg:im.bg, cap:im.cap}));
+    const detReadyItems=[
+      {t:'Photos', ok:det.ready || det.flag!=='Add photos'},
+      {t:'Map pin', ok:det.flag!=='Map pin missing'},
+      {t:'Sector proof', ok:det.flag!=='Sector proof missing'},
+      {t:'Brochure', ok:det.flag!=='Brochure not ready'}
+    ].map(r=>({t:r.t, mk:r.ok?'✓':'!', col:r.ok?'#1F5E47':'#9A4A2C', bg:r.ok?'#E7F0EB':'#F7E7E0'}));
+
+    const tint={'#2E8B66':'#E7F2EC','#1F5E47':'#E7F0EB','#3E6E96':'#E9EFF4','#A87C3D':'#F3EAD8'};
+    const actions=[
+      {label:'Add Client',mark:'+',col:'#1F5E47',go:()=>this.setState({screen:'addClient'})},
+      {label:'Add Property',mark:'+',col:'#A87C3D',go:()=>this.setState({screen:'addProp'})},
+      {label:'Schedule Visit',mark:'\u25F7',col:'#3E6E96',go:()=>this.setState({screen:'team'})},
+      {label:'Open Map Studio',mark:'\u2316',col:'#2E8B66',go:()=>this.setState({screen:'studio'})}
+    ].map(a=>({...a,tint:tint[a.col]}));
+    const weekStats=[
+      {k:'Clients added',v:'6',unit:'this week'},
+      {k:'Site visits done',v:'4',unit:''},
+      {k:'Properties added',v:'3',unit:''},
+      {k:'Follow-ups logged',v:'9',unit:''}
+    ];
+    const myClients=[
+      {initials:'RS',name:'Rajdeep Singh',meta:'Aerocity · 200 yd²',stage:'Hot',stageCol:'#9A4A2C',stageBg:'#F7E7E0',avBg:'#1F5E47'},
+      {initials:'SK',name:'Simran Kaur',meta:'Aerocity · new today',stage:'Warm',stageCol:'#345D80',stageBg:'#E9EFF4',avBg:'#6FA3C9'},
+      {initials:'MK',name:'Mehul Kapoor',meta:'IT City · SCO',stage:'Warm',stageCol:'#345D80',stageBg:'#E9EFF4',avBg:'#3E6E96'},
+      {initials:'AB',name:'Anita Bhatia',meta:'New Chandigarh · token paid',stage:'Negotiating',stageCol:'#8A6224',stageBg:'#F3EAD8',avBg:'#A87C3D'},
+      {initials:'HS',name:'Harman Sodhi',meta:'Zirakpur · quiet 3w',stage:'Cold',stageCol:'#7C8076',stageBg:'#EFEBE2',avBg:'#9A9D96'}
+    ];
+    const teamRecs=[
+      {t:'Add Simran Kaur to the Aerocity list',sub:'She walked in this morning',col:'#1F5E47',cta:'Add'},
+      {t:'Upload photos for SCO F-7',sub:'Buyers skip plots without photos',col:'#A87C3D',cta:'Upload'},
+      {t:'2 plots in Sector 82 aren\u2019t on the map',sub:'Mark them so they\u2019re shareable',col:'#3E6E96',cta:'Map'},
+      {t:'Confirm Mehul\u2019s site visit time',sub:'Visit pencilled for today',col:'#2E8B66',cta:'Confirm'}
+    ];
+    const recent=[{name:'Simran Kaur',meta:'New client · Aerocity',when:'2h ago'},{name:'Plot C-118 added',meta:'Block C · 250 sq yd',when:'4h ago'},{name:'Gurpreet Dhillon',meta:'Deal closed · \u20B974L',when:'Yesterday'}];
+
+    const studioStepsDef=[['1','Pick your map','City + masterplan',true],['2','Mark it','Roads, blocks, plots',false],['3','Publish','Send safe markings',false]];
+    const studioSteps=studioStepsDef.map(([num,label,sub,active])=>({num,label,sub,bg:active?'#E7F0EB':'#fff',bd:active?'#1F5E47':'#E7E3D9',numBg:active?'#1F5E47':'#E7E3D9',numCol:active?'#fff':'#9A9D96',txt:active?'#1C1E1B':'#6A6E68'}));
+    const studioTools=[
+      {icon:'\u2500',label:'Road',active:true},
+      {icon:'\u25A2',label:'Block',active:false},
+      {icon:'\u24B7',label:'Sector',active:false},
+      {icon:'\u25C9',label:'Plot',active:false}
+    ].map(t=>({icon:t.icon,label:t.label,bg:t.active?'#E7F0EB':'#fff',bd:t.active?'#1F5E47':'#E7E3D9',iconBg:t.active?'#1F5E47':'#F4F2EC',iconCol:t.active?'#fff':'#7C8076',txt:t.active?'#1F5E47':'#56544A'}));
+
+    const studioOpen=this.state.studioOpen;
+
+    return {
+      navShow: w==='landing'?'none':'flex',
+      landingShow: w==='landing'?'block':'none',
+      mapShow: s==='map'?'block':'none',
+      detailShow: s==='detail'?'block':'none',
+      sectorShow: s==='sector'?'block':'none',
+      dashShow: s==='dash'?'block':'none',
+      insightsShow: s==='insights'?'block':'none',
+      clientsShow: s==='clients'?'block':'none',
+      clientShow: s==='client'?'block':'none',
+      propsShow: s==='props'?'block':'none',
+      teamShow: s==='team'?'block':'none',
+      addClientShow: s==='addClient'?'block':'none',
+      addPropShow: s==='addProp'?'block':'none',
+      studioShow: s==='studio'?'block':'none',
+      help, helpShow:help,
+      tabs, doors, mapTypes,
+      masterplans, mpName:curMp, mpSub:(mpSubs[curMp]||'Tricity'),
+      mpNavShow: (w==='client' && s==='map') ? 'flex' : 'none',
+      mpOpenShow: this.state.mpOpen ? 'block' : 'none',
+      toggleMp: ()=> this.setState(p=>({mpOpen:!p.mpOpen})),
+      togglePhoto: ()=> this.setState(p=>({photoOpen:!p.photoOpen})),
+      photoOpenShow: this.state.photoOpen ? 'block' : 'none',
+      photoBtnShow: (w==='client' && s==='map') ? 'flex' : 'none',
+      polyOverlays, roadOverlays, pinOverlays, mapLabels, dimOpacity, mapLegend,
+      sideShow: (w==='client' && s==='map') ? 'block' : 'none',
+      mcEmptyShow: mcEmpty?'flex':'none', mcGenericShow: mcGeneric?'flex':'none', mcPinShow: mcPin?'flex':'none',
+      mcAccent, mcAccentBg, mcEyebrow, mcTitle, mcSub, mcRows,
+      mcProofShow: mcProof?'flex':'none', mcPrimaryLabel, mcSecondaryLabel, mcSecondaryShow: mcSecondaryLabel?'inline-flex':'none',
+      mcPrimaryGo: ()=> this.setState({screen:'props'}),
+      pinName: pinObj?pinObj.name:'', pinArea: pinObj?(pinObj.area+' \u00b7 Block '+pinObj.block):'', pinSize: pinObj?(pinObj.size+' \u00b7 '+pinObj.facing):'', pinSector: pinObj?pinObj.sector:'', pinBlock: pinObj?pinObj.block:'', pinRoadW: pinObj?pinObj.roadW:'',
+      clearSel: ()=> this.setState({mapSel:null}),
+      studioToolList, studioStepList, studioInstr, studioTypeLabel: tm.label, studioGroups, statusChips, studioStatus: stStatus,
+      studioName: this.state.studioName,
+      studioDrawRoad: (stKind==='road'||stKind==='none'), studioDrawPoly: stKind==='poly', studioDrawPin: stKind==='pin', studioDrawColor: (stKind==='poly'?tm.c:'#1F5E47'),
+      studioDrawRoadDisp: (stKind==='road'||stKind==='none')?'inline':'none', studioDrawPolyDisp: stKind==='poly'?'inline':'none', studioDrawPinDisp: stKind==='pin'?'inline':'none',
+      pvRoadDisp: (stKind==='road'||stKind==='none')?'inline':'none', pvPolyDisp: stKind==='poly'?'inline':'none', pvPinDisp: stKind==='pin'?'inline':'none',
+      cvToggleBg: this.state.studioCV?'#1F5E47':'#DAD5C9', cvKnobX: this.state.studioCV?'21px':'2px', cvLabel: this.state.studioCV?'Client visible':'Internal only', cvLabelCol: this.state.studioCV?'#1F5E47':'#9A9D96',
+      toggleStudioCV: ()=> this.setState(p=>({studioCV:!p.studioCV})),
+      studioMoreShow: this.state.studioMore?'block':'none', studioMoreCaret: this.state.studioMore?'\u25be':'\u25b8', toggleStudioMore: ()=> this.setState(p=>({studioMore:!p.studioMore})),
+      studioPreviewShow: this.state.studioPreview?'flex':'none', openStudioPreview: ()=> this.setState({studioPreview:true}), closeStudioPreview: ()=> this.setState({studioPreview:false}),
+      pvColor, pvDesc, pvIsRoad: (stKind==='road'||stKind==='none'), pvIsPoly: stKind==='poly', pvIsPin: stKind==='pin',
+      studioSaveDraft: ()=> this.setState({studioStatus:'Draft', toast:'Saved as draft \u2014 stays internal only.'}),
+      studioPublish: ()=> this.setState(p=>({studioStatus:'Published', studioCV:true, pub:Object.assign({}, p.pub, {'road-link':true}), toast:'Published \u2014 now live in Client Presentation.'})),
+      detailFacts, detailNearby, detailSimilar,
+      sectorChips, sectors,
+      stats, briefing, momentum, areas, ownerRecs, clients,
+      clientChips, clientRows, sel,
+      insightKpis, attention, invHealth, invArea, invType, signals,
+      filters, inv, actions, teamRecs, recent, studioSteps, studioTools, weekStats, myClients, myClientsCount: myClients.length,
+      det, detImages, detReadyItems,
+      detName:det.name, detArea:det.area+' · Sector '+det.sector+' · Block '+det.block, detSize:det.size+' · '+det.facing+' · '+det.type,
+      detViews:det.views, detShares:det.shares, detProof:det.proofOpens, detMatches:det.matches, detScore:det.score, detScoreLabel:det.scoreLabel,
+      propsSub: isClient ? 'Browse available plots, sectors and locations.' : 'Everything you have to sell, in one place.',
+      addPropBtn: w==='team' ? 'inline-flex' : 'none',
+      roleName:role.roleName, roleKind:role.roleKind, roleColor:role.roleColor, roleInitial:role.roleInitial,
+      goHome: ()=> this.setState({world:'landing', screen:''}),
+      goDetail: ()=> this.setState({detailBack: w==='client'?'map':'props', selProp:0, screen:'detail'}),
+      backFromDetail: ()=> this.setState(p=>({screen:p.detailBack||'map'})),
+      goClients: ()=> this.setState({screen:'clients'}),
+      goStudio: ()=> this.setState({screen:'studio'}),
+      goTeam: ()=> this.setState({screen:'team'}),
+      goProps: ()=> this.setState({screen:'props'}),
+      goAddProperty: ()=> this.setState({screen:'addProp'}),
+      removeModalShow: this.state.removeModal ? 'flex' : 'none',
+      removeName: this.state.removeModal ? this.state.removeModal.name : '',
+      removeArea: this.state.removeModal ? this.state.removeModal.area : '',
+      verifyModalShow: this.state.verifyModal ? 'flex' : 'none',
+      verifyName: this.state.verifyModal ? this.state.verifyModal.name : '',
+      verifyArea: this.state.verifyModal ? this.state.verifyModal.area : '',
+      closeRemove: ()=> this.setState({removeModal:null}),
+      submitRemove: ()=> this.setState(p=>({removeModal:null, verifyModal:p.removeModal})),
+      closeVerify: ()=> this.setState({verifyModal:null}),
+      confirmVerify: ()=> this.setState({verifyModal:null, toast:'₹2.5L added to Money · property marked Sold'}),
+      toastShow: this.state.toast ? 'flex' : 'none',
+      toastText: this.state.toast,
+      dismissToast: ()=> this.setState({toast:''}),
+      toggleStudio: ()=> this.setState(p=>({studioOpen:!p.studioOpen})),
+      studioPanelShow: studioOpen?'block':'none',
+      studioToggleLabel: studioOpen?'Close':'Open studio',
+      studioHint: studioOpen?'Drop the pin, pick a group, then save.':'Opens the map studio right here — no page change.',
+      studioBd: studioOpen?'#C9DED4':'#E7E3D9',
+      studioHeadBg: studioOpen?'#F4F9F6':'#FAF8F3'
+    };
+  }
+}
+</script>
+<script>
+(async () => {
+  if (!document.title || !document.title.trim()) document.title = "PlotMap Hero Screens";
+  // Prepend so page-supplied @page / break rules (deck-stage's margin:0,
+  // author CSS) keep source-order precedence over the baseline.
+  const baseCss = document.createElement('style');
+  baseCss.textContent = "@media print {\n  figure, table { break-inside: avoid; }\n  *, *::before, *::after {\n    print-color-adjust: exact; -webkit-print-color-adjust: exact;\n    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;\n    animation-delay: -99s !important; animation-duration: .001s !important;\n    animation-iteration-count: 1 !important; animation-fill-mode: both !important;\n    animation-play-state: running !important; transition-duration: 0s !important;\n  }\n}";
+  document.head.prepend(baseCss);
+  if (document.readyState === 'loading') {
+    await new Promise((r) => document.addEventListener('DOMContentLoaded', r, { once: true }));
+  }
+  let ds = document.querySelector('deck-stage');
+  // whenDefined never resolves when nothing registers the element, so only
+  // await it when a <deck-stage> tag exists (and race a timeout regardless).
+  if (ds && !customElements.get('deck-stage')) {
+    try {
+      await Promise.race([
+        customElements.whenDefined('deck-stage'),
+        new Promise((r) => setTimeout(r, 3000)),
+      ]);
+    } catch (e) {}
+    ds = document.querySelector('deck-stage');
+  }
+  // dc-runtime assigns window.DCLogic at init and mounts into #dc-root on
+  // DOMContentLoaded; settle on that subtree so React has rendered before
+  // print(). Non-DC pages fall through to weighing body.
+  const isDc = !ds && 'DCLogic' in window;
+  const settleRoot = ds || (isDc ? document.getElementById('dc-root') : null) || document.body;
+  if (settleRoot) {
+    // Weigh only content children — skip script/style/template so inline
+    // Babel/CSS doesn't register as stable "content" before the framework
+    // has mounted anything.
+    const MEDIA = 'img,svg,canvas,video,picture,iframe,embed,object';
+    const weigh = () => {
+      let text = 0, media = 0;
+      for (const c of settleRoot.children) {
+        const t = c.tagName;
+        if (t === 'SCRIPT' || t === 'STYLE' || t === 'TEMPLATE') continue;
+        text += (c.textContent || '').trim().length;
+        media += c.querySelectorAll(MEDIA).length + (c.matches(MEDIA) ? 1 : 0);
+      }
+      return text + media * 100;
+    };
+    // "Non-zero and stable" alone is not sufficient to mean rendered: generic
+    // body can carry a static shell while async main content is pending, and
+    // #dc-root can carry the root DC's static text while child refs are still
+    // .sc-placeholder boxes. Gate generic on readyState 'complete', and never
+    // accept stability while a dc-runtime placeholder is present.
+    const isGeneric = settleRoot === document.body;
+    const deadline = Date.now() + 15000;
+    let last = -1, stable = 0;
+    while (Date.now() < deadline) {
+      const n = weigh();
+      const ready =
+        (!isGeneric || document.readyState === 'complete') &&
+        !settleRoot.querySelector('.sc-placeholder');
+      if (n > 0 && n === last && ready) { if (++stable >= 2) break; } else { stable = 0; }
+      last = n;
+      await new Promise((r) => setTimeout(r, 250));
+    }
+  }
+  // Project support.js may predate runtime default-seeding; push via bridge.
+  if (isDc && window.__dcSetProps && window.__dcRootName) {
+    try {
+      const dpEl = document.querySelector('script[data-dc-script]');
+      const meta = JSON.parse((dpEl && dpEl.getAttribute('data-props')) || '{}');
+      const bag = {};
+      for (const k in meta)
+        if (k[0] !== '$' && meta[k] && meta[k].default !== undefined)
+          bag[k] = meta[k].default;
+      if (Object.keys(bag).length) {
+        window.__dcSetProps(window.__dcRootName(), bag);
+        await new Promise((r) => setTimeout(r, 50));
+      }
+    } catch (e) {}
+  }
+  // Reveal content gated on scroll or visibility before printing. Lazy <img>,
+  // IntersectionObserver fade-ins, and collapsed <details> don't render while
+  // off-screen, so a long page would print with them blank or closed. Open
+  // every <details>, force native-lazy images eager, and scroll the document
+  // through its full height to trip lazy-load + IO; then wait (bounded) for the
+  // newly-triggered images. Inert for deck-stage (slides aren't scroll-gated).
+  try {
+    for (const d of document.querySelectorAll('details')) d.open = true;
+    for (const img of document.querySelectorAll('img[loading="lazy"]'))
+      img.loading = 'eager';
+    const scroller = document.scrollingElement || document.documentElement;
+    const full = Math.max(scroller.scrollHeight, document.body.scrollHeight);
+    const step = window.innerHeight || 800;
+    for (let y = 0; y <= full; y += step) {
+      window.scrollTo(0, y);
+      await new Promise((r) => requestAnimationFrame(r));
+    }
+    window.scrollTo(0, 0);
+    await Promise.race([
+      Promise.all(
+        [...document.images].map((img) =>
+          img.complete
+            ? null
+            : new Promise((res) => {
+                img.addEventListener('load', res, { once: true });
+                img.addEventListener('error', res, { once: true });
+              })
+        )
+      ),
+      new Promise((r) => setTimeout(r, 4000)),
+    ]);
+  } catch (e) {}
+  try { await document.fonts.ready; } catch (e) {}
+  // Jump every animation to its end state so print() never captures a slide
+  // mid-entrance. Ordering matters: the 0s-transition style must be live
+  // BEFORE data-deck-active is set so attribute-keyed transitions don't
+  // start a (now-0s) run from the pre-active base.
+  const st = document.createElement('style');
+  st.textContent = '*,*::before,*::after{animation-delay:-99s !important;animation-duration:.001s !important;animation-iteration-count:1 !important;animation-fill-mode:both !important;animation-play-state:running !important;transition-duration:0s !important}';
+  document.head.appendChild(st);
+  for (const d of document.querySelectorAll('deck-stage')) {
+    for (const c of d.children) {
+      const t = c.tagName;
+      if (t === 'SCRIPT' || t === 'STYLE' || t === 'TEMPLATE') continue;
+      c.setAttribute('data-deck-active', '');
+    }
+  }
+  // Re-append deck-stage's @page last so no author @page can add a margin and
+  // spill each full-bleed slide onto two sheets. Backstop for old copies.
+  if (ds) {
+    let pg = document.getElementById('deck-stage-print-page');
+    if (!pg) {
+      pg = document.createElement('style');
+      pg.textContent = '@page{size:' + (+ds.getAttribute('width') || 1920) +
+        'px ' + (+ds.getAttribute('height') || 1080) + 'px;margin:0}';
+    }
+    document.body.appendChild(pg);
+  }
+  try {
+    const sweep = () => {
+      for (const a of document.getAnimations()) {
+        try { a.finish(); } catch (e) {
+          try { a.currentTime = (a.effect && a.effect.getComputedTiming().duration) || 0; a.pause(); } catch (e2) {}
+        }
+      }
+    };
+    sweep();
+    await new Promise((r) => requestAnimationFrame(r));
+    sweep();
+    await new Promise((r) => requestAnimationFrame(r));
+  } catch (e) {}
+  // Size the PDF page to the rendered design unless the file opted into
+  // standard paper via @page{size:letter|A4|…}. Decks own their own @page.
+  // Wrappers (body, …) lose padding+margin so the frame sits at (0,0); the
+  // frame itself loses only margin — its padding is INSIDE the measured
+  // rect and must stay, or content shifts and leaves a gap at bottom/right.
+  var __m = null;
+  try { __m = (() => {
+  var STAMP = true;
+  var docEl = document.documentElement;
+  var doc = { width: docEl.scrollWidth, height: docEl.scrollHeight };
+
+  var ds = document.querySelector('deck-stage');
+  if (ds) {
+    var dw = Number(ds.getAttribute('width')) || 1920;
+    var dh = Number(ds.getAttribute('height')) || 1080;
+    var n = typeof ds.length === 'number' ? ds.length : ds.children.length;
+    var idx = typeof ds.index === 'number' ? ds.index : 0;
+    var frames = [];
+    for (var i = 0; i < n; i++) frames.push({ left: 0, top: 0, width: dw, height: dh });
+    return { kind: 'deck', source: 'declared', doc: doc, frames: frames,
+      authored: frames.map(function(){return{width:true,height:true}}),
+      deck: { width: dw, height: dh, slideCount: n, index: idx },
+      signals: { paperPage: false, pxPage: false } };
+  }
+
+  // Declared kind: a doc-page tag names the kind outright, so no signal
+  // heuristics run (like the deck branch above, signals report false —
+  // they describe inferred classifications only). The tag alone is not
+  // trusted: the element must have upgraded (shadowRoot present), so a
+  // leftover tag whose script was deleted falls through to the heuristics
+  // that handle plain markup.
+  var stageSx = window.scrollX || 0, stageSy = window.scrollY || 0;
+  var dp = document.querySelector('doc-page');
+  if (dp && dp.shadowRoot) {
+    // Crop to the sheet, not the host — the desk around it is screen-only
+    // chrome that must not land in PNG exports.
+    var sheet = dp.shadowRoot.querySelector('.sheet');
+    var sr = (sheet || dp).getBoundingClientRect();
+    return { kind: 'paper-doc', source: 'declared', doc: doc,
+      frames: [{ left: sr.left + stageSx, top: sr.top + stageSy,
+        width: sr.width, height: sr.height }],
+      authored: [{ width: false, height: false }],
+      signals: { paperPage: false, pxPage: false } };
+  }
+  var paperPage = false, pxPage = false;
+  var eachRule = function (fn) {
+    for (var s = 0; s < document.styleSheets.length; s++) {
+      var rs; try { rs = document.styleSheets[s].cssRules; } catch (e) { continue; }
+      for (var r = 0; r < rs.length; r++) {
+        fn(rs[r]);
+        if (rs[r].cssRules) for (var n = 0; n < rs[r].cssRules.length; n++) fn(rs[r].cssRules[n]);
+      }
+    }
+  };
+  eachRule(function (r) {
+    if (r.type !== 6) return;
+    var m = /\bsize\s*:\s*([^;}]+)/i.exec(r.cssText || '');
+    if (!m) return;
+    if (/\b(letter|a[3-5]|legal|ledger)\b/i.test(m[1])) paperPage = true;
+    if (/\d+(?:\.\d+)?px\b/i.test(m[1])) pxPage = true;
+  });
+  var signals = { paperPage: paperPage, pxPage: pxPage };
+
+  var pxVal = function (v) {
+    var m = /^(\d+(?:\.\d+)?)px$/.exec(v || ''); return m ? +m[1] : 0;
+  };
+  var authoredPx = function (el, prop) {
+    if (pxVal(el.style[prop])) return true;
+    var attr = el.getAttribute(prop);
+    if (attr && /^\d+$/.test(attr)) return true;
+    var hit = false;
+    eachRule(function (r) {
+      if (hit || r.type !== 1 || !r.style) return;
+      try { if (el.matches(r.selectorText) && pxVal(r.style[prop])) hit = true; } catch (e) {}
+    });
+    return hit;
+  };
+
+  var el = document.body, rootPxW = false;
+  for (;;) {
+    var kids = [];
+    for (var c = 0; c < el.children.length; c++) {
+      var t = el.children[c].tagName;
+      if (t !== 'SCRIPT' && t !== 'STYLE' && t !== 'TEMPLATE') kids.push(el.children[c]);
+    }
+    if (kids.length !== 1 || !(kids[0] instanceof HTMLElement)) break;
+    if (STAMP) el.setAttribute('data-om-frame-wrap', '');
+    el = kids[0];
+    rootPxW = authoredPx(el, 'width');
+    if (rootPxW) break;
+  }
+  if (!rootPxW) rootPxW = authoredPx(el, 'width');
+
+  // @page{size:letter} alone is a flowing doc; with a px-width root it's a
+  // fixed sheet pretending to be paper — fall through and size to render.
+  if (paperPage && !rootPxW) {
+    return { kind: 'paper-doc', source: 'inferred', doc: doc, signals: signals,
+      frames: [{ left: 0, top: 0, width: doc.width, height: doc.height }],
+      authored: [{ width: false, height: false }] };
+  }
+
+  var sx = window.scrollX || 0, sy = window.scrollY || 0;
+  var rectOf = function (e) {
+    var r = e.getBoundingClientRect();
+    var oy; try { oy = getComputedStyle(e).overflowY; } catch (err) {}
+    var h = oy === 'visible' ? Math.max(r.height, e.scrollHeight || 0) : r.height;
+    return { left: r.left + sx, top: r.top + sy, width: r.width, height: h };
+  };
+
+  // Multi-frame: ≥2 visible non-fixed children, each with authored px width
+  // AND height, all within ±2px of each other. Off unless the page opts in
+  // via data-om-multi-frame on the stop element — guards against card grids
+  // and pricing tables that match the geometry but aren't separate canvases.
+  if (el.hasAttribute('data-om-multi-frame')) {
+    var cands = [];
+    for (var k = 0; k < el.children.length; k++) {
+      var ch = el.children[k];
+      var cs; try { cs = getComputedStyle(ch); } catch (e) { continue; }
+      if (cs.display === 'none' || cs.visibility === 'hidden' || cs.position === 'fixed') continue;
+      var rc = rectOf(ch);
+      if (rc.width < 2 || rc.height < 2) continue;
+      if (!authoredPx(ch, 'width') || !authoredPx(ch, 'height')) continue;
+      cands.push(rc);
+    }
+    if (cands.length >= 2) {
+      var w0 = cands[0].width, h0 = cands[0].height, ok = true;
+      for (var q = 1; q < cands.length; q++)
+        if (Math.abs(cands[q].width - w0) > 2 || Math.abs(cands[q].height - h0) > 2) ok = false;
+      if (ok) return { kind: 'multi-frame', source: 'inferred', doc: doc, signals: signals,
+        frames: cands, authored: cands.map(function(){return{width:true,height:true}}) };
+    }
+  }
+
+  if (STAMP) el.setAttribute('data-om-frame', '');
+  return { kind: 'single-canvas', source: 'inferred', doc: doc, signals: signals,
+    frames: [rectOf(el)],
+    authored: [{ width: rootPxW, height: authoredPx(el, 'height') }] };
+})(); } catch (e) {}
+  var frame = null;
+  if (__m && __m.kind === 'single-canvas') {
+    var f = __m.frames && __m.frames[0];
+    if (f && f.width >= 200 && f.height >= 200) {
+      frame = f;
+      var fst = document.createElement('style');
+      fst.textContent = '@media print{@page{size:' + Math.ceil(f.width) + 'px ' +
+        Math.ceil(f.height) + 'px;margin:0}' +
+        'html,body,[data-om-frame-wrap]{padding:0!important;margin:0!important;background:none!important}' +
+        '[data-om-frame]{margin:0!important}}';
+      document.body.appendChild(fst);
+    }
+  }
+  // Relax break-inside on oversized elements. An element taller than a
+  // printable page can't honor break-inside: avoid — browsers either overflow
+  // it or push it whole to the next page, leaving a blank gap, then break it
+  // anyway at an arbitrary point. After the final layout (content revealed,
+  // animations jumped), find elements taller than a page that still compute
+  // break-inside: avoid and reset them to auto, so the browser breaks them at
+  // their children's boundaries instead (children keep their own avoid). PAGE_PX
+  // is a conservative portrait estimate at 96 CSS px/in — Letter/A4 usable
+  // height minus our 0.5in margins — so only clearly-oversized elements are
+  // touched and under-page elements still stay whole. Skipped for decks (slides
+  // are sized to the page) and for fixed-size canvases (frame set, or an author
+  // px-based @page) — runs as before for flowing docs on letter/A4.
+  try {
+    if (!ds && !frame && !(__m && __m.signals && __m.signals.pxPage)) {
+      const PAGE_PX = 1024;
+      // Our print defaults add a real @page margin only when the source has
+      // no @page of its own; computed style can't tell us (it reports screen
+      // media), so read the injected rule directly.
+      const defaults = document.querySelector('style[data-omelette-print-defaults]');
+      const pageInset = /@page\s*\{[^}]*margin/.test(defaults ? defaults.textContent || '' : '');
+      const SEL = 'section,article,figure,table,pre,blockquote,[class~="card" i],[class~="page" i],[class~="sheet" i]';
+      for (const el of document.body.querySelectorAll(SEL)) {
+        if (el instanceof HTMLElement && el.offsetHeight > PAGE_PX) {
+          el.setAttribute('data-om-oversized', '');
+          // Fake-paged docs simulate sheets with over-tall break-after:page
+          // boxes; honoring the break spills half-blank pages and ends a
+          // colored box mid-sheet. Flow them, and (only when we own the page
+          // inset) drop the redundant padding/background via the rule below.
+          const cs = getComputedStyle(el);
+          if (cs.breakAfter === 'page' || cs.pageBreakAfter === 'always') {
+            el.setAttribute('data-om-fakepage', '');
+          }
+        }
+      }
+      const ost = document.createElement('style');
+      ost.textContent = '@media print{' +
+        '[data-om-oversized]{break-inside:auto !important;page-break-inside:auto !important}' +
+        '[data-om-fakepage]{break-after:auto !important;page-break-after:auto !important}' +
+        (pageInset ? '[data-om-fakepage]{padding:0 !important;background:none !important}' : '') +
+        '}';
+      document.head.appendChild(ost);
+    }
+  } catch (e) {}
+  // macOS Preview renders Skia-PDF Luminosity soft-masks as opaque grey boxes;
+  // swap the CSS that triggers them for Preview-safe forms.
+  try {
+    for (const el of document.body.querySelectorAll('*')) {
+      const cs = getComputedStyle(el);
+
+      if (cs.boxShadow !== 'none' && cs.filter === 'none') {
+        const outs = [], kept = [];
+        for (const s of cs.boxShadow.split(/,(?![^(]*[)])/)) {
+          const t = s.trim();
+          const m = t.match(/^(rgba?[(][^)]+[)]) (-?[0-9.]+px) (-?[0-9.]+px) ([0-9.]+px) -?[0-9.]+px$/);
+          if (m && parseFloat(m[4]) > 0) outs.push('drop-shadow(' + m[2] + ' ' + m[3] + ' ' + m[4] + ' ' + m[1] + ')');
+          else kept.push(t);
+        }
+        if (outs.length) {
+          el.style.setProperty('filter', outs.join(' '), 'important');
+          el.style.setProperty('box-shadow', kept.join(', ') || 'none', 'important');
+        }
+      }
+
+      const mask = cs.maskImage && cs.maskImage !== 'none' ? cs.maskImage : cs.webkitMaskImage;
+      if (mask && mask !== 'none' && cs.filter === 'none') el.style.setProperty('filter', 'opacity(1)', 'important');
+    }
+  } catch (e) {}
+  setTimeout(() => { try { window.print(); } catch (e) {} }, 200);
+})();
+</script>
+</body>
+</html>

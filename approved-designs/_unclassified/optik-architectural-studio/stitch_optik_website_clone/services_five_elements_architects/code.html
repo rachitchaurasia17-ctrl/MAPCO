@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Optik Architectural Studio - Services</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=Oswald:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Oswald', 'sans-serif'],
+          },
+          colors: {
+            'dark-bg': '#1a1a1a',
+            'light-bg': '#f8f9fa',
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="custom-styles">
+    .text-outline {
+      color: transparent;
+      -webkit-text-stroke: 1px #e5e7eb;
+    }
+    
+    .service-row {
+      transition: all 0.3s ease;
+    }
+    
+    .service-row:hover {
+      background-color: white;
+    }
+
+    .service-image-container {
+      opacity: 0;
+      transform: scale(0.95);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.95);
+      z-index: 10;
+    }
+
+    .service-row:hover .service-image-container {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  </style>
+</head>
+<body class="bg-light-bg font-sans text-gray-900 antialiased">
+<!-- BEGIN: Header -->
+<header class="py-6 px-6 md:px-12 lg:px-24">
+<div class="max-w-7xl mx-auto flex justify-between items-center">
+<img alt="Five Elements Architects Logo" class="h-16 w-auto object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLUeSJJpXaB9oByGlLUuMkqgqpnzdraWJMNituPHT6aQCCrOk4c62qo-ULeC73PLx523iJNEf8NhAjzHylUbUTE7WuAB-IpHVKz2ueFLJkZ3VSVHukveuTIunB8ou6ghYtOYJqihlOhhz5oI-jdL5ZnUl8Hrt4ruGTB9TEWNXi6nzVq_wCKJ9Z9COEUGOqaaLCIakw8wkRCh58P6HH7WG_hP1symwYVCjqOfNOvElb5Dmjd-7E1Jt8SBr03q5kr8_PvvwGtNN6C6w"/>
+<nav class="hidden md:flex gap-8 font-bold uppercase tracking-wide text-sm">
+<a class="hover:text-gray-600 transition-colors" href="#">Services</a>
+<a class="hover:text-gray-600 transition-colors" href="#">Founder</a>
+</nav>
+</div>
+</header>
+<!-- END: Header -->
+<!-- BEGIN: Hero Section -->
+<section class="py-20 px-6 md:px-12 lg:px-24">
+<div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+<!-- Left Column: Title -->
+<div class="lg:col-span-5">
+<div class="flex items-center gap-2 mb-6">
+<span class="w-2 h-2 rounded-full bg-black"></span>
+<span class="text-sm font-bold tracking-widest uppercase">Services</span>
+</div>
+<h1 class="font-display text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.1] uppercase">
+          Architectural<br/>Services Tailored<br/>To Your Need.
+        </h1>
+</div>
+<!-- Center Column: Image -->
+<div class="lg:col-span-4 flex justify-center">
+<div class="rounded-2xl overflow-hidden aspect-square w-full max-w-[400px]">
+<img alt="Modern architectural building with curved white roof" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida/ADBb0ugoaxQnAmzdi3jMVZZqXvEFXu0qeeOVF2Q2lxb93YXSO0CAexvXikhQl1piMYVUEmli2AJQvZG3EPji0-Nkt8pbyiUPWSd8brhTh2D5QNPy0BU51YAyMq_vvECjxmhmaly27IGcXW4x9Xull6J05sCoaPzi0wX7CVX_zDO3QOBAFkUImEKFC0GszehLX8OBjnJGGkqCkAO7hnzJLgeiwRKpkXe4WouMSOrTL9ADobBaSjcFJDHVCTWVqXg"/>
+</div>
+</div>
+<!-- Right Column: Profile & Text -->
+<div class="lg:col-span-3 flex flex-col gap-6 pt-4 lg:pt-0">
+<img alt="Profile" class="w-16 h-16 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD2E1uVAdf6n0xZS0UOSg7UVvupBFBvoNNRpzGqdjAGySDRvplMA2Pwns8oXce1w6VddyQDiuSaYmh6Sct7LqfjjIWqRTI05Y2LLytfKwQpzUP2vXPskBj3U1DDjQQmQYzF2lwUcvvFUTLfPj6Nnp3RkTWBiScK-LGTGrVoHYBqKIwAqOh8_kyFbwJhW9o8l3KTH3rlihdSUR5RmLOFZNioC68ZwGp2vtWO5KhnRZIbirM7n0-USYje0BdIWVvCWY1EUCdl8crX78c"/>
+<p class="text-gray-600 text-lg leading-relaxed">
+          We believe in creating meaningful, lasting connections through digital innovation whether it's
+        </p>
+</div>
+</div>
+</section>
+<!-- END: Hero Section -->
+<!-- BEGIN: Services List Section -->
+<section class="pb-24 px-6 md:px-12 lg:px-24">
+<div class="max-w-7xl mx-auto relative border-t border-gray-200">
+<!-- Service Row 01 -->
+<div class="service-row group relative py-12 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-8 cursor-pointer">
+<div class="flex items-center gap-8 md:gap-16 w-full md:w-1/2">
+<span class="text-outline font-display text-7xl md:text-8xl font-bold leading-none tracking-tighter">01</span>
+<div>
+<h3 class="font-display text-2xl md:text-3xl font-bold uppercase mb-2">Conceptual Design</h3>
+<p class="text-gray-600">We turn ideas into reality<br/>with innovative design</p>
+</div>
+</div>
+<div class="flex flex-wrap gap-3 w-full md:w-auto md:justify-end">
+<span class="px-4 py-2 bg-white rounded-full text-sm font-bold uppercase tracking-wide border border-gray-100 shadow-sm">Architecture</span>
+<span class="px-4 py-2 bg-white rounded-full text-sm font-bold uppercase tracking-wide border border-gray-100 shadow-sm">Design</span>
+</div>
+</div>
+<!-- Service Row 02 -->
+<div class="service-row group relative py-12 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-8 cursor-pointer">
+<div class="flex items-center gap-8 md:gap-16 w-full md:w-1/2">
+<span class="text-outline font-display text-7xl md:text-8xl font-bold leading-none tracking-tighter">02</span>
+<div>
+<h3 class="font-display text-2xl md:text-3xl font-bold uppercase mb-2">Interior Architecture</h3>
+<p class="text-gray-600">We turn ideas into reality<br/>with innovative design</p>
+</div>
+</div>
+<div class="flex flex-wrap gap-3 w-full md:w-auto md:justify-end">
+<span class="px-4 py-2 bg-white rounded-full text-sm font-bold uppercase tracking-wide border border-gray-100 shadow-sm">Interiordesign</span>
+<span class="px-4 py-2 bg-white rounded-full text-sm font-bold uppercase tracking-wide border border-gray-100 shadow-sm">Archilovers</span>
+</div>
+</div>
+<!-- Service Row 03 -->
+<div class="service-row group relative py-12 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-8 cursor-pointer">
+<!-- Hover Image Container (Centered over the row) -->
+<div class="service-image-container w-[400px] h-[300px] rounded-2xl overflow-hidden shadow-2xl">
+<img alt="Curved metallic structure at sunset" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida/ADBb0uicv30yl71Xmlz5FxGVap6cpao8eCs1uol0cTqgqarGNy9LKkGwwTJKFlzf1gGMTzGObor8ghh8uC7ZI5YtuqCp15ZJX2LUqj2Asoe_9UE6J4qaYOoZdzQrKOkzUUCCSaZravusYLx_vnRt1D5y3SbmFAONeCyYv0reCmxazAY-KFoBn9AtFE4gu6E771h88o_gMla0prpSqgigDrfX5LEVbTxwpeiMMPrOqcmw3R-wQihkUA9xNGzgmIk"/>
+</div>
+<div class="flex items-center gap-8 md:gap-16 w-full md:w-1/2 relative z-0">
+<span class="text-outline font-display text-7xl md:text-8xl font-bold leading-none tracking-tighter">03</span>
+<div>
+<h3 class="font-display text-2xl md:text-3xl font-bold uppercase mb-2">Urban Planning</h3>
+<p class="text-gray-600">We turn ideas into reality<br/>with innovative design</p>
+</div>
+</div>
+<div class="flex flex-wrap gap-3 w-full md:w-auto md:justify-end relative z-0">
+<span class="px-4 py-2 bg-white rounded-full text-sm font-bold uppercase tracking-wide border border-gray-100 shadow-sm">Architecture</span>
+<span class="px-4 py-2 bg-white rounded-full text-sm font-bold uppercase tracking-wide border border-gray-100 shadow-sm">Design</span>
+</div>
+</div>
+<!-- Service Row 04 -->
+<div class="service-row group relative py-12 border-b border-gray-200 flex flex-col md:flex-row md:items-center justify-between gap-8 cursor-pointer">
+<div class="flex items-center gap-8 md:gap-16 w-full md:w-1/2">
+<span class="text-outline font-display text-7xl md:text-8xl font-bold leading-none tracking-tighter">04</span>
+<div>
+<h3 class="font-display text-2xl md:text-3xl font-bold uppercase mb-2">Renovations &amp; Restorations</h3>
+<p class="text-gray-600">We turn ideas into reality<br/>with innovative design</p>
+</div>
+</div>
+<div class="flex flex-wrap gap-3 w-full md:w-auto md:justify-end">
+<span class="px-4 py-2 bg-white rounded-full text-sm font-bold uppercase tracking-wide border border-gray-100 shadow-sm">Architecture</span>
+<span class="px-4 py-2 bg-white rounded-full text-sm font-bold uppercase tracking-wide border border-gray-100 shadow-sm">Design</span>
+</div>
+</div>
+</div>
+</section>
+<!-- END: Services List Section -->
+<!-- BEGIN: Footer -->
+<footer class="py-12 px-6 md:px-12 lg:px-24 bg-dark-bg text-white">
+<div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+<div class="flex flex-col gap-2 text-sm text-gray-400">
+<p><span class="font-semibold text-white">Phone:</span> 7416 0000 90</p>
+<p><span class="font-semibold text-white">Location:</span> Mohali, Punjab</p>
+</div>
+<p class="text-sm text-gray-500">© Five Elements Architects. All rights reserved.</p>
+</div>
+</footer>
+<!-- END: Footer -->
+<!-- BEGIN: WhatsApp Button -->
+<a class="fixed bottom-6 right-6 bg-[#25D366] text-white p-4 rounded-full shadow-lg hover:bg-[#128C7E] transition-colors z-50 flex items-center justify-center" href="https://wa.me/7416000090" target="_blank" title="Chat with us on WhatsApp">
+<svg class="w-8 h-8" fill="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"></path>
+</svg>
+</a>
+<!-- END: WhatsApp Button -->
+</body></html>

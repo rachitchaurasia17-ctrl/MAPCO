@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Client Portfolio - Luminous Premier</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-surface": "#2f3131",
+                        "on-secondary-container": "#5c647a",
+                        "tertiary-fixed-dim": "#b7c8e1",
+                        "on-secondary-fixed": "#131b2e",
+                        "surface-container-low": "#f3f3f3",
+                        "surface-container-high": "#e8e8e8",
+                        "surface-container": "#eeeeee",
+                        "surface-tint": "#705d00",
+                        "secondary-fixed-dim": "#bec6e0",
+                        "tertiary-container": "#cadbf5",
+                        "primary": "#705d00",
+                        "secondary-fixed": "#dae2fd",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed": "#0b1c30",
+                        "primary-fixed": "#ffe16d",
+                        "on-tertiary-fixed-variant": "#38485d",
+                        "inverse-on-surface": "#f0f1f1",
+                        "secondary": "#565e74",
+                        "on-surface-variant": "#4d4732",
+                        "on-tertiary": "#ffffff",
+                        "on-primary": "#ffffff",
+                        "primary-container": "#ffd700",
+                        "on-background": "#1a1c1c",
+                        "on-primary-fixed": "#221b00",
+                        "surface-variant": "#e2e2e2",
+                        "on-error-container": "#93000a",
+                        "secondary-container": "#dae2fd",
+                        "surface": "#f9f9f9",
+                        "outline": "#7e775f",
+                        "on-primary-fixed-variant": "#544600",
+                        "error": "#ba1a1a",
+                        "background": "#f9f9f9",
+                        "surface-bright": "#f9f9f9",
+                        "surface-container-highest": "#e2e2e2",
+                        "on-secondary": "#ffffff",
+                        "tertiary": "#505f76",
+                        "outline-variant": "#d0c6ab",
+                        "on-tertiary-container": "#506076",
+                        "on-primary-container": "#705e00",
+                        "inverse-primary": "#e9c400",
+                        "error-container": "#ffdad6",
+                        "primary-fixed-dim": "#e9c400",
+                        "on-secondary-fixed-variant": "#3f465c",
+                        "tertiary-fixed": "#d3e4fe",
+                        "surface-dim": "#dadada",
+                        "on-surface": "#1a1c1c"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "unit": "8px",
+                        "margin-desktop": "64px",
+                        "container-max": "1440px",
+                        "margin-mobile": "20px",
+                        "gutter": "24px"
+                    },
+                    fontFamily: {
+                        "body-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-xl": ["Inter"],
+                        "label-md": ["Inter"],
+                        "headline-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "headline-md": ["Inter"]
+                    },
+                    fontSize: {
+                        "body-md": ["16px", { lineHeight: "24px", letterSpacing: "0", fontWeight: "400" }],
+                        "label-sm": ["12px", { lineHeight: "16px", letterSpacing: "0", fontWeight: "500" }],
+                        "body-lg": ["18px", { lineHeight: "28px", letterSpacing: "0", fontWeight: "400" }],
+                        "headline-xl": ["48px", { lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700" }],
+                        "label-md": ["14px", { lineHeight: "20px", letterSpacing: "0.05em", fontWeight: "600" }],
+                        "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "700" }],
+                        "headline-lg-mobile": ["24px", { lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "700" }],
+                        "headline-md": ["24px", { lineHeight: "32px", letterSpacing: "-0.01em", fontWeight: "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #ffffff; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(15, 23, 42, 0.05);
+            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+        }
+        .soft-shadow { box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04); }
+        .electric-glow { box-shadow: 0 0 15px rgba(255, 215, 0, 0.4); }
+    </style>
+</head>
+<body class="text-on-surface font-body-md antialiased min-h-screen flex flex-col bg-surface-container-lowest">
+<!-- TopNavBar (Shared Component) -->
+<header class="bg-surface-container-lowest/80 dark:bg-surface-dim/80 backdrop-blur-md w-full sticky top-0 z-50 shadow-sm dark:shadow-none hidden md:flex justify-between items-center px-margin-desktop h-20 mx-auto border-b border-outline-variant/30">
+<div class="flex items-center gap-8">
+<div class="text-headline-md font-headline-md font-bold tracking-tight text-on-surface dark:text-surface-bright flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container" style="font-variation-settings: 'FILL' 1;">hexagon</span>
+                LUMINOUS PREMIER
+            </div>
+<div class="relative ml-8 w-96">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-secondary">search</span>
+<input class="w-full pl-10 pr-4 py-2.5 bg-surface-container-low border border-outline-variant rounded-xl focus:border-primary-container focus:ring-2 focus:ring-primary-container/20 transition-all font-body-md text-on-surface outline-none" placeholder="Search clients, mandates, properties..." type="text"/>
+</div>
+</div>
+<nav class="flex items-center gap-6">
+<a class="text-secondary hover:text-on-surface transition-colors font-label-md text-label-md px-3 py-2 rounded-lg hover:bg-surface-variant/50" href="#">Dashboard</a>
+<a class="text-secondary hover:text-on-surface transition-colors font-label-md text-label-md px-3 py-2 rounded-lg hover:bg-surface-variant/50" href="#">Area Intelligence</a>
+<a class="text-primary border-b-2 border-primary pb-1 font-label-md text-label-md px-3 py-2" href="#">Client Details</a>
+<a class="text-secondary hover:text-on-surface transition-colors font-label-md text-label-md px-3 py-2 rounded-lg hover:bg-surface-variant/50" href="#">Property Insights</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="font-label-md text-label-md text-on-surface bg-surface-container-low border border-outline-variant px-4 py-2 rounded-xl hover:bg-surface-container transition-all flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">map</span> Map Studio
+            </button>
+<button class="font-label-md text-label-md text-on-primary-container bg-primary-container px-6 py-2 rounded-xl hover:bg-primary-fixed-dim transition-all flex items-center gap-2 electric-glow">
+<span class="material-symbols-outlined text-sm">person_add</span> Add Client
+            </button>
+<div class="h-10 w-10 rounded-full bg-surface-container-high border border-outline-variant overflow-hidden cursor-pointer">
+<img alt="Dealer Profile Avatar" class="w-full h-full object-cover" data-alt="A professional headshot of a luxury real estate dealer in a bright, modern office setting with Luminous Premier branding, high-key lighting, photorealistic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB9pWsz9WRwlLWymqrzCIYsTgI77A0bKlgL-bEC8HbOGgR-ByiJ5m5JLVMtE72DPRF1PRCvKYNpK0O7YEI5CLNyiFQ-ly125U1s4plEWESqU1EQW0mYHN-VLaRXE2csV7UVY5i5OWY0rq9fUGMtuvFP5WX7wJnBaGgy2T2QH5qjRAZ7DjrKDq12n_5KNsGouwIqW2oOiCpvewS84vpTMkZLrN6D5l3-HD4xk4CeRQx6jUJvqC6gMIrr"/>
+</div>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden h-[calc(100vh-80px)] max-w-container-max mx-auto w-full bg-surface-container-lowest">
+<!-- Internal Client Sidebar -->
+<aside class="w-80 bg-surface-container-lowest border-r border-outline-variant flex flex-col h-full overflow-y-auto">
+<div class="p-6 border-b border-outline-variant sticky top-0 bg-surface-container-lowest/90 backdrop-blur-sm z-10">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-2">Active Portfolios</h2>
+<div class="flex gap-2">
+<span class="px-3 py-1 bg-primary-container/20 text-on-primary-container rounded-full font-label-sm text-label-sm border border-primary-container/30">High Net Worth</span>
+<span class="px-3 py-1 bg-surface-container text-secondary rounded-full font-label-sm text-label-sm border border-outline-variant">All</span>
+</div>
+</div>
+<div class="flex flex-col p-4 gap-2">
+<!-- Inactive Client -->
+<div class="p-4 rounded-xl border border-transparent hover:border-outline-variant hover:bg-surface-container-low transition-all cursor-pointer group">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-label-md text-label-md text-on-surface group-hover:text-primary transition-colors">Eleanor Vance</h3>
+<span class="w-2 h-2 rounded-full bg-tertiary-fixed-dim mt-1"></span>
+</div>
+<p class="font-label-sm text-label-sm text-secondary mb-2">Interest: Luxury Residential</p>
+<div class="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px]">payments</span> $4.5M - $6M
+                    </div>
+</div>
+<!-- Active Client -->
+<div class="p-4 rounded-xl bg-surface-container-lowest border border-primary/20 shadow-sm cursor-pointer relative overflow-hidden">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary-container"></div>
+<div class="flex justify-between items-start mb-1 pl-2">
+<h3 class="font-label-md text-label-md text-on-surface font-bold">Alexander Vance</h3>
+<span class="w-2 h-2 rounded-full bg-primary-container electric-glow mt-1"></span>
+</div>
+<p class="font-label-sm text-label-sm text-secondary mb-2 pl-2">Interest: Premium Commercial</p>
+<div class="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm pl-2">
+<span class="material-symbols-outlined text-[16px]">payments</span> $8.5M - $12M
+                    </div>
+</div>
+<!-- Inactive Client -->
+<div class="p-4 rounded-xl border border-transparent hover:border-outline-variant hover:bg-surface-container-low transition-all cursor-pointer group">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-label-md text-label-md text-on-surface group-hover:text-primary transition-colors">Marcus Thorne</h3>
+<span class="w-2 h-2 rounded-full bg-tertiary-fixed-dim mt-1"></span>
+</div>
+<p class="font-label-sm text-label-sm text-secondary mb-2">Interest: Mixed-Use Dev</p>
+<div class="flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px]">payments</span> $15M+
+                    </div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 overflow-y-auto p-margin-desktop bg-surface-container-lowest">
+<div class="max-w-5xl mx-auto space-y-8">
+<!-- Client Command Header -->
+<div class="glass-panel rounded-[24px] p-8 flex items-start gap-8 relative overflow-hidden">
+<div class="absolute top-0 right-0 w-64 h-64 bg-primary-container/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
+<div class="w-32 h-32 rounded-[20px] bg-surface-container-high border-2 border-surface-container-lowest overflow-hidden flex-shrink-0 soft-shadow">
+<img alt="Alexander Vance" class="w-full h-full object-cover" data-alt="A highly detailed portrait of a sophisticated male client in his 40s wearing a tailored suit, looking confident. Bright, premium lighting, solid light gray background, Luminous Precision UI style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuDZ0onYPRF4m6ez9YhfFecj0iRKRAQnFAQZ-cqCmd77TKWWYwd1wp-0AgpjabkE_FBYHZbfeiCJ0-7WrLHv5KYXYBk804hotWvBhjAK4aOX5kZkle74xdihJQpcktqdiPJRzl6hqzdanzPXvkEif2zvSp2_6D4pDk5qKkQbxixKQ18OMtkootmsrVUwJ5PzwO5bBesJmk3NKowt-V9xnyCeED0baUc_SzpSEZavetC4XUyUt5qcwd"/>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<div>
+<div class="flex items-center gap-3 mb-2">
+<h1 class="font-headline-xl text-headline-xl text-on-surface">Alexander Vance</h1>
+<span class="px-3 py-1 bg-[#1a1c1c] text-[#ffd700] rounded-full font-label-sm text-label-sm flex items-center gap-1 uppercase tracking-wider">
+<span class="material-symbols-outlined text-[14px]">star</span> VIP Status
+                                    </span>
+</div>
+<p class="font-body-lg text-body-lg text-secondary">CEO, Vance Holdings LLC • Acquired 2023</p>
+</div>
+<div class="flex gap-3">
+<button class="w-12 h-12 rounded-xl bg-surface-container-lowest border border-outline-variant flex items-center justify-center text-on-surface hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined">mail</span>
+</button>
+<button class="w-12 h-12 rounded-xl bg-surface-container-lowest border border-outline-variant flex items-center justify-center text-on-surface hover:bg-surface-container transition-all">
+<span class="material-symbols-outlined">call</span>
+</button>
+<button class="px-6 py-3 rounded-xl bg-primary-container text-on-primary-container font-label-md text-label-md hover:bg-primary-fixed-dim transition-all flex items-center gap-2 electric-glow">
+<span class="material-symbols-outlined">edit</span> Edit Profile
+                                </button>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-6 mt-8">
+<div>
+<p class="font-label-sm text-label-sm text-secondary mb-1">Primary Contact</p>
+<p class="font-body-md text-body-md text-on-surface">a.vance@vanceholdings.com</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-secondary mb-1">Phone</p>
+<p class="font-body-md text-body-md text-on-surface">+1 (555) 019-2834</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-secondary mb-1">Location Preference</p>
+<p class="font-body-md text-body-md text-on-surface">Metropolitan Core</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-6">
+<!-- Core Requirements -->
+<div class="col-span-8 space-y-6">
+<div class="bg-surface-container-lowest rounded-[20px] p-6 border border-outline-variant/50 soft-shadow">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container">radar</span> Core Requirements
+                            </h3>
+<div class="grid grid-cols-2 gap-4">
+<div class="p-5 bg-[#FAFAFA] rounded-xl border border-outline-variant/30">
+<p class="font-label-sm text-label-sm text-secondary mb-2 uppercase tracking-wider">Asset Class</p>
+<p class="font-headline-md text-headline-md text-on-surface">Premium Commercial Space</p>
+</div>
+<div class="p-5 bg-[#FAFAFA] rounded-xl border border-outline-variant/30">
+<p class="font-label-sm text-label-sm text-secondary mb-2 uppercase tracking-wider">Target Budget</p>
+<p class="font-headline-md text-headline-md text-on-surface">$12,000,000</p>
+</div>
+<div class="col-span-2 p-5 bg-[#FAFAFA] rounded-xl border border-outline-variant/30">
+<p class="font-label-sm text-label-sm text-secondary mb-2 uppercase tracking-wider">Target Geographies</p>
+<div class="flex gap-2 flex-wrap">
+<span class="px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg font-label-md text-label-md text-on-surface">Financial District</span>
+<span class="px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg font-label-md text-label-md text-on-surface">Tech Park South</span>
+<span class="px-4 py-2 bg-surface-container-lowest border border-outline-variant rounded-lg font-label-md text-label-md text-on-surface">Harbor Front</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Mandate Status Tracker -->
+<div class="bg-surface-container-lowest rounded-[20px] p-6 border border-outline-variant/50 soft-shadow">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-8 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container">timeline</span> Mandate Progress
+                            </h3>
+<div class="relative flex justify-between items-center px-4">
+<!-- Progress Line -->
+<div class="absolute left-10 right-10 top-1/2 h-1 bg-surface-container -z-10 -translate-y-1/2"></div>
+<div class="absolute left-10 w-1/2 h-1 bg-primary-container -z-10 -translate-y-1/2"></div>
+<!-- Steps -->
+<div class="flex flex-col items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold">
+<span class="material-symbols-outlined text-[20px]">check</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">Qualified</span>
+</div>
+<div class="flex flex-col items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold">
+<span class="material-symbols-outlined text-[20px]">check</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">Touring</span>
+</div>
+<div class="flex flex-col items-center gap-3 relative">
+<div class="w-12 h-12 rounded-full bg-surface-container-lowest border-4 border-primary-container text-primary-container flex items-center justify-center font-bold bg-white electric-glow">
+<span class="w-3 h-3 bg-primary-container rounded-full"></span>
+</div>
+<span class="font-label-sm text-label-sm text-primary font-bold absolute -bottom-6 whitespace-nowrap">Offer Prep</span>
+</div>
+<div class="flex flex-col items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container border-2 border-outline-variant text-secondary flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">lock</span>
+</div>
+<span class="font-label-sm text-label-sm text-secondary">Closed</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Side Widgets -->
+<div class="col-span-4 space-y-6">
+<!-- Next Action Widget -->
+<div class="bg-[#1a1c1c] text-white rounded-[20px] p-6 shadow-xl relative overflow-hidden border border-outline-variant/20">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-[100px]">warning</span>
+</div>
+<div class="relative z-10">
+<div class="flex items-center gap-2 mb-4">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-primary-container uppercase tracking-wider">Next Critical Action</span>
+</div>
+<h4 class="font-headline-md text-headline-md mb-2">Draft preliminary term sheet</h4>
+<p class="font-body-md text-body-md text-surface-dim mb-6 opacity-80">Requires input from legal regarding zoning variance on Harbor Front property.</p>
+<div class="flex items-center justify-between bg-white/10 p-3 rounded-xl backdrop-blur-sm">
+<span class="font-label-md text-label-md">Due in:</span>
+<span class="font-headline-md text-headline-md text-primary-container">48h</span>
+</div>
+<button class="w-full mt-4 bg-primary-container text-[#1a1c1c] font-label-md text-label-md py-3 rounded-xl hover:bg-primary-fixed-dim transition-all text-center">
+                                    Mark as Complete
+                                </button>
+</div>
+</div>
+<!-- Quick Insight Widget -->
+<div class="bg-surface-container-lowest rounded-[20px] p-6 border border-outline-variant/50 soft-shadow">
+<h3 class="font-label-md text-label-md text-on-surface mb-4 uppercase tracking-wider flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px]">psychology</span> AI Insight
+                            </h3>
+<p class="font-body-md text-body-md text-secondary leading-relaxed">
+                                Alexander has shown a 40% higher engagement rate with properties offering immediate high-speed fiber connectivity. Highlight this in the upcoming Harbor Front presentation.
+                            </p>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>
