@@ -1,0 +1,4 @@
+﻿.pm-buyer{min-height:100vh;background:#0f0a1a;color:#f0eaff;font-family:var(--pm-font-ui)} 
+ .pm-buyer *{box-sizing:border-box} 
+ .pm-buyer-card{background:#1a1428;border:1px solid rgba(139,96,232,.2);border-radius:22px;overflow:hidden;transition:border-color .2s} 
+ .pm-buyer-card:hover{border-color:rgba(255,194,30,.4)}

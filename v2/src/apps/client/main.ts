@@ -15,14 +15,7 @@ async function initClient(container: HTMLElement) {
     window.history.replaceState(null, '', window.location.pathname);
   }
 
-  // Include reset + tokens globally
-  const head = document.head;
-  if (!head.querySelector('#pm-styles')) {
-    const style = document.createElement('style');
-    style.id = 'pm-styles';
-    style.innerHTML = `@import '/src/packages/ui/reset.css'; @import '/src/packages/ui/tokens.css';`;
-    head.appendChild(style);
-  }
+  // (Styles are loaded via external CSS in index.html for strict CSP)
 
   // In production: use token to call Edge → Supabase RPC
   // For Pass 1: show mock data
@@ -35,12 +28,6 @@ async function initClient(container: HTMLElement) {
   const voiceSecs = 45;
 
   container.innerHTML = `
-<style>
-  .pm-buyer{min-height:100vh;background:#0f0a1a;color:#f0eaff;font-family:var(--pm-font-ui)}
-  .pm-buyer *{box-sizing:border-box}
-  .pm-buyer-card{background:#1a1428;border:1px solid rgba(139,96,232,.2);border-radius:22px;overflow:hidden;transition:border-color .2s}
-  .pm-buyer-card:hover{border-color:rgba(255,194,30,.4)}
-</style>
 <div class="pm-buyer">
   <!-- Header -->
   <div style="padding:clamp(20px,4vw,34px) clamp(16px,4vw,34px);text-align:center;background:linear-gradient(180deg,#150f24,#0f0a1a);border-bottom:1px solid rgba(139,96,232,.15)">
