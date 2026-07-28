@@ -4,9 +4,9 @@ import { getGreeting, getInitials, getFirstName, getProfile } from './packages/a
 
 // Load Phosphor Icons from CDN
 const iconLinks = [
-  'https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css',
-  'https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css',
-  'https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css',
+  '/assets/phosphor/regular/style.css',
+  '/assets/phosphor/fill/style.css',
+  '/assets/phosphor/bold/style.css',
 ];
 iconLinks.forEach(href => {
   const link = document.createElement('link');

@@ -5,6 +5,7 @@ const pathMap: Record<string, string> = {
   '/admin/deals.html': 'deals',
   '/admin/properties.html': 'properties',
   '/admin/clients.html': 'clients',
+  '/admin/demand.html': 'demand',
   '/admin/area-intelligence.html': 'area-intelligence',
   '/admin/property-insights.html': 'property-insights',
 };

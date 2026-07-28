@@ -12,6 +12,7 @@ export default defineConfig({
         dealerTeam: resolve(__dirname, 'admin/team.html'),
         dealerProperties: resolve(__dirname, 'admin/properties.html'),
         dealerClients: resolve(__dirname, 'admin/clients.html'),
+        dealerDemand: resolve(__dirname, 'admin/demand.html'),
         dealerDeals: resolve(__dirname, 'admin/deals.html'),
         dealerMapStudio: resolve(__dirname, 'admin/map-studio.html'),
         developer: resolve(__dirname, 'admin/developer.html'),

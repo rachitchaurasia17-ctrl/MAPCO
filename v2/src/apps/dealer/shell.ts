@@ -7,12 +7,14 @@ import { renderCustomers } from './pages/customers';
 import { renderLinks } from './pages/links';
 import { renderAreaIntelligence } from './pages/area-intelligence';
 import { renderPropertyInsights } from './pages/property-insights';
+import { renderDemand } from './pages/demand';
 
 const NAV = [
   { key: 'areas', label: 'Home', icon: 'ph-house', iconFill: 'ph-fill ph-house', badge: '', path: '/admin/owner.html' },
   { key: 'deals', label: 'My Deals', icon: 'ph-handshake', iconFill: 'ph-fill ph-handshake', badge: '4', path: '/admin/deals.html' },
   { key: 'properties', label: 'My Plots', icon: 'ph-buildings', iconFill: 'ph-fill ph-buildings', badge: '', path: '/admin/properties.html' },
   { key: 'clients', label: 'My Customers', icon: 'ph-users-three', iconFill: 'ph-fill ph-users-three', badge: '', path: '/admin/clients.html' },
+  { key: 'demand', label: 'Demand', icon: 'ph-list-magnifying-glass', iconFill: 'ph-fill ph-list-magnifying-glass', badge: '', path: '/admin/demand.html' },
   { key: 'links', label: 'Client Links', icon: 'ph-paper-plane-tilt', iconFill: 'ph-fill ph-paper-plane-tilt', badge: '3', path: '/admin/owner.html#links' }, // or something else
   { key: 'area-intelligence', label: 'Area Intelligence', icon: 'ph-map-pin', iconFill: 'ph-fill ph-map-pin', badge: '', path: '/admin/area-intelligence.html' },
   { key: 'property-insights', label: 'Property Insights', icon: 'ph-trend-up', iconFill: 'ph-fill ph-trend-up', badge: '', path: '/admin/property-insights.html' },
@@ -24,6 +26,7 @@ const SECMETA: Record<string, { name: string; icon: string }> = {
   deals: { name: 'My Deals', icon: 'ph-fill ph-handshake' },
   properties: { name: 'My Plots', icon: 'ph-fill ph-buildings' },
   clients: { name: 'My Customers', icon: 'ph-fill ph-users-three' },
+  demand: { name: 'Demand Pipeline', icon: 'ph-fill ph-list-magnifying-glass' },
   links: { name: 'Client Links', icon: 'ph-fill ph-paper-plane-tilt' },
   'area-intelligence': { name: 'Area Intelligence', icon: 'ph-fill ph-map-pin' },
   'property-insights': { name: 'Property Insights', icon: 'ph-fill ph-trend-up' }
@@ -39,6 +42,7 @@ function renderSection(content: HTMLElement) {
     case 'deals': renderDeals(content); break;
     case 'properties': renderProperties(content); break;
     case 'clients': renderCustomers(content); break;
+    case 'demand': renderDemand(content); break;
     case 'links': renderLinks(content); break;
     case 'area-intelligence': renderAreaIntelligence(content); break;
     case 'property-insights': renderPropertyInsights(content); break;
