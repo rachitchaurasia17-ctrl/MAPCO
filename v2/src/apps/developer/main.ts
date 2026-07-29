@@ -14,7 +14,7 @@ function initDeveloperControl(container: HTMLElement) {
         <i class="ph-fill ph-lock-key" style="font-size:48px;color:#c2185b;margin-bottom:16px"></i>
         <h1 style="font-size:24px;font-weight:800;color:#1f1a12">Access Denied</h1>
         <p style="margin-top:8px;font-size:15px;color:#6b6156">You must be a Platform Admin to view this page.</p>
-        <a href="/" style="margin-top:24px;padding:10px 20px;background:#5b32c4;color:#fff;border-radius:12px;text-decoration:none;font-weight:700">Return to Home</a>
+        <a href="/" style="margin-top:24px;padding:10px 20px;background:#5b32c4;color:#fff;border-radius:12px;text-decoration:none;font-weight:700" onmouseenter="this.style.background='#4a26a8'" onmouseleave="this.style.background='#5b32c4'">Return to Home</a>
       </div>
     `;
     return;
@@ -81,7 +81,7 @@ function initDeveloperControl(container: HTMLElement) {
           { name: 'Chandigarh Plots Hub', plan: 'Trial', props: 2, links: 0, status: 'expiring' },
           { name: 'Tricity Estates', plan: 'Basic', props: 6, links: 3, status: 'active' },
         ].map(d => `
-        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 120px;gap:12px;align-items:center;padding:16px 22px;border-bottom:1px solid #f6e8c8;cursor:pointer;transition:background .12s" onmouseenter="this.style.background='#faf7ff'" onmouseleave="this.style.background='transparent'">
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 120px;gap:12px;align-items:center;padding:16px 22px;border-bottom:1px solid #f6e8c8;cursor:pointer;transition:background .12s" onmouseenter="this.style.background='#efe8fb'" onmouseleave="this.style.background='transparent'">
           <div style="font-size:15px;font-weight:700;color:#241f1c">${d.name}</div>
           <div style="font-size:14px;font-weight:700;color:${d.plan === 'Pro' ? '#5b32c4' : d.plan === 'Trial' ? '#c85a1a' : '#6b6156'}">${d.plan}</div>
           <div style="font-size:14px;font-weight:600;color:#241f1c">${d.props}</div>

@@ -15,7 +15,7 @@ export async function renderTeamClients(el: HTMLElement) {
           <h1 style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:42px;letter-spacing:-.025em">Clients</h1>
           <p style="margin:10px 0 0;font-size:16.5px;color:#6b6156">Everyone the dealer is talking to, and what they are looking for.</p>
         </div>
-        <button style="display:flex;align-items:center;gap:9px;padding:14px 20px;border-radius:14px;background:#5b32c4;color:#fff;font-size:15.5px;font-weight:800;box-shadow:0 14px 26px -16px rgba(91,50,196,.95)"><i class="ph-bold ph-plus" style="font-size:16px"></i>Add a client</button>
+        <button style="display:flex;align-items:center;gap:9px;padding:14px 20px;border-radius:14px;background:#5b32c4;color:#fff;font-size:15.5px;font-weight:800;box-shadow:0 14px 26px -16px rgba(91,50,196,.95);border:none;cursor:pointer" onmouseenter="this.style.background='#4a26a8'" onmouseleave="this.style.background='#5b32c4'"><i class="ph-bold ph-plus" style="font-size:16px"></i>Add a client</button>
       </div>
 
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-top:26px">
@@ -44,9 +44,9 @@ export async function renderTeamClients(el: HTMLElement) {
               <div style="margin-top:4px;font-size:15px;font-weight:600;color:#4c463d">${c.want || 'Any plot'}</div>
             </div>
             <div style="display:flex;align-items:center;gap:9px;margin-top:15px">
-              <button style="display:flex;align-items:center;justify-content:center;gap:7px;flex:1;padding:12px;border-radius:12px;background:#efe8fb;border:1px solid #d6c6f5;color:#5b32c4;font-size:13.5px;font-weight:800"><i class="ph-bold ph-pencil-simple" style="font-size:15px"></i>Edit details</button>
-              <button style="display:flex;align-items:center;justify-content:center;gap:7px;flex:1;padding:12px;border-radius:12px;background:#dcf3e5;border:1px solid #b3e0c6;color:#12704a;font-size:13.5px;font-weight:800"><i class="ph-fill ph-paper-plane-tilt" style="font-size:15px"></i>Send link</button>
-              <button style="width:42px;height:42px;border-radius:12px;background:#ffe1e6;color:#b3123a;display:grid;place-items:center;flex:none"><i class="ph-fill ph-trash" style="font-size:17px"></i></button>
+              <button style="display:flex;align-items:center;justify-content:center;gap:7px;flex:1;padding:12px;border-radius:12px;background:#efe8fb;border:1px solid #d6c6f5;color:#5b32c4;font-size:13.5px;font-weight:800;cursor:pointer" onmouseenter="this.style.borderColor='#5b32c4'" onmouseleave="this.style.borderColor='#d6c6f5'"><i class="ph-bold ph-pencil-simple" style="font-size:15px"></i>Edit details</button>
+              <button style="display:flex;align-items:center;justify-content:center;gap:7px;flex:1;padding:12px;border-radius:12px;background:#dcf3e5;border:1px solid #b3e0c6;color:#12704a;font-size:13.5px;font-weight:800;cursor:pointer" onmouseenter="this.style.borderColor='#12a150'" onmouseleave="this.style.borderColor='#b3e0c6'"><i class="ph-fill ph-paper-plane-tilt" style="font-size:15px"></i>Send link</button>
+              <button style="width:42px;height:42px;border-radius:12px;background:#ffe1e6;color:#b3123a;display:grid;place-items:center;flex:none;border:none;cursor:pointer" onmouseenter="this.style.background='#ffccd6'" onmouseleave="this.style.background='#ffe1e6'"><i class="ph-fill ph-trash" style="font-size:17px"></i></button>
             </div>
           </div>
           `;

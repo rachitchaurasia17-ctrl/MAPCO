@@ -96,9 +96,15 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
     pinLayer.style.transform = `translate(${t.tx}px, ${t.ty}px) scale(${t.scale})`;
 
     const inv = 1 / t.scale;
+    const is3d = mode === 'threeD';
+    const upright = is3d ? 'rotateZ(5deg) rotateX(-44deg)' : '';
+
     for (let i = 0; i < pinLayer.children.length; i++) {
       const p = pinLayer.children[i] as HTMLElement;
-      p.style.transform = `translate(-50%, -100%) scale(${inv})`;
+      const inner = p.querySelector('button');
+      if (inner) {
+        inner.style.transform = `translate(-50%, -100%) scale(${inv}) ${upright}`;
+      }
     }
   }
   updatePins();
@@ -116,11 +122,18 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
       const px = pt.x * map.original.dims.w;
       const py = pt.y * map.original.dims.h;
       const prop = props.find(x => x.id === id);
+      const is3d = mode === 'threeD';
+      const upright = is3d ? 'rotateZ(5deg) rotateX(-44deg)' : '';
+
       const el = document.createElement('div');
-      el.style.cssText = `position:absolute;left:${px}px;top:${py}px;width:32px;height:42px;color:#ffc93c;display:flex;flex-direction:column;align-items:center;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.5))`;
+      el.style.cssText = `position:absolute;left:${px}px;top:${py}px;z-index:6;transform-style:preserve-3d;pointer-events:none`;
       el.innerHTML = `
-        <i class="ph-fill ph-map-pin" style="font-size:32px"></i>
-        ${prop ? `<div style="background:#1a1428;color:#f0eaff;font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px;margin-top:-6px;white-space:nowrap">${esc(prop.area)}</div>` : ''}
+        <div style="position:absolute;left:0;top:0;width:70px;height:70px;border-radius:50%;background:rgba(255,194,30,.5);animation:ringPulse 1.8s ease-out infinite;transform:translate(-50%,-50%);pointer-events:none"></div>
+        <button style="position:relative;transform:translate(-50%,-100%) ${upright};transform-origin:bottom center;display:flex;flex-direction:column;align-items:center;cursor:pointer;animation:pinIn .4s cubic-bezier(.2,.9,.3,1.3) both;border:none;background:none;padding:0;pointer-events:auto">
+          <span style="display:flex;align-items:center;gap:7px;background:#ffc21e;color:#231a04;border-radius:12px;padding:9px 14px;white-space:nowrap;font-size:15px;font-weight:800;border:2.5px solid #fffdf7;box-shadow:0 10px 22px -8px rgba(40,26,2,.7)"><i class="ph-fill ph-map-pin" style="font-size:15px"></i>${prop ? esc(prop.area) : 'Pinned'}</span>
+          <span style="display:block;width:3px;height:14px;background:#ffc21e"></span>
+          <span style="display:block;width:14px;height:14px;border-radius:50%;background:#ffc21e;border:3px solid #fffdfb;margin-top:-2px"></span>
+        </button>
       `;
       pinLayer.appendChild(el);
     });
@@ -175,20 +188,74 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
     botleft.style.display = showMap ? 'flex' : 'none';
     botright.style.display = showMap ? 'flex' : 'none';
     stage.style.display = showMap ? 'block' : 'none';
-    grid.style.display = view === 'properties' ? 'grid' : 'none';
-    if (view === 'properties') renderGrid();
+    grid.style.display = (view === 'properties' || view === 'sectors') ? 'block' : 'none';
+    if (view === 'properties' || view === 'sectors') renderGrid();
     syncPins();
   }
 
   function renderGrid(): void {
-    grid.innerHTML = `
-      <div style="max-width:1260px;margin:0 auto;padding:84px 34px 56px">
-        <h1 style="font-family:var(--pm-font-display);font-weight:400;font-size:32px;color:#fff;margin:0 0 24px">All Properties</h1>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px">
-          ${props.map(pcard).join('')}
+    if (view === 'properties') {
+      grid.innerHTML = `
+        <div style="position:absolute;inset:0;overflow-y:auto;background:#f5efff;background-image:radial-gradient(62% 50% at -2% -4%,rgba(139,96,232,.5),transparent 62%),radial-gradient(54% 44% at 101% 4%,rgba(56,138,186,.4),transparent 62%),radial-gradient(66% 48% at 46% 108%,rgba(255,190,48,.44),transparent 64%),radial-gradient(40% 34% at 86% 66%,rgba(236,120,168,.22),transparent 68%)">
+          <div style="max-width:1260px;margin:0 auto;padding:84px 34px 56px">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;animation:rowIn .45s ease both">
+              <button style="height:36px;padding:0 14px;border-radius:10px;font-size:15px;font-weight:800;background:#5b32c4;color:#fff;box-shadow:0 8px 18px -8px rgba(91,50,196,.95)">All properties<span style="font-size:12.5px;font-weight:800;color:#5b32c4;background:#fff;padding:2px 7px;border-radius:99px;margin-left:8px">${props.length}</span></button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(298px,1fr));gap:20px;margin-top:22px">
+              ${props.map(p => {
+                const photo = p.photos[0];
+                const bg = photo ? `background:#efdcb2 url('${esc(photo)}') center/cover` : `background:#efe6da;display:grid;place-items:center;color:#b3a894`;
+                return `
+                <button data-act="open-prop" data-id="${esc(p.id)}" style="text-align:left;background:#fffdfb;border-radius:20px;overflow:hidden;box-shadow:0 0 0 1px rgba(88,52,168,.1),0 14px 30px -22px rgba(42,31,77,.6);cursor:pointer;transition:transform .15s,box-shadow .15s" onmouseenter="this.style.transform='translateY(-8px)';this.style.boxShadow='0 0 0 1px rgba(139,96,232,.35),0 3px 4px rgba(40,26,2,.06),0 44px 66px -36px rgba(139,96,232,.6)'" onmouseleave="this.style.transform='none';this.style.boxShadow='0 0 0 1px rgba(88,52,168,.1),0 14px 30px -22px rgba(42,31,77,.6)'">
+                  <span style="position:relative;display:block;overflow:hidden">
+                    <span style="display:block;aspect-ratio:16/9;${bg}">${photo ? '' : '<i class="ph-fill ph-image" style="font-size:34px"></i>'}</span>
+                    <span style="position:absolute;top:13px;left:13px;display:inline-block;white-space:nowrap;padding:6px 11px;border-radius:8px;background:rgba(28,21,51,.72);backdrop-filter:blur(10px);font-size:12px;font-weight:800;letter-spacing:.02em;font-variant-numeric:tabular-nums;color:#fff8e6">${esc(p.size)}</span>
+                    <span style="position:absolute;right:13px;bottom:13px;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:rgba(255,253,249,.95);box-shadow:0 2px 8px -3px rgba(28,21,51,.4);font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;color:#1c1533"><i class="ph-fill ph-images" style="font-size:13px"></i>${p.photos.length} photos</span>
+                  </span>
+                  <span style="display:block;padding:18px 20px 20px;text-align:left">
+                    <span style="display:block;font-family:'Newsreader',serif;font-weight:500;font-size:27px;letter-spacing:-.025em;color:#1c1533;line-height:1.06">${esc(p.area)}</span>
+                    <span style="display:block;margin-top:5px;font-size:14px;font-weight:600;letter-spacing:.005em;color:#6f6489">${esc(p.loc)}</span>
+                    <span style="display:flex;flex-wrap:wrap;gap:7px;margin-top:14px">
+                      <span style="padding:6px 11px;border-radius:8px;background:#fff2cd;box-shadow:inset 0 0 0 1px rgba(168,121,42,.22);font-size:12px;font-weight:800;letter-spacing:.02em;color:#8a5a0c">${esc(p.facing)} facing</span>
+                      ${p.position === 'corner' ? `<span style="padding:6px 11px;border-radius:8px;background:#e0f2e7;box-shadow:inset 0 0 0 1px rgba(20,108,58,.2);font-size:12px;font-weight:800;letter-spacing:.02em;color:#146c3a">Corner plot</span>` : ''}
+                    </span>
+                    <span style="display:flex;align-items:center;gap:8px;margin-top:16px;font-size:14.5px;font-weight:800;letter-spacing:.01em;color:#8a5a0c">See everything <i class="ph-bold ph-arrow-right" style="font-size:15px"></i></span>
+                  </span>
+                </button>
+                `;
+              }).join('')}
+            </div>
+          </div>
         </div>
-      </div>
-    `;
+      `;
+    } else if (view === 'sectors') {
+      const sectors = maps.filter(m => m.kind === 'sector');
+      grid.innerHTML = `
+        <div style="position:absolute;inset:0;overflow-y:auto;background:#f5efff;background-image:radial-gradient(62% 50% at -2% -4%,rgba(139,96,232,.5),transparent 62%),radial-gradient(54% 44% at 101% 4%,rgba(56,138,186,.4),transparent 62%),radial-gradient(66% 48% at 46% 108%,rgba(255,190,48,.44),transparent 64%),radial-gradient(40% 34% at 86% 66%,rgba(236,120,168,.22),transparent 68%)">
+          <div style="max-width:1260px;margin:0 auto;padding:84px 34px 56px">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;animation:rowIn .45s ease both">
+              <button style="height:36px;padding:0 14px;border-radius:10px;font-size:15px;font-weight:800;background:#5b32c4;color:#fff;box-shadow:0 8px 18px -8px rgba(91,50,196,.95)">All sectors<span style="font-size:12.5px;font-weight:800;color:#5b32c4;background:#fff;padding:2px 7px;border-radius:99px;margin-left:8px">${sectors.length}</span></button>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(288px,1fr));gap:20px;margin-top:22px">
+              ${sectors.map(m => `
+                <button data-act="open-sec" data-id="${esc(m.id)}" style="text-align:left;background:#fffdfb;border-radius:20px;overflow:hidden;box-shadow:0 0 0 1px rgba(88,52,168,.1),0 14px 30px -22px rgba(42,31,77,.6);cursor:pointer;transition:transform .15s,box-shadow .15s" onmouseenter="this.style.transform='translateY(-8px)';this.style.boxShadow='0 0 0 1px rgba(139,96,232,.42),0 3px 4px rgba(40,26,2,.06),0 44px 66px -36px rgba(107,63,212,.7)'" onmouseleave="this.style.transform='none';this.style.boxShadow='0 0 0 1px rgba(88,52,168,.1),0 14px 30px -22px rgba(42,31,77,.6)'">
+                  <span style="position:relative;display:block;height:172px;overflow:hidden">
+                    <span style="display:block;width:100%;height:100%;background:#efdcb2 url('${esc(m.original.src)}') center/cover"></span>
+                    <span style="position:absolute;top:13px;left:13px;display:inline-block;white-space:nowrap;padding:6px 11px;border-radius:8px;background:rgba(28,21,51,.72);backdrop-filter:blur(10px);font-size:12px;font-weight:800;letter-spacing:.02em;color:#fff8e6">${esc(m.city)}</span>
+                    ${m.linkedPropertyIds.length > 0 ? `<span style="position:absolute;right:13px;bottom:13px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;padding:6px 12px;border-radius:999px;background:#ffc21e;box-shadow:0 2px 8px -3px rgba(120,86,10,.6);font-size:12px;font-weight:800;color:#231a04"><i class="ph-fill ph-map-pin-area" style="font-size:13px"></i>${m.linkedPropertyIds.length} plots</span>` : ''}
+                  </span>
+                  <span style="display:block;padding:18px 20px 20px;text-align:left">
+                    <span style="display:block;font-family:'Newsreader',serif;font-weight:500;font-size:26px;letter-spacing:-.025em;color:#1c1533;line-height:1.06">${esc(m.title)}</span>
+                    <span style="display:block;margin-top:5px;font-size:14px;font-weight:600;color:#6f6489">${esc(m.sectorOrBlock)}</span>
+                    <span style="display:flex;align-items:center;gap:8px;margin-top:16px;font-size:15px;font-weight:800;color:#8a5a0c">Open the layout <i class="ph-bold ph-arrow-right" style="font-size:15px"></i></span>
+                  </span>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    }
   }
 
   function pcard(p: Property): string {
@@ -248,6 +315,27 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
         const m = maps.find((x) => x.id === activeMapId);
         view = m?.kind === 'sector' ? 'sectors' : 'masterplan';
         renderTopbar(); renderMapControls(); void applyMap(); break;
+      }
+      case 'open-sec': {
+        activeMapId = t.dataset.id!;
+        const m = maps.find((x) => x.id === activeMapId);
+        view = m?.kind === 'sector' ? 'sectors' : 'masterplan';
+        renderTopbar(); renderMapControls(); void applyMap(); break;
+      }
+      case 'open-prop': {
+        // Find property map
+        const propId = t.dataset.id!;
+        const p = props.find(x => x.id === propId);
+        if (p) {
+          // If property is pinned in a map, go to that map. Otherwise go to masterplan
+          // For parity, just go to masterplan and select it for now
+          view = 'masterplan';
+          if (!pinned.has(p.id)) {
+            pinned.add(p.id);
+          }
+          renderTopbar(); renderMapControls(); void applyMap();
+        }
+        break;
       }
       case 'view': view = t.dataset.view as View; mapsOpen = false; renderTopbar(); renderMapControls(); break;
       case 'mode': {

@@ -66,26 +66,9 @@ export function initDealerShell(container: HTMLElement, initialSection: string) 
   }
 
   container.innerHTML = `
-<style>
-  .pm-dash{display:flex;height:100vh;min-height:0;width:100%;overflow:hidden;background:#f5efff;background-image:var(--pm-bloom);background-attachment:fixed}
-  .pm-dash-side{width:270px;flex:none;height:100%;min-height:0;overflow:hidden;background:rgba(252,250,255,.82);background-image:linear-gradient(180deg,rgba(253,251,255,.95),rgba(243,236,255,.76) 55%,rgba(236,227,255,.66));backdrop-filter:blur(16px);box-shadow:inset -1px 0 0 rgba(88,52,168,.14);display:flex;flex-direction:column;border-right:1px solid #ddd2f5}
-  .pm-dash-nav-btn{width:100%;display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;transition:background .12s,color .12s;color:#6b6156;text-decoration:none}
-  .pm-dash-nav-btn:hover{background:#fdefc9;color:#1f1a12}
-  .pm-dash-nav-btn.active{background:#ffc93c;color:#1f1a12;box-shadow:inset 0 1px 2px rgba(0,0,0,.08)}
-  .pm-dash-main{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column}
-  .pm-dash-header{display:flex;align-items:center;gap:14px;padding:16px 40px;border-bottom:1px solid #ddd2f5;background:rgba(247,243,234,.86);backdrop-filter:blur(8px);position:sticky;top:0;z-index:30;flex-wrap:wrap}
-  .pm-dash-content{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden}
-  .pm-dash-cta{width:100%;display:flex;align-items:center;gap:13px;padding:16px;border-radius:16px;background:#f0a83c;color:#3a2410;text-align:left;text-decoration:none;box-shadow:0 10px 26px -12px rgba(0,0,0,.6);animation:omGlow 3.4s ease-in-out infinite}
-  .pm-dash-cta:hover{background:#ffb84a}
-  @media(max-width:768px){
-    .pm-dash-side{width:72px}
-    .pm-dash-side .pm-side-label,.pm-dash-side .pm-side-badge,.pm-dash-side .pm-side-owner,.pm-dash-side .pm-side-cta-text{display:none!important}
-    .pm-dash-nav-btn{justify-content:center;padding:14px}
-    .pm-dash-header{padding:14px 20px}
-  }
-</style>
-<div class="pm-dash">
-  <aside class="pm-dash-side">
+<div style="display:flex;height:100vh;min-height:0;width:100%;overflow:hidden;background:#f5efff;background-image:radial-gradient(62% 50% at -2% -4%,rgba(139,96,232,.5),transparent 62%),radial-gradient(54% 44% at 101% 4%,rgba(56,138,186,.4),transparent 62%),radial-gradient(66% 48% at 46% 108%,rgba(255,190,48,.44),transparent 64%),radial-gradient(40% 34% at 86% 66%,rgba(236,120,168,.22),transparent 68%)">
+
+  <aside style="width:270px;flex:none;height:100%;min-height:0;overflow:hidden;background:rgba(252,250,255,.82);background-image:linear-gradient(180deg,rgba(253,251,255,.95),rgba(243,236,255,.76) 55%,rgba(236,227,255,.66));backdrop-filter:blur(16px);box-shadow:inset -1px 0 0 rgba(88,52,168,.14);display:flex;flex-direction:column;border-right:1px solid #ddd2f5">
     <div style="display:flex;align-items:center;gap:12px;padding:26px 24px 18px">
       <svg viewBox="0 0 40 40" style="width:40px;height:40px;flex:none;display:block">
         <rect x="0" y="0" width="40" height="40" rx="12" fill="#241d0c"></rect>
@@ -93,39 +76,46 @@ export function initDealerShell(container: HTMLElement, initialSection: string) 
         <path d="M7 22 L20 29.5 L33 22 L33 25.5 L20 33 L7 25.5 Z" fill="#f4ae14" opacity="0.55"></path>
         <circle cx="20" cy="16" r="3.6" fill="#241d0c"></circle>
       </svg>
-      <div class="pm-side-label" style="font-weight:800;font-size:22px;letter-spacing:-.02em;color:#1f1a12">Plot<span style="color:#c2622a">Map</span></div>
+      <div style="font-weight:800;font-size:22px;letter-spacing:-.02em;color:#1f1a12">Plot<span style="color:#c2622a">Map</span></div>
     </div>
     <nav data-scroll style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:4px;padding:6px 16px 8px" id="pm-dash-nav">
-      ${NAV.map(n => `
-      <a href="${n.path}" class="pm-dash-nav-btn ${currentSection === n.key ? 'active' : ''}" data-section="${n.key}">
-        <i class="${currentSection === n.key ? n.iconFill : n.icon}" style="font-size:23px;line-height:1;width:26px;text-align:center"></i>
-        <span class="pm-side-label" style="font-size:16.5px;font-weight:700;letter-spacing:-.01em">${n.label}</span>
-        ${n.badge ? `<span class="pm-side-badge" style="margin-left:auto;font-size:12px;font-weight:800;padding:3px 9px;border-radius:999px;background:${currentSection === n.key ? 'rgba(0,0,0,.12)' : '#efe8fb'};color:${currentSection === n.key ? '#1f1a12' : '#5b32c4'}">${n.badge}</span>` : ''}
-      </a>`).join('')}
+      ${NAV.map(n => {
+        const isActive = currentSection === n.key;
+        const style = isActive ? 'width:100%;display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;transition:background .12s,color .12s;background:#ffc93c;color:#1f1a12;box-shadow:inset 0 1px 2px rgba(0,0,0,.08);text-decoration:none' : 'width:100%;display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;transition:background .12s,color .12s;color:#6b6156;text-decoration:none';
+        const badgeStyle = isActive ? 'margin-left:auto;font-size:12px;font-weight:800;padding:3px 9px;border-radius:999px;background:rgba(0,0,0,.12);color:#1f1a12' : 'margin-left:auto;font-size:12px;font-weight:800;padding:3px 9px;border-radius:999px;background:#efe8fb;color:#5b32c4';
+        return `
+        <a href="${n.path}" style="${style}" data-section="${n.key}" onmouseover="if(this.dataset.section!=='${currentSection}'){this.style.background='#fdefc9';this.style.color='#1f1a12';}" onmouseout="if(this.dataset.section!=='${currentSection}'){this.style.background='transparent';this.style.color='#6b6156';}">
+          <i class="${isActive ? n.iconFill : n.icon}" style="font-size:23px;line-height:1;width:26px;text-align:center"></i>
+          <span style="font-size:16.5px;font-weight:700;letter-spacing:-.01em">${n.label}</span>
+          ${n.badge ? `<span style="${badgeStyle}">${n.badge}</span>` : ''}
+        </a>`;
+      }).join('')}
     </nav>
     <div style="flex:none;padding:14px 18px 10px">
-      <div class="pm-side-label" style="font-size:11px;font-weight:800;letter-spacing:.14em;color:#9a8f7c;text-transform:uppercase;padding:0 4px 9px">With a customer?</div>
-      <a href="/app/plotmap/index.html" class="pm-dash-cta">
+      <div style="font-size:11px;font-weight:800;letter-spacing:.14em;color:#9a8f7c;text-transform:uppercase;padding:0 4px 9px">With a customer?</div>
+      <a href="/app/plotmap/index.html" style="width:100%;display:flex;align-items:center;gap:13px;padding:16px 16px;border-radius:16px;background:#f0a83c;color:#3a2410;text-align:left;text-decoration:none;box-shadow:0 10px 26px -12px rgba(0,0,0,.6);animation:omGlow 3.4s ease-in-out infinite" onmouseover="this.style.background='#ffb84a'" onmouseout="this.style.background='#f0a83c'">
         <i class="ph-fill ph-projector-screen-chart" style="font-size:26px"></i>
-        <span class="pm-side-cta-text" style="display:block"><span style="display:block;font-size:15.5px;font-weight:800;letter-spacing:-.01em">Show Map to Customer</span><span style="display:block;font-size:12.5px;font-weight:700;color:#8a5a12">Opens the full-screen map</span></span>
+        <span style="display:block"><span style="display:block;font-size:15.5px;font-weight:800;letter-spacing:-.01em">Show Map to Customer</span><span style="display:block;font-size:12.5px;font-weight:700;color:#8a5a12">Opens the full-screen map</span></span>
       </a>
     </div>
     <div style="flex:none;display:flex;align-items:center;gap:12px;padding:12px 20px 16px;border-top:1px solid #ddd2f5">
-      <div style="width:40px;height:40px;border-radius:50%;background:#f0a83c;color:#3a2410;display:grid;place-items:center;font-weight:800;font-size:15px;flex:none">${initials}</div>
-      <div class="pm-side-owner" style="min-width:0;flex:1"><div style="font-size:14.5px;font-weight:700;color:#1f1a12;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${profile.name}</div><div style="font-size:12.5px;color:#9a8f7c;font-weight:600">${profile.dealerName}</div></div>
-      <i class="ph ph-gear-six pm-side-label" style="font-size:20px;color:#9a8f7c"></i>
+      <div style="width:40px;height:40px;border-radius:50%;background:#f0a83c;color:#3a2410;display:grid;place-items:center;font-weight:800;font-size:15px;flex:none">\${initials}</div>
+      <div style="min-width:0;flex:1"><div style="font-size:14.5px;font-weight:700;color:#1f1a12;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">\${profile.name}</div><div style="font-size:12.5px;color:#9a8f7c;font-weight:600">\${profile.dealerName}</div></div>
+      <i class="ph ph-gear-six" style="font-size:20px;color:#9a8f7c"></i>
     </div>
   </aside>
 
-  <main class="pm-dash-main">
-    <header class="pm-dash-header" id="pm-dash-header">
-      <i class="${SECMETA[currentSection].icon}" style="font-size:21px;color:#d95d1e"></i>
-      <span style="font-size:17px;font-weight:800;letter-spacing:-.01em;color:#2f2a2d" id="pm-dash-sec-name">${SECMETA[currentSection].name}</span>
-      <div style="display:flex;align-items:center;gap:8px;color:#6b6156;font-size:14.5px;font-weight:600"><i class="ph ph-calendar-blank" style="font-size:17px"></i>${formatDateShort()}</div>
+  <main style="flex:1;min-width:0;min-height:0;display:flex;flex-direction:column">
+    <header style="display:flex;align-items:center;gap:14px;padding:16px 40px;border-bottom:1px solid #ddd2f5;background:rgba(247,243,234,.86);backdrop-filter:blur(8px);position:sticky;top:0;z-index:30">
+      <i class="\${SECMETA[currentSection].icon}" style="font-size:21px;color:#d95d1e"></i>
+      <span style="font-size:17px;font-weight:800;letter-spacing:-.01em;color:#2f2a2d" id="pm-dash-sec-name">\${SECMETA[currentSection].name}</span>
+      <div style="display:flex;align-items:center;gap:8px;color:#6b6156;font-size:14.5px;font-weight:600"><i class="ph ph-calendar-blank" style="font-size:17px"></i>\${formatDateShort()}</div>
       <div style="width:1px;height:22px;background:#e6cf9a"></div>
       <div style="display:flex;align-items:center;gap:8px;background:#e2f2e6;color:#186c3c;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:800"><span style="width:9px;height:9px;border-radius:50%;background:#12a150;animation:omGlow 1.8s ease-in-out infinite"></span>A client is on your map now</div>
+      <div style="display:flex;align-items:center;gap:7px;background:#f3eeff;color:#a86a08;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700"><i class="ph-fill ph-seal-check" style="font-size:15px"></i>Trial · 12 days left</div>
     </header>
-    <div class="pm-dash-content" data-scroll id="pm-dash-content"></div>
+
+    <div data-scroll style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden" id="pm-dash-content"></div>
   </main>
 </div>`;
 

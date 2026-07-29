@@ -9,13 +9,20 @@ function esc(s: string): string {
 
 function shell(inner: string): string {
   return `
-<div style="max-width:1120px;margin:0 auto;padding:34px 40px 70px">
-  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;animation:omRise .5s cubic-bezier(.2,.8,.2,1) both">
+<div style="padding:40px;max-width:1200px;margin:0 auto">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px">
     <div>
-      <h1 style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:34px;letter-spacing:-.015em;color:#241f1c">My Plots</h1>
-      <p style="margin:8px 0 0;font-size:17px;color:#6b6156">Everything you have to sell — and what's ready to show a customer.</p>
+      <h1 style="font-size:32px;font-weight:800;letter-spacing:-.02em;color:#1f1a12;margin-bottom:6px">My Plots</h1>
+      <p style="font-size:16px;color:#6b6156;font-weight:500">Your direct inventory, visible on your map.</p>
     </div>
-    <button style="display:flex;align-items:center;gap:9px;padding:15px 22px;border-radius:14px;background:#ffc93c;color:#1f1a12;font-size:16px;font-weight:800;box-shadow:0 12px 26px -14px rgba(244,174,20,.85);border:none;cursor:pointer" onmouseenter="this.style.background='#f4ae14'" onmouseleave="this.style.background='#ffc93c'"><i class="ph-bold ph-plus" style="font-size:18px"></i>Add a plot</button>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="background:#fff;border-radius:12px;padding:6px;display:flex;box-shadow:0 2px 6px rgba(0,0,0,.04);border:1px solid rgba(88,52,168,.08)">
+        <button style="padding:6px 16px;border-radius:8px;background:#efe8fb;color:#5b32c4;font-size:13.5px;font-weight:800;border:none">All Plots (42)</button>
+        <button style="padding:6px 16px;border-radius:8px;background:transparent;color:#6b6156;font-size:13.5px;font-weight:700;border:none">Available</button>
+        <button style="padding:6px 16px;border-radius:8px;background:transparent;color:#6b6156;font-size:13.5px;font-weight:700;border:none">Sold</button>
+      </div>
+      <button style="display:flex;align-items:center;gap:8px;padding:12px 20px;border-radius:12px;background:#6533d1;color:#fff;font-size:14.5px;font-weight:700;box-shadow:0 4px 12px rgba(101,51,209,.3);border:none;cursor:pointer"><i class="ph-bold ph-plus" style="font-size:16px"></i>Add Plot</button>
+    </div>
   </div>
   ${inner}
 </div>`;
@@ -43,6 +50,30 @@ export async function renderProperties(el: HTMLElement): Promise<void> {
     }
   };
 
+  function propertyCard(p: Property): string {
+    const thumb = p.photos && p.photos[0] ? p.photos[0] : '/assets/plot-placeholder.jpg';
+    return `
+        <div style="background:#fff;border-radius:16px;padding:8px;box-shadow:0 2px 8px rgba(0,0,0,.04);border:1px solid rgba(88,52,168,.08)">
+          <div style="height:140px;border-radius:12px;background:#f3eeff url('${esc(thumb)}') center/cover;position:relative;margin-bottom:12px">
+            <div style="position:absolute;top:10px;right:10px;background:rgba(255,255,255,.9);backdrop-filter:blur(4px);padding:4px 10px;border-radius:8px;font-size:12px;font-weight:800;color:#189c4d;display:flex;align-items:center;gap:4px">
+              <div style="width:6px;height:6px;border-radius:50%;background:#189c4d"></div> Published
+            </div>
+            <div style="position:absolute;bottom:10px;left:10px;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);padding:4px 10px;border-radius:8px;font-size:12px;font-weight:700;color:#fff;display:flex;align-items:center;gap:4px">
+              <i class="ph-fill ph-image"></i> ${p.photos?.length || 0}
+            </div>
+          </div>
+          <div style="padding:0 8px 8px">
+            <div style="font-size:12px;font-weight:800;color:#5b32c4;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">${esc(p.city)}</div>
+            <div style="font-weight:800;font-size:17px;color:#1f1a12;margin-bottom:6px">${esc(p.size)} · ${esc(p.facing)} Facing</div>
+            <div style="font-size:14px;color:#6b6156;font-weight:600;margin-bottom:12px">${esc(p.loc)}</div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px dashed #e8e3f2">
+              <div style="font-size:16px;font-weight:800;color:#1f1a12">${formatINR(p.price)}</div>
+              <div style="font-size:13px;font-weight:700;color:#c97312;background:#fff4e5;padding:4px 10px;border-radius:6px">₹2L Comm</div>
+            </div>
+          </div>
+        </div>`;
+  }
+
   async function load(): Promise<void> {
     el.innerHTML = shell(loadingBlock());
     const res = await adapter.properties.list({ limit: 100 }, { signal: controller.signal });
@@ -53,97 +84,10 @@ export async function renderProperties(el: HTMLElement): Promise<void> {
     }
 
     const props = res.value.items;
-    const ready = props.filter(p => p.photos && p.photos.length > 0 && !p.sold);
-    const needWork = props.filter(p => (!p.photos || p.photos.length === 0) && !p.sold);
-    const totalValue = ready.reduce((s, p) => s + (p.price || 0), 0);
-    const allCities = [...new Set(props.map(p => p.city))];
-
     el.innerHTML = shell(`
-      <div style="display:flex;align-items:center;gap:14px;margin-top:22px;position:relative;z-index:20">
-        <button style="display:flex;align-items:center;gap:12px;padding:12px 18px;border-radius:14px;background:#faf7ff;border:1px solid #e4dbf7;box-shadow:0 1px 2px rgba(30,28,22,.03);cursor:pointer">
-          <i class="ph-fill ph-map-pin" style="font-size:19px;color:#d95d1e"></i>
-          <span style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.1"><span style="font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8d8271">Showing</span><span style="font-size:16.5px;font-weight:800;color:#241f1c">All cities · ${props.filter(p => !p.sold).length} plots</span></span>
-          <i class="ph-bold ph-caret-down" style="font-size:15px;color:#8d8271;margin-left:4px"></i>
-        </button>
+      <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:20px">
+        ${props.map(propertyCard).join('')}
       </div>
-
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:24px;animation:omRise .55s cubic-bezier(.2,.8,.2,1) both;animation-delay:.06s">
-        <div style="background:#ffc93c;background-image:linear-gradient(135deg,#ffdc7a,#f4ae14);border-radius:20px;padding:22px 24px">
-          <div style="font-size:14.5px;color:#8a6a14;font-weight:600">Value of stock</div>
-          <div style="font-family:'Newsreader',serif;font-weight:500;font-size:46px;line-height:1;color:#1f1a12;margin-top:8px">${formatINR(totalValue)}</div>
-        </div>
-        <div style="background:#ffe6cf;border:1px solid #f8cba6;border-radius:20px;padding:22px 24px">
-          <div style="font-size:14.5px;color:#6b6156;font-weight:600">Ready to show</div>
-          <div style="font-family:'Newsreader',serif;font-weight:500;font-size:46px;line-height:1;color:#d95d1e;margin-top:8px">${ready.length}</div>
-        </div>
-        <div style="background:#efe8fb;border:1px solid #ddd0f5;border-radius:20px;padding:22px 24px">
-          <div style="font-size:14.5px;color:#6b6156;font-weight:600">Need a photo</div>
-          <div style="font-family:'Newsreader',serif;font-weight:500;font-size:46px;line-height:1;color:#b5322a;margin-top:8px">${needWork.length}</div>
-        </div>
-      </div>
-
-      ${ready.length > 0 ? `<div style="font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8d8271;margin:34px 0 14px">Ready to show</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:18px">
-      ${ready.map(p => {
-        const pubText = p.published ? 'On presentation' : 'Not published';
-        const pubIcon = p.published ? 'ph-fill ph-check-circle' : 'ph-fill ph-eye-slash';
-        const pubStyle = p.published
-          ? 'display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;padding:5px 11px;border-radius:999px;background:#e2f2e6;color:#186c3c'
-          : 'display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;padding:5px 11px;border-radius:999px;background:#f3eeff;color:#6b3fd4';
-        const thumb = p.photos[0] ? p.photos[0] : '/assets/ph-plot-1.png';
-
-        return `
-        <div style="background:#faf7ff;border:1px solid #e4dbf7;border-radius:18px;overflow:hidden;box-shadow:0 1px 2px rgba(30,28,22,.03),0 14px 34px -26px rgba(30,28,22,.6);transition:border-color .12s,transform .12s" onmouseenter="this.style.borderColor='#ecd0bf';this.style.transform='translateY(-2px)'" onmouseleave="this.style.borderColor='#e4dbf7';this.style.transform='none'">
-          <div style="height:150px;position:relative;background:#e7e0d2">
-            <button title="Open this plot" style="position:absolute;inset:0;cursor:pointer;background:none;padding:0;border:none;width:100%"><span style="display:block;width:100%;height:100%;background-image:url('${esc(thumb)}');background-size:cover;background-position:center"></span></button>
-            <span style="position:absolute;top:12px;right:12px;font-size:12px;font-weight:800;padding:5px 12px;border-radius:999px;background:${p.published ? '#d9f5e3' : '#ffe6cf'};color:${p.published ? '#0b6f39' : '#c2622a'}">${p.published ? 'Published' : 'Draft'}</span>
-          </div>
-          <div style="padding:18px 20px">
-            <div style="font-size:17.5px;font-weight:800;color:#241f1c">${esc(p.area)} · ${esc(p.size)}</div>
-            <div style="font-size:14px;color:#6b6156;margin-top:2px">${esc(p.loc)}</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:13px">
-              <span style="font-size:13px;font-weight:600;color:#4c463d;background:#f7e7c6;border-radius:9px;padding:5px 11px">${esc(p.size)}</span>
-              <span style="font-size:13px;font-weight:600;color:#4c463d;background:#f7e7c6;border-radius:9px;padding:5px 11px"><i class="ph ph-compass" style="font-size:14px;vertical-align:-2px"></i> ${esc(p.facing)}</span>
-            </div>
-            <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:12px">
-              <span style="${pubStyle}"><i class="${pubIcon}" style="font-size:14px"></i>${pubText}</span>
-              ${p.photos.length > 0 ? `<span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;padding:5px 11px;border-radius:999px;background:#f7e7c6;color:#8a6a14"><i class="ph-fill ph-images" style="font-size:14px"></i>${p.photos.length}</span>` : ''}
-              ${p.views > 0 ? `<span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;padding:5px 11px;border-radius:999px;background:#f4ae14;color:#1f1a12"><i class="ph-bold ph-eye" style="font-size:14px"></i>${p.views}</span>` : ''}
-            </div>
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:14px;border-top:1px solid #f6e8c8">
-              <button title="Update price" style="display:flex;align-items:center;gap:8px;font-family:'Newsreader',serif;font-weight:600;font-size:24px;color:#c85a1a;cursor:pointer;background:none;border:none;padding:0" onmouseenter="this.style.color='#a3470f'" onmouseleave="this.style.color='#c85a1a'">${formatINR(p.price)}<i class="ph-fill ph-pencil-simple" style="font-size:15px"></i></button>
-              <button data-act="menu" data-id="${p.id}" title="More" style="width:36px;height:36px;border-radius:11px;background:#f3eeff;color:#8a7a52;display:grid;place-items:center;cursor:pointer;border:none;padding:0" onmouseenter="this.style.background='#ddd2f5'" onmouseleave="this.style.background='#f3eeff'"><i class="ph-bold ph-dots-three" style="font-size:18px"></i></button>
-            </div>
-            <div data-menu="${p.id}" hidden style="display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;padding-top:12px;border-top:1px dashed #eed9a8">
-              <button style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;background:#f3eeff;color:#6b3fd4;border:none;cursor:pointer;font-weight:600;font-size:13px"><i class="ph-fill ph-paper-plane-tilt" style="font-size:15px"></i>See its links</button>
-              <button style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;background:#f3eeff;color:#6b3fd4;border:none;cursor:pointer;font-weight:600;font-size:13px"><i class="${p.published ? 'ph-fill ph-eye-slash' : 'ph-fill ph-eye'}" style="font-size:15px"></i>${p.published ? 'Take off presentation' : 'Publish to presentation'}</button>
-              <button style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;background:#f3eeff;color:#6b3fd4;border:none;cursor:pointer;font-weight:600;font-size:13px"><i class="ph-fill ph-seal-check" style="font-size:15px"></i>Mark sold</button>
-              <button style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;background:#f3eeff;color:#6b3fd4;border:none;cursor:pointer;font-weight:600;font-size:13px"><i class="ph-fill ph-pencil-simple" style="font-size:15px"></i>Edit</button>
-              <button style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;background:#f3eeff;color:#6b3fd4;border:none;cursor:pointer;font-weight:600;font-size:13px"><i class="ph-fill ph-copy" style="font-size:15px"></i>Duplicate</button>
-              <button style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:8px;background:#fdf3ee;color:#b5322a;border:none;cursor:pointer;font-weight:600;font-size:13px"><i class="ph-fill ph-archive" style="font-size:15px"></i>Archive</button>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
-              <button style="display:flex;align-items:center;justify-content:center;gap:7px;height:46px;border-radius:12px;background:#fff3d1;color:#8a6a14;font-size:14.5px;font-weight:800;border:none;cursor:pointer" onmouseenter="this.style.background='#ffe9a8'" onmouseleave="this.style.background='#fff3d1'"><i class="ph-fill ph-map-pin-line" style="font-size:17px"></i>Show on map</button>
-              <a href="#/presentation" style="display:flex;align-items:center;justify-content:center;gap:7px;height:46px;border-radius:12px;background:#e2f2e6;color:#186c3c;font-size:14.5px;font-weight:800;text-decoration:none" onmouseenter="this.style.background='#cbe9d4'" onmouseleave="this.style.background='#e2f2e6'"><i class="ph-fill ph-presentation-chart" style="font-size:17px"></i>Presentation</a>
-              <button style="grid-column:1 / -1;display:flex;align-items:center;justify-content:center;gap:8px;height:48px;border-radius:12px;background:#ffc93c;color:#241d0c;font-size:15.5px;font-weight:800;box-shadow:0 10px 22px -12px rgba(244,174,20,.9);border:none;cursor:pointer" onmouseenter="this.style.background='#f4ae14'" onmouseleave="this.style.background='#ffc93c'"><i class="ph-fill ph-paper-plane-tilt" style="font-size:18px"></i>Send private link</button>
-            </div>
-          </div>
-        </div>
-        `;
-      }).join('')}</div>` : `<div style="padding:30px;text-align:center;color:#8d8271;font-size:15px;background:#faf7ff;border:1px dashed #e6cf9a;border-radius:18px">No ready-to-show plots yet.</div>`}
-
-      ${needWork.length > 0 ? `
-      <div style="font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8d8271;margin:34px 0 14px">Need work before you can show them</div>
-      <div style="display:flex;flex-direction:column;gap:12px">
-        ${needWork.map(p => `
-        <div style="display:flex;align-items:center;gap:16px;padding:18px 22px;border:1px solid #f2ddd2;background:#fdf3ee;border-radius:16px">
-          <i class="ph-fill ph-warning-circle" style="font-size:26px;color:#b5322a;flex:none"></i>
-          <div style="flex:1;min-width:0"><div style="font-size:16.5px;font-weight:700;color:#2f2a2d">${esc(p.area)} · ${esc(p.loc)}</div><div style="font-size:14px;color:#b5322a;font-weight:600">No photos added yet</div></div>
-          <div style="font-family:'Newsreader',serif;font-weight:600;font-size:20px;color:#241f1c;flex:none">${formatINR(p.price)}</div>
-        </div>
-        `).join('')}
-      </div>
-      ` : ''}
     `);
   }
 

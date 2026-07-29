@@ -11,7 +11,7 @@ export function renderAreaIntelligence(el: HTMLElement) {
           <h1 style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:42px;letter-spacing:-.025em">Area Intelligence</h1>
           <p style="margin:10px 0 0;font-size:16.5px;color:#6b6156">Discover demographic and market trends in your active sectors.</p>
         </div>
-        <button style="display:flex;align-items:center;gap:9px;padding:14px 20px;border-radius:14px;background:#fffaf0;border:1px solid #d6c6f5;color:#5b32c4;font-size:15.5px;font-weight:800"><i class="ph-bold ph-download-simple" style="font-size:16px"></i>Export Report</button>
+        <button style="display:flex;align-items:center;gap:9px;padding:14px 20px;border-radius:14px;background:#fffaf0;border:1px solid #d6c6f5;color:#5b32c4;font-size:15.5px;font-weight:800;cursor:pointer" onmouseenter="this.style.background='#f0eaff'" onmouseleave="this.style.background='#fffaf0'"><i class="ph-bold ph-download-simple" style="font-size:16px"></i>Export Report</button>
       </div>
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:26px">

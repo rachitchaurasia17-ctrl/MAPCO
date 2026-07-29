@@ -5,25 +5,25 @@
 
 export function renderWorkHome(el: HTMLElement) {
   el.innerHTML = `
-    <div style="max-width:1180px;margin:0 auto;padding:40px 34px 70px">
+    <div style="max-width:1140px;margin:0 auto;padding:40px 34px 70px">
       <div style="animation:wRise .5s cubic-bezier(.2,.8,.2,1) both">
-        <div style="font-size:12px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#5b32c4">Dealer workspace</div>
-        <h1 style="margin:8px 0 0;font-family:'Newsreader',serif;font-weight:500;font-size:46px;line-height:1.02;letter-spacing:-.03em">The Work Table</h1>
-        <p style="margin:12px 0 0;max-width:540px;font-size:16.5px;line-height:1.5;color:#6b6156;text-wrap:pretty">Where the heavy lifting happens. Everything you add here feeds directly into the client presentation.</p>
+        <div style="font-size:12px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#a8792a">The work table</div>
+        <h1 style="margin:10px 0 0;font-family:'Newsreader',serif;font-weight:500;font-size:46px;line-height:1.05;letter-spacing:-.025em">What are we adding today?</h1>
+        <p style="margin:12px 0 0;max-width:600px;font-size:17px;line-height:1.5;color:#6b6156;text-wrap:pretty">Everything you do here decides what a client sees on the presentation screen. Maps go live the moment you mark them — one switch hides them again.</p>
       </div>
 
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:36px">
-        <button style="text-align:left;display:flex;flex-direction:column;gap:0;padding:26px;border-radius:24px;background:#fffaf0;background-image:radial-gradient(130% 120% at 100% 0%,#f4ecdd,#fff 62%);border:1px solid #f6d98d;box-shadow:0 2px 3px rgba(40,30,10,.04),0 26px 50px -38px rgba(120,86,10,.7);transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s ease,border-color .25s;animation:wRise .55s cubic-bezier(.2,.8,.2,1) both;animation-delay:.06s" onmouseenter="this.style.transform='translateY(-6px)';this.style.borderColor='#ffc93c';this.style.boxShadow='0 2px 3px rgba(40,30,10,.05),0 36px 60px -36px rgba(120,86,10,.8)'" onmouseleave="this.style.transform='none';this.style.borderColor='#f6d98d';this.style.boxShadow='0 2px 3px rgba(40,30,10,.04),0 26px 50px -38px rgba(120,86,10,.7)'">
-          <span style="width:52px;height:52px;border-radius:16px;background:#ffc93c;color:#1a2f24;display:grid;place-items:center;box-shadow:0 14px 24px -16px rgba(120,86,10,.8)"><i class="ph-fill ph-buildings" style="font-size:27px"></i></span>
-          <span style="display:block;margin-top:20px;font-family:'Newsreader',serif;font-weight:500;font-size:27px;letter-spacing:-.015em">Add property</span>
-          <span style="display:block;margin-top:7px;font-size:15px;line-height:1.5;color:#6b6156">Upload photos, fill in the fact sheet, and choose if it's visible on the map.</span>
+      <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-top:34px">
+        <button style="text-align:left;display:flex;flex-direction:column;gap:0;padding:26px;border-radius:24px;background:#fff3d1;background-image:radial-gradient(130% 120% at 100% 0%,#ffe9ae,#fff6e2 62%);border:1px solid #f6d98d;box-shadow:0 2px 3px rgba(40,30,10,.04),0 26px 50px -38px rgba(120,86,10,.85);transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s ease,border-color .25s;animation:wRise .55s cubic-bezier(.2,.8,.2,1) both;animation-delay:.06s" onmouseenter="this.style.transform='translateY(-6px)';this.style.borderColor='#ffc93c';this.style.boxShadow='0 2px 3px rgba(40,30,10,.05),0 36px 60px -36px rgba(168,121,42,.85)'" onmouseleave="this.style.transform='none';this.style.borderColor='#f6d98d';this.style.boxShadow='0 2px 3px rgba(40,30,10,.04),0 26px 50px -38px rgba(120,86,10,.85)'">
+          <span style="width:52px;height:52px;border-radius:16px;background:#ffc93c;color:#241d0c;display:grid;place-items:center;box-shadow:0 14px 24px -16px rgba(120,86,10,.9)"><i class="ph-fill ph-house-line" style="font-size:27px"></i></span>
+          <span style="display:block;margin-top:20px;font-family:'Newsreader',serif;font-weight:500;font-size:27px;letter-spacing:-.015em">Add a property</span>
+          <span style="display:block;margin-top:7px;font-size:15px;line-height:1.5;color:#6b6156">Photos, size, facing, sector. Save it, then publish when it is ready to show.</span>
           <span style="display:flex;align-items:center;gap:8px;margin-top:20px;font-size:15px;font-weight:800;color:#8a5a0c">Start <i class="ph-bold ph-arrow-right" style="font-size:15px"></i></span>
         </button>
 
-        <button style="text-align:left;display:flex;flex-direction:column;gap:0;padding:26px;border-radius:24px;background:#f0eaff;background-image:radial-gradient(130% 120% at 100% 0%,#e4dbf7,#f8f5ff 62%);border:1px solid #d6c6f5;box-shadow:0 2px 3px rgba(40,30,10,.04),0 26px 50px -38px rgba(70,40,150,.7);transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s ease,border-color .25s;animation:wRise .55s cubic-bezier(.2,.8,.2,1) both;animation-delay:.12s" onmouseenter="this.style.transform='translateY(-6px)';this.style.borderColor='#976eeb';this.style.boxShadow='0 2px 3px rgba(40,30,10,.05),0 36px 60px -36px rgba(70,40,150,.8)'" onmouseleave="this.style.transform='none';this.style.borderColor='#d6c6f5';this.style.boxShadow='0 2px 3px rgba(40,30,10,.04),0 26px 50px -38px rgba(70,40,150,.7)'">
-          <span style="width:52px;height:52px;border-radius:16px;background:#5b32c4;color:#fff;display:grid;place-items:center;box-shadow:0 14px 24px -16px rgba(40,20,90,.9)"><i class="ph-fill ph-users-three" style="font-size:27px"></i></span>
-          <span style="display:block;margin-top:20px;font-family:'Newsreader',serif;font-weight:500;font-size:27px;letter-spacing:-.015em">Add client</span>
-          <span style="display:block;margin-top:7px;font-size:15px;line-height:1.5;color:#6b6156">Record a new buyer enquiry, note what they want, and mark them hot or warm.</span>
+        <button style="text-align:left;display:flex;flex-direction:column;gap:0;padding:26px;border-radius:24px;background:#efe8fb;background-image:radial-gradient(130% 120% at 100% 0%,#e3d6fb,#f7f3ff 62%);border:1px solid #d6c6f5;box-shadow:0 2px 3px rgba(40,30,10,.04),0 26px 50px -38px rgba(70,40,150,.75);transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s ease,border-color .25s;animation:wRise .55s cubic-bezier(.2,.8,.2,1) both;animation-delay:.12s" onmouseenter="this.style.transform='translateY(-6px)';this.style.borderColor='#5b32c4';this.style.boxShadow='0 2px 3px rgba(40,30,10,.05),0 36px 60px -36px rgba(91,50,196,.7)'" onmouseleave="this.style.transform='none';this.style.borderColor='#d6c6f5';this.style.boxShadow='0 2px 3px rgba(40,30,10,.04),0 26px 50px -38px rgba(70,40,150,.75)'">
+          <span style="width:52px;height:52px;border-radius:16px;background:#5b32c4;color:#efe8fb;display:grid;place-items:center;box-shadow:0 14px 24px -16px rgba(52,28,120,.9)"><i class="ph-fill ph-user-plus" style="font-size:27px"></i></span>
+          <span style="display:block;margin-top:20px;font-family:'Newsreader',serif;font-weight:500;font-size:27px;letter-spacing:-.015em">Add a client</span>
+          <span style="display:block;margin-top:7px;font-size:15px;line-height:1.5;color:#6b6156">Name, phone, what they are looking for. Ready for the dealer's next meeting.</span>
           <span style="display:flex;align-items:center;gap:8px;margin-top:20px;font-size:15px;font-weight:800;color:#5b32c4">Start <i class="ph-bold ph-arrow-right" style="font-size:15px"></i></span>
         </button>
 

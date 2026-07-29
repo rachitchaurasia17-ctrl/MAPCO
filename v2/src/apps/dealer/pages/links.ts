@@ -22,7 +22,7 @@ export async function renderLinks(el: HTMLElement) {
       <h1 style="font-family:var(--pm-font-display);font-weight:500;font-size:34px;letter-spacing:-.015em;color:#241f1c">Client Links</h1>
       <p style="margin-top:8px;font-size:17px;color:#6b6156">Private pages you sent after a meeting — one link can hold up to 4 plots.</p>
     </div>
-    <button style="display:flex;align-items:center;gap:9px;padding:16px 24px;border-radius:14px;background:#ffc93c;color:#1f1a12;font-size:16.5px;font-weight:800;box-shadow:0 12px 26px -14px rgba(244,174,20,.85)"><i class="ph-fill ph-paper-plane-tilt" style="font-size:19px"></i>Send a new link</button>
+    <button style="display:flex;align-items:center;gap:9px;padding:16px 24px;border-radius:14px;background:#ffc93c;color:#1f1a12;font-size:16.5px;font-weight:800;box-shadow:0 12px 26px -14px rgba(244,174,20,.85);cursor:pointer;transition:background .15s" onmouseenter="this.style.background='#f4ae14'" onmouseleave="this.style.background='#ffc93c'"><i class="ph-fill ph-paper-plane-tilt" style="font-size:19px"></i>Send a new link</button>
   </div>
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:22px;animation:omRise .55s cubic-bezier(.2,.8,.2,1) both;animation-delay:.06s">
@@ -66,12 +66,12 @@ export async function renderLinks(el: HTMLElement) {
         ${l.events.visit > 0 ? `<span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;padding:5px 12px;border-radius:999px;background:#e2f2e6;color:#186c3c"><i class="ph-fill ph-calendar-check" style="font-size:14px"></i>Asked for a visit</span>` : ''}
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid #f6e8c8">
-        <button style="display:flex;align-items:center;gap:8px;height:46px;padding:0 16px;border-radius:12px;background:#efe8fb;color:#6b3fd4;font-size:15px;font-weight:800"><i class="ph-fill ph-device-mobile" style="font-size:18px"></i>See their page</button>
+        <button style="display:flex;align-items:center;gap:8px;height:46px;padding:0 16px;border-radius:12px;background:#efe8fb;color:#6b3fd4;font-size:15px;font-weight:800;cursor:pointer;transition:background .15s" onmouseenter="this.style.background='#e2d6fa'" onmouseleave="this.style.background='#efe8fb'"><i class="ph-fill ph-device-mobile" style="font-size:18px"></i>See their page</button>
         ${isActive ? `
-        <button style="display:flex;align-items:center;gap:8px;height:46px;padding:0 16px;border-radius:12px;background:#e2f2e6;color:#146c3a;font-size:15px;font-weight:800"><i class="ph-fill ph-whatsapp-logo" style="font-size:18px"></i>Send again</button>
-        <button style="display:flex;align-items:center;gap:8px;height:46px;padding:0 16px;border-radius:12px;background:#ffe1e6;color:#c2185b;font-size:15px;font-weight:800"><i class="ph-fill ph-prohibit" style="font-size:18px"></i>Stop this link</button>` : ''}
+        <button style="display:flex;align-items:center;gap:8px;height:46px;padding:0 16px;border-radius:12px;background:#e2f2e6;color:#146c3a;font-size:15px;font-weight:800;cursor:pointer;transition:background .15s" onmouseenter="this.style.background='#cbe9d4'" onmouseleave="this.style.background='#e2f2e6'"><i class="ph-fill ph-whatsapp-logo" style="font-size:18px"></i>Send again</button>
+        <button style="display:flex;align-items:center;gap:8px;height:46px;padding:0 16px;border-radius:12px;background:#ffe1e6;color:#c2185b;font-size:15px;font-weight:800;cursor:pointer;transition:background .15s" onmouseenter="this.style.background='#f7c4cd'" onmouseleave="this.style.background='#ffe1e6'"><i class="ph-fill ph-prohibit" style="font-size:18px"></i>Stop this link</button>` : ''}
         <div style="flex:1"></div>
-        <button style="display:flex;align-items:center;gap:8px;height:46px;padding:0 16px;border-radius:12px;background:#f3eeff;color:#8a7a52;font-size:15px;font-weight:800"><i class="ph-fill ph-trash" style="font-size:18px"></i>Delete</button>
+        <button style="display:flex;align-items:center;gap:8px;height:46px;padding:0 16px;border-radius:12px;background:#f3eeff;color:#8a7a52;font-size:15px;font-weight:800;cursor:pointer;transition:background .15s" onmouseenter="this.style.background='#ddd2f5'" onmouseleave="this.style.background='#f3eeff'"><i class="ph-fill ph-trash" style="font-size:18px"></i>Delete</button>
       </div>
     </div>`;
     }).join('')}

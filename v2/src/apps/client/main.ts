@@ -47,78 +47,157 @@ function esc(s: string): string {
 }
 
 /* ── valid payload rendering ─────────────────────────────────── */
-function propertyCard(p: ClientSafeProperty, i: number): string {
-  const hero = p.photos[0];
-  const heroBlock = hero
-    ? `<div style="position:absolute;inset:0;background-image:url('${esc(hero)}');background-size:cover;background-position:center"></div>`
-    : `<div style="position:absolute;inset:0;background:#241a33;display:grid;place-items:center;color:#6b5a90"><i class="ph-fill ph-image" style="font-size:40px"></i></div>`;
-  return `
-<div class="pm-buyer-card" style="animation:omRise .9s cubic-bezier(.2,.8,.2,1) both;animation-delay:${(0.22 + i * 0.08).toFixed(2)}s">
-  <div style="position:relative;height:clamp(200px,50vw,280px)">
-    ${heroBlock}
-    <div style="position:absolute;inset:0;background:linear-gradient(0deg,rgba(15,10,26,.8),transparent 50%)"></div>
-    <div style="position:absolute;bottom:16px;left:16px;right:16px">
-      <div style="font-family:var(--pm-font-display);font-weight:500;font-size:clamp(22px,5vw,28px);color:#fff">${esc(p.area)}</div>
-      ${p.loc ? `<div style="font-size:14px;color:#c9b8e8;margin-top:2px">${esc(p.loc)}</div>` : ''}
-    </div>
-    <div style="position:absolute;top:14px;right:14px;display:flex;gap:7px">
-      ${p.approvals.map((a) => `<span style="font-size:11px;font-weight:800;padding:4px 10px;border-radius:999px;background:rgba(255,201,60,.2);color:#ffc93c">${esc(a)}</span>`).join('')}
-    </div>
-  </div>
-  <div style="padding:20px 22px">
-    <div style="display:flex;flex-wrap:wrap;gap:10px">
-      <div style="background:rgba(255,248,230,.08);border-radius:12px;padding:10px 14px;flex:1;min-width:80px"><div style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9a8aad">Size</div><div style="font-size:15px;font-weight:800;color:#f0eaff;margin-top:2px">${esc(p.size)}</div></div>
-      <div style="background:rgba(255,248,230,.08);border-radius:12px;padding:10px 14px;flex:1;min-width:80px"><div style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9a8aad">Facing</div><div style="font-size:15px;font-weight:800;color:#f0eaff;margin-top:2px">${esc(p.facing)}</div></div>
-      <div style="background:rgba(255,248,230,.08);border-radius:12px;padding:10px 14px;flex:1;min-width:80px"><div style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9a8aad">Position</div><div style="font-size:15px;font-weight:800;color:#f0eaff;margin-top:2px">${esc(p.position)}</div></div>
-    </div>
-    ${p.price !== undefined
-      ? `<div style="font-family:var(--pm-font-display);font-weight:600;font-size:clamp(24px,6vw,30px);color:#ffc93c;margin-top:16px">${formatINR(p.price)}</div>`
-      : `<div style="font-size:14px;font-weight:700;color:#9a8aad;margin-top:16px">Price on request</div>`}
-    <div style="font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9a8aad;margin-top:18px">Nearby</div>
-    <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
-      ${p.landmarks.map((lm) => `
-      <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:11px;background:rgba(255,248,230,.05)">
-        <i class="${lm.icon}" style="font-size:18px;color:#ffc93c;flex:none"></i>
-        <span style="flex:1;font-size:14px;font-weight:600;color:#f0eaff">${esc(lm.name)}</span>
-        <span style="font-size:13px;color:#9a8aad;flex:none">${esc(lm.distance)}</span>
-      </div>`).join('')}
-    </div>
-    <div style="display:flex;gap:10px;margin-top:18px">
-      <a href="https://wa.me/?text=${encodeURIComponent('Hi, I saw ' + p.area + ' on PlotMap')}" target="_blank" rel="noopener" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;height:50px;border-radius:14px;background:#12a150;color:#fff;font-size:15px;font-weight:800;text-decoration:none"><i class="ph-fill ph-whatsapp-logo" style="font-size:20px"></i>WhatsApp</a>
-      <a href="tel:" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;height:50px;border-radius:14px;background:rgba(255,248,230,.1);color:#ffc93c;font-size:15px;font-weight:800;text-decoration:none;border:1px solid rgba(255,194,30,.2)"><i class="ph-fill ph-phone" style="font-size:20px"></i>Call dealer</a>
-    </div>
-  </div>
-</div>`;
-}
+let activeIndex = 0;
+let activeShot = 0;
 
 function renderValid(container: HTMLElement, payload: ClientSafePayload, noPhotos: boolean): void {
   const { dealerDisplayName, properties, voiceNote } = payload;
+  const p = properties[activeIndex] || properties[0];
+  if (!p) return;
+  const multi = properties.length > 1;
+  const chosen = p.photos && p.photos.length ? p.photos : [];
+  const heroUrl = chosen[activeShot] || '';
+  const heroStyle = heroUrl
+    ? `position:absolute;inset:0;background-image:url('${esc(heroUrl)}');background-size:cover;background-position:center;transition:background-image .3s ease`
+    : `position:absolute;inset:0;background:#241a33;display:grid;place-items:center;color:#6b5a90`;
+
+  const priceLabel = p.price !== undefined ? formatINR(p.price) : 'Price on call';
+
+  const pagerHtml = multi
+    ? `<div style="position:absolute;top:62px;left:16px;right:16px;display:flex;gap:6px;z-index:3">
+        ${properties.map((_, i) => `<button data-go="${i}" class="pm-client-go" style="flex:1;height:4px;border-radius:2px;background:${i === activeIndex ? '#fff' : 'rgba(255,255,255,.3)'};cursor:pointer;border:none"></button>`).join('')}
+       </div>`
+    : '';
+
+  const dotsHtml = chosen.length > 1
+    ? `<div style="display:flex;align-items:center;gap:7px">
+         ${chosen.slice(0, 8).map((_, i) => `<span style="width:6px;height:6px;border-radius:50%;background:${i === activeShot ? '#fff' : 'rgba(255,255,255,.4)'}"></span>`).join('')}
+       </div>`
+    : '';
+
+  const prevBtn = chosen.length > 1 ? `<button class="pm-client-prev" style="position:absolute;left:10px;top:150px;width:40px;height:40px;border-radius:50%;background:rgba(20,13,32,.6);color:#fff6e0;display:grid;place-items:center;border:none;cursor:pointer"><i class="ph-bold ph-caret-left" style="font-size:18px"></i></button>` : '';
+  const nextBtn = chosen.length > 1 ? `<button class="pm-client-next" style="position:absolute;right:10px;top:150px;width:40px;height:40px;border-radius:50%;background:rgba(20,13,32,.6);color:#fff6e0;display:grid;place-items:center;border:none;cursor:pointer"><i class="ph-bold ph-caret-right" style="font-size:18px"></i></button>` : '';
+
+  const factsHtml = `
+    <span style="display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:800;color:#fff6e0;background:rgba(255,255,255,.09);border-radius:11px;padding:9px 13px"><i class="ph-fill ph-ruler" style="font-size:15px;color:#ffc93c"></i>${esc(p.size)}</span>
+    <span style="display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:800;color:#fff6e0;background:rgba(255,255,255,.09);border-radius:11px;padding:9px 13px"><i class="ph-fill ph-compass" style="font-size:15px;color:#ffc93c"></i>${esc(p.facing)} facing</span>
+    <span style="display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:800;color:#fff6e0;background:rgba(255,255,255,.09);border-radius:11px;padding:9px 13px"><i class="ph-fill ph-road-horizon" style="font-size:15px;color:#ffc93c"></i>${esc(p.position)}</span>
+  `;
+
+  const audioHtml = voiceNote ? `
+    <div style="border-radius:20px;padding:18px;margin-top:18px;background:linear-gradient(150deg,#6b3fd4,#3f1f9e);box-shadow:0 18px 40px -20px rgba(107,63,212,.9)">
+      <div style="font-size:11.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#d8c8ff">A message from ${esc(dealerDisplayName)}</div>
+      <div style="display:flex;align-items:center;gap:13px;margin-top:12px">
+        <button style="width:56px;height:56px;border-radius:50%;background:#ffc93c;color:#241d0c;display:grid;place-items:center;flex:none;border:none"><i class="ph-fill ph-play" style="font-size:22px"></i></button>
+        <div style="flex:1;display:flex;align-items:center;gap:3px;height:38px">
+          ${Array.from({ length: 24 }).map((_, i) => `<span style="flex:1;background:rgba(255,255,255,.3);border-radius:2px;height:${10 + Math.random() * 20}px"></span>`).join('')}
+        </div>
+        <span style="font-size:14px;font-weight:800;color:#fff6e0;flex:none">${voiceNote.seconds}s</span>
+      </div>
+    </div>` : '';
+
+  const othersHtml = multi ? `
+    <div style="font-size:11.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#9d8bc7;margin-top:24px">Also shortlisted for you</div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:11px">
+      ${properties.map((o, i) => {
+        if (i === activeIndex) return '';
+        const thumbUrl = o.photos && o.photos.length ? o.photos[0] : '';
+        const thumbStyle = thumbUrl ? `background-image:url('${esc(thumbUrl)}');background-size:cover;background-position:center` : `background:#241a33`;
+        return `
+        <button class="pm-client-go" data-go="${i}" style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:18px;background:rgba(255,255,255,.04);border:none;cursor:pointer;text-align:left">
+          <span style="width:64px;height:64px;border-radius:12px;flex:none;${thumbStyle}"></span>
+          <span style="flex:1;min-width:0"><span style="display:block;font-size:15.5px;font-weight:800;color:#fffdf7">${esc(o.area)}</span><span style="display:block;font-size:12.5px;font-weight:700;color:#b9a8dd">${esc(o.loc || '')}</span></span>
+          <i class="ph-bold ph-caret-right" style="font-size:15px;color:#9d8bc7;flex:none"></i>
+        </button>`;
+      }).join('')}
+    </div>` : '';
+
+  const whyHtml = `
+    <div style="font-size:11.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#9d8bc7;margin-top:24px">Why this one</div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-top:11px">
+      ${p.landmarks.map(lm => `
+        <div style="display:flex;align-items:center;gap:11px;padding:10px 14px;border-radius:13px;background:rgba(255,255,255,.05)">
+          <i class="${lm.icon}" style="font-size:19px;color:#ffc93c;flex:none"></i>
+          <span style="flex:1;min-width:0;font-size:14.5px;font-weight:700;color:#fff8e6">${esc(lm.name)}</span>
+          <span style="font-size:14.5px;font-weight:800;color:#7be0a4;flex:none">${esc(lm.distance)}</span>
+        </div>
+      `).join('')}
+    </div>`;
+
+  const waText = encodeURIComponent('Hi, I saw ' + p.area + ' on PlotMap');
+  
   container.innerHTML = `
-<div class="pm-buyer">
-  <div style="padding:clamp(20px,4vw,34px) clamp(16px,4vw,34px);text-align:center;background:linear-gradient(180deg,#150f24,#0f0a1a);border-bottom:1px solid rgba(139,96,232,.15)">
-    <div style="display:flex;align-items:center;justify-content:center;gap:10px;animation:omRise .6s cubic-bezier(.2,.8,.2,1) both">
-      <svg viewBox="0 0 40 40" style="width:36px;height:36px"><rect width="40" height="40" rx="12" fill="#ffc93c"></rect><path d="M20 8.5 L33 16 L20 23.5 L7 16 Z" fill="#231a04"></path><path d="M7 22 L20 29.5 L33 22 L33 25.5 L20 33 L7 25.5 Z" fill="#231a04" opacity=".42"></path></svg>
-      <span style="font-weight:800;font-size:20px;color:#ffc93c">PlotMap</span>
+<div class="pm-buyer" style="background:#0f0a18;min-height:100vh;display:flex;justify-content:center;position:relative">
+  <div style="width:100%;max-width:480px;background:#140d20;position:relative;display:flex;flex-direction:column">
+    <div style="position:relative;height:330px;flex:none">
+      <div style="${heroStyle}"></div>
+      <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,10,24,.62) 0%,rgba(15,10,24,.05) 38%,rgba(20,13,32,.96) 100%)"></div>
+      <div style="position:absolute;top:16px;left:16px;right:16px;display:flex;align-items:center;gap:10px">
+        <div style="width:38px;height:38px;border-radius:50%;background:#ffc93c;color:#241d0c;display:grid;place-items:center;font-size:14px;font-weight:800;flex:none">${esc(dealerDisplayName.charAt(0))}</div>
+        <div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:800;color:#fff6e0">PlotMap Private</div><div style="font-size:11.5px;font-weight:700;color:#c9b6ef">Chosen for you by ${esc(dealerDisplayName)}</div></div>
+      </div>
+      <div style="position:absolute;bottom:14px;left:16px;right:16px">
+        ${dotsHtml}
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:10px">
+          <div>
+            <div style="font-size:11px;font-weight:800;letter-spacing:.14em;color:#ffc93c">${esc(p.position)}</div>
+            <div style="font-family:'Newsreader',serif;font-weight:500;font-size:27px;line-height:1.12;color:#fffdf7;margin-top:4px">${esc(p.area)}</div>
+          </div>
+          <span style="font-size:11.5px;font-weight:800;color:#fff6e0;background:rgba(255,255,255,.16);border-radius:999px;padding:6px 11px;flex:none">Photo ${activeShot + 1}/${chosen.length || 1}</span>
+        </div>
+      </div>
+      ${pagerHtml}
+      ${prevBtn}
+      ${nextBtn}
     </div>
-    <div style="margin-top:16px;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#9a8aad">Sent by</div>
-    <div style="margin-top:4px;font-family:var(--pm-font-display);font-weight:500;font-size:clamp(22px,5vw,30px);color:#fff">${esc(dealerDisplayName)}</div>
-    <p style="margin-top:6px;font-size:15px;color:#9a8aad">${properties.length} ${properties.length === 1 ? 'plot' : 'plots'} selected for you</p>
-  </div>
-  ${voiceNote ? `
-  <div style="max-width:540px;margin:0 auto;padding:0 clamp(16px,4vw,34px)">
-    <div style="margin-top:24px;padding:18px 22px;border-radius:18px;background:#1a1428;border:1px solid rgba(139,96,232,.2);display:flex;align-items:center;gap:14px">
-      <div style="width:48px;height:48px;border-radius:14px;background:#ffc93c;color:#231a04;display:grid;place-items:center;flex:none"><i class="ph-fill ph-microphone" style="font-size:24px"></i></div>
-      <div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:800;color:#f0eaff">Voice note from your dealer</div><div style="font-size:13px;color:#9a8aad;margin-top:2px">${voiceNote.seconds} seconds</div></div>
-      <button aria-label="Play voice note" style="width:44px;height:44px;border-radius:12px;background:rgba(255,194,30,.15);color:#ffc93c;display:grid;place-items:center"><i class="ph-fill ph-play" style="font-size:22px"></i></button>
+
+    <div style="padding:4px 18px 26px;background:#140d20;flex:1">
+      <div style="display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:700;color:#c9b6ef"><i class="ph-fill ph-map-pin" style="font-size:17px;color:#ffc93c"></i>${esc(p.loc || '')}</div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:14px">
+        ${factsHtml}
+      </div>
+
+      <div style="display:flex;align-items:center;gap:11px;background:linear-gradient(135deg,#ffc93c,#f4881f);border-radius:16px;padding:15px 17px;margin-top:16px">
+        <i class="ph-fill ph-tag" style="font-size:21px;color:#3a2410"></i>
+        <span style="font-size:19px;font-weight:800;color:#241d0c">${priceLabel}</span>
+      </div>
+
+      ${audioHtml}
+      ${othersHtml}
+      ${whyHtml}
+
+      <div style="margin-top:24px;display:flex;gap:10px">
+        <a href="https://wa.me/?text=${waText}" target="_blank" rel="noopener" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;height:52px;border-radius:15px;background:#12a150;color:#fff;font-size:15px;font-weight:800;text-decoration:none"><i class="ph-fill ph-whatsapp-logo" style="font-size:19px"></i>WhatsApp</a>
+        <a href="tel:" style="display:flex;align-items:center;justify-content:center;gap:8px;height:52px;width:52px;border-radius:15px;background:rgba(255,248,230,.1);color:#ffc93c;font-size:15px;font-weight:800;text-decoration:none;flex:none"><i class="ph-fill ph-phone" style="font-size:21px"></i></a>
+      </div>
+      <div style="text-align:center;padding:20px 0 0;font-size:12px;color:#6b5a90"><div style="display:flex;align-items:center;justify-content:center;gap:6px"><i class="ph-fill ph-shield-check" style="font-size:14px"></i>Powered by PlotMap · Private link</div></div>
     </div>
-  </div>` : ''}
-  ${noPhotos ? `<div style="max-width:540px;margin:16px auto 0;padding:0 clamp(16px,4vw,34px)"><div style="padding:14px 18px;border-radius:14px;background:rgba(255,201,60,.08);color:#c9b8e8;font-size:14px;text-align:center">Photos are being prepared and will appear here shortly.</div></div>` : ''}
-  <div style="max-width:540px;margin:0 auto;padding:clamp(16px,4vw,28px) clamp(16px,4vw,34px) 40px;display:flex;flex-direction:column;gap:22px">
-    ${properties.map((p, i) => propertyCard(p, i)).join('')}
-    <button style="width:100%;height:56px;border-radius:16px;background:#ffc93c;color:#231a04;font-size:17px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:10px"><i class="ph-fill ph-calendar-check" style="font-size:22px"></i>Book a site visit</button>
-    <div style="text-align:center;padding:20px 0;font-size:12px;color:#6b5a90"><div style="display:flex;align-items:center;justify-content:center;gap:6px"><i class="ph-fill ph-shield-check" style="font-size:14px"></i>Powered by PlotMap · Private link</div></div>
   </div>
 </div>`;
+
+  const prev = container.querySelector('.pm-client-prev');
+  if (prev) {
+    prev.addEventListener('click', () => {
+      activeShot = (activeShot - 1 + chosen.length) % chosen.length;
+      renderValid(container, payload, noPhotos);
+    });
+  }
+  const next = container.querySelector('.pm-client-next');
+  if (next) {
+    next.addEventListener('click', () => {
+      activeShot = (activeShot + 1) % chosen.length;
+      renderValid(container, payload, noPhotos);
+    });
+  }
+  container.querySelectorAll('.pm-client-go').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      const idx = parseInt((e.currentTarget as HTMLElement).dataset.go || '0', 10);
+      activeIndex = idx;
+      activeShot = 0;
+      renderValid(container, payload, noPhotos);
+    });
+  });
 }
 
 function render(container: HTMLElement, state: ClientLinkState): void {

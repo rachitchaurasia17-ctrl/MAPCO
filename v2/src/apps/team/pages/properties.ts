@@ -53,7 +53,7 @@ export async function renderTeamProperties(el: HTMLElement) {
               </div>
               <div style="display:flex;align-items:center;gap:10px;margin-top:16px">
                 <button style="${btnStyle}"><i class="${btnIcon}" style="font-size:16px"></i>${btnLabel}</button>
-                <button style="display:flex;align-items:center;gap:7px;padding:11px 14px;border-radius:12px;background:#efe8fb;border:1px solid #d6c6f5;font-size:13.5px;font-weight:800;color:#5b32c4"><i class="ph-bold ph-pencil-simple" style="font-size:16px"></i>Edit</button>
+                <button style="display:flex;align-items:center;gap:7px;padding:11px 14px;border-radius:12px;background:#efe8fb;border:1px solid #d6c6f5;font-size:13.5px;font-weight:800;color:#5b32c4;cursor:pointer" onmouseenter="this.style.borderColor='#5b32c4'" onmouseleave="this.style.borderColor='#d6c6f5'"><i class="ph-bold ph-pencil-simple" style="font-size:16px"></i>Edit</button>
               </div>
             </div>
           </div>

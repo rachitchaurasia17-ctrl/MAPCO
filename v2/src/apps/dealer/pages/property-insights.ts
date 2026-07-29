@@ -17,7 +17,7 @@ export async function renderPropertyInsights(el: HTMLElement) {
         </div>
         <div style="display:flex;align-items:center;gap:10px">
           <input type="text" placeholder="Search a property..." style="padding:12px 16px;border-radius:12px;border:1px solid #ddd2f5;background:#fffaf0;font-size:15px;width:260px;outline:none"/>
-          <button style="display:flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:12px;background:#5b32c4;color:#fff"><i class="ph-bold ph-magnifying-glass" style="font-size:18px"></i></button>
+          <button style="display:flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:12px;background:#5b32c4;color:#fff;border:none;cursor:pointer" onmouseenter="this.style.background='#4a26a8'" onmouseleave="this.style.background='#5b32c4'"><i class="ph-bold ph-magnifying-glass" style="font-size:18px"></i></button>
         </div>
       </div>
 
@@ -55,7 +55,7 @@ export async function renderPropertyInsights(el: HTMLElement) {
               <div style="font-size:14px;font-weight:800;color:#241f1c">Corner Plots</div>
               <div style="font-size:13px;color:#6b6156;margin-top:4px">8 active buyers</div>
             </div>
-            <div style="padding:12px 14px;border-radius:12px;background:#fffaf0;border:1px dashed #d6c6f5;color:#5b32c4;font-size:13px;font-weight:800;display:grid;place-items:center;cursor:pointer">
+            <div style="padding:12px 14px;border-radius:12px;background:#fffaf0;border:1px dashed #d6c6f5;color:#5b32c4;font-size:13px;font-weight:800;display:grid;place-items:center;cursor:pointer" onmouseenter="this.style.background='#f0eaff'" onmouseleave="this.style.background='#fffaf0'">
               View all matching
             </div>
           </div>
