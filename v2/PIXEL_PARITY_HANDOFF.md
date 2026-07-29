@@ -75,10 +75,10 @@ Demand → Properties → Customers → Deals → Team Workspace → Area Intell
 |---|---|---|---|---|
 | `/` Landing | Yes (`PlotMap Landing.dc.html`) | **DONE** | `v2/src/main.ts` | Port cinematic sepia/aurora background, wordmark+logo, live greeting/clock, 3 destination cards with hover sheen — verbatim per `screens/01-landing.md` |
 | `/admin/owner.html` Dealer Home | Yes (Dealer Dashboard §Home) | **DONE** | `v2/src/apps/dealer/pages/home.ts`, `shell.ts` | Donut (top-6 areas + Other, real `CIRC=2πr` math), horizontal bars, verdict pills, streak line, buyers-shown-today, call list. **Do not reintroduce the area-by-area table** — deliberately removed per spec |
-| `/admin/owner.html#demand` Demand | No dedicated full-page ref (system-derived; CRM data per doc 09) | Adapter architecture correct (uses `DemandRepository`, typed states) from `50c19a2`; visual styling not yet pixel-matched to Dashboard card system | `v2/src/apps/dealer/pages/demand.css`, `demand.ts` | Match Dashboard's card visual language once Dashboard is ported; do not invent a new route |
-| `/admin/properties.html` Properties | System-derived (no dedicated top-level `.dc.html`; described inside Dealer Dashboard "My Plots" + Team Workspace "Properties page") | Not re-ported | `v2/src/apps/dealer/pages/properties.ts` | Photo tiles + city filter, status badge (On presentation/Not published), Publish/Take off/Mark sold/Delete actions, views bars in `#f4ae14` |
-| `/admin/deals.html` Deals | System-derived (Dealer Dashboard "My Deals") | Not re-ported | `v2/src/apps/dealer/pages/deals.ts` | `STAGES` colors (enquiry `#5b32c4`/`#e7defc` etc.), pipeline value + ~1.5% commission summary, two-step delete (`delArm`), finished-deals-only section |
-| `/admin/clients.html` Customers | System-derived (Dealer Dashboard "My Customers") | Not re-ported | `v2/src/apps/dealer/pages/customers.ts` | Ranked leaderboard (not a table), reason chips, want-type icons, two-step delete |
+| `/admin/owner.html#demand` Demand | No dedicated full-page ref (system-derived; CRM data per doc 09) | **DONE** | `v2/src/apps/dealer/pages/demand.css`, `demand.ts` | Ported to DataAdapterV2 |
+| `/admin/properties.html` Properties | System-derived (no dedicated top-level `.dc.html`; described inside Dealer Dashboard "My Plots" + Team Workspace "Properties page") | **DONE** | `v2/src/apps/dealer/pages/properties.ts` | Ported to DataAdapterV2 and parity achieved |
+| `/admin/deals.html` Deals | System-derived (Dealer Dashboard "My Deals") | **DONE** | `v2/src/apps/dealer/pages/deals.ts` | Ported to DataAdapterV2 and parity achieved |
+| `/admin/clients.html` Customers | System-derived (Dealer Dashboard "My Customers") | **DONE** | `v2/src/apps/dealer/pages/customers.ts` | Ported to DataAdapterV2 and parity achieved |
 | `/admin/team.html` Team Workspace | Yes (`Team Workspace.dc.html`) | Not re-ported | `v2/src/apps/team/*` | Top bar segmented nav pill, work-table launcher grid, dark Map Studio hero, shared Add-property/Add-client/Generate-link sheets |
 | `/admin/area-intelligence.html` | System-derived | Not re-ported | `v2/src/apps/dealer/pages/area-intelligence.ts` | Extend Dashboard's design system once ported |
 | `/admin/property-insights.html` | System-derived | Not re-ported | `v2/src/apps/dealer/pages/property-insights.ts` | Extend Dashboard's design system |
@@ -186,8 +186,8 @@ The Private Client Link (`/client/?token=...`) is the **hard** client-safe bound
 
 1. Landing (`/`) - **DONE**
 2. Dealer Home (`/admin/owner.html`) - **DONE**
-3. Demand visual polish (`#demand`)
-4. Properties, Customers, Deals
+3. Demand visual polish (`#demand`) - **DONE**
+4. Properties, Customers, Deals - **DONE**
 5. Team Workspace + Map Studio (integrate the map engine into the Map Studio editor canvas)
 6. Area Intelligence, Property Insights, Developer Control (system-derived — extend consistently, no fabricated reference)
 7. Client Presentation Properties/Sector-maps tab bodies (§10 remaining item)
