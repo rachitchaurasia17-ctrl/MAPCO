@@ -57,6 +57,7 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
 <div class="pm-pres">
   <div class="pm-pres-map">
     <div class="pm-pres-stage" id="pm-stage"></div>
+    <div class="pm-pres-grid pm-glass-bg" id="pm-grid" data-scroll style="display:none"></div>
     <div class="pm-pres-topbar" id="pm-topbar"></div>
     <div class="pm-botleft pm-glass-lite" id="pm-botleft"></div>
     <div class="pm-botright pm-glass" id="pm-botright"></div>
@@ -68,6 +69,7 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
 </div>`;
 
   const stage = container.querySelector<HTMLElement>('#pm-stage')!;
+  const grid = container.querySelector<HTMLElement>('#pm-grid')!;
   const topbar = container.querySelector<HTMLElement>('#pm-topbar')!;
   const botleft = container.querySelector<HTMLElement>('#pm-botleft')!;
   const botright = container.querySelector<HTMLElement>('#pm-botright')!;
@@ -75,6 +77,54 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
   const railList = container.querySelector<HTMLElement>('#pm-rail-list')!;
 
   mounted = mountMapEngine(stage);
+  const pinLayer = document.createElement('div');
+  pinLayer.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:2;transform-origin:0 0;';
+  stage.appendChild(pinLayer);
+
+  const PIN_COORDS: Record<string, {x:number, y:number}> = {
+    'ecocity': {x: 0.45, y: 0.35},
+    'block5': {x: 0.65, y: 0.75},
+    'omx': {x: 0.55, y: 0.55},
+  };
+
+  let animFrame = 0;
+  function updatePins() {
+    animFrame = requestAnimationFrame(updatePins);
+    if (!mounted || !pinLayer || view === 'properties') return;
+    const t = mounted.engine.transform;
+    if (!t) return;
+    pinLayer.style.transform = `translate(${t.tx}px, ${t.ty}px) scale(${t.scale})`;
+
+    const inv = 1 / t.scale;
+    for (let i = 0; i < pinLayer.children.length; i++) {
+      const p = pinLayer.children[i] as HTMLElement;
+      p.style.transform = `translate(-50%, -100%) scale(${inv})`;
+    }
+  }
+  updatePins();
+
+  function syncPins(): void {
+    const map = maps.find((m) => m.id === activeMapId);
+    pinLayer.innerHTML = '';
+    if (!map || !map.original) return;
+
+    // In a real app we'd get these from the map data's MarkSet,
+    // but here we just render any pinned property that we have coords for.
+    pinned.forEach(id => {
+      const pt = PIN_COORDS[id];
+      if (!pt) return;
+      const px = pt.x * map.original.dims.w;
+      const py = pt.y * map.original.dims.h;
+      const prop = props.find(x => x.id === id);
+      const el = document.createElement('div');
+      el.style.cssText = `position:absolute;left:${px}px;top:${py}px;width:32px;height:42px;color:#ffc93c;display:flex;flex-direction:column;align-items:center;filter:drop-shadow(0 4px 6px rgba(0,0,0,0.5))`;
+      el.innerHTML = `
+        <i class="ph-fill ph-map-pin" style="font-size:32px"></i>
+        ${prop ? `<div style="background:#1a1428;color:#f0eaff;font-size:11px;font-weight:700;padding:2px 6px;border-radius:4px;margin-top:-6px;white-space:nowrap">${esc(prop.area)}</div>` : ''}
+      `;
+      pinLayer.appendChild(el);
+    });
+  }
 
   // ── renderers ─────────────────────────────────────────────
   function renderTopbar(): void {
@@ -125,6 +175,20 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
     botleft.style.display = showMap ? 'flex' : 'none';
     botright.style.display = showMap ? 'flex' : 'none';
     stage.style.display = showMap ? 'block' : 'none';
+    grid.style.display = view === 'properties' ? 'grid' : 'none';
+    if (view === 'properties') renderGrid();
+    syncPins();
+  }
+
+  function renderGrid(): void {
+    grid.innerHTML = `
+      <div style="max-width:1260px;margin:0 auto;padding:84px 34px 56px">
+        <h1 style="font-family:var(--pm-font-display);font-weight:400;font-size:32px;color:#fff;margin:0 0 24px">All Properties</h1>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px">
+          ${props.map(pcard).join('')}
+        </div>
+      </div>
+    `;
   }
 
   function pcard(p: Property): string {
@@ -226,9 +290,11 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
     loadState = 'error';
   }
   renderRail();
+  syncPins();
 
   // ── cleanup ───────────────────────────────────────────────
   const cleanup = () => {
+    cancelAnimationFrame(animFrame);
     container.removeEventListener('click', onClick);
     document.removeEventListener('keydown', onKey);
     document.removeEventListener('click', onDocClick, true);

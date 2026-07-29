@@ -245,18 +245,29 @@ class MockDemandRepository implements DemandRepository {
    MAPS / PRESENTATION / EVENTS
    ═══════════════════════════════════════════════════════════════ */
 
-const MAP_REGISTRY: Omit<MapData, 'sets'>[] = [
+const MAP_REGISTRY: MapData[] = [
   {
     id: 'nc-master', kind: 'masterplan', city: 'New Chandigarh', sector: 'Master Plan',
     label: 'New Chandigarh — Master Plan', raster: '/assets/newchandigarh-map.png',
     dims: { original: { w: 2400, h: 1600 } }, published: true, hidden: false,
     linkedProperties: ['ecocity', 'block5', 'omx'],
+    sets: [
+      {
+        id: 'masterplan-mohali',
+        name: 'Master Plan',
+        marks: [
+          { kind: 'pin', points: { x: 0.45, y: 0.35 }, label: 'Eco City', propertyId: 'ecocity' },
+          { kind: 'pin', points: { x: 0.65, y: 0.75 }, label: 'Block 5', propertyId: 'block5' },
+          { kind: 'pin', points: { x: 0.55, y: 0.55 }, label: 'Omaxe', propertyId: 'omx' }
+        ]
+      }
+    ]
   },
 ];
 
 class MockMapRepository implements MapRepository {
-  async listRegistry(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<Omit<MapData, 'sets'>>>> {
-    const a = aborted<Page<Omit<MapData, 'sets'>>>(opts); if (a) return a;
+  async listRegistry(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<MapData>>> {
+    const a = aborted<Page<MapData>>(opts); if (a) return a;
     if (sc() === 'no-map') return ok({ items: [], nextCursor: null, total: 0 });
     return ok(paginate(MAP_REGISTRY, params, (m, q) => m.label.toLowerCase().includes(q)));
   }
@@ -265,7 +276,7 @@ class MockMapRepository implements MapRepository {
     if (sc() === 'map-asset-failed') return err('unavailable', 'Map asset failed to load');
     const meta = MAP_REGISTRY.find((m) => m.id === id);
     if (!meta) return err('not_found', 'Map not found');
-    return ok({ ...meta, sets: [] });
+    return ok({ ...meta });
   }
 }
 
