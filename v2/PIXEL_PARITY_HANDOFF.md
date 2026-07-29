@@ -6,7 +6,7 @@ Written for the next AI/engineer continuing this work. Read this fully before to
 
 - Branch: feat/mapco-v2-pixel-parity
 - Current branch HEAD: 4150e8b — handoff documentation commit
-- Latest implementation commit: 763257d — pixel-parity foundation and Client Presentation
+- Latest implementation commit: a10fa63 — Dealer Home pixel parity
 - Working tree is clean except two **untracked, intentionally-excluded** root folders: `maps with svg/` and `normal maps/` (raw source map assets — do not add to git, do not delete).
 
 ## 2. Git commands to run first
@@ -60,19 +60,21 @@ approved-designs/02-Dashboard/design_handoff_plotmap/
 ## 7. Routes already completed
 
 - **`/app/plotmap/` (Client Presentation)** — exact-reference pixel port + real map engine integration. Implemented and browser-verified this session; **awaiting user's own visual testing** (see §23).
+- **`/` (Landing)** — implemented and verified in previous session.
+- **`/admin/owner.html` (Dealer Home)** — implemented and verified in this session.
 - Design-system foundation (fonts self-hosted, CDN removed) applies globally to all routes already.
 
 ## 8. Routes still requiring pixel-parity migration
 
 Everything else. In priority order per the original task's implementation process:
-`/` (Landing) → Dealer Home → Demand → Properties → Customers → Deals → Team Workspace → Area Intelligence → Property Insights → Map Studio → Developer Control → `/client/?token=...` (private buyer page) → responsive corrections → accessibility corrections → final build/regression validation.
+Demand → Properties → Customers → Deals → Team Workspace → Area Intelligence → Property Insights → Map Studio → Developer Control → `/client/?token=...` (private buyer page) → responsive corrections → accessibility corrections → final build/regression validation.
 
 ## 9. Route-by-route status table
 
 | Route | Exact reference? | Status | Main files | Remaining work |
 |---|---|---|---|---|
-| `/` Landing | Yes (`PlotMap Landing.dc.html`) | Not re-ported (current impl predates this handoff) | `v2/src/main.ts` | Port cinematic sepia/aurora background, wordmark+logo, live greeting/clock, 3 destination cards with hover sheen — verbatim per `screens/01-landing.md` |
-| `/admin/owner.html` Dealer Home | Yes (Dealer Dashboard §Home) | Not re-ported | `v2/src/apps/dealer/pages/home.ts`, `shell.ts` | Donut (top-6 areas + Other, real `CIRC=2πr` math), horizontal bars, verdict pills, streak line, buyers-shown-today, call list. **Do not reintroduce the area-by-area table** — deliberately removed per spec |
+| `/` Landing | Yes (`PlotMap Landing.dc.html`) | **DONE** | `v2/src/main.ts` | Port cinematic sepia/aurora background, wordmark+logo, live greeting/clock, 3 destination cards with hover sheen — verbatim per `screens/01-landing.md` |
+| `/admin/owner.html` Dealer Home | Yes (Dealer Dashboard §Home) | **DONE** | `v2/src/apps/dealer/pages/home.ts`, `shell.ts` | Donut (top-6 areas + Other, real `CIRC=2πr` math), horizontal bars, verdict pills, streak line, buyers-shown-today, call list. **Do not reintroduce the area-by-area table** — deliberately removed per spec |
 | `/admin/owner.html#demand` Demand | No dedicated full-page ref (system-derived; CRM data per doc 09) | Adapter architecture correct (uses `DemandRepository`, typed states) from `50c19a2`; visual styling not yet pixel-matched to Dashboard card system | `v2/src/apps/dealer/pages/demand.css`, `demand.ts` | Match Dashboard's card visual language once Dashboard is ported; do not invent a new route |
 | `/admin/properties.html` Properties | System-derived (no dedicated top-level `.dc.html`; described inside Dealer Dashboard "My Plots" + Team Workspace "Properties page") | Not re-ported | `v2/src/apps/dealer/pages/properties.ts` | Photo tiles + city filter, status badge (On presentation/Not published), Publish/Take off/Mark sold/Delete actions, views bars in `#f4ae14` |
 | `/admin/deals.html` Deals | System-derived (Dealer Dashboard "My Deals") | Not re-ported | `v2/src/apps/dealer/pages/deals.ts` | `STAGES` colors (enquiry `#5b32c4`/`#e7defc` etc.), pipeline value + ~1.5% commission summary, two-step delete (`delArm`), finished-deals-only section |
@@ -182,8 +184,8 @@ The Private Client Link (`/client/?token=...`) is the **hard** client-safe bound
 
 ## 19. Remaining migration order
 
-1. Landing (`/`)
-2. Dealer Home (`/admin/owner.html`)
+1. Landing (`/`) - **DONE**
+2. Dealer Home (`/admin/owner.html`) - **DONE**
 3. Demand visual polish (`#demand`)
 4. Properties, Customers, Deals
 5. Team Workspace + Map Studio (integrate the map engine into the Map Studio editor canvas)
@@ -241,7 +243,7 @@ Continue the MAPCO V2 pixel-parity migration.
 Repository: C:\Users\rachi_l35wosr\OneDrive\Desktop\MAPCO
 Branch: feat/mapco-v2-pixel-parity (do not create a new branch, do not merge to main)
 Expected current HEAD: 4150e8b
-Latest implementation commit: 763257d
+Latest implementation commit: a10fa63
 
 First read v2/PIXEL_PARITY_HANDOFF.md in full — it has the complete state,
 architecture, route status table, and prohibited actions.
