@@ -9,10 +9,10 @@ import { renderTeamProperties } from './pages/properties';
 import { renderTeamClients } from './pages/clients';
 
 const NAV = [
-  { key: 'home', label: 'Work Table', path: '/admin/team.html' },
-  { key: 'map-studio', label: 'Map Studio', path: '/admin/map-studio.html' },
-  { key: 'properties', label: 'Properties', path: '/admin/team.html#properties' }, // For simplicity right now, or separate if needed
+  { key: 'home', label: 'Workspace', path: '/admin/team.html' },
+  { key: 'properties', label: 'Properties', path: '/admin/team.html#properties' },
   { key: 'clients', label: 'Clients', path: '/admin/team.html#clients' },
+  { key: 'map-studio', label: 'Map Studio', path: '/admin/map-studio.html' }
 ];
 
 export function initTeamShell(container: HTMLElement, initialSection: string) {
@@ -35,11 +35,11 @@ export function initTeamShell(container: HTMLElement, initialSection: string) {
       <span style="font-family:'Newsreader',serif;font-weight:600;font-size:20px;letter-spacing:-.01em">PlotMap</span>
     </a>
     <div style="display:flex;align-items:center;gap:4px;padding:4px;border-radius:14px;background:#f0eaff">
-      \${NAV.map(n => \`
-        <a href="\${n.path}" style="\${currentSection === n.key ? 'padding:8px 24px;border-radius:10px;font-size:15px;font-weight:700;background:#fff;color:#5b32c4;box-shadow:0 4px 10px -4px rgba(80,50,160,.4);text-decoration:none' : 'padding:8px 24px;border-radius:10px;font-size:15px;font-weight:600;color:#6d6380;text-decoration:none'}">
-          \${n.label}
+      ${NAV.map(n => `
+        <a href="${n.path}" style="${currentSection === n.key ? 'padding:8px 24px;border-radius:10px;font-size:15px;font-weight:700;background:#fff;color:#5b32c4;box-shadow:0 4px 10px -4px rgba(80,50,160,.4);text-decoration:none' : 'padding:8px 24px;border-radius:10px;font-size:15px;font-weight:600;color:#6d6380;text-decoration:none'}">
+          ${n.label}
         </a>
-      \`).join('')}
+      `).join('')}
     </div>
     <div style="flex:1"></div>
     <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:13px;background:#f0eaff;border:1px solid #dcd0f3">
