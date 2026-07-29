@@ -4,8 +4,9 @@ Written for the next AI/engineer continuing this work. Read this fully before to
 
 ## 1. Branch and commit
 
-- Branch: `feat/mapco-v2-pixel-parity`
-- Latest commit: `763257d` — `feat: migrate MAPCO V2 to approved pixel-parity design (foundation + Client Presentation)`
+- Branch: feat/mapco-v2-pixel-parity
+- Current branch HEAD: 4150e8b — handoff documentation commit
+- Latest implementation commit: 763257d — pixel-parity foundation and Client Presentation
 - Working tree is clean except two **untracked, intentionally-excluded** root folders: `maps with svg/` and `normal maps/` (raw source map assets — do not add to git, do not delete).
 
 ## 2. Git commands to run first
@@ -239,6 +240,8 @@ Continue the MAPCO V2 pixel-parity migration.
 
 Repository: C:\Users\rachi_l35wosr\OneDrive\Desktop\MAPCO
 Branch: feat/mapco-v2-pixel-parity (do not create a new branch, do not merge to main)
+Expected current HEAD: 4150e8b
+Latest implementation commit: 763257d
 
 First read v2/PIXEL_PARITY_HANDOFF.md in full — it has the complete state,
 architecture, route status table, and prohibited actions.
