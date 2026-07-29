@@ -1,0 +1,113 @@
+/* ═══════════════════════════════════════════════════════════════
+   PlotMap V2 — Shared Responsive & Accessibility
+   ---------------------------------------------------------------
+   Mobile & Tablet Viewports + WCAG Accessibility pass
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── ACCESSIBILITY (WCAG) ────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--pm-violet) !important;
+  outline-offset: 2px !important;
+  border-radius: 4px;
+}
+button:focus-visible, a:focus-visible {
+  border-radius: inherit;
+}
+
+/* ── RESPONSIVE SHELL (Dealer Dashboard) ─────────────────── */
+@media (max-width: 1024px) {
+  #pm-dash-shell header {
+    padding: 16px 20px !important;
+    flex-wrap: wrap;
+  }
+  #pm-dash-shell main {
+    padding: 0 !important;
+  }
+  .pm-pres-rail {
+    width: 320px !important; /* scale down presentation rail */
+  }
+}
+
+@media (max-width: 768px) {
+  /* Dealer Dashboard Mobile Transformation */
+  #pm-dash-shell {
+    flex-direction: column !important;
+  }
+  #pm-dash-sidebar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100% !important;
+    height: 70px !important;
+    border-right: none !important;
+    border-top: 1px solid var(--pm-hairline);
+    flex-direction: row !important;
+    padding: 0 !important;
+    z-index: 1000;
+  }
+  #pm-dash-sidebar > div {
+    display: none !important; /* Hide logo and user profile */
+  }
+  #pm-dash-sidebar > #pm-dash-nav {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 8px !important;
+    padding: 6px 12px !important;
+    width: 100%;
+    justify-content: space-between;
+    overflow-x: auto;
+  }
+  #pm-dash-nav a {
+    padding: 8px !important;
+    flex-direction: column !important;
+    gap: 4px !important;
+    width: auto !important;
+    min-width: 60px;
+  }
+  #pm-dash-nav a span {
+    font-size: 11px !important;
+    display: block !important;
+    text-align: center;
+  }
+  #pm-dash-nav a i {
+    font-size: 20px !important;
+    margin: 0 auto;
+  }
+  #pm-dash-nav a span:nth-child(3) {
+    display: none !important; /* Hide badges on mobile nav */
+  }
+
+  #pm-dash-main {
+    padding-bottom: 70px !important; /* Space for bottom nav */
+  }
+
+  /* Presentation Mobile */
+  .pm-pres {
+    flex-direction: column !important;
+  }
+  .pm-pres-map {
+    height: 50vh !important;
+  }
+  .pm-pres-rail, .pm-rail {
+    width: 100% !important;
+    height: 50vh !important;
+    border-left: none !important;
+    border-top: 1px solid var(--pm-hairline);
+  }
+  .pm-viewtabs {
+    display: none !important; /* hide on very small */
+  }
+
+  /* Buyer Mobile - already mobile layout, ensure full width */
+  .pm-buyer > div {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+
+/* Team Workspace Mobile */
+@media (max-width: 768px) {
+  #pm-ws-header { flex-wrap: wrap !important; padding: 12px !important; }
+  #pm-ws-header > div:nth-child(2) { width: 100%; order: 3; justify-content: space-between; }
+}

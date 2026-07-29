@@ -3,8 +3,9 @@
    Source of truth: approved-designs/02-Dashboard/design_handoff_plotmap/
    ═══════════════════════════════════════════════════════════════ */
 
-/* ── Fonts ─────────────────────────────────────────────────── */
+/* ── Fonts & Responsive ──────────────────────────────────────── */
 @import url('./fonts.css');
+@import url('./responsive.css');
 
 :root {
   /* ── Base surfaces ────────────────────────────────────────── */

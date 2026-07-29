@@ -66,9 +66,9 @@ export function initDealerShell(container: HTMLElement, initialSection: string) 
   }
 
   container.innerHTML = `
-<div style="display:flex;height:100vh;min-height:0;width:100%;overflow:hidden;background:#f5efff;background-image:radial-gradient(62% 50% at -2% -4%,rgba(139,96,232,.5),transparent 62%),radial-gradient(54% 44% at 101% 4%,rgba(56,138,186,.4),transparent 62%),radial-gradient(66% 48% at 46% 108%,rgba(255,190,48,.44),transparent 64%),radial-gradient(40% 34% at 86% 66%,rgba(236,120,168,.22),transparent 68%)">
+<div id="pm-dash-shell" style="display:flex;height:100vh;min-height:0;width:100%;overflow:hidden;background:#f5efff;background-image:radial-gradient(62% 50% at -2% -4%,rgba(139,96,232,.5),transparent 62%),radial-gradient(54% 44% at 101% 4%,rgba(56,138,186,.4),transparent 62%),radial-gradient(66% 48% at 46% 108%,rgba(255,190,48,.44),transparent 64%),radial-gradient(40% 34% at 86% 66%,rgba(236,120,168,.22),transparent 68%)">
 
-  <aside style="width:270px;flex:none;height:100%;min-height:0;overflow:hidden;background:rgba(252,250,255,.82);background-image:linear-gradient(180deg,rgba(253,251,255,.95),rgba(243,236,255,.76) 55%,rgba(236,227,255,.66));backdrop-filter:blur(16px);box-shadow:inset -1px 0 0 rgba(88,52,168,.14);display:flex;flex-direction:column;border-right:1px solid #ddd2f5">
+  <aside id="pm-dash-sidebar" style="width:270px;flex:none;height:100%;min-height:0;overflow:hidden;background:rgba(252,250,255,.82);background-image:linear-gradient(180deg,rgba(253,251,255,.95),rgba(243,236,255,.76) 55%,rgba(236,227,255,.66));backdrop-filter:blur(16px);box-shadow:inset -1px 0 0 rgba(88,52,168,.14);display:flex;flex-direction:column;border-right:1px solid #ddd2f5">
     <div style="display:flex;align-items:center;gap:12px;padding:26px 24px 18px">
       <svg viewBox="0 0 40 40" style="width:40px;height:40px;flex:none;display:block">
         <rect x="0" y="0" width="40" height="40" rx="12" fill="#241d0c"></rect>
@@ -105,7 +105,7 @@ export function initDealerShell(container: HTMLElement, initialSection: string) 
     </div>
   </aside>
 
-  <main style="flex:1;min-width:0;min-height:0;display:flex;flex-direction:column">
+  <main id="pm-dash-main" style="flex:1;min-width:0;min-height:0;display:flex;flex-direction:column">
     <header style="display:flex;align-items:center;gap:14px;padding:16px 40px;border-bottom:1px solid #ddd2f5;background:rgba(247,243,234,.86);backdrop-filter:blur(8px);position:sticky;top:0;z-index:30">
       <i class="\${SECMETA[currentSection].icon}" style="font-size:21px;color:#d95d1e"></i>
       <span style="font-size:17px;font-weight:800;letter-spacing:-.01em;color:#2f2a2d" id="pm-dash-sec-name">\${SECMETA[currentSection].name}</span>
