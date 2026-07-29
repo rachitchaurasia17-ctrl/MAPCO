@@ -1,53 +1,148 @@
-﻿/* ═══════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════
    PlotMap V2 — Dealer Dashboard: Demand
+   ---------------------------------------------------------------
+   Consumes the hardened DataAdapterV2 DemandRepository (NOT the
+   legacy getClients()). Renders typed loading/empty/error states,
+   deterministic matches (with a no-match state), and binds all
+   interactions through delegated listeners with cleanup.
    ═══════════════════════════════════════════════════════════════ */
-import { dataAdapter } from '../../../packages/data/mock-adapter';
+import './demand.css';
+import { adapter } from '../../../packages/data/mock-adapter-v2';
 import { getInitials } from '../../../packages/auth/auth';
+import { formatINR } from '../../../packages/ui/utils';
+import type { DemandRecord, DemandMatch } from '../../../packages/data/contracts';
 
-export async function renderDemand(el: HTMLElement) {
-  const clients = await dataAdapter.getClients();
-  const total = clients.length;
+const PAGE_LIMIT = 24; // documented cap; within repo MAX_LIMIT ceiling
 
-  el.innerHTML = `
-<div style="max-width:1080px;margin:0 auto;padding:34px 40px 70px">
-  <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;animation:omRise .5s cubic-bezier(.2,.8,.2,1) both">
+function esc(s: string): string {
+  return s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
+}
+
+function shell(inner: string): string {
+  return `
+<div class="pm-dem">
+  <div class="pm-dem-head">
     <div>
-      <h1 style="font-family:var(--pm-font-display);font-weight:500;font-size:34px;letter-spacing:-.015em;color:#241f1c">Demand Pipeline</h1>
-      <p style="margin-top:8px;font-size:17px;color:#6b6156">Active buyer requests and specific plot demands.</p>
+      <h1 class="pm-dem-title">Demand Pipeline</h1>
+      <p class="pm-dem-sub">Active buyer requirements matched against your plots.</p>
     </div>
-    <button style="display:flex;align-items:center;gap:9px;padding:15px 22px;border-radius:14px;background:#ffc93c;color:#1f1a12;font-size:16px;font-weight:800;box-shadow:0 12px 26px -14px rgba(244,174,20,.85)"><i class="ph-bold ph-plus" style="font-size:18px"></i>Log Demand</button>
+    <button class="pm-dem-add" type="button" data-act="add"><i class="ph-bold ph-plus" aria-hidden="true"></i>Log Demand</button>
   </div>
-
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:24px;animation:omRise .55s cubic-bezier(.2,.8,.2,1) both;animation-delay:.06s">
-    <div style="background:#fff3d1;border:1px solid #f6e3ab;border-radius:20px;padding:22px 24px">
-      <div style="font-size:14.5px;color:#6b6156;font-weight:600">Total Demands</div>
-      <div style="font-family:var(--pm-font-display);font-weight:500;font-size:46px;line-height:1;color:#241f1c;margin-top:8px">${total}</div>
-    </div>
-    <div style="background:#efe8fb;border:1px solid #ddd0f5;border-radius:20px;padding:22px 24px">
-      <div style="font-size:14.5px;color:#6b6156;font-weight:600">Unfulfilled</div>
-      <div style="font-family:var(--pm-font-display);font-weight:500;font-size:46px;line-height:1;color:#e79a1f;margin-top:8px">${total}</div>
-    </div>
-  </div>
-
-  <div style="margin-top:24px;">
-    ${clients.length ? `
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px">
-      ${clients.map(c => `
-      <div style="min-width:0;background:#faf7ff;border:1px solid #e4dbf7;border-radius:18px;padding:20px 22px;cursor:pointer;box-shadow:var(--pm-shadow-card);transition:border-color .12s,transform .12s" onmouseenter="this.style.borderColor='#ecd0bf';this.style.transform='translateY(-2px)'" onmouseleave="this.style.borderColor='#e4dbf7';this.style.transform='none'">
-        <div style="display:flex;align-items:center;gap:14px">
-          <div style="width:52px;height:52px;border-radius:50%;background:#f7e7d9;display:grid;place-items:center;font-weight:800;font-size:16px;color:#8a5a0c;flex:none"><i class="ph ph-magnifying-glass" style="font-size:24px;"></i></div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:17.5px;font-weight:700;color:#2f2a2d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.want}</div>
-            <div style="font-size:13.5px;color:#8d8271;margin-top:2px">Budget: <strong style="color:#c85a1a">${c.budget}</strong></div>
-          </div>
-        </div>
-        <div style="margin-top:16px;background:#faf7ff;border:1px solid #f6e8c8;border-radius:12px;padding:11px 13px;display:flex;align-items:center;gap:10px">
-           <div style="width:24px;height:24px;border-radius:50%;background:#e3d6cc;display:grid;place-items:center;font-weight:800;font-size:10px;color:#8a5a0c;flex:none">${getInitials(c.name)}</div>
-           <div style="font-size:13px;font-weight:600;color:#2f2a2d;flex:1">${c.name}</div>
-           <div style="font-size:12px;color:#8d8271">${c.city}</div>
-        </div>
-      </div>`).join('')}
-    </div>` : `<div style="padding:40px;text-align:center;color:#8d8271;font-size:15px;background:#faf7ff;border:1px dashed #e6cf9a;border-radius:18px">No demands logged yet.</div>`}
-  </div>
+  ${inner}
 </div>`;
+}
+
+function stateBlock(icon: string, msg: string, opts: { error?: boolean; retry?: boolean } = {}): string {
+  return `
+<div class="pm-dem-state ${opts.error ? 'pm-dem-state--error' : ''}" role="status" aria-live="polite">
+  <i class="${icon} pm-dem-state-icon" aria-hidden="true"></i>
+  <div>${esc(msg)}</div>
+  ${opts.retry ? `<button class="pm-dem-retry" type="button" data-act="retry">Try again</button>` : ''}
+</div>`;
+}
+
+function loadingBlock(): string {
+  return `<div class="pm-dem-grid" aria-busy="true">${'<div class="pm-dem-skeleton"></div>'.repeat(4)}</div>`;
+}
+
+const URGENCY_LABEL: Record<DemandRecord['urgency'], string> = {
+  immediate: 'Immediate', 'this-quarter': 'This quarter', exploring: 'Exploring',
+};
+
+function card(d: DemandRecord): string {
+  const budget = `${formatINR(d.budgetMin)} – ${formatINR(d.budgetMax)}`;
+  return `
+<div class="pm-dem-card" data-id="${esc(d.id)}">
+  <div class="pm-dem-card-top">
+    <div class="pm-dem-avatar"><i class="ph-fill ph-list-magnifying-glass" style="font-size:24px" aria-hidden="true"></i></div>
+    <div style="flex:1;min-width:0">
+      <div class="pm-dem-card-type">${esc(d.propertyType)}</div>
+      <div class="pm-dem-card-cust">${esc(getInitials(d.customerName))} · ${esc(d.customerName)} · ${esc(d.preferredLocations.join(', '))}</div>
+    </div>
+  </div>
+  <div class="pm-dem-tags">
+    <span class="pm-dem-tag">${esc(d.category)}</span>
+    <span class="pm-dem-tag pm-dem-tag--budget">${budget}</span>
+    ${d.urgency === 'immediate'
+      ? `<span class="pm-dem-tag pm-dem-tag--urgent">${URGENCY_LABEL[d.urgency]}</span>`
+      : `<span class="pm-dem-tag">${URGENCY_LABEL[d.urgency]}</span>`}
+  </div>
+  <div class="pm-dem-meta">
+    <span>Follow-up: <strong>${esc(d.followUp)}</strong></span>
+    <span class="pm-dem-status">${esc(d.status)}</span>
+  </div>
+  <button class="pm-dem-match-btn" type="button" data-act="match" data-id="${esc(d.id)}" aria-expanded="false">
+    <i class="ph-bold ph-magic-wand" aria-hidden="true"></i>View matching plots
+  </button>
+  <div class="pm-dem-matches" data-matches="${esc(d.id)}" hidden></div>
+</div>`;
+}
+
+function renderMatches(host: HTMLElement, matches: DemandMatch[]): void {
+  if (matches.length === 0) {
+    host.innerHTML = `<div class="pm-dem-nomatch">No matching plots yet — try widening the budget or locations.</div>`;
+    return;
+  }
+  host.innerHTML = matches.slice(0, 5).map((m) => `
+    <div class="pm-dem-match">
+      <span class="pm-dem-match-score">${Math.round(m.score * 100)}%</span>
+      <div class="pm-dem-match-name">${esc(m.property.area)} · ${esc(m.property.size)}</div>
+      <div class="pm-dem-match-why">${esc(m.reasons.join(' · '))}</div>
+    </div>`).join('');
+}
+
+export async function renderDemand(el: HTMLElement): Promise<void> {
+  const controller = new AbortController();
+
+  // Single delegated click handler for the whole feature (no inline handlers,
+  // no global pollution). Cleaned up on navigation.
+  const onClick = async (ev: Event) => {
+    const target = (ev.target as HTMLElement).closest('[data-act]') as HTMLElement | null;
+    if (!target) return;
+    const act = target.dataset.act;
+    if (act === 'retry') { void load(); return; }
+    if (act === 'add') { return; /* create/edit drawer wiring lands with backend Pass 2 */ }
+    if (act === 'match') {
+      const id = target.dataset.id!;
+      const host = el.querySelector<HTMLElement>(`[data-matches="${CSS.escape(id)}"]`);
+      if (!host) return;
+      const expanded = target.getAttribute('aria-expanded') === 'true';
+      if (expanded) { host.hidden = true; target.setAttribute('aria-expanded', 'false'); return; }
+      target.setAttribute('aria-expanded', 'true');
+      host.hidden = false;
+      host.innerHTML = `<div class="pm-dem-nomatch">Finding matches…</div>`;
+      const res = await adapter.demand.match(id, { signal: controller.signal });
+      if (res.ok) renderMatches(host, res.value);
+      else host.innerHTML = `<div class="pm-dem-nomatch">Could not load matches.</div>`;
+    }
+  };
+
+  async function load(): Promise<void> {
+    el.innerHTML = shell(loadingBlock());
+    const res = await adapter.demand.list({ limit: PAGE_LIMIT }, { signal: controller.signal });
+    if (!res.ok) {
+      if (res.error.code === 'aborted') return;
+      el.innerHTML = shell(stateBlock('ph-fill ph-warning-circle', 'Could not load demand records.', { error: true, retry: true }));
+      return;
+    }
+    const items = res.value.items;
+    if (items.length === 0) {
+      el.innerHTML = shell(stateBlock('ph-fill ph-tray', 'No demand logged yet. Capture a buyer requirement to get started.'));
+      return;
+    }
+    const open = items.filter((d) => d.status === 'open').length;
+    el.innerHTML = shell(`
+      <div class="pm-dem-stats">
+        <div class="pm-dem-stat pm-dem-stat--total"><div class="pm-dem-stat-label">Total demands</div><div class="pm-dem-stat-num">${items.length}</div></div>
+        <div class="pm-dem-stat pm-dem-stat--open"><div class="pm-dem-stat-label">Open</div><div class="pm-dem-stat-num">${open}</div></div>
+      </div>
+      <div class="pm-dem-grid">${items.map(card).join('')}</div>`);
+  }
+
+  el.addEventListener('click', onClick);
+  // Cleanup: drop the listener and cancel in-flight requests on page hide.
+  const cleanup = () => { el.removeEventListener('click', onClick); controller.abort(); };
+  window.addEventListener('pagehide', cleanup, { once: true });
+
+  await load();
 }

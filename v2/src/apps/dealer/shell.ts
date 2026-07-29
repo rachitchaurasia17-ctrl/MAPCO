@@ -14,7 +14,7 @@ const NAV = [
   { key: 'deals', label: 'My Deals', icon: 'ph-handshake', iconFill: 'ph-fill ph-handshake', badge: '4', path: '/admin/deals.html' },
   { key: 'properties', label: 'My Plots', icon: 'ph-buildings', iconFill: 'ph-fill ph-buildings', badge: '', path: '/admin/properties.html' },
   { key: 'clients', label: 'My Customers', icon: 'ph-users-three', iconFill: 'ph-fill ph-users-three', badge: '', path: '/admin/clients.html' },
-  { key: 'demand', label: 'Demand', icon: 'ph-list-magnifying-glass', iconFill: 'ph-fill ph-list-magnifying-glass', badge: '', path: '/admin/demand.html' },
+  { key: 'demand', label: 'Demand', icon: 'ph-list-magnifying-glass', iconFill: 'ph-fill ph-list-magnifying-glass', badge: '', path: '/admin/owner.html#demand' },
   { key: 'links', label: 'Client Links', icon: 'ph-paper-plane-tilt', iconFill: 'ph-fill ph-paper-plane-tilt', badge: '3', path: '/admin/owner.html#links' }, // or something else
   { key: 'area-intelligence', label: 'Area Intelligence', icon: 'ph-map-pin', iconFill: 'ph-fill ph-map-pin', badge: '', path: '/admin/area-intelligence.html' },
   { key: 'property-insights', label: 'Property Insights', icon: 'ph-trend-up', iconFill: 'ph-fill ph-trend-up', badge: '', path: '/admin/property-insights.html' },
