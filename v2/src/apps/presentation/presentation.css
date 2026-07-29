@@ -1,0 +1,109 @@
+/* ═══════════════════════════════════════════════════════════════
+   Client Presentation — map-first chrome (approved dark design)
+   Source: approved-designs .../Client Presentation.dc.html
+   ═══════════════════════════════════════════════════════════════ */
+
+.pm-pres {
+  position: fixed; inset: 0; display: flex; overflow: hidden;
+  font-family: var(--pm-font-ui); color: #fff8e6;
+  background: #241a08;
+  background-image:
+    radial-gradient(70% 55% at 8% 0%, rgba(255,201,60,.30), transparent 60%),
+    radial-gradient(60% 50% at 96% 6%, rgba(151,110,235,.26), transparent 62%),
+    radial-gradient(75% 55% at 50% 104%, rgba(31,161,110,.22), transparent 62%);
+}
+.pm-pres * { box-sizing: border-box; }
+
+/* ── map stage ─────────────────────────────────────────────── */
+.pm-pres-map { position: relative; flex: 1; min-width: 0; overflow: hidden; }
+.pm-pres-stage { position: absolute; inset: 0; cursor: grab; }
+.pm-pres-stage:active { cursor: grabbing; }
+
+/* ── floating glass ────────────────────────────────────────── */
+.pm-glass { background: rgba(24,16,4,.5); backdrop-filter: blur(12px); }
+.pm-glass-lite { background: rgba(24,16,4,.3); backdrop-filter: blur(10px); }
+
+.pm-pres-topbar { position: absolute; top: 14px; left: 14px; z-index: 34; display: flex; align-items: center; gap: 8px; }
+.pm-brand { display: flex; align-items: center; gap: 8px; padding: 3px 10px 3px 3px; border-radius: 14px; }
+.pm-brand-name { font-size: 17px; font-weight: 800; letter-spacing: -.02em; color: #fff8e6; }
+.pm-brand-name b { color: #ffc21e; font-weight: 800; }
+
+.pm-mapbtn { display: flex; align-items: center; gap: 8px; height: 42px; padding: 0 12px; border-radius: 14px; }
+.pm-mapbtn .pm-mapname { font-size: 15.5px; font-weight: 800; color: #fff8e6; white-space: nowrap; }
+
+.pm-viewtabs { display: flex; gap: 5px; padding: 4px; border-radius: 14px; }
+.pm-viewtab { height: 34px; padding: 0 14px; border-radius: 10px; font-size: 14.5px; font-weight: 800; color: #f4e5c4; white-space: nowrap; transition: background .15s, color .15s; }
+.pm-viewtab.active { background: #ffc21e; color: #231a04; box-shadow: 0 8px 18px -8px rgba(255,194,30,.95); }
+.pm-viewtab:focus-visible, .pm-mapbtn:focus-visible, .pm-ctl:focus-visible { outline: 2px solid #ffd76b; outline-offset: 2px; }
+
+/* ── bottom-left dim / highlight ───────────────────────────── */
+.pm-botleft { position: absolute; left: 10px; bottom: 10px; z-index: 26; display: flex; align-items: center; gap: 4px; padding: 4px; border-radius: 12px; }
+.pm-ctl { display: flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 9px; font-size: 14px; font-weight: 800; color: #f4e5c4; transition: background .15s, color .15s; }
+.pm-ctl.active { background: rgba(255,248,230,.16); color: #fff8e6; }
+.pm-ctl:hover { background: rgba(255,248,230,.12); }
+.pm-ctl-sep { width: 1px; height: 24px; background: rgba(255,248,230,.22); margin: 0 3px; }
+
+/* ── bottom-right zoom + pin count ─────────────────────────── */
+.pm-botright { position: absolute; right: 16px; bottom: 16px; z-index: 26; display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 14px; }
+.pm-zoombtn { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 10px; color: #fff8e6; font-size: 18px; background: rgba(255,248,230,.10); transition: background .15s; }
+.pm-zoombtn:hover { background: rgba(255,248,230,.24); }
+.pm-pincount { font-size: 14.5px; font-weight: 700; color: #fff8e6; padding: 0 6px; }
+
+/* ── right property rail ───────────────────────────────────── */
+.pm-rail { width: clamp(304px, 30vw, 420px); flex: none; display: flex; flex-direction: column; min-height: 0; z-index: 28;
+  background: #f5efff; background-image: linear-gradient(180deg,#faf6ff,#ede4ff);
+  box-shadow: inset 1px 0 0 rgba(139,96,232,.18), -18px 0 50px -30px rgba(42,31,77,.6); }
+.pm-rail-head { flex: none; padding: 14px 16px 12px; }
+.pm-filter { display: flex; align-items: center; gap: 10px; width: 100%; height: 58px; padding: 0 14px; border-radius: 16px; background: #fff3d1; border: 1px solid #f6d98d; }
+.pm-filter-eyebrow { display: block; font-size: 10.5px; font-weight: 800; letter-spacing: .12em; color: #a8792a; }
+.pm-filter-label { display: block; font-size: 17px; font-weight: 800; color: #241d0c; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pm-filter-count { margin-left: auto; font-size: 13px; font-weight: 800; color: #8a5a0c; background: rgba(138,90,12,.12); padding: 3px 10px; border-radius: 999px; }
+
+.pm-rail-list { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 4px 16px 24px; display: flex; flex-direction: column; gap: 14px; }
+
+.pm-pcard { flex: none; background: #fffdfb; border-radius: 18px; overflow: hidden;
+  box-shadow: 0 0 0 1px rgba(88,52,168,.14), 0 14px 30px -22px rgba(42,31,77,.6); transition: transform .15s, box-shadow .15s; }
+.pm-pcard:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px rgba(255,194,30,.5), 0 18px 34px -20px rgba(42,31,77,.7); }
+.pm-pcard-photo { position: relative; aspect-ratio: 16 / 9; background: #efe6da; }
+.pm-pcard-photo img { width: 100%; height: 100%; object-fit: cover; }
+.pm-pcard-noimg { position: absolute; inset: 0; display: grid; place-items: center; color: #b3a894; }
+.pm-pcard-count { position: absolute; right: 10px; bottom: 10px; display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; color: #fff; background: rgba(24,16,4,.6); padding: 4px 9px; border-radius: 999px; backdrop-filter: blur(4px); }
+.pm-pcard-body { padding: 12px 14px 14px; }
+.pm-pcard-area { font-family: var(--pm-font-display); font-weight: 500; font-size: 20px; letter-spacing: -.01em; color: #241f1c; }
+.pm-pcard-loc { font-size: 13px; color: #6b6156; margin-top: 1px; }
+.pm-pcard-facts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.pm-pcard-fact { font-size: 12px; font-weight: 700; color: #5b4e3a; background: #f4ecdd; padding: 4px 9px; border-radius: 8px; }
+.pm-pcard-actions { display: flex; gap: 8px; margin-top: 12px; }
+.pm-pcard-act { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; height: 40px; border-radius: 11px; font-size: 13.5px; font-weight: 800; transition: background .15s; }
+.pm-pcard-act--pin { background: #ffc93c; color: #231a04; }
+.pm-pcard-act--pin:hover { background: #ffb84a; }
+.pm-pcard-act--sv { background: #f0eaff; color: #5b32c4; border: 1px solid #d6c6f5; }
+.pm-pcard-act--sv:hover { background: #e7defc; }
+.pm-pcard-act:focus-visible { outline: 2px solid #5b32c4; outline-offset: 2px; }
+
+/* ── map picker / filter popovers ──────────────────────────── */
+.pm-pop { position: absolute; top: calc(100% + 9px); left: 0; min-width: 260px; background: #fffdfb; border-radius: 16px; padding: 9px; z-index: 40;
+  box-shadow: 0 0 0 1px rgba(88,52,168,.14), 0 26px 60px -20px rgba(28,21,51,.55); animation: rowIn .16s ease both; }
+.pm-pop-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border-radius: 11px; text-align: left; transition: background .12s; }
+.pm-pop-item:hover:not(:disabled) { background: #fff6e2; }
+.pm-pop-item:disabled { opacity: .45; cursor: not-allowed; }
+.pm-pop-item .lbl { flex: 1; font-size: 15px; font-weight: 700; color: #1c1533; }
+.pm-pop-item .tag { font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 999px; }
+
+/* ── empty / loading / error states in rail ────────────────── */
+.pm-rail-state { padding: 44px 20px; text-align: center; color: #6b6156; font-size: 15px; }
+.pm-rail-state i { font-size: 32px; display: block; margin-bottom: 12px; color: #a8792a; }
+.pm-skel { flex: none; height: 210px; border-radius: 18px; background: #efe6f8; }
+@media (prefers-reduced-motion: no-preference) { .pm-skel { background-image: linear-gradient(100deg,#efe6f8 30%,#e6daf2 50%,#efe6f8 70%); background-size: 200% 100%; animation: shimmer 1.3s ease-in-out infinite; } }
+
+@keyframes rowIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+
+/* ── responsive: rail collapses under map on narrow screens ── */
+@media (max-width: 860px) {
+  .pm-pres { flex-direction: column; }
+  .pm-pres-map { flex: 1 1 55%; }
+  .pm-rail { width: 100%; flex: 1 1 45%; box-shadow: inset 0 1px 0 rgba(139,96,232,.18); }
+  .pm-rail-list { flex-direction: row; overflow-x: auto; overflow-y: hidden; }
+  .pm-pcard { width: 260px; flex: none; }
+  .pm-pres-topbar { flex-wrap: wrap; max-width: calc(100% - 28px); }
+}
