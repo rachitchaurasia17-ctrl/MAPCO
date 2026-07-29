@@ -16,6 +16,7 @@ export default defineConfig({
         dealerMapStudio: resolve(__dirname, 'admin/map-studio.html'),
         developer: resolve(__dirname, 'admin/developer.html'),
         presentation: resolve(__dirname, 'app/plotmap/index.html'),
+        mapPilot: resolve(__dirname, 'app/map-pilot/index.html'),
         client: resolve(__dirname, 'client/index.html')
       }
     }
