@@ -188,10 +188,10 @@ The Private Client Link (`/client/?token=...`) is the **hard** client-safe bound
 2. Dealer Home (`/admin/owner.html`) - **DONE**
 3. Demand visual polish (`#demand`) - **DONE**
 4. Properties, Customers, Deals - **DONE**
-5. Team Workspace + Map Studio (integrate the map engine into the Map Studio editor canvas)
-6. Area Intelligence, Property Insights, Developer Control (system-derived — extend consistently, no fabricated reference)
-7. Client Presentation Properties/Sector-maps tab bodies (§10 remaining item)
-8. Private buyer page visual polish against the Dashboard's phone-preview spec
+5. Team Workspace + Map Studio - **DONE**
+6. Area Intelligence, Property Insights, Developer Control - **DONE**
+7. Client Presentation Properties/Sector-maps tab bodies - **DONE**
+8. Private buyer page visual polish against the Dashboard's phone-preview spec - **DONE**
 9. Full 6-viewport responsive pass (1440×900, 1366×768, 1024×768, tablet landscape, 430×932, 390×844)
 10. Full accessibility pass across all routes
 11. Final build/regression validation
