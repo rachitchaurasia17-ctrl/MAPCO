@@ -1,88 +1,60 @@
 /* ═══════════════════════════════════════════════════════════════
    PlotMap V2 — Team Workspace: Work Table (Home)
-   Three launcher cards + Map Studio hero
-   Source: Team Workspace.dc.html
+   Source: Team Workspace.dc.html (isWork)
    ═══════════════════════════════════════════════════════════════ */
 
 export function renderWorkHome(el: HTMLElement) {
   el.innerHTML = `
-<div style="max-width:1120px;margin:0 auto;padding:34px 40px 70px">
-  <div style="animation:omRise .5s cubic-bezier(.2,.8,.2,1) both">
-    <h1 style="font-family:var(--pm-font-display);font-weight:500;font-size:38px;letter-spacing:-.02em;color:#241f1c">The Work Table</h1>
-    <p style="margin-top:8px;font-size:17px;color:#6b6156">Everything that feeds the presentation. Add properties, mark maps, manage your data.</p>
-  </div>
+    <div style="max-width:1180px;margin:0 auto;padding:40px 34px 70px">
+      <div style="animation:wRise .5s cubic-bezier(.2,.8,.2,1) both">
+        <div style="font-size:12px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#5b32c4">Dealer workspace</div>
+        <h1 style="margin:8px 0 0;font-family:'Newsreader',serif;font-weight:500;font-size:46px;line-height:1.02;letter-spacing:-.03em">The Work Table</h1>
+        <p style="margin:12px 0 0;max-width:540px;font-size:16.5px;line-height:1.5;color:#6b6156;text-wrap:pretty">Where the heavy lifting happens. Everything you add here feeds directly into the client presentation.</p>
+      </div>
 
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:28px;animation:omRise .55s cubic-bezier(.2,.8,.2,1) both;animation-delay:.06s">
-    <div style="border-radius:24px;overflow:hidden;background:#ffc93c;background-image:linear-gradient(140deg,#ffdc7a,#f4ae14);box-shadow:0 20px 50px -24px rgba(244,174,20,.8);cursor:pointer;transition:transform .2s" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='none'">
-      <div style="padding:28px 26px 24px">
-        <div style="width:54px;height:54px;border-radius:16px;background:#1a2f24;color:#ffd75e;display:grid;place-items:center;box-shadow:0 12px 24px -12px rgba(26,47,36,.8)"><i class="ph-fill ph-pen-nib" style="font-size:26px"></i></div>
-        <div style="margin-top:18px;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#8a6a14">Map Studio</div>
-        <div style="margin-top:6px;font-family:var(--pm-font-display);font-weight:500;font-size:26px;letter-spacing:-.02em;color:#241d0c">Mark your maps</div>
-        <p style="margin-top:6px;font-size:14px;color:#6b5a20;line-height:1.45">Upload a masterplan, draw roads and blocks, pin properties.</p>
-      </div>
-    </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:36px">
+        <button style="text-align:left;display:flex;flex-direction:column;gap:0;padding:26px;border-radius:24px;background:#fffaf0;background-image:radial-gradient(130% 120% at 100% 0%,#f4ecdd,#fff 62%);border:1px solid #f6d98d;box-shadow:0 2px 3px rgba(40,30,10,.04),0 26px 50px -38px rgba(120,86,10,.7);transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s ease,border-color .25s;animation:wRise .55s cubic-bezier(.2,.8,.2,1) both;animation-delay:.06s" onmouseenter="this.style.transform='translateY(-6px)';this.style.borderColor='#ffc93c';this.style.boxShadow='0 2px 3px rgba(40,30,10,.05),0 36px 60px -36px rgba(120,86,10,.8)'" onmouseleave="this.style.transform='none';this.style.borderColor='#f6d98d';this.style.boxShadow='0 2px 3px rgba(40,30,10,.04),0 26px 50px -38px rgba(120,86,10,.7)'">
+          <span style="width:52px;height:52px;border-radius:16px;background:#ffc93c;color:#1a2f24;display:grid;place-items:center;box-shadow:0 14px 24px -16px rgba(120,86,10,.8)"><i class="ph-fill ph-buildings" style="font-size:27px"></i></span>
+          <span style="display:block;margin-top:20px;font-family:'Newsreader',serif;font-weight:500;font-size:27px;letter-spacing:-.015em">Add property</span>
+          <span style="display:block;margin-top:7px;font-size:15px;line-height:1.5;color:#6b6156">Upload photos, fill in the fact sheet, and choose if it's visible on the map.</span>
+          <span style="display:flex;align-items:center;gap:8px;margin-top:20px;font-size:15px;font-weight:800;color:#8a5a0c">Start <i class="ph-bold ph-arrow-right" style="font-size:15px"></i></span>
+        </button>
 
-    <div style="border-radius:24px;overflow:hidden;background:#1f4d3a;background-image:linear-gradient(140deg,#37876a,#1f4d3a 58%,#143528);box-shadow:0 20px 50px -24px rgba(18,112,74,.8);cursor:pointer;transition:transform .2s" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='none'">
-      <div style="padding:28px 26px 24px">
-        <div style="width:54px;height:54px;border-radius:16px;background:#ffc93c;color:#1a2f24;display:grid;place-items:center;box-shadow:0 12px 24px -12px rgba(255,201,60,.8)"><i class="ph-fill ph-buildings" style="font-size:26px"></i></div>
-        <div style="margin-top:18px;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#a3d6bc">Properties</div>
-        <div style="margin-top:6px;font-family:var(--pm-font-display);font-weight:500;font-size:26px;letter-spacing:-.02em;color:#fff8e6">Add your stock</div>
-        <p style="margin-top:6px;font-size:14px;color:#9acfb6;line-height:1.45">Upload photos, set price, choose sector and facing. Everything your clients see.</p>
-      </div>
-    </div>
+        <button style="text-align:left;display:flex;flex-direction:column;gap:0;padding:26px;border-radius:24px;background:#f0eaff;background-image:radial-gradient(130% 120% at 100% 0%,#e4dbf7,#f8f5ff 62%);border:1px solid #d6c6f5;box-shadow:0 2px 3px rgba(40,30,10,.04),0 26px 50px -38px rgba(70,40,150,.7);transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s ease,border-color .25s;animation:wRise .55s cubic-bezier(.2,.8,.2,1) both;animation-delay:.12s" onmouseenter="this.style.transform='translateY(-6px)';this.style.borderColor='#976eeb';this.style.boxShadow='0 2px 3px rgba(40,30,10,.05),0 36px 60px -36px rgba(70,40,150,.8)'" onmouseleave="this.style.transform='none';this.style.borderColor='#d6c6f5';this.style.boxShadow='0 2px 3px rgba(40,30,10,.04),0 26px 50px -38px rgba(70,40,150,.7)'">
+          <span style="width:52px;height:52px;border-radius:16px;background:#5b32c4;color:#fff;display:grid;place-items:center;box-shadow:0 14px 24px -16px rgba(40,20,90,.9)"><i class="ph-fill ph-users-three" style="font-size:27px"></i></span>
+          <span style="display:block;margin-top:20px;font-family:'Newsreader',serif;font-weight:500;font-size:27px;letter-spacing:-.015em">Add client</span>
+          <span style="display:block;margin-top:7px;font-size:15px;line-height:1.5;color:#6b6156">Record a new buyer enquiry, note what they want, and mark them hot or warm.</span>
+          <span style="display:flex;align-items:center;gap:8px;margin-top:20px;font-size:15px;font-weight:800;color:#5b32c4">Start <i class="ph-bold ph-arrow-right" style="font-size:15px"></i></span>
+        </button>
 
-    <div style="border-radius:24px;overflow:hidden;background:#5b32c4;background-image:linear-gradient(140deg,#8a63e8,#5b32c4 58%,#4a26a8);box-shadow:0 20px 50px -24px rgba(91,50,196,.8);cursor:pointer;transition:transform .2s" onmouseenter="this.style.transform='translateY(-4px)'" onmouseleave="this.style.transform='none'">
-      <div style="padding:28px 26px 24px">
-        <div style="width:54px;height:54px;border-radius:16px;background:#ffe1e6;color:#5b32c4;display:grid;place-items:center;box-shadow:0 12px 24px -12px rgba(255,225,230,.8)"><i class="ph-fill ph-users-three" style="font-size:26px"></i></div>
-        <div style="margin-top:18px;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#d8c8ff">Clients</div>
-        <div style="margin-top:6px;font-family:var(--pm-font-display);font-weight:500;font-size:26px;letter-spacing:-.02em;color:#fff">Manage clients</div>
-        <p style="margin-top:6px;font-size:14px;color:#c4b0f0;line-height:1.45">Add buyers, track what they want, link them to properties and deals.</p>
+        <button style="text-align:left;display:flex;flex-direction:column;gap:0;padding:26px;border-radius:24px;background:#dcf3e5;background-image:radial-gradient(130% 120% at 100% 0%,#c9edd8,#f0fbf4 62%);border:1px solid #b3e0c6;box-shadow:0 2px 3px rgba(40,30,10,.04),0 26px 50px -38px rgba(18,120,70,.75);transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s ease,border-color .25s;animation:wRise .55s cubic-bezier(.2,.8,.2,1) both;animation-delay:.18s" onmouseenter="this.style.transform='translateY(-6px)';this.style.borderColor='#1f4d3a';this.style.boxShadow='0 2px 3px rgba(40,30,10,.05),0 36px 60px -36px rgba(31,77,58,.8)'" onmouseleave="this.style.transform='none';this.style.borderColor='#b3e0c6';this.style.boxShadow='0 2px 3px rgba(40,30,10,.04),0 26px 50px -38px rgba(18,120,70,.75)'">
+          <span style="width:52px;height:52px;border-radius:16px;background:#1f4d3a;color:#d9f5e3;display:grid;place-items:center;box-shadow:0 14px 24px -16px rgba(12,45,30,.9)"><i class="ph-fill ph-paper-plane-tilt" style="font-size:27px"></i></span>
+          <span style="display:block;margin-top:20px;font-family:'Newsreader',serif;font-weight:500;font-size:27px;letter-spacing:-.015em">Generate a link</span>
+          <span style="display:block;margin-top:7px;font-size:15px;line-height:1.5;color:#6b6156">Pick a client, pick up to four plots, send one private page on WhatsApp.</span>
+          <span style="display:flex;align-items:center;gap:8px;margin-top:20px;font-size:15px;font-weight:800;color:#1f4d3a">Start <i class="ph-bold ph-arrow-right" style="font-size:15px"></i></span>
+        </button>
       </div>
-    </div>
-  </div>
 
-  <div style="margin-top:28px;border-radius:28px;overflow:hidden;background:#241d0c;background-image:linear-gradient(140deg,#3a2f14 0%,#241d0c 60%,#150f04 100%);box-shadow:0 26px 60px -34px rgba(20,14,2,.95);padding:34px 36px;animation:omRise .6s cubic-bezier(.2,.8,.2,1) both;animation-delay:.12s">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap">
-      <div>
-        <div style="font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#c9a94a">Map Studio</div>
-        <h2 style="margin-top:8px;font-family:var(--pm-font-display);font-weight:500;font-size:34px;letter-spacing:-.02em;color:#fff8e6">Your maps are the product</h2>
-        <p style="margin-top:8px;font-size:16px;color:#c9b48a;max-width:520px">Upload your masterplan, draw roads and sectors, pin properties. What you publish here is what your clients see in the full-screen presentation.</p>
-      </div>
+      <a href="/admin/map-studio.html" style="text-decoration:none;display:block;width:100%;text-align:left;position:relative;overflow:hidden;margin-top:20px;border-radius:26px;border:1px solid #2c4a3c;background:#1b3a2e;background-image:radial-gradient(90% 140% at 88% 20%,rgba(255,201,60,.28),transparent 60%);box-shadow:0 2px 3px rgba(40,30,10,.06),0 34px 60px -40px rgba(12,45,30,.95);animation:wRise .6s cubic-bezier(.2,.8,.2,1) both;animation-delay:.24s;transition:transform .3s cubic-bezier(.2,.8,.2,1)" onmouseenter="this.style.transform='translateY(-5px)'" onmouseleave="this.style.transform='none'">
+        <span style="display:flex;align-items:center;gap:30px;padding:30px 34px">
+          <span style="flex:1;min-width:0">
+            <span style="display:block;font-size:11.5px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#ffd75e">The important one</span>
+            <span style="display:block;margin-top:10px;font-family:'Newsreader',serif;font-weight:500;font-size:38px;line-height:1.05;letter-spacing:-.02em;color:#faf7ff">Map Studio</span>
+            <span style="display:block;margin-top:10px;max-width:520px;font-size:16px;line-height:1.55;color:#c9dbcf">Mark roads, blocks and pins on any masterplan or sector map — then publish it straight to the client screen.</span>
+            <span style="display:flex;flex-wrap:wrap;gap:8px;margin-top:18px">
+              <span style="padding:7px 13px;border-radius:10px;background:rgba(255,255,255,.1);font-size:13px;font-weight:700;color:#e8f2eb">182 maps</span>
+              <span style="padding:7px 13px;border-radius:10px;background:rgba(255,255,255,.1);font-size:13px;font-weight:700;color:#e8f2eb">Masterplan highlights</span>
+              <span style="padding:7px 13px;border-radius:10px;background:rgba(255,255,255,.1);font-size:13px;font-weight:700;color:#e8f2eb">Sector drawing</span>
+            </span>
+          </span>
+          <span style="flex:none;display:flex;align-items:center;gap:20px">
+            <span style="display:block;width:230px;height:150px;border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,.18);box-shadow:0 22px 40px -24px rgba(0,0,0,.7)">
+              <img src="/maps-pilot/mohali-masterplan.png" alt="" style="width:100%;height:100%;object-fit:cover"/>
+            </span>
+            <span style="width:56px;height:56px;border-radius:50%;background:#ffc93c;color:#241d0c;display:grid;place-items:center;flex:none;box-shadow:0 16px 30px -16px rgba(255,201,60,.9)"><i class="ph-bold ph-arrow-right" style="font-size:24px"></i></span>
+          </span>
+        </span>
+      </a>
     </div>
-
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:26px">
-      <div style="border-radius:20px;padding:22px 24px;background:rgba(255,248,230,.08);border:1px solid rgba(255,248,230,.12)">
-        <div style="display:flex;align-items:center;gap:10px">
-          <div style="width:36px;height:36px;border-radius:10px;background:#ffc93c;color:#241d0c;display:grid;place-items:center;font-weight:900;font-size:15px;flex:none">1</div>
-          <span style="font-size:16px;font-weight:800;color:#fff8e6">Publish Masterplan</span>
-        </div>
-        <p style="margin-top:10px;font-size:14px;color:#c9b48a;line-height:1.45">Upload your city masterplan image, draw roads and block boundaries.</p>
-      </div>
-      <div style="border-radius:20px;padding:22px 24px;background:rgba(255,248,230,.08);border:1px solid rgba(255,248,230,.12)">
-        <div style="display:flex;align-items:center;gap:10px">
-          <div style="width:36px;height:36px;border-radius:10px;background:#5b32c4;color:#fff;display:grid;place-items:center;font-weight:900;font-size:15px;flex:none">2</div>
-          <span style="font-size:16px;font-weight:800;color:#fff8e6">Publish Sector Maps</span>
-        </div>
-        <p style="margin-top:10px;font-size:14px;color:#c9b48a;line-height:1.45">Add close-up sector maps and mark individual plots on them.</p>
-      </div>
-      <div style="border-radius:20px;padding:22px 24px;background:rgba(255,248,230,.08);border:1px solid rgba(255,248,230,.12)">
-        <div style="display:flex;align-items:center;gap:10px">
-          <div style="width:36px;height:36px;border-radius:10px;background:#12a150;color:#fff;display:grid;place-items:center;font-weight:900;font-size:15px;flex:none">3</div>
-          <span style="font-size:16px;font-weight:800;color:#fff8e6">Manage Published</span>
-        </div>
-        <p style="margin-top:10px;font-size:14px;color:#c9b48a;line-height:1.45">See what's live, hide maps you're still working on, track usage.</p>
-      </div>
-    </div>
-  </div>
-
-  <div style="margin-top:22px;padding:22px 26px;border-radius:22px;background:#fffaf0;border:1.5px solid #f6e3ab;animation:omRise .65s cubic-bezier(.2,.8,.2,1) both;animation-delay:.18s">
-    <div style="display:flex;align-items:center;gap:12px">
-      <i class="ph-fill ph-info" style="font-size:22px;color:#a8792a"></i>
-      <div>
-        <div style="font-size:15px;font-weight:800;color:#241f1c">Everything here feeds the presentation</div>
-        <div style="font-size:14px;color:#6b6156;margin-top:2px">Maps you publish, properties you add, and client links you send — all appear instantly in the Client Presentation screen.</div>
-      </div>
-    </div>
-  </div>
-</div>`;
+  `;
 }

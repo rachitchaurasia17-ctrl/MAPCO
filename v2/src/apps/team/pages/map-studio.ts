@@ -1,94 +1,197 @@
 /* ═══════════════════════════════════════════════════════════════
    PlotMap V2 — Team Workspace: Map Studio
-   Map editor chrome with tools, panels, set rows
-   Source: Team Workspace.dc.html (Publish Masterplan / Sector sections)
+   Integrates MapEngine for the editor canvas.
    ═══════════════════════════════════════════════════════════════ */
+import { adapter } from '../../../packages/data/mock-adapter-v2';
+import { mountMapEngine, type MountedMap } from '../../../packages/maps/dom-surface';
 
-export function renderMapStudio(el: HTMLElement) {
-  const TOOLS = [
-    { icon: 'ph-fill ph-road-horizon', label: 'Roads', desc: 'Draw road center-lines on the masterplan' },
-    { icon: 'ph-fill ph-bounding-box', label: 'Blocks', desc: 'Outline sector or block boundaries' },
-    { icon: 'ph-fill ph-map-pin', label: 'Places', desc: 'Pin landmarks, projects, and amenities' },
-    { icon: 'ph-fill ph-text-t', label: 'Labels', desc: 'Add text labels anywhere on the map' },
+export async function renderMapStudio(el: HTMLElement) {
+  let view: 'hub' | 'editor' = 'hub';
+  let mountedMap: MountedMap | null = null;
+  let currentMapId = 'mohali';
+  let activeTool = 'select';
+  let activeSet = 'A';
+
+  const tools = [
+    { id: 'select', icon: 'ph-bold ph-cursor', label: 'Select' },
+    { id: 'road', icon: 'ph-fill ph-road-horizon', label: 'Road' },
+    { id: 'block', icon: 'ph-fill ph-bounding-box', label: 'Block' },
+    { id: 'pin', icon: 'ph-fill ph-map-pin', label: 'Pin' },
+    { id: 'text', icon: 'ph-fill ph-text-t', label: 'Text' }
   ];
 
-  const SETS = [
-    { id: 'A', label: 'Set A', marks: 12, color: '#ffc93c' },
-    { id: 'B', label: 'Set B', marks: 8, color: '#5b32c4' },
-    { id: 'C', label: 'Set C', marks: 4, color: '#12a150' },
+  const sets = [
+    { id: 'A', n: 12 },
+    { id: 'B', n: 5 },
+    { id: 'C', n: 0 },
   ];
 
-  el.innerHTML = `
-<div style="display:flex;height:100%;min-height:0">
-  <!-- Left: Map canvas area -->
-  <div style="flex:1;min-width:0;position:relative;overflow:hidden;background:#f0e8ff;background-image:radial-gradient(58% 48% at 6% -2%,rgba(139,96,232,.3),transparent 62%),radial-gradient(52% 44% at 96% 6%,rgba(56,138,186,.25),transparent 62%)">
-    <!-- Tools bar -->
-    <div style="position:absolute;top:16px;left:16px;display:flex;gap:8px;z-index:10;animation:omRise .4s cubic-bezier(.2,.8,.2,1) both">
-      ${TOOLS.map(t => `
-      <button style="display:flex;align-items:center;gap:8px;height:42px;padding:0 14px;border-radius:12px;background:rgba(255,248,230,.9);backdrop-filter:blur(8px);border:1px solid #e4dbf7;font-size:13.5px;font-weight:800;color:#241f1c;box-shadow:0 4px 12px -6px rgba(30,28,22,.3);transition:all .15s" onmouseenter="this.style.background='#ffc93c'" onmouseleave="this.style.background='rgba(255,248,230,.9)'">
-        <i class="${t.icon}" style="font-size:18px"></i>${t.label}
-      </button>`).join('')}
-    </div>
+  const goEditor = (mapId: string) => {
+    currentMapId = mapId;
+    view = 'editor';
+    render();
+  };
 
-    <!-- Map placeholder -->
-    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
-      <div style="text-align:center;animation:omRise .5s cubic-bezier(.2,.8,.2,1) both">
-        <div style="width:120px;height:120px;margin:0 auto;border-radius:28px;background:#efe8fb;display:grid;place-items:center"><i class="ph-fill ph-image" style="font-size:54px;color:#b5a0e6"></i></div>
-        <div style="margin-top:18px;font-family:var(--pm-font-display);font-weight:500;font-size:24px;color:#241f1c">Drop a masterplan image here</div>
-        <p style="margin-top:8px;font-size:15px;color:#6b6156;max-width:380px">Upload your city masterplan PNG or JPG. It will fill the entire canvas and you can start marking roads, blocks, and places.</p>
-        <button style="margin-top:16px;display:inline-flex;align-items:center;gap:9px;height:52px;padding:0 28px;border-radius:14px;background:#ffc93c;color:#241d0c;font-size:16px;font-weight:800;box-shadow:0 12px 26px -14px rgba(244,174,20,.85)"><i class="ph-bold ph-upload-simple" style="font-size:20px"></i>Upload masterplan</button>
-      </div>
-    </div>
+  const goHub = () => {
+    if (mountedMap) {
+      mountedMap.dispose();
+      mountedMap = null;
+    }
+    view = 'hub';
+    render();
+  };
 
-    <!-- Bottom: set row -->
-    <div style="position:absolute;bottom:16px;left:16px;right:16px;display:flex;align-items:center;gap:10px;z-index:10;animation:omRise .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:.1s">
-      ${SETS.map((s, i) => `
-      <button style="display:flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-radius:11px;font-size:13.5px;font-weight:800;background:${i === 0 ? '#ffc93c' : 'rgba(255,248,230,.9)'};color:${i === 0 ? '#241d0c' : '#6b6156'};border:1px solid ${i === 0 ? '#f4ae14' : '#e4dbf7'};backdrop-filter:blur(8px);box-shadow:${i === 0 ? '0 8px 16px -8px rgba(255,194,30,.6)' : '0 4px 12px -6px rgba(30,28,22,.2)'};transition:all .15s">
-        <span style="width:10px;height:10px;border-radius:50%;background:${s.color}"></span>${s.label} · ${s.marks} marks
-      </button>`).join('')}
-      <button style="display:flex;align-items:center;gap:6px;height:40px;padding:0 14px;border-radius:11px;font-size:13.5px;font-weight:800;background:rgba(255,248,230,.9);color:#5b32c4;border:1px solid #e4dbf7;backdrop-filter:blur(8px)">
-        <i class="ph-bold ph-plus" style="font-size:14px"></i>New set
-      </button>
-    </div>
-
-    <!-- Zoom controls -->
-    <div style="position:absolute;bottom:16px;right:16px;display:flex;flex-direction:column;gap:6px;z-index:10">
-      <button style="width:40px;height:40px;border-radius:11px;background:rgba(255,248,230,.9);backdrop-filter:blur(8px);border:1px solid #e4dbf7;display:grid;place-items:center;font-size:20px;color:#241f1c;box-shadow:0 4px 12px -6px rgba(30,28,22,.3)"><i class="ph-bold ph-plus"></i></button>
-      <button style="width:40px;height:40px;border-radius:11px;background:rgba(255,248,230,.9);backdrop-filter:blur(8px);border:1px solid #e4dbf7;display:grid;place-items:center;font-size:20px;color:#241f1c;box-shadow:0 4px 12px -6px rgba(30,28,22,.3)"><i class="ph-bold ph-minus"></i></button>
-      <button style="width:40px;height:40px;border-radius:11px;background:rgba(255,248,230,.9);backdrop-filter:blur(8px);border:1px solid #e4dbf7;display:grid;place-items:center;font-size:20px;color:#241f1c;box-shadow:0 4px 12px -6px rgba(30,28,22,.3)"><i class="ph-bold ph-arrows-out"></i></button>
-    </div>
-  </div>
-
-  <!-- Right panel -->
-  <aside style="width:340px;flex:none;height:100%;min-height:0;overflow-y:auto;overflow-x:hidden;background:rgba(252,250,255,.92);border-left:1px solid #ddd2f5;backdrop-filter:blur(12px);display:flex;flex-direction:column" data-scroll>
-    <div style="padding:22px 22px 18px;border-bottom:1px solid #ddd2f5">
-      <div style="font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#8d8271">Editing</div>
-      <div style="margin-top:6px;font-size:20px;font-weight:800;color:#241f1c">New Chandigarh</div>
-      <div style="font-size:13.5px;color:#6b6156;margin-top:2px">Masterplan · Draft</div>
-    </div>
-
-    <div style="padding:16px 22px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-        ${['Roads', 'Sectors', 'Blocks', 'Places'].map((tab, i) => `<button style="height:34px;padding:0 12px;border-radius:9px;font-size:13px;font-weight:800;${i === 0 ? 'background:#ffc93c;color:#241d0c' : 'background:rgba(255,248,230,.3);color:#6b6156'};transition:all .15s">${tab}</button>`).join('')}
-      </div>
-
-      <div style="display:flex;flex-direction:column;gap:10px">
-        ${['PR-7 Highway · 200ft', 'GMADA Expressway', 'Airport Road · 150ft', 'Madhya Marg Extension'].map((road, i) => `
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:#faf7ff;border:1px solid #e4dbf7;cursor:pointer;transition:background .12s" onmouseenter="this.style.background='#f4ecdd'" onmouseleave="this.style.background='#faf7ff'">
-          <div style="width:34px;height:34px;border-radius:9px;background:#fff3d1;color:#8a6a14;display:grid;place-items:center;flex:none"><i class="ph-fill ph-road-horizon" style="font-size:18px"></i></div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:14px;font-weight:700;color:#241f1c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${road}</div>
+  function render() {
+    if (view === 'hub') {
+      el.innerHTML = `
+        <div style="max-width:1180px;margin:0 auto;padding:38px 34px 70px">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap;animation:wRise .5s cubic-bezier(.2,.8,.2,1) both">
+            <div>
+              <div style="font-size:12px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#a8792a">Map Studio</div>
+              <h1 style="margin:10px 0 0;font-family:'Newsreader',serif;font-weight:500;font-size:46px;line-height:1.02;letter-spacing:-.03em">What are we publishing?</h1>
+              <p style="margin:12px 0 0;max-width:540px;font-size:16.5px;line-height:1.5;color:#6b6156;text-wrap:pretty">Everything here lands on the client screen the moment you save it.</p>
+            </div>
           </div>
-          <button style="width:28px;height:28px;border-radius:8px;background:#f3eeff;color:#8a7a52;display:grid;place-items:center;flex:none"><i class="ph-bold ph-dots-three" style="font-size:14px"></i></button>
-        </div>`).join('')}
-      </div>
 
-      <button style="width:100%;margin-top:14px;display:flex;align-items:center;justify-content:center;gap:8px;height:44px;border-radius:12px;background:#f3eeff;color:#5b32c4;font-size:14px;font-weight:800;border:1px dashed #ddd2f5"><i class="ph-bold ph-plus" style="font-size:16px"></i>Draw a new road</button>
-    </div>
+          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-top:34px">
+            <button id="btn-master" style="text-align:left;position:relative;display:flex;flex-direction:column;overflow:hidden;border-radius:26px;background:#fffaf0;border:1px solid #f6d98d;box-shadow:0 2px 3px rgba(40,30,10,.04),0 30px 56px -40px rgba(120,86,10,.9);transition:transform .34s cubic-bezier(.2,.8,.2,1),box-shadow .34s,border-color .3s;animation:wRise .55s cubic-bezier(.2,.8,.2,1) both;animation-delay:.06s">
+              <span style="position:relative;display:block;height:152px;overflow:hidden;background:#ffc93c;background-image:radial-gradient(120% 130% at 12% 8%,#ffe28a,#f7b21f 62%,#e79a0c)">
+                <span style="position:absolute;inset:0;background:repeating-linear-gradient(58deg,rgba(255,255,255,.22) 0 2px,transparent 2px 26px)"></span>
+                <span style="position:absolute;right:-22px;bottom:-36px;width:134px;height:134px;border-radius:50%;background:rgba(255,255,255,.26)"></span>
+                <span style="position:absolute;left:22px;top:50%;transform:translateY(-50%);width:56px;height:56px;border-radius:17px;background:#1a2f24;color:#ffd75e;display:grid;place-items:center;box-shadow:0 16px 28px -14px rgba(26,47,36,.85)"><i class="ph-fill ph-map-trifold" style="font-size:29px"></i></span>
+                <span style="position:absolute;top:16px;right:20px;font-family:'Newsreader',serif;font-size:27px;color:rgba(26,47,36,.4)">01</span>
+              </span>
+              <span style="display:flex;flex-direction:column;flex:1;padding:6px 24px 24px">
+                <span style="display:block;font-size:11.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#a8792a">Big city map</span>
+                <span style="display:block;margin-top:8px;font-family:'Newsreader',serif;font-weight:500;font-size:29px;letter-spacing:-.02em">Publish Masterplan</span>
+                <span style="display:block;margin-top:9px;font-size:15px;line-height:1.5;color:#6b6156">Pick which traced roads, blocks and pins light up when your client taps a highlight button.</span>
+                <span style="display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:20px;font-size:15px;font-weight:800;color:#8a5a0c">Open <i class="ph-bold ph-arrow-right" style="font-size:15px"></i></span>
+              </span>
+            </button>
 
-    <div style="margin-top:auto;padding:16px 22px;border-top:1px solid #ddd2f5">
-      <button style="width:100%;height:52px;border-radius:14px;background:#ffc93c;color:#241d0c;font-size:16px;font-weight:800;box-shadow:0 12px 26px -14px rgba(244,174,20,.85);display:flex;align-items:center;justify-content:center;gap:10px"><i class="ph-fill ph-upload-simple" style="font-size:20px"></i>Publish this map</button>
-    </div>
-  </aside>
-</div>`;
+            <button id="btn-editor" style="text-align:left;position:relative;display:flex;flex-direction:column;overflow:hidden;border-radius:26px;background:#fffaf0;border:1px solid #d6c6f5;box-shadow:0 2px 3px rgba(40,30,10,.04),0 30px 56px -40px rgba(70,40,150,.8);transition:transform .34s cubic-bezier(.2,.8,.2,1),box-shadow .34s,border-color .3s;animation:wRise .55s cubic-bezier(.2,.8,.2,1) both;animation-delay:.12s">
+              <span style="position:relative;display:block;height:152px;overflow:hidden;background:#5b32c4;background-image:radial-gradient(120% 130% at 18% 4%,#a983f5,#6a3ed6 58%,#4a26a8)">
+                <span style="position:absolute;inset:0;background:repeating-linear-gradient(58deg,rgba(255,255,255,.16) 0 2px,transparent 2px 26px)"></span>
+                <span style="position:absolute;right:-20px;top:-36px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.18)"></span>
+                <span style="position:absolute;left:22px;top:50%;transform:translateY(-50%);width:56px;height:56px;border-radius:17px;background:#ffe1e6;color:#5b32c4;display:grid;place-items:center;box-shadow:0 16px 28px -14px rgba(40,20,90,.75)"><i class="ph-fill ph-pen-nib" style="font-size:29px"></i></span>
+                <span style="position:absolute;top:16px;right:20px;font-family:'Newsreader',serif;font-size:27px;color:rgba(239,232,251,.5)">02</span>
+              </span>
+              <span style="display:flex;flex-direction:column;flex:1;padding:6px 24px 24px">
+                <span style="display:block;font-size:11.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#5b32c4">Detailed proof map</span>
+                <span style="display:block;margin-top:8px;font-family:'Newsreader',serif;font-weight:500;font-size:29px;letter-spacing:-.02em">Publish Sector Map</span>
+                <span style="display:block;margin-top:9px;font-size:15px;line-height:1.5;color:#6b6156">Trace roads, draw blocks, drop pins and labels on the layout, then link a pin to a plot.</span>
+                <span style="display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:20px;font-size:15px;font-weight:800;color:#5b32c4">Open <i class="ph-bold ph-arrow-right" style="font-size:15px"></i></span>
+              </span>
+            </button>
+
+            <button id="btn-manage" style="text-align:left;position:relative;display:flex;flex-direction:column;overflow:hidden;border-radius:26px;background:#fffaf0;border:1px solid #b3e0c6;box-shadow:0 2px 3px rgba(40,30,10,.04),0 30px 56px -40px rgba(18,120,70,.85);transition:transform .34s cubic-bezier(.2,.8,.2,1),box-shadow .34s,border-color .3s;animation:wRise .55s cubic-bezier(.2,.8,.2,1) both;animation-delay:.18s">
+              <span style="position:relative;display:block;height:152px;overflow:hidden;background:#1f4d3a;background-image:radial-gradient(120% 130% at 88% 6%,#37876a,#1f4d3a 58%,#143528)">
+                <span style="position:absolute;inset:0;background:repeating-linear-gradient(122deg,rgba(255,255,255,.12) 0 2px,transparent 2px 26px)"></span>
+                <span style="position:absolute;left:-26px;bottom:-36px;width:134px;height:134px;border-radius:50%;background:rgba(122,224,164,.24)"></span>
+                <span style="position:absolute;left:22px;top:50%;transform:translateY(-50%);width:56px;height:56px;border-radius:17px;background:#ffc93c;color:#1a2f24;display:grid;place-items:center;box-shadow:0 16px 28px -14px rgba(0,0,0,.6)"><i class="ph-fill ph-squares-four" style="font-size:29px"></i></span>
+                <span style="position:absolute;top:16px;right:20px;font-family:'Newsreader',serif;font-size:27px;color:rgba(154,207,182,.4)">03</span>
+              </span>
+              <span style="display:flex;flex-direction:column;flex:1;padding:6px 24px 24px">
+                <span style="display:block;font-size:11.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#12a150">See what's live</span>
+                <span style="display:block;margin-top:8px;font-family:'Newsreader',serif;font-weight:500;font-size:29px;letter-spacing:-.02em">Manage Published</span>
+                <span style="display:block;margin-top:9px;font-size:15px;line-height:1.5;color:#6b6156">Take maps offline, track how many plots are linked, and see client usage.</span>
+                <span style="display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:20px;font-size:15px;font-weight:800;color:#12704a">Open <i class="ph-bold ph-arrow-right" style="font-size:15px"></i></span>
+              </span>
+            </button>
+          </div>
+        </div>
+      `;
+      
+      el.querySelector('#btn-master')?.addEventListener('click', () => goEditor('mohali'));
+      el.querySelector('#btn-editor')?.addEventListener('click', () => goEditor('mohali'));
+      el.querySelector('#btn-manage')?.addEventListener('click', () => goEditor('mohali'));
+
+    } else {
+      el.innerHTML = `
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;background:#f0e8ff;background-image:radial-gradient(58% 48% at 6% -2%,rgba(139,96,232,.56),transparent 62%),radial-gradient(52% 44% at 96% 6%,rgba(56,138,186,.44),transparent 62%),radial-gradient(60% 46% at 50% 108%,rgba(255,190,48,.4),transparent 64%)">
+          <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:#fffaf0;background-image:linear-gradient(90deg,#fff6dd,#fffaf0 55%,#f6f0ff);border-bottom:1px solid #ddd2f5;flex:none;z-index:20;min-height:62px">
+            <button id="btn-back" style="display:flex;align-items:center;gap:7px;padding:10px 14px;border-radius:12px;background:#f0eaff;font-size:14.5px;font-weight:800;color:#4c463d;flex:none"><i class="ph-bold ph-arrow-left" style="font-size:15px"></i>Back</button>
+            <div style="display:flex;align-items:center;gap:11px;padding:6px 14px;border-radius:14px;background:#fffaf0;border:1px solid #e4dbf7;box-shadow:0 4px 12px -6px rgba(30,28,22,.1)">
+              <span style="width:24px;height:24px;border-radius:7px;background:#ffc93c;color:#1a2f24;display:grid;place-items:center;flex:none"><i class="ph-fill ph-map-trifold" style="font-size:14px"></i></span>
+              <span style="font-size:14.5px;font-weight:800;color:#241f1c">Mohali</span>
+            </div>
+            <div style="flex:1"></div>
+            <button style="display:flex;align-items:center;gap:7px;padding:11px 13px;border-radius:12px;background:#dcf3e5;border:1px solid #b3e0c6;font-size:13.5px;font-weight:800;color:#12704a"><i class="ph-bold ph-link-simple" style="font-size:17px"></i>Link property</button>
+          </div>
+
+          <div style="flex:1;min-height:0;display:flex">
+            <div style="flex:1;min-width:0;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden">
+              <!-- MAP ENGINE CANVAS -->
+              <div id="map-engine-canvas" style="position:absolute;inset:0"></div>
+            </div>
+
+            <!-- RIGHT SIDEBAR: Tools & Sets -->
+            <div style="width:340px;flex:none;background:#fffaf0;border-left:1px solid #ddd2f5;overflow-y:auto;display:flex;flex-direction:column">
+              <div style="padding:16px 18px;background:#fff3d1;border-bottom:1px solid #f6d98d;flex:none">
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+                  <div style="font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#8a5a0c">Drawing tools</div>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:10px">
+                  ${tools.map(t => `
+                    <button class="tool-btn" data-id="${t.id}" style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 0;border-radius:12px;border:1px solid ${activeTool === t.id ? '#f4ae14' : 'transparent'};background:${activeTool === t.id ? '#ffc93c' : 'rgba(255,255,255,.5)'};color:${activeTool === t.id ? '#241f1c' : '#8a6a14'};transition:all .15s">
+                      <i class="${t.icon}" style="font-size:20px"></i>
+                      <span style="font-size:11px;font-weight:800">${t.label}</span>
+                    </button>
+                  `).join('')}
+                </div>
+              </div>
+              <div style="padding:14px 18px;background:#efe8fb;border-bottom:1px solid #d6c6f5;flex:none">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+                  <div style="font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#5b32c4">Saving into</div>
+                </div>
+                <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+                  ${sets.map(s => `
+                    <button class="set-btn" data-id="${s.id}" style="display:flex;align-items:center;gap:6px;padding:0 12px;height:40px;border-radius:12px;font-size:15px;font-weight:800;border:1px solid ${activeSet === s.id ? '#5b32c4' : '#d6c6f5'};background:${activeSet === s.id ? '#5b32c4' : '#fffaf0'};color:${activeSet === s.id ? '#fff' : '#5b32c4'};transition:all .15s">
+                      ${s.id}<span style="padding:2px 6px;border-radius:8px;font-size:11.5px;background:${activeSet === s.id ? 'rgba(255,255,255,.25)' : '#f0eaff'}">${s.n}</span>
+                    </button>
+                  `).join('')}
+                  <button style="width:40px;height:40px;border-radius:12px;background:#fffaf0;border:1px dashed #c3a6f0;color:#5b32c4;display:grid;place-items:center;flex:none"><i class="ph-bold ph-plus" style="font-size:15px"></i></button>
+                </div>
+              </div>
+
+              <!-- Extra dummy padding -->
+              <div style="flex:1;min-height:200px"></div>
+
+              <div style="padding:16px 18px;border-top:1px solid #ddd2f5;margin-top:auto">
+                <button style="width:100%;height:52px;border-radius:14px;background:#ffc93c;color:#241d0c;font-size:16px;font-weight:800;box-shadow:0 12px 26px -14px rgba(244,174,20,.85);display:flex;align-items:center;justify-content:center;gap:10px"><i class="ph-fill ph-upload-simple" style="font-size:20px"></i>Publish this map</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      el.querySelector('#btn-back')?.addEventListener('click', goHub);
+      
+      el.querySelectorAll('.tool-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          activeTool = (e.currentTarget as HTMLElement).dataset.id!;
+          render();
+        });
+      });
+      el.querySelectorAll('.set-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          activeSet = (e.currentTarget as HTMLElement).dataset.id!;
+          render();
+        });
+      });
+
+      // Mount Map Engine
+      const canvasEl = el.querySelector('#map-engine-canvas') as HTMLElement;
+      if (canvasEl && !mountedMap) {
+        mountedMap = mountMapEngine(canvasEl);
+        mountedMap.engine.setMap(currentMapId, { mode: 'original' });
+      } else if (canvasEl && mountedMap) {
+        mountedMap.dispose();
+        mountedMap = mountMapEngine(canvasEl);
+        mountedMap.engine.setMap(currentMapId, { mode: 'original' });
+      }
+    }
+  }
+
+  render();
 }
