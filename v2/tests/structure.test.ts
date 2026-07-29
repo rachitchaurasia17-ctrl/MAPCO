@@ -58,6 +58,41 @@ describe('Buyer client does not import internal record data', () => {
   });
 });
 
+describe('Audited adapter and accessibility boundaries', () => {
+  it('keeps migrated dealer screens on DataAdapterV2', () => {
+    for (const p of ['src/apps/dealer/pages/home.ts', 'src/apps/dealer/pages/links.ts']) {
+      const source = readFileSync(join(root, p), 'utf8');
+      expect(source).toContain('mock-adapter-v2');
+      expect(source).not.toMatch(/mock-adapter['"]/);
+    }
+  });
+
+  it('loads presentation pins through the map repository and labels mock provenance', () => {
+    const source = readFileSync(join(root, 'src/apps/presentation/main.ts'), 'utf8');
+    expect(source).toContain('adapter.maps.listRegistry');
+    expect(source).toContain('adapter.maps.get');
+    expect(source).not.toContain('PIN_COORDS');
+    expect(source).toContain('not survey coordinates');
+  });
+
+  it('gives the activation modal dialog semantics and Escape handling', () => {
+    const source = readFileSync(join(root, 'src/main.ts'), 'utf8');
+    expect(source).toContain('role="dialog"');
+    expect(source).toContain('aria-modal="true"');
+    expect(source).toContain("e.key === 'Escape'");
+    expect(source).toContain('previouslyFocused?.focus()');
+  });
+
+  it('targets every audited responsive surface', () => {
+    const css = readFileSync(join(root, 'src/packages/ui/responsive.css'), 'utf8');
+    for (const selector of ['#pm-dash-sidebar', '#pm-dash-content', '#pm-ws-header',
+      '.pm-map-editor-body', '.pm-map-editor-sidebar', '.pm-rail', '.pm-viewtabs',
+      '.pm-pres-grid', '.pm-modal-content', '.pm-buyer']) {
+      expect(css).toContain(selector);
+    }
+  });
+});
+
 describe('No forbidden legacy filenames imported', () => {
   const forbidden = [/xyz/i, /legacy/i, /\.dc\.html/];
   function walk(dir: string): string[] {

@@ -255,10 +255,12 @@ const MAP_REGISTRY: MapData[] = [
       {
         id: 'masterplan-mohali',
         name: 'Master Plan',
+        // Development-only normalized preview positions invented in fa6642b.
+        // They were not measured from a survey or approved map artwork.
         marks: [
-          { kind: 'pin', points: { x: 0.45, y: 0.35 }, label: 'Eco City', propertyId: 'ecocity' },
-          { kind: 'pin', points: { x: 0.65, y: 0.75 }, label: 'Block 5', propertyId: 'block5' },
-          { kind: 'pin', points: { x: 0.55, y: 0.55 }, label: 'Omaxe', propertyId: 'omx' }
+          { kind: 'pin', coordinateProvenance: 'development-mock', points: { x: 0.45, y: 0.35 }, label: 'Eco City', propertyId: 'ecocity' },
+          { kind: 'pin', coordinateProvenance: 'development-mock', points: { x: 0.65, y: 0.75 }, label: 'Block 5', propertyId: 'block5' },
+          { kind: 'pin', coordinateProvenance: 'development-mock', points: { x: 0.55, y: 0.55 }, label: 'Omaxe', propertyId: 'omx' }
         ]
       }
     ]

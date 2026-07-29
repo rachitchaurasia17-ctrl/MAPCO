@@ -48,6 +48,7 @@
 .pm-zoombtn { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 10px; color: #fff8e6; font-size: 18px; background: rgba(255,248,230,.10); transition: background .15s; }
 .pm-zoombtn:hover { background: rgba(255,248,230,.24); }
 .pm-pincount { font-size: 14.5px; font-weight: 700; color: #fff8e6; padding: 0 6px; }
+.pm-coordinate-note { max-width: 130px; font-size: 10px; font-weight: 800; line-height: 1.15; color: #ffd76b; }
 
 /* ── right property rail ───────────────────────────────────── */
 .pm-rail { width: clamp(304px, 30vw, 420px); flex: none; display: flex; flex-direction: column; min-height: 0; z-index: 28;
@@ -94,6 +95,7 @@
 .pm-rail-state { padding: 44px 20px; text-align: center; color: #6b6156; font-size: 15px; }
 .pm-rail-state i { font-size: 32px; display: block; margin-bottom: 12px; color: #a8792a; }
 .pm-skel { flex: none; height: 210px; border-radius: 18px; background: #efe6f8; }
+.pm-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 @media (prefers-reduced-motion: no-preference) { .pm-skel { background-image: linear-gradient(100deg,#efe6f8 30%,#e6daf2 50%,#efe6f8 70%); background-size: 200% 100%; animation: shimmer 1.3s ease-in-out infinite; } }
 
 @keyframes rowIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }

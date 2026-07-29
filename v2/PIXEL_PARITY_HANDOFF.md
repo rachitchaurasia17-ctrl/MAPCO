@@ -5,9 +5,8 @@ Written for the next AI/engineer continuing this work. Read this fully before to
 ## 1. Branch and commit
 
 - Branch: feat/mapco-v2-pixel-parity
-- Current branch HEAD: 4150e8b — handoff documentation commit
-- Latest implementation commit: a10fa63 — Dealer Home pixel parity
-- Working tree is clean except two **untracked, intentionally-excluded** root folders: `maps with svg/` and `normal maps/` (raw source map assets — do not add to git, do not delete).
+- Audit starting HEAD: `899c3870a8b7f37137aca087f02e52844a197016` (the audit repair commit is newer; use `git rev-parse HEAD` for the current SHA).
+- The raw source-map folders `maps with svg/` and `normal maps/` were accidentally committed in `fbd8e30` (104 files, 181.06 MiB). The audit repair removes them from the branch tip without deleting the local working copies and adds root ignore rules. They remain present in historical commit `fbd8e30` unless history is explicitly rewritten.
 
 ## 2. Git commands to run first
 
@@ -52,46 +51,47 @@ approved-designs/02-Dashboard/design_handoff_plotmap/
 
 ## 6. Exact-reference screens available
 
-1. **Landing** (`PlotMap Landing.dc.html` + `screens/01-landing.md`) — NOT yet re-ported.
-2. **Dealer Dashboard** (`Dealer Dashboard.dc.html` + `screens/03-dealer-dashboard.md`) — NOT yet re-ported. Covers Home/areas, My Deals, My Plots, My Customers, Client Links, and the shared Add-property/Add-client/Generate-link sheets.
-3. **Team Workspace** (`Team Workspace.dc.html` + `screens/04-team-workspace.md`) — NOT yet re-ported. Covers the work-table launcher, Map Studio hub (Publish Masterplan / Publish Sector / Manage Published), Properties editor, Clients page.
-4. **Client Presentation** (`Client Presentation.dc.html` + `screens/02-client-presentation.md`) — **DONE** (see §10).
+1. **Landing** (`PlotMap Landing.dc.html` + `screens/01-landing.md`) — implemented, awaiting user visual review.
+2. **Dealer Dashboard** (`Dealer Dashboard.dc.html` + `screens/03-dealer-dashboard.md`) — incomplete. Covers Home/areas, My Deals, My Plots, My Customers, Client Links, and the shared Add-property/Add-client/Generate-link sheets.
+3. **Team Workspace** (`Team Workspace.dc.html` + `screens/04-team-workspace.md`) — incomplete. Covers the work-table launcher, Map Studio hub (Publish Masterplan / Publish Sector / Manage Published), Properties editor, Clients page.
+4. **Client Presentation** (`Client Presentation.dc.html` + `screens/02-client-presentation.md`) — incomplete (see §10).
 
-## 7. Routes already completed
+## 7. Exact-reference route status
 
-- **`/app/plotmap/` (Client Presentation)** — exact-reference pixel port + real map engine integration. Implemented and browser-verified this session; **awaiting user's own visual testing** (see §23).
-- **`/` (Landing)** — implemented and verified in previous session.
-- **`/admin/owner.html` (Dealer Home)** — implemented and verified in this session.
-- Design-system foundation (fonts self-hosted, CDN removed) applies globally to all routes already.
+- **`/` (Landing)** — implemented, awaiting user visual review. Approved sections are present, but the system-derived activation control/modal is additional hierarchy and is backend-only future work.
+- **`/admin/owner.html` (Dealer Home)** — incomplete. The approved shell/home hierarchy is present, but the type chart is reduced to three hardcoded rows and multiple approved interactions are not implemented.
+- **`/admin/team.html` (Team Workspace)** — incomplete. The approved work-table hierarchy is present; the three primary launcher buttons are decorative and do not open the approved sheets.
+- **`/admin/map-studio.html` (Map Studio)** — incomplete. The hub is implemented, but the three hub branches collapse into one approximate editor and several controls are placeholders.
+- **`/app/plotmap/` (Client Presentation)** — incomplete. The map-first shell, property grid, and sector grid are implemented, but approved detail/lightbox flows are absent and the grids are approximate.
 
-## 8. Routes still requiring pixel-parity migration
+## 8. Remaining structural work
 
-Everything else. In priority order per the original task's implementation process:
-Demand → Properties → Customers → Deals → Team Workspace → Area Intelligence → Property Insights → Map Studio → Developer Control → `/client/?token=...` (private buyer page) → responsive corrections → accessibility corrections → final build/regression validation.
+Exact-reference routes still require the missing structures and interactions identified in §7 and §9. Non-exact routes are system-derived and must not be described as pixel-parity ports. Responsive and accessibility rules are implemented at code level but remain awaiting user viewport testing; no viewport has been visually approved.
 
 ## 9. Route-by-route status table
 
 | Route | Exact reference? | Status | Main files | Remaining work |
 |---|---|---|---|---|
-| `/` Landing | Yes (`PlotMap Landing.dc.html`) | **DONE** | `v2/src/main.ts` | Port cinematic sepia/aurora background, wordmark+logo, live greeting/clock, 3 destination cards with hover sheen — verbatim per `screens/01-landing.md` |
-| `/admin/owner.html` Dealer Home | Yes (Dealer Dashboard §Home) | **DONE** | `v2/src/apps/dealer/pages/home.ts`, `shell.ts` | Donut (top-6 areas + Other, real `CIRC=2πr` math), horizontal bars, verdict pills, streak line, buyers-shown-today, call list. **Do not reintroduce the area-by-area table** — deliberately removed per spec |
-| `/admin/owner.html#demand` Demand | No dedicated full-page ref (system-derived; CRM data per doc 09) | **DONE** | `v2/src/apps/dealer/pages/demand.css`, `demand.ts` | Ported to DataAdapterV2 |
-| `/admin/properties.html` Properties | System-derived (no dedicated top-level `.dc.html`; described inside Dealer Dashboard "My Plots" + Team Workspace "Properties page") | **DONE** | `v2/src/apps/dealer/pages/properties.ts` | Ported to DataAdapterV2 and parity achieved |
-| `/admin/deals.html` Deals | System-derived (Dealer Dashboard "My Deals") | **DONE** | `v2/src/apps/dealer/pages/deals.ts` | Ported to DataAdapterV2 and parity achieved |
-| `/admin/clients.html` Customers | System-derived (Dealer Dashboard "My Customers") | **DONE** | `v2/src/apps/dealer/pages/customers.ts` | Ported to DataAdapterV2 and parity achieved |
-| `/admin/team.html` Team Workspace | Yes (`Team Workspace.dc.html`) | Not re-ported | `v2/src/apps/team/*` | Top bar segmented nav pill, work-table launcher grid, dark Map Studio hero, shared Add-property/Add-client/Generate-link sheets |
-| `/admin/area-intelligence.html` | System-derived | Not re-ported | `v2/src/apps/dealer/pages/area-intelligence.ts` | Extend Dashboard's design system once ported |
-| `/admin/property-insights.html` | System-derived | Not re-ported | `v2/src/apps/dealer/pages/property-insights.ts` | Extend Dashboard's design system |
-| `/admin/map-studio.html` | Yes (Team Workspace §Map Studio hub/Publish Masterplan/Publish Sector/Manage Published) | Not re-ported | `v2/src/apps/team/pages/map-studio.ts` | Numbered 01/02/03 cards, 2×2 tool grid (Move/Road/Block/Pin + Text), set-row A/B/C/+, stat tiles; should integrate `v2/src/packages/maps/` engine for the editor canvas |
-| `/admin/developer.html` | System-derived (not in the 4 approved handoff screens) | Not re-ported | `v2/src/apps/developer/main.ts` | Extend shared design system consistently; no dedicated approved reference exists — do not fabricate pixel-parity claims here |
-| `/app/plotmap/` Client Presentation | Yes | **DONE**, browser-verified | `v2/src/apps/presentation/main.ts`, `presentation.css` | Live pin-overlay-on-map rendering (currently pin state tracked but not drawn as a moving dot on the transforming raster — see §22); properties/sectors view bodies still need their own approved-exact layout (grid + detail page + sector layout cards per `screens/02-client-presentation.md` Views B/C) |
-| `/client/?token=...` Buyer page | Not one of the 4 `.dc.html` files, but governed by `data-model.md` visibility rules + `docs/v2-blueprint/13_PRIVATE_CLIENT_LINKS_INTERNALS.md` | Functionally correct (client-safe, token-stripped, all link states) from `23ac9b8`; visual polish not checked against Dealer Dashboard's "private client page" phone-preview spec (dark magazine layout, photo carousel, price band only if enabled, voice-note card, green Call button) | `v2/src/apps/client/main.ts` | Compare against Dashboard §"Private client page" spec once available |
+| `/` Landing | Yes (`PlotMap Landing.dc.html`) | implemented, awaiting user visual review | `v2/src/main.ts` | Approved background, hero, cards, and footer are present. Device activation is an additional system-derived/backend-only surface. |
+| `/admin/owner.html` Dealer Home | Yes (Dealer Dashboard §Home) | incomplete | `v2/src/apps/dealer/pages/home.ts`, `shell.ts` | Shell/home hierarchy is present; approved five-row type chart and card interactions are incomplete. |
+| `/admin/owner.html#demand` Demand | No dedicated full-page ref | system-derived | `v2/src/apps/dealer/pages/demand.css`, `demand.ts` | Uses `DemandRepository`; do not make an exact-source claim. |
+| `/admin/properties.html` Properties | No dedicated full-page ref | system-derived | `v2/src/apps/dealer/pages/properties.ts` | Uses DataAdapterV2; do not make an exact-source claim. |
+| `/admin/deals.html` Deals | No dedicated full-page ref | system-derived | `v2/src/apps/dealer/pages/deals.ts` | Uses DataAdapterV2; do not make an exact-source claim. |
+| `/admin/clients.html` Customers | No dedicated full-page ref | system-derived | `v2/src/apps/dealer/pages/customers.ts` | Uses DataAdapterV2; do not make an exact-source claim. |
+| `/admin/team.html` Team Workspace | Yes (`Team Workspace.dc.html`) | incomplete | `v2/src/apps/team/*` | Work-table structure is present; launcher sheet interactions are absent. |
+| `/admin/area-intelligence.html` | No dedicated exact reference | system-derived | `v2/src/apps/dealer/pages/area-intelligence.ts` | No pixel-parity claim is valid. |
+| `/admin/property-insights.html` | No dedicated exact reference | system-derived | `v2/src/apps/dealer/pages/property-insights.ts` | No pixel-parity claim is valid. |
+| `/admin/map-studio.html` | Yes (Team Workspace Map Studio states) | incomplete | `v2/src/apps/team/pages/map-studio.ts` | Hub exists; masterplan/manage/editor state separation, repository-backed map/set data, and multiple tool interactions remain incomplete. |
+| `/admin/developer.html` | No dedicated exact reference | system-derived | `v2/src/apps/developer/main.ts` | No pixel-parity claim is valid. |
+| `/app/plotmap/` Client Presentation | Yes | incomplete | `v2/src/apps/presentation/main.ts`, `presentation.css` | Approved sector detail, property detail/gallery, and lightbox are missing; filters and grids are approximate. |
+| `/client/?token=...` Buyer page | Governed by visibility/security contracts, not an exact `.dc.html` route | system-derived | `v2/src/apps/client/main.ts` | ClientSafePayload/token handling are implemented; final visual review remains with the user. |
+| Device activation backend | System architecture | backend-only future work | `v2/src/main.ts` | UI exists, but no Supabase connection or real verification is part of this branch. |
 
 ## 10. Client Presentation implementation details
 
 File: `v2/src/apps/presentation/main.ts` + `v2/src/apps/presentation/presentation.css`.
 
-- Full-bleed dark map (`#241a08` base + 3-radial-gradient aurora) with transparent glass chrome (`rgba(24,16,4,.5)` + `backdrop-filter:blur(12px)`), matching `Client Presentation.dc.html` root styling verbatim.
+- Full-bleed dark map (`#241a08` base + 3-radial-gradient aurora) with transparent glass chrome (`rgba(24,16,4,.5)` + `backdrop-filter:blur(12px)`). This is implemented, awaiting user visual review; it is not a visual-approval claim.
 - Floating top-left brand mark + map picker (`pm-mapbtn` → `pm-pop` dropdown listing `getMaps()`) + view tabs (Masterplan/Properties/Sector maps).
 - Bottom-left: Original/3D toggle + Fit Map (`pm-botleft`). Bottom-right: zoom in/out + pin count (`pm-botright`).
 - Right rail (`pm-rail`, violet-dusk light theme against the dark map) with a SHOWING filter chip and compact property cards (`pm-pcard`) — photo, area, loc, size/facing/position fact chips, Pin-on-map + Street-view actions. No price anywhere.
@@ -99,7 +99,7 @@ File: `v2/src/apps/presentation/main.ts` + `v2/src/apps/presentation/presentatio
 - Single delegated `data-act` click handler; `Escape` closes the map picker; outside-click closes it; `AbortController` cancels the properties fetch; `mountMapEngine().dispose()` releases the map engine, listeners, cached images on `pagehide`.
 - Data: `adapter.properties.list()` from `DataAdapterV2`, filtered to `published && !sold` — never reads `price`.
 
-**Not yet built:** the full-page Properties grid + property-detail page (gallery, facts grid, 4 pinned action buttons) and the Sector-maps city-chip→layout-card view described in `screens/02-client-presentation.md` Views B/C — the current implementation shows the map view fully but the `properties`/`sectors` tab bodies are placeholders (map area hidden, rail still shows the card list). This is the top remaining item for this route.
+**Incomplete:** the Properties and Sector maps grids exist, but city filters are approximate; the property-detail gallery/facts/actions, sector-detail layout, and lightbox are not built.
 
 ## 11. Map-engine architecture and files
 
@@ -144,7 +144,7 @@ The Mohali masterplan overlay SVG (`viewBox="0 0 1575 1132"`) was authored again
 
 Implementation: `v2/src/packages/data/mock-adapter-v2.ts` — `MockDataAdapterV2` implements every interface with bounded, deterministic fixtures (no randomness). Exported singleton: `adapter`. **All new/ported screens must import `adapter` from here — never call Supabase/IndexedDB directly, never bypass with hardcoded page data.**
 
-The legacy `v2/src/packages/data/mock-adapter.ts` (`dataAdapter`, `getClients()` etc.) still exists and is still used by some unported pages (home, deals, properties, customers, team, area-intelligence, property-insights). **Do not delete it** until every page importing it has been migrated onto `DataAdapterV2` — check with `grep -rl "from '.*mock-adapter'" v2/src` (excluding `mock-adapter-v2`) before removing anything.
+The legacy `v2/src/packages/data/mock-adapter.ts` remains the fixture source used internally by `mock-adapter-v2.ts`; production page modules no longer import it directly. Do not delete it until the V2 fixture layer is separated from those exports.
 
 ## 15. Client-safe security requirements
 
@@ -182,19 +182,16 @@ The Private Client Link (`/client/?token=...`) is the **hard** client-safe bound
 - Do not reinstall the full Phosphor package or reintroduce a Google Fonts CDN import.
 - Do not claim pixel-perfect/visually-approved status — see §23.
 
-## 19. Remaining migration order
+## 19. Audited status categories
 
-1. Landing (`/`) - **DONE**
-2. Dealer Home (`/admin/owner.html`) - **DONE**
-3. Demand visual polish (`#demand`) - **DONE**
-4. Properties, Customers, Deals - **DONE**
-5. Team Workspace + Map Studio - **DONE**
-6. Area Intelligence, Property Insights, Developer Control - **DONE**
-7. Client Presentation Properties/Sector-maps tab bodies - **DONE**
-8. Private buyer page visual polish against the Dashboard's phone-preview spec - **DONE**
-9. Full 6-viewport responsive pass (1440×900, 1366×768, 1024×768, tablet landscape, 430×932, 390×844)
-10. Full accessibility pass across all routes
-11. Final build/regression validation
+1. Landing (`/`) — implemented, awaiting user visual review.
+2. Dealer Home (`/admin/owner.html`) — incomplete.
+3. Demand, Properties, Customers, Deals, Area Intelligence, Property Insights, Developer Control, and Buyer page — system-derived.
+4. Team Workspace (`/admin/team.html`) — incomplete.
+5. Map Studio (`/admin/map-studio.html`) — incomplete.
+6. Client Presentation (`/app/plotmap/`) — incomplete.
+7. Device activation verification and all real persistence — backend-only future work.
+8. Responsive and accessibility work — incomplete until the user performs viewport and interaction testing.
 
 ## 20. Test and build commands
 
@@ -205,7 +202,7 @@ npm test
 npm run build
 ```
 
-Current state (as of `763257d`): tsc clean, **62/62 vitest tests pass**, build succeeds. Re-run all three before every commit.
+The audit repair reruns TypeScript, Vitest, and the production build before commit. Use the latest audit report/commit output rather than this handoff for exact counts.
 
 ## 21. Local preview links
 
@@ -225,11 +222,11 @@ npm run preview   # http://localhost:4173 by default
 
 ## 22. Current known defects and limitations
 
-- Client Presentation: pinning a property (`pm-pcard-act--pin`) updates the pin-count chip and card label but does **not** yet draw a glowing dot marker on the map at the property's coordinates — the approved design's pin dot spec (`13px circle, #ffc21e, 3px solid #fffdfb border, box-shadow:0 0 16px #ffc21e`) is documented in `screens/02-client-presentation.md` but not wired to real coordinates yet (no per-property `{x,y}` mark data exists in the current fixtures).
-- Client Presentation Properties/Sector-maps tab bodies are not built (§10).
+- Client Presentation property-pin coordinates were invented in commit `fa6642b`: Eco City `(0.45, 0.35)`, Block 5 `(0.65, 0.75)`, and Omaxe `(0.55, 0.55)`. They are normalized development-only mock positions, not survey/map-authored coordinates. They now originate only from `DataAdapterV2.maps`, carry explicit `development-mock` provenance, and the UI labels them “MOCK · NOT SURVEY”.
+- Client Presentation Properties/Sector-maps grids are approximate; property detail, sector detail, and lightbox remain missing (§10).
 - SVG/raster geometry mismatch on the Mohali pilot pair — flagged, not fixed (§12).
-- All screens outside Client Presentation still run the pre-pixel-parity visual implementation (functionally correct, tokens-based, but not verified against the `.dc.html` markup pixel-by-pixel).
-- Some dealer pages still import the legacy `mock-adapter.ts` rather than `DataAdapterV2` (§14) — migrate opportunistically as each page is pixel-ported, don't do a disruptive mass find-replace.
+- Dealer Home preserves the approved section order but uses an incomplete three-row type chart; Team Workspace and Map Studio retain decorative/nonfunctional controls documented in §7 and §9.
+- Responsive rules now target the dealer shell/content, Team Workspace, Map Studio, Client Presentation, property grids, modals, and buyer surface. This is code-level coverage only; viewport success is awaiting user testing.
 
 ## 23. Final visual testing rule
 
@@ -242,8 +239,7 @@ Continue the MAPCO V2 pixel-parity migration.
 
 Repository: C:\Users\rachi_l35wosr\OneDrive\Desktop\MAPCO
 Branch: feat/mapco-v2-pixel-parity (do not create a new branch, do not merge to main)
-Expected current HEAD: 4150e8b
-Latest implementation commit: a10fa63
+Run `git rev-parse HEAD` and verify it matches `origin/feat/mapco-v2-pixel-parity` before continuing.
 
 First read v2/PIXEL_PARITY_HANDOFF.md in full — it has the complete state,
 architecture, route status table, and prohibited actions.
@@ -257,10 +253,10 @@ Then run:
 Approved design source (the visual contract, read completely, do not modify):
   approved-designs/02-Dashboard/design_handoff_plotmap/
 
-Continue the remaining migration order from §19 of the handoff, starting with
-Landing (/) and Dealer Home (/admin/owner.html), porting each screen's exact
-markup/spacing/typography/colors from the corresponding .dc.html file and
-screens/*.md spec. Preserve all architecture listed in §17 of the handoff
+Continue the incomplete exact-reference work from §19, starting with the
+missing Dealer Home interactions/charts, Team Workspace sheets, Map Studio
+state branches, and Client Presentation detail/lightbox flows. Preserve the
+approved markup/measurements and all architecture listed in §17 of the handoff
 (DataAdapterV2, map engine, client-safe types, etc.) — do not bypass typed
 adapters with hardcoded page data.
 

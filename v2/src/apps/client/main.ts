@@ -65,7 +65,7 @@ function renderValid(container: HTMLElement, payload: ClientSafePayload, noPhoto
 
   const pagerHtml = multi
     ? `<div style="position:absolute;top:62px;left:16px;right:16px;display:flex;gap:6px;z-index:3">
-        ${properties.map((_, i) => `<button data-go="${i}" class="pm-client-go" style="flex:1;height:4px;border-radius:2px;background:${i === activeIndex ? '#fff' : 'rgba(255,255,255,.3)'};cursor:pointer;border:none"></button>`).join('')}
+        ${properties.map((_, i) => `<button data-go="${i}" class="pm-client-go" aria-label="View shortlisted property ${i + 1}" ${i === activeIndex ? 'aria-current="true"' : ''} style="flex:1;height:4px;border-radius:2px;background:${i === activeIndex ? '#fff' : 'rgba(255,255,255,.3)'};cursor:pointer;border:none"></button>`).join('')}
        </div>`
     : '';
 
@@ -75,8 +75,8 @@ function renderValid(container: HTMLElement, payload: ClientSafePayload, noPhoto
        </div>`
     : '';
 
-  const prevBtn = chosen.length > 1 ? `<button class="pm-client-prev" style="position:absolute;left:10px;top:150px;width:40px;height:40px;border-radius:50%;background:rgba(20,13,32,.6);color:#fff6e0;display:grid;place-items:center;border:none;cursor:pointer"><i class="ph-bold ph-caret-left" style="font-size:18px"></i></button>` : '';
-  const nextBtn = chosen.length > 1 ? `<button class="pm-client-next" style="position:absolute;right:10px;top:150px;width:40px;height:40px;border-radius:50%;background:rgba(20,13,32,.6);color:#fff6e0;display:grid;place-items:center;border:none;cursor:pointer"><i class="ph-bold ph-caret-right" style="font-size:18px"></i></button>` : '';
+  const prevBtn = chosen.length > 1 ? `<button class="pm-client-prev" aria-label="Previous property photo" style="position:absolute;left:10px;top:150px;width:40px;height:40px;border-radius:50%;background:rgba(20,13,32,.6);color:#fff6e0;display:grid;place-items:center;border:none;cursor:pointer"><i class="ph-bold ph-caret-left" style="font-size:18px"></i></button>` : '';
+  const nextBtn = chosen.length > 1 ? `<button class="pm-client-next" aria-label="Next property photo" style="position:absolute;right:10px;top:150px;width:40px;height:40px;border-radius:50%;background:rgba(20,13,32,.6);color:#fff6e0;display:grid;place-items:center;border:none;cursor:pointer"><i class="ph-bold ph-caret-right" style="font-size:18px"></i></button>` : '';
 
   const factsHtml = `
     <span style="display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:800;color:#fff6e0;background:rgba(255,255,255,.09);border-radius:11px;padding:9px 13px"><i class="ph-fill ph-ruler" style="font-size:15px;color:#ffc93c"></i>${esc(p.size)}</span>
@@ -88,12 +88,13 @@ function renderValid(container: HTMLElement, payload: ClientSafePayload, noPhoto
     <div style="border-radius:20px;padding:18px;margin-top:18px;background:linear-gradient(150deg,#6b3fd4,#3f1f9e);box-shadow:0 18px 40px -20px rgba(107,63,212,.9)">
       <div style="font-size:11.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#d8c8ff">A message from ${esc(dealerDisplayName)}</div>
       <div style="display:flex;align-items:center;gap:13px;margin-top:12px">
-        <button style="width:56px;height:56px;border-radius:50%;background:#ffc93c;color:#241d0c;display:grid;place-items:center;flex:none;border:none"><i class="ph-fill ph-play" style="font-size:22px"></i></button>
+        <span aria-hidden="true" style="width:56px;height:56px;border-radius:50%;background:#ffc93c;color:#241d0c;display:grid;place-items:center;flex:none"><i class="ph-fill ph-waveform" style="font-size:22px"></i></span>
         <div style="flex:1;display:flex;align-items:center;gap:3px;height:38px">
-          ${Array.from({ length: 24 }).map((_, i) => `<span style="flex:1;background:rgba(255,255,255,.3);border-radius:2px;height:${10 + Math.random() * 20}px"></span>`).join('')}
+          ${Array.from({ length: 24 }).map((_, i) => `<span style="flex:1;background:rgba(255,255,255,.3);border-radius:2px;height:${10 + ((i * 7) % 20)}px"></span>`).join('')}
         </div>
         <span style="font-size:14px;font-weight:800;color:#fff6e0;flex:none">${voiceNote.seconds}s</span>
       </div>
+      <div style="margin-top:8px;font-size:11px;font-weight:700;color:#d8c8ff">Audio playback is unavailable in development mock data.</div>
     </div>` : '';
 
   const othersHtml = multi ? `
@@ -169,7 +170,6 @@ function renderValid(container: HTMLElement, payload: ClientSafePayload, noPhoto
 
       <div style="margin-top:24px;display:flex;gap:10px">
         <a href="https://wa.me/?text=${waText}" target="_blank" rel="noopener" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;height:52px;border-radius:15px;background:#12a150;color:#fff;font-size:15px;font-weight:800;text-decoration:none"><i class="ph-fill ph-whatsapp-logo" style="font-size:19px"></i>WhatsApp</a>
-        <a href="tel:" style="display:flex;align-items:center;justify-content:center;gap:8px;height:52px;width:52px;border-radius:15px;background:rgba(255,248,230,.1);color:#ffc93c;font-size:15px;font-weight:800;text-decoration:none;flex:none"><i class="ph-fill ph-phone" style="font-size:21px"></i></a>
       </div>
       <div style="text-align:center;padding:20px 0 0;font-size:12px;color:#6b5a90"><div style="display:flex;align-items:center;justify-content:center;gap:6px"><i class="ph-fill ph-shield-check" style="font-size:14px"></i>Powered by PlotMap · Private link</div></div>
     </div>

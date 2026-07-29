@@ -99,6 +99,8 @@ export interface MarkSet {
 
 export interface Mark {
   kind: 'road' | 'block' | 'pin' | 'text';
+  /** Coordinate provenance must be explicit for property pins. */
+  coordinateProvenance?: 'development-mock' | 'map-authored' | 'survey';
   points: number[][] | { x: number; y: number };
   label: string;
   propertyId?: string;

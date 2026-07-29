@@ -13,6 +13,17 @@
 button:focus-visible, a:focus-visible {
   border-radius: inherit;
 }
+.pm-sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
 
 /* ── RESPONSIVE SHELL (Dealer Dashboard) ─────────────────── */
 @media (max-width: 1024px) {
@@ -23,8 +34,27 @@ button:focus-visible, a:focus-visible {
   #pm-dash-shell main {
     padding: 0 !important;
   }
-  .pm-pres-rail {
+  #pm-dash-content > div {
+    max-width: 100% !important;
+    padding-left: 24px !important;
+    padding-right: 24px !important;
+  }
+  .pm-rail {
     width: 320px !important; /* scale down presentation rail */
+  }
+  #pm-ws-header {
+    flex-wrap: wrap !important;
+  }
+  #pm-ws-header > div:nth-child(2) {
+    flex: 1 1 520px;
+    overflow-x: auto;
+  }
+  .pm-work-actions,
+  .pm-map-hub-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .pm-map-editor-sidebar {
+    width: 300px !important;
   }
 }
 
@@ -80,22 +110,49 @@ button:focus-visible, a:focus-visible {
   #pm-dash-main {
     padding-bottom: 70px !important; /* Space for bottom nav */
   }
+  #pm-dash-main > header {
+    padding: 12px 16px !important;
+    overflow-x: auto;
+    flex-wrap: nowrap !important;
+  }
+  #pm-dash-content > div {
+    width: 100% !important;
+    padding: 20px 16px 96px !important;
+  }
+  #pm-dash-content [style*="grid-template-columns:repeat(3"],
+  #pm-dash-content [style*="grid-template-columns:repeat(auto-fit"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
 
   /* Presentation Mobile */
   .pm-pres {
     flex-direction: column !important;
   }
   .pm-pres-map {
-    height: 50vh !important;
+    min-height: 48vh !important;
+    flex: 1 1 48% !important;
   }
-  .pm-pres-rail, .pm-rail {
+  .pm-rail {
     width: 100% !important;
-    height: 50vh !important;
+    min-height: 0 !important;
+    flex: 1 1 52% !important;
     border-left: none !important;
     border-top: 1px solid var(--pm-hairline);
   }
   .pm-viewtabs {
-    display: none !important; /* hide on very small */
+    display: flex !important;
+    max-width: calc(100vw - 28px);
+    overflow-x: auto;
+  }
+  .pm-pres-grid > div > div {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  .pm-pres-grid [style*="grid-template-columns"] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  .pm-coordinate-note {
+    display: none;
   }
 
   /* Buyer Mobile - already mobile layout, ensure full width */
@@ -103,11 +160,48 @@ button:focus-visible, a:focus-visible {
     width: 100% !important;
     max-width: 100% !important;
   }
+  .pm-modal-content,
+  [role="dialog"] > div {
+    max-width: calc(100vw - 24px) !important;
+    max-height: calc(100vh - 24px) !important;
+    overflow-y: auto !important;
+    padding: 24px 20px !important;
+  }
 }
 
 
 /* Team Workspace Mobile */
 @media (max-width: 768px) {
-  #pm-ws-header { flex-wrap: wrap !important; padding: 12px !important; }
-  #pm-ws-header > div:nth-child(2) { width: 100%; order: 3; justify-content: space-between; }
+  #pm-ws-header { flex-wrap: wrap !important; padding: 10px 12px !important; gap: 10px !important; }
+  #pm-ws-header > div:nth-child(2) { width: 100%; order: 3; justify-content: flex-start; overflow-x: auto; }
+  #pm-ws-header > div:nth-child(2) a { flex: none; padding-left: 14px !important; padding-right: 14px !important; }
+  #pm-ws-header > div:last-child { display: none !important; }
+  #pm-ws-content > div:not(.pm-map-editor) { padding-left: 16px !important; padding-right: 16px !important; }
+  .pm-work-actions,
+  .pm-map-hub-grid { grid-template-columns: minmax(0, 1fr) !important; }
+  .pm-work-studio > span { align-items: flex-start !important; padding: 24px !important; }
+  .pm-work-studio > span > span:last-child > span:first-child { display: none !important; }
+  .pm-map-editor-toolbar { overflow-x: auto; align-items: center !important; }
+  .pm-map-editor-toolbar > * { flex: none; }
+  .pm-map-editor-body { flex-direction: column !important; }
+  .pm-map-editor-body > div:first-child { min-height: 44vh !important; }
+  .pm-map-editor-sidebar {
+    width: 100% !important;
+    height: 46vh !important;
+    border-left: 0 !important;
+    border-top: 1px solid var(--pm-hairline);
+  }
+}
+
+@media (max-width: 560px) {
+  .pm-landing { overflow-y: auto !important; }
+  .pm-landing > div:nth-child(3) { justify-content: flex-start !important; padding-top: 16px !important; }
+  .pm-land-cards { flex-direction: column !important; flex: none !important; }
+  .pm-land-cards > a { min-height: 250px; }
+  .pm-land-footer { padding-bottom: 18px; }
+  .pm-pres-topbar { right: 14px; }
+  .pm-mapbtn .pm-mapname { max-width: 130px; overflow: hidden; text-overflow: ellipsis; }
+  .pm-botright { right: 8px !important; bottom: 8px !important; }
+  .pm-botleft { max-width: calc(100% - 16px); overflow-x: auto; }
+  .pm-rail-list { padding-left: 10px !important; padding-right: 10px !important; }
 }

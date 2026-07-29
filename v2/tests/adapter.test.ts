@@ -117,3 +117,15 @@ describe('Client-safe projection (security invariant)', () => {
     }
   });
 });
+
+describe('Property-pin coordinate provenance', () => {
+  it('marks invented preview pins as development-only, never survey coordinates', async () => {
+    const result = await adapter.maps.get('nc-master');
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const pins = result.value.sets.flatMap((set) => set.marks).filter((mark) => mark.kind === 'pin');
+    expect(pins).toHaveLength(3);
+    expect(pins.every((pin) => pin.coordinateProvenance === 'development-mock')).toBe(true);
+    expect(pins.every((pin) => pin.coordinateProvenance !== 'survey')).toBe(true);
+  });
+});

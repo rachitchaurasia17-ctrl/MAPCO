@@ -44,7 +44,7 @@ function initLanding(container: HTMLElement) {
   .pm-land-card-2:hover{transform:translateY(-10px);box-shadow:0 2px 3px rgba(40,30,10,.05),0 44px 70px -34px rgba(18,161,80,.75) !important;border-color:#12a150 !important;}
   .pm-land-card-3:hover{transform:translateY(-10px);box-shadow:0 2px 3px rgba(40,30,10,.05),0 44px 70px -34px rgba(151,110,235,.8) !important;border-color:#976eeb !important;}
 </style>
-<div style="position:fixed;inset:0;overflow:hidden;background:#f7ecd6;font-family:var(--pm-font-ui);display:flex;flex-direction:column">
+<div class="pm-landing" style="position:fixed;inset:0;overflow:hidden;background:#f7ecd6;font-family:var(--pm-font-ui);display:flex;flex-direction:column">
 
   <div style="position:absolute;inset:0;overflow:hidden;pointer-events:none">
     <div style="position:absolute;width:70vw;height:70vw;left:-16vw;top:-22vw;border-radius:50%;background:radial-gradient(circle,rgba(255,201,60,.72),rgba(255,201,60,0) 68%);animation:lBloomA 26s ease-in-out infinite"></div>
@@ -96,7 +96,7 @@ function initLanding(container: HTMLElement) {
       <p style="margin:clamp(10px,1.8vh,18px) 0 0;max-width:480px;font-size:clamp(14px,1.9vh,17px);line-height:1.5;color:#6b6156;text-wrap:pretty;animation:lRise 1s cubic-bezier(.2,.8,.2,1) both;animation-delay:.16s">Every map, every plot, every client — one calm room. Choose where the day starts.</p>
     </div>
 
-    <div style="display:flex;gap:clamp(12px,1.4vw,20px);width:100%;max-width:1160px;flex:0 1 auto;min-height:0">
+    <div class="pm-land-cards" style="display:flex;gap:clamp(12px,1.4vw,20px);width:100%;max-width:1160px;flex:0 1 auto;min-height:0">
 
       <a href="/app/plotmap/index.html" class="pm-land-card-1" style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;border-radius:clamp(18px,2.4vh,26px);background:#fffaf0;border:1px solid #f2dca6;box-shadow:0 2px 3px rgba(40,30,10,.04),0 30px 56px -38px rgba(120,86,10,.8);color:inherit;text-decoration:none;transition:transform .38s cubic-bezier(.2,.8,.2,1),box-shadow .38s ease,border-color .3s ease;animation:lRise .95s cubic-bezier(.2,.8,.2,1) both;animation-delay:.2s">
         <div style="position:relative;flex:none;height:clamp(84px,13vh,120px);background:#ffc93c;background-image:radial-gradient(120% 130% at 12% 8%,#ffe28a,#f7b21f 62%,#e79a0c);overflow:hidden">
@@ -145,7 +145,7 @@ function initLanding(container: HTMLElement) {
 
     </div>
 
-    <div style="display:flex;align-items:center;justify-content:center;gap:clamp(12px,1.6vw,24px);flex-wrap:wrap;flex:none;animation:lFade 1.2s ease both;animation-delay:.5s">
+    <div class="pm-land-footer" style="display:flex;align-items:center;justify-content:center;gap:clamp(12px,1.6vw,24px);flex-wrap:wrap;flex:none;animation:lFade 1.2s ease both;animation-delay:.5s">
       <div style="display:flex;align-items:center;gap:7px;font-size:clamp(11.5px,1.5vh,13.5px);color:#8d8271"><i class="ph-fill ph-shield-check" style="font-size:16px;color:#12704a"></i>Only what you publish is ever visible to a client</div>
       <span style="width:5px;height:5px;border-radius:50%;background:#d3c49c"></span>
       <div style="display:flex;align-items:center;gap:7px;font-size:clamp(11.5px,1.5vh,13.5px);color:#8d8271"><i class="ph-fill ph-cloud-check" style="font-size:16px;color:#a8792a"></i>Studio changes reach the client screen instantly</div>
@@ -154,20 +154,21 @@ function initLanding(container: HTMLElement) {
   </div>
 
   <!-- Device Activation Modal -->
-  <div id="pm-activation-modal" class="pm-modal-overlay">
-    <div class="pm-modal-content">
+  <div id="pm-activation-modal" class="pm-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="pm-activation-title" aria-hidden="true">
+    <div class="pm-modal-content" tabindex="-1">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
-        <h2 style="font-family:var(--pm-font-display);font-size:24px;font-weight:500;color:#241f1c;letter-spacing:-.02em">Activate Device</h2>
-        <button id="pm-close-modal" style="background:none;border:none;cursor:pointer;color:#9a8f7c;padding:4px"><i class="ph-bold ph-x" style="font-size:20px"></i></button>
+        <h2 id="pm-activation-title" style="font-family:var(--pm-font-display);font-size:24px;font-weight:500;color:#241f1c;letter-spacing:-.02em">Activate Device</h2>
+        <button id="pm-close-modal" aria-label="Close device activation" style="background:none;border:none;cursor:pointer;color:#9a8f7c;padding:4px"><i class="ph-bold ph-x" style="font-size:20px"></i></button>
       </div>
       <p style="font-size:15px;color:#6b6156;line-height:1.5;margin-bottom:24px">Enter the 6-digit activation code provided by your PlotMap platform administrator.</p>
       
       <div style="display:flex;flex-direction:column;gap:16px">
-        <input type="text" id="pm-act-code" placeholder="000-000" style="width:100%;height:52px;border-radius:14px;border:1px solid #ddd2f5;padding:0 16px;font-family:var(--pm-font-ui);font-size:16px;text-align:center;letter-spacing:4px;font-weight:700;color:#1f1a12;background:#fff" maxlength="7">
+        <label for="pm-act-code" class="pm-sr-only">Six-digit activation code</label>
+        <input type="text" id="pm-act-code" inputmode="numeric" autocomplete="one-time-code" aria-describedby="pm-act-error" placeholder="000-000" style="width:100%;height:52px;border-radius:14px;border:1px solid #ddd2f5;padding:0 16px;font-family:var(--pm-font-ui);font-size:16px;text-align:center;letter-spacing:4px;font-weight:700;color:#1f1a12;background:#fff" maxlength="7">
         
-        <div id="pm-act-error" style="display:none;color:#c2185b;font-size:13px;font-weight:700;text-align:center;padding:8px;background:#ffe1e6;border-radius:8px">Invalid activation code.</div>
+        <div id="pm-act-error" role="alert" aria-live="assertive" style="display:none;color:#c2185b;font-size:13px;font-weight:700;text-align:center;padding:8px;background:#ffe1e6;border-radius:8px">Invalid activation code.</div>
         
-        <button id="pm-act-submit" style="width:100%;height:52px;border-radius:14px;background:#ffc93c;color:#231a04;font-size:16px;font-weight:800;border:none;cursor:pointer;box-shadow:0 8px 16px -8px rgba(255,194,30,.6)">Verify & Activate</button>
+        <button id="pm-act-submit" disabled aria-disabled="true" title="Backend-only future work" style="width:100%;height:52px;border-radius:14px;background:#ffc93c;color:#231a04;font-size:16px;font-weight:800;border:none;cursor:not-allowed;opacity:.65;box-shadow:0 8px 16px -8px rgba(255,194,30,.6)">Activation backend not connected</button>
       </div>
     </div>
   </div>
@@ -189,13 +190,21 @@ function initLanding(container: HTMLElement) {
   const modal = document.getElementById('pm-activation-modal')!;
   const btnOpen = document.getElementById('pm-activate-btn')!;
   const btnClose = document.getElementById('pm-close-modal')!;
-  const btnSubmit = document.getElementById('pm-act-submit')!;
   const inputCode = document.getElementById('pm-act-code') as HTMLInputElement;
   const errorMsg = document.getElementById('pm-act-error')!;
+  let previouslyFocused: HTMLElement | null = null;
+
+  const closeModal = () => {
+    modal.classList.remove('active');
+    modal.setAttribute('aria-hidden', 'true');
+    previouslyFocused?.focus();
+  };
 
   if (btnOpen) {
     btnOpen.addEventListener('click', () => {
+      previouslyFocused = document.activeElement as HTMLElement | null;
       modal.classList.add('active');
+      modal.setAttribute('aria-hidden', 'false');
       inputCode.value = '';
       errorMsg.style.display = 'none';
       inputCode.focus();
@@ -203,12 +212,26 @@ function initLanding(container: HTMLElement) {
   }
 
   if (btnClose) {
-    btnClose.addEventListener('click', () => modal.classList.remove('active'));
+    btnClose.addEventListener('click', closeModal);
   }
   
   if (modal) {
     modal.addEventListener('click', (e) => {
-      if (e.target === modal) modal.classList.remove('active');
+      if (e.target === modal) closeModal();
+    });
+    modal.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeModal();
+        return;
+      }
+      if (e.key !== 'Tab') return;
+      const focusable = [...modal.querySelectorAll<HTMLElement>('button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])')];
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (!first || !last) return;
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     });
   }
 
@@ -221,25 +244,6 @@ function initLanding(container: HTMLElement) {
     });
   }
 
-  if (btnSubmit) {
-    btnSubmit.addEventListener('click', () => {
-      if (inputCode.value.length < 7) {
-        errorMsg.style.display = 'block';
-        errorMsg.textContent = 'Please enter a complete 6-digit code.';
-        return;
-      }
-      
-      btnSubmit.textContent = 'Verifying...';
-      btnSubmit.style.opacity = '0.7';
-      
-      setTimeout(() => {
-        btnSubmit.textContent = 'Verify & Activate';
-        btnSubmit.style.opacity = '1';
-        errorMsg.style.display = 'block';
-        errorMsg.textContent = 'Activation failed. Please contact your PlotMap administrator.';
-      }, 800);
-    });
-  }
 }
 
 const app = document.getElementById('app');

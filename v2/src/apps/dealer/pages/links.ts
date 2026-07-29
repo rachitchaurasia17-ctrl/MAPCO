@@ -1,11 +1,17 @@
 /* ═══════════════════════════════════════════════════════════════
    PlotMap V2 — Dealer Dashboard: Client Links
    ═══════════════════════════════════════════════════════════════ */
-import { dataAdapter } from '../../../packages/data/mock-adapter';
+import { adapter } from '../../../packages/data/mock-adapter-v2';
 import { getInitials } from '../../../packages/auth/auth';
 
 export async function renderLinks(el: HTMLElement) {
-  const links = await dataAdapter.getClientLinks();
+  el.innerHTML = '<div role="status" aria-live="polite" style="max-width:720px;margin:40px auto;padding:24px;color:#6b6156">Loading client links…</div>';
+  const result = await adapter.clientLinks.list({ limit: 100 });
+  if (!result.ok) {
+    el.innerHTML = '<div role="alert" aria-live="assertive" style="max-width:720px;margin:40px auto;padding:24px;border-radius:18px;background:#fffaf0;color:#6b6156">Client links could not be loaded.</div>';
+    return;
+  }
+  const links = result.value.items;
   const liveCount = links.filter(l => l.status === 'active').length;
   const totalOpens = links.reduce((s, l) => s + l.events.opens, 0);
 

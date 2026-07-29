@@ -2,7 +2,7 @@
    PlotMap V2 — Dealer Dashboard: Home section
    Metrics grid, map integration, recent views
    ═══════════════════════════════════════════════════════════════ */
-import { dataAdapter } from '../../../packages/data/mock-adapter';
+import { adapter } from '../../../packages/data/mock-adapter-v2';
 import { getProfile, getGreeting, getFirstName } from '../../../packages/auth/auth';
 import { formatDateShort } from '../../../packages/ui/utils';
 
@@ -14,9 +14,25 @@ const formatPrice = (val: number) => {
 
 export async function renderHome(el: HTMLElement) {
   const profile = getProfile();
-  const signals = await dataAdapter.getDemandSignals();
-  const links = await dataAdapter.getClientLinks();
-  const properties = await dataAdapter.getProperties();
+  el.innerHTML = '<div role="status" aria-live="polite" style="max-width:720px;margin:40px auto;padding:24px;color:#6b6156">Loading dashboard…</div>';
+  const [signalsResult, linksResult, propertiesResult] = await Promise.all([
+    adapter.demandSignals.get(),
+    adapter.clientLinks.list({ limit: 100 }),
+    adapter.properties.list({ limit: 100 }),
+  ]);
+
+  if (!signalsResult.ok || !linksResult.ok || !propertiesResult.ok) {
+    el.innerHTML = '<div role="alert" aria-live="assertive" style="max-width:720px;margin:40px auto;padding:24px;border-radius:18px;background:#fffaf0;color:#6b6156">Dashboard data could not be loaded.</div>';
+    return;
+  }
+
+  const signals = signalsResult.value;
+  const links = linksResult.value.items;
+  const properties = propertiesResult.value.items;
+  if (signals.length === 0) {
+    el.innerHTML = '<div role="status" aria-live="polite" style="max-width:720px;margin:40px auto;padding:24px;border-radius:18px;background:#fffaf0;color:#6b6156">No presentation demand signals are available yet.</div>';
+    return;
+  }
 
   const totalOpens = signals.reduce((s, d) => s + d.opens, 0);
   const totalLinkOpens = links.reduce((s, l) => s + l.events.opens, 0);
@@ -135,7 +151,7 @@ export async function renderHome(el: HTMLElement) {
         </div>
         <div style="flex:1 1 150px;min-width:0;display:flex;flex-direction:column;gap:8px">
           ${segs.slice(0, 5).map(l => `
-          <div style="display:flex;align-items:center;gap:10px;padding:5px 7px;border-radius:10px;cursor:pointer" style="transition:background .1s" onmouseover="this.style.background='#ffe9a8'" onmouseout="this.style.background='transparent'">
+          <div style="display:flex;align-items:center;gap:10px;padding:5px 7px;border-radius:10px;cursor:pointer;transition:background .1s" onmouseover="this.style.background='#ffe9a8'" onmouseout="this.style.background='transparent'">
             <span style="width:12px;height:12px;border-radius:50%;background:${l.color};flex:none"></span>
             <span style="flex:1;min-width:0;text-align:left;font-size:15px;font-weight:800;color:#241f1c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l.city}</span>
             <span style="font-family:var(--pm-font-display);font-size:18px;font-weight:600;color:#241f1c;flex:none">${l.pct}%</span>

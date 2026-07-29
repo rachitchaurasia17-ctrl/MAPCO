@@ -44,7 +44,7 @@ export async function renderMapStudio(el: HTMLElement) {
   function render() {
     if (view === 'hub') {
       el.innerHTML = `
-        <div style="max-width:1180px;margin:0 auto;padding:38px 34px 70px">
+        <div class="pm-map-hub" style="max-width:1180px;margin:0 auto;padding:38px 34px 70px">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap;animation:wRise .5s cubic-bezier(.2,.8,.2,1) both">
             <div>
               <div style="font-size:12px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#a8792a">Map Studio</div>
@@ -53,7 +53,7 @@ export async function renderMapStudio(el: HTMLElement) {
             </div>
           </div>
 
-          <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-top:34px">
+          <div class="pm-map-hub-grid" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-top:34px">
             <button id="btn-master" style="text-align:left;position:relative;display:flex;flex-direction:column;overflow:hidden;border-radius:26px;background:#fffaf0;border:1px solid #f6d98d;box-shadow:0 2px 3px rgba(40,30,10,.04),0 30px 56px -40px rgba(120,86,10,.9);transition:transform .34s cubic-bezier(.2,.8,.2,1),box-shadow .34s,border-color .3s;animation:wRise .55s cubic-bezier(.2,.8,.2,1) both;animation-delay:.06s" onmouseenter="this.style.transform='translateY(-8px)';this.style.borderColor='#ffc93c';this.style.boxShadow='0 2px 3px rgba(40,30,10,.05),0 44px 68px -34px rgba(255,175,20,.95)'" onmouseleave="this.style.transform='none';this.style.borderColor='#f6d98d';this.style.boxShadow='0 2px 3px rgba(40,30,10,.04),0 30px 56px -40px rgba(120,86,10,.9)'">
               <span style="position:relative;display:block;height:152px;overflow:hidden;background:#ffc93c;background-image:radial-gradient(120% 130% at 12% 8%,#ffe28a,#f7b21f 62%,#e79a0c)">
                 <span style="position:absolute;inset:0;background:repeating-linear-gradient(58deg,rgba(255,255,255,.22) 0 2px,transparent 2px 26px)"></span>
@@ -108,8 +108,8 @@ export async function renderMapStudio(el: HTMLElement) {
 
     } else {
       el.innerHTML = `
-        <div style="position:absolute;inset:0;display:flex;flex-direction:column;background:#f0e8ff;background-image:radial-gradient(58% 48% at 6% -2%,rgba(139,96,232,.56),transparent 62%),radial-gradient(52% 44% at 96% 6%,rgba(56,138,186,.44),transparent 62%),radial-gradient(60% 46% at 50% 108%,rgba(255,190,48,.4),transparent 64%)">
-          <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:#fffaf0;background-image:linear-gradient(90deg,#fff6dd,#fffaf0 55%,#f6f0ff);border-bottom:1px solid #ddd2f5;flex:none;z-index:20;min-height:62px">
+        <div class="pm-map-editor" style="position:absolute;inset:0;display:flex;flex-direction:column;background:#f0e8ff;background-image:radial-gradient(58% 48% at 6% -2%,rgba(139,96,232,.56),transparent 62%),radial-gradient(52% 44% at 96% 6%,rgba(56,138,186,.44),transparent 62%),radial-gradient(60% 46% at 50% 108%,rgba(255,190,48,.4),transparent 64%)">
+          <div class="pm-map-editor-toolbar" style="display:flex;align-items:center;gap:10px;padding:10px 16px;background:#fffaf0;background-image:linear-gradient(90deg,#fff6dd,#fffaf0 55%,#f6f0ff);border-bottom:1px solid #ddd2f5;flex:none;z-index:20;min-height:62px">
             <button id="btn-back" style="display:flex;align-items:center;gap:7px;padding:10px 14px;border-radius:12px;background:#f0eaff;font-size:14.5px;font-weight:800;color:#4c463d;flex:none;cursor:pointer;border:none" onmouseenter="this.style.background='#ddd2f5'" onmouseleave="this.style.background='#f0eaff'"><i class="ph-bold ph-arrow-left" style="font-size:15px"></i>Back</button>
             <div style="display:flex;align-items:center;gap:11px;padding:6px 14px;border-radius:14px;background:#fffaf0;border:1px solid #e4dbf7;box-shadow:0 4px 12px -6px rgba(30,28,22,.1)">
               <span style="width:24px;height:24px;border-radius:7px;background:#ffc93c;color:#1a2f24;display:grid;place-items:center;flex:none"><i class="ph-fill ph-map-trifold" style="font-size:14px"></i></span>
@@ -120,14 +120,14 @@ export async function renderMapStudio(el: HTMLElement) {
             <button title="Undo" style="display:flex;align-items:center;gap:7px;padding:11px 14px;border-radius:12px;background:#f0eaff;font-size:14.5px;font-weight:800;color:#4c463d;flex:none;white-space:nowrap;cursor:pointer;border:none" onmouseenter="this.style.background='#ddd2f5'" onmouseleave="this.style.background='#f0eaff'"><i class="ph-bold ph-arrow-counter-clockwise" style="font-size:15px"></i>Undo</button>
           </div>
 
-          <div style="flex:1;min-height:0;display:flex">
+          <div class="pm-map-editor-body" style="flex:1;min-height:0;display:flex">
             <div style="flex:1;min-width:0;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden">
               <!-- MAP ENGINE CANVAS -->
-              <div id="map-engine-canvas" style="position:absolute;inset:0"></div>
+              <div id="map-engine-canvas" role="img" aria-label="Interactive map editor canvas" style="position:absolute;inset:0"></div>
             </div>
 
             <!-- RIGHT SIDEBAR: Tools & Sets -->
-            <div style="width:340px;flex:none;background:#fffaf0;border-left:1px solid #ddd2f5;overflow:hidden;display:flex;flex-direction:column">
+            <div class="pm-map-editor-sidebar" style="width:340px;flex:none;background:#fffaf0;border-left:1px solid #ddd2f5;overflow:hidden;display:flex;flex-direction:column">
               <div style="padding:16px 18px;background:#fff3d1;border-bottom:1px solid #f6d98d;flex:none">
                 <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
                   <div style="font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#8a5a0c">Drawing tools</div>
@@ -153,7 +153,7 @@ export async function renderMapStudio(el: HTMLElement) {
                       ${s.id}<span style="padding:2px 6px;border-radius:8px;font-size:11.5px;background:${activeSet === s.id ? 'rgba(255,255,255,.25)' : '#f0eaff'}">${s.n}</span>
                     </button>
                   `).join('')}
-                  <button title="New set" style="width:40px;height:40px;border-radius:12px;background:#fffaf0;border:1px dashed #c3a6f0;color:#5b32c4;display:grid;place-items:center;flex:none;cursor:pointer" onmouseenter="this.style.borderColor='#5b32c4'" onmouseleave="this.style.borderColor='#c3a6f0'"><i class="ph-bold ph-plus" style="font-size:15px"></i></button>
+                  <button title="New set" aria-label="Create a new mark set" style="width:40px;height:40px;border-radius:12px;background:#fffaf0;border:1px dashed #c3a6f0;color:#5b32c4;display:grid;place-items:center;flex:none;cursor:pointer" onmouseenter="this.style.borderColor='#5b32c4'" onmouseleave="this.style.borderColor='#c3a6f0'"><i class="ph-bold ph-plus" style="font-size:15px"></i></button>
                 </div>
               </div>
 

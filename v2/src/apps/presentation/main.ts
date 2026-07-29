@@ -14,7 +14,7 @@ import './presentation.css';
 import { adapter } from '../../packages/data/mock-adapter-v2';
 import { getMaps, mountMapEngine, type RenderMode, type MountedMap } from '../../packages/maps';
 import { streetViewUrl } from '../../packages/ui/utils';
-import type { Property } from '../../packages/data/types';
+import type { Mark, Property } from '../../packages/data/types';
 
 type View = 'masterplan' | 'properties' | 'sectors';
 
@@ -48,6 +48,8 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
   let props: Property[] = [];
   let loadState: 'loading' | 'ready' | 'empty' | 'error' = 'loading';
   const pinned = new Set<string>();
+  type PinPosition = { x: number; y: number; provenance: NonNullable<Mark['coordinateProvenance']> };
+  const pinPositionsByMap = new Map<string, Map<string, PinPosition>>();
 
   let mounted: MountedMap | null = null;
   const controller = new AbortController();
@@ -57,14 +59,14 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
 <div class="pm-pres">
   <div class="pm-pres-map">
     <div class="pm-pres-stage" id="pm-stage"></div>
-    <div class="pm-pres-grid pm-glass-bg" id="pm-grid" data-scroll style="display:none"></div>
+    <div class="pm-pres-grid pm-glass-bg" id="pm-grid" data-scroll role="tabpanel" aria-live="polite" style="display:none"></div>
     <div class="pm-pres-topbar" id="pm-topbar"></div>
     <div class="pm-botleft pm-glass-lite" id="pm-botleft"></div>
     <div class="pm-botright pm-glass" id="pm-botright"></div>
   </div>
   <aside class="pm-rail">
     <div class="pm-rail-head" id="pm-rail-head"></div>
-    <div class="pm-rail-list" data-scroll id="pm-rail-list"></div>
+    <div class="pm-rail-list" data-scroll id="pm-rail-list" aria-live="polite" aria-busy="true"></div>
   </aside>
 </div>`;
 
@@ -81,11 +83,28 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
   pinLayer.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:2;transform-origin:0 0;';
   stage.appendChild(pinLayer);
 
-  const PIN_COORDS: Record<string, {x:number, y:number}> = {
-    'ecocity': {x: 0.45, y: 0.35},
-    'block5': {x: 0.65, y: 0.75},
-    'omx': {x: 0.55, y: 0.55},
-  };
+  async function loadPinPositions(): Promise<void> {
+    const registry = await adapter.maps.listRegistry({ limit: 100 }, { signal: controller.signal });
+    if (!registry.ok) return;
+    const details = await Promise.all(
+      registry.value.items.map((entry) => adapter.maps.get(entry.id, { signal: controller.signal })),
+    );
+    details.forEach((result) => {
+      if (!result.ok) return;
+      result.value.sets.forEach((set) => {
+        const positions = pinPositionsByMap.get(set.id) ?? new Map<string, PinPosition>();
+        set.marks.forEach((mark) => {
+          if (mark.kind !== 'pin' || !mark.propertyId || Array.isArray(mark.points) || !mark.coordinateProvenance) return;
+          positions.set(mark.propertyId, { ...mark.points, provenance: mark.coordinateProvenance });
+        });
+        pinPositionsByMap.set(set.id, positions);
+      });
+    });
+  }
+
+  function pinPositionFor(propertyId: string): PinPosition | undefined {
+    return pinPositionsByMap.get(activeMapId)?.get(propertyId);
+  }
 
   let animFrame = 0;
   function updatePins() {
@@ -101,7 +120,7 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
 
     for (let i = 0; i < pinLayer.children.length; i++) {
       const p = pinLayer.children[i] as HTMLElement;
-      const inner = p.querySelector('button');
+      const inner = p.querySelector<HTMLElement>('[data-pin-marker]');
       if (inner) {
         inner.style.transform = `translate(-50%, -100%) scale(${inv}) ${upright}`;
       }
@@ -114,14 +133,16 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
     pinLayer.innerHTML = '';
     if (!map || !map.original) return;
 
-    // In a real app we'd get these from the map data's MarkSet,
-    // but here we just render any pinned property that we have coords for.
     pinned.forEach(id => {
-      const pt = PIN_COORDS[id];
+      const pt = pinPositionFor(id);
       if (!pt) return;
       const px = pt.x * map.original.dims.w;
       const py = pt.y * map.original.dims.h;
       const prop = props.find(x => x.id === id);
+      const propLabel = prop ? esc(prop.area) : 'Pinned property';
+      const provenanceLabel = pt.provenance === 'development-mock'
+        ? 'Development-only mock position; not survey coordinates'
+        : pt.provenance === 'map-authored' ? 'Map-authored position' : 'Survey coordinate';
       const is3d = mode === 'threeD';
       const upright = is3d ? 'rotateZ(5deg) rotateX(-44deg)' : '';
 
@@ -129,11 +150,12 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
       el.style.cssText = `position:absolute;left:${px}px;top:${py}px;z-index:6;transform-style:preserve-3d;pointer-events:none`;
       el.innerHTML = `
         <div style="position:absolute;left:0;top:0;width:70px;height:70px;border-radius:50%;background:rgba(255,194,30,.5);animation:ringPulse 1.8s ease-out infinite;transform:translate(-50%,-50%);pointer-events:none"></div>
-        <button style="position:relative;transform:translate(-50%,-100%) ${upright};transform-origin:bottom center;display:flex;flex-direction:column;align-items:center;cursor:pointer;animation:pinIn .4s cubic-bezier(.2,.9,.3,1.3) both;border:none;background:none;padding:0;pointer-events:auto">
-          <span style="display:flex;align-items:center;gap:7px;background:#ffc21e;color:#231a04;border-radius:12px;padding:9px 14px;white-space:nowrap;font-size:15px;font-weight:800;border:2.5px solid #fffdf7;box-shadow:0 10px 22px -8px rgba(40,26,2,.7)"><i class="ph-fill ph-map-pin" style="font-size:15px"></i>${prop ? esc(prop.area) : 'Pinned'}</span>
+        <div data-pin-marker role="img" aria-label="${propLabel}: ${provenanceLabel}" title="${provenanceLabel}" style="position:relative;transform:translate(-50%,-100%) ${upright};transform-origin:bottom center;display:flex;flex-direction:column;align-items:center;animation:pinIn .4s cubic-bezier(.2,.9,.3,1.3) both;pointer-events:auto">
+          <span style="display:flex;align-items:center;gap:7px;background:#ffc21e;color:#231a04;border-radius:12px;padding:9px 14px;white-space:nowrap;font-size:15px;font-weight:800;border:2.5px solid #fffdf7;box-shadow:0 10px 22px -8px rgba(40,26,2,.7)"><i class="ph-fill ph-map-pin" style="font-size:15px"></i>${propLabel}</span>
+          ${pt.provenance === 'development-mock' ? '<span style="margin-top:4px;padding:3px 7px;border-radius:7px;background:#241d0c;color:#fff8e6;font-size:9px;font-weight:800;white-space:nowrap">MOCK · NOT SURVEY</span>' : ''}
           <span style="display:block;width:3px;height:14px;background:#ffc21e"></span>
           <span style="display:block;width:14px;height:14px;border-radius:50%;background:#ffc21e;border:3px solid #fffdfb;margin-top:-2px"></span>
-        </button>
+        </div>
       `;
       pinLayer.appendChild(el);
     });
@@ -166,7 +188,7 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
         </div>` : ''}
       </div>
       <div class="pm-viewtabs pm-glass" role="tablist">
-        ${VIEWS.map((v) => `<button class="pm-viewtab ${view === v.k ? 'active' : ''}" role="tab" aria-selected="${view === v.k}" data-act="view" data-view="${v.k}">${v.l}</button>`).join('')}
+        ${VIEWS.map((v) => `<button class="pm-viewtab ${view === v.k ? 'active' : ''}" role="tab" aria-selected="${view === v.k}" aria-controls="pm-grid" tabindex="${view === v.k ? '0' : '-1'}" data-act="view" data-view="${v.k}">${v.l}</button>`).join('')}
       </div>`;
   }
 
@@ -178,12 +200,14 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
       <button class="pm-ctl ${mode === 'threeD' ? 'active' : ''}" data-act="mode" data-mode="threeD" ${has3D ? '' : 'disabled style="opacity:.4"'}><i class="ph-fill ph-cube" style="font-size:15px"></i>3D Map</button>
       <span class="pm-ctl-sep"></span>
       <button class="pm-ctl" data-act="fit"><i class="ph-fill ph-corners-out" style="font-size:15px"></i>Fit Map</button>`;
+    const hasMockPins = [...pinned].some((id) => pinPositionFor(id)?.provenance === 'development-mock');
     botright.innerHTML = `
       <button class="pm-zoombtn" data-act="zoom-out" aria-label="Zoom out"><i class="ph-bold ph-minus"></i></button>
       <button class="pm-zoombtn" data-act="zoom-in" aria-label="Zoom in"><i class="ph-bold ph-plus"></i></button>
       <span class="pm-ctl-sep"></span>
       <i class="ph-fill ph-map-pin" style="font-size:18px;color:#ffd76b"></i>
-      <span class="pm-pincount">${pinned.size} pinned</span>`;
+      <span class="pm-pincount">${pinned.size} pinned</span>
+      ${hasMockPins ? '<span class="pm-coordinate-note">Mock positions · not survey coordinates</span>' : ''}`;
     const showMap = view === 'masterplan' || view === 'sectors';
     botleft.style.display = showMap ? 'flex' : 'none';
     botright.style.display = showMap ? 'flex' : 'none';
@@ -260,6 +284,8 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
 
   function pcard(p: Property): string {
     const photo = p.photos[0];
+    const pin = pinPositionFor(p.id);
+    const mockPin = pin?.provenance === 'development-mock';
     return `
     <article class="pm-pcard">
       <div class="pm-pcard-photo">
@@ -275,7 +301,7 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
           <span class="pm-pcard-fact">${esc(p.position)}</span>
         </div>
         <div class="pm-pcard-actions">
-          <button class="pm-pcard-act pm-pcard-act--pin" data-act="pin" data-id="${esc(p.id)}"><i class="ph-fill ph-map-pin"></i>${pinned.has(p.id) ? 'Pinned' : 'Pin on map'}</button>
+          <button class="pm-pcard-act pm-pcard-act--pin" data-act="pin" data-id="${esc(p.id)}" ${mockPin ? 'title="Development-only mock position; not survey coordinates"' : ''}><i class="ph-fill ph-map-pin"></i>${pinned.has(p.id) ? 'Pinned' : mockPin ? 'Pin mock preview' : 'Pin on map'}</button>
           <a class="pm-pcard-act pm-pcard-act--sv" href="${esc(streetViewUrl(p.loc))}" target="_blank" rel="noopener"><i class="ph-fill ph-street-view"></i>Street view</a>
         </div>
       </div>
@@ -283,6 +309,7 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
   }
 
   function renderRail(): void {
+    railList.setAttribute('aria-busy', String(loadState === 'loading'));
     railHead.innerHTML = `
       <div class="pm-filter">
         <i class="ph-fill ph-squares-four" style="font-size:20px;color:#a8792a"></i>
@@ -292,7 +319,7 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
         </span>
         <span class="pm-filter-count">${loadState === 'ready' ? props.length : 0}</span>
       </div>`;
-    if (loadState === 'loading') { railList.innerHTML = '<div class="pm-skel"></div>'.repeat(3); return; }
+    if (loadState === 'loading') { railList.innerHTML = '<span class="pm-sr-only" role="status">Loading published plots…</span>' + '<div class="pm-skel"></div>'.repeat(3); return; }
     if (loadState === 'error') { railList.innerHTML = `<div class="pm-rail-state" role="alert"><i class="ph-fill ph-warning-circle"></i>Could not load plots.</div>`; return; }
     if (loadState === 'empty' || props.length === 0) { railList.innerHTML = `<div class="pm-rail-state"><i class="ph-fill ph-tray"></i>No published plots to show yet.</div>`; return; }
     railList.innerHTML = props.map(pcard).join('');
@@ -358,6 +385,19 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
   const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape' && mapsOpen) { mapsOpen = false; renderTopbar(); } };
   document.addEventListener('keydown', onKey);
 
+  const onTabKey = (e: KeyboardEvent) => {
+    const target = (e.target as HTMLElement).closest<HTMLElement>('[role="tab"]');
+    if (!target || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+    e.preventDefault();
+    const current = VIEWS.findIndex((item) => item.k === target.dataset.view);
+    const next = e.key === 'Home' ? 0 : e.key === 'End' ? VIEWS.length - 1
+      : (current + (e.key === 'ArrowRight' ? 1 : -1) + VIEWS.length) % VIEWS.length;
+    view = VIEWS[next]!.k;
+    renderTopbar(); renderMapControls();
+    topbar.querySelector<HTMLElement>(`[data-view="${view}"]`)?.focus();
+  };
+  container.addEventListener('keydown', onTabKey);
+
   const onDocClick = (e: MouseEvent) => {
     if (mapsOpen && !(e.target as HTMLElement).closest('.pm-mapbtn, .pm-pop')) { mapsOpen = false; renderTopbar(); }
   };
@@ -370,7 +410,10 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
   void applyMap();
 
   // load published plots (client-safe: price never read)
-  const res = await adapter.properties.list({ limit: 24 }, { signal: controller.signal });
+  const [res] = await Promise.all([
+    adapter.properties.list({ limit: 24 }, { signal: controller.signal }),
+    loadPinPositions(),
+  ]);
   if (res.ok) {
     props = res.value.items.filter((p) => p.published && !p.sold);
     loadState = props.length ? 'ready' : 'empty';
@@ -384,6 +427,7 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
   const cleanup = () => {
     cancelAnimationFrame(animFrame);
     container.removeEventListener('click', onClick);
+    container.removeEventListener('keydown', onTabKey);
     document.removeEventListener('keydown', onKey);
     document.removeEventListener('click', onDocClick, true);
     controller.abort();
