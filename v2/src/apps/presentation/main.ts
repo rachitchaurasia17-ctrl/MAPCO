@@ -223,12 +223,15 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
         <div style="position:absolute;inset:0;overflow-y:auto;background:#f5efff;background-image:radial-gradient(62% 50% at -2% -4%,rgba(139,96,232,.5),transparent 62%),radial-gradient(54% 44% at 101% 4%,rgba(56,138,186,.4),transparent 62%),radial-gradient(66% 48% at 46% 108%,rgba(255,190,48,.44),transparent 64%),radial-gradient(40% 34% at 86% 66%,rgba(236,120,168,.22),transparent 68%)">
           <div style="max-width:1260px;margin:0 auto;padding:84px 34px 56px">
             <div style="display:flex;gap:8px;flex-wrap:wrap;animation:rowIn .45s ease both">
-              <button style="height:36px;padding:0 14px;border-radius:10px;font-size:15px;font-weight:800;background:#5b32c4;color:#fff;box-shadow:0 8px 18px -8px rgba(91,50,196,.95)">All properties<span style="font-size:12.5px;font-weight:800;color:#5b32c4;background:#fff;padding:2px 7px;border-radius:99px;margin-left:8px">${props.length}</span></button>
+              <button style="height:36px;padding:0 14px;border-radius:10px;font-size:15px;font-weight:800;background:#2c224b;color:#f0eaff;box-shadow:0 8px 18px -8px rgba(44,34,75,.95)">All properties<span style="font-size:12.5px;font-weight:800;color:#f0eaff;background:#5b32c4;padding:2px 7px;border-radius:99px;margin-left:8px">${props.length}</span></button>
+              <button style="height:36px;padding:0 14px;border-radius:10px;font-size:15px;font-weight:800;background:#f5efff;color:#5b32c4;box-shadow:0 4px 12px rgba(91,50,196,.06)">New Chandigarh<span style="font-size:12.5px;font-weight:800;color:#5b32c4;background:#e5d9f2;padding:2px 7px;border-radius:99px;margin-left:8px">3</span></button>
+              <button style="height:36px;padding:0 14px;border-radius:10px;font-size:15px;font-weight:800;background:#f5efff;color:#5b32c4;box-shadow:0 4px 12px rgba(91,50,196,.06)">Mohali<span style="font-size:12.5px;font-weight:800;color:#5b32c4;background:#e5d9f2;padding:2px 7px;border-radius:99px;margin-left:8px">3</span></button>
             </div>
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(298px,1fr));gap:20px;margin-top:22px">
               ${props.map(p => {
                 const photo = p.photos[0];
                 const bg = photo ? `background:#efdcb2 url('${esc(photo)}') center/cover` : `background:#efe6da;display:grid;place-items:center;color:#b3a894`;
+                const pName = p.id === 'ecocity' ? 'Eco City plot' : p.id === 'block5' ? 'Block 5 site' : p.id === 'aero' ? 'Aerocity plot' : p.id === 'sec79' ? 'Sector 79 plot' : p.id === 'sec66' ? 'Sector 66 plot' : p.area;
                 return `
                 <button data-act="open-prop" data-id="${esc(p.id)}" style="text-align:left;background:#fffdfb;border-radius:20px;overflow:hidden;box-shadow:0 0 0 1px rgba(88,52,168,.1),0 14px 30px -22px rgba(42,31,77,.6);cursor:pointer;transition:transform .15s,box-shadow .15s" onmouseenter="this.style.transform='translateY(-8px)';this.style.boxShadow='0 0 0 1px rgba(139,96,232,.35),0 3px 4px rgba(40,26,2,.06),0 44px 66px -36px rgba(139,96,232,.6)'" onmouseleave="this.style.transform='none';this.style.boxShadow='0 0 0 1px rgba(88,52,168,.1),0 14px 30px -22px rgba(42,31,77,.6)'">
                   <span style="position:relative;display:block;overflow:hidden">
@@ -237,11 +240,11 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
                     <span style="position:absolute;right:13px;bottom:13px;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:rgba(255,253,249,.95);box-shadow:0 2px 8px -3px rgba(28,21,51,.4);font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;color:#1c1533"><i class="ph-fill ph-images" style="font-size:13px"></i>${p.photos.length} photos</span>
                   </span>
                   <span style="display:block;padding:18px 20px 20px;text-align:left">
-                    <span style="display:block;font-family:'Newsreader',serif;font-weight:500;font-size:27px;letter-spacing:-.025em;color:#1c1533;line-height:1.06">${esc(p.area)}</span>
+                    <span style="display:block;font-family:'Newsreader',serif;font-weight:500;font-size:27px;letter-spacing:-.025em;color:#1c1533;line-height:1.06">${esc(pName)}</span>
                     <span style="display:block;margin-top:5px;font-size:14px;font-weight:600;letter-spacing:.005em;color:#6f6489">${esc(p.loc)}</span>
                     <span style="display:flex;flex-wrap:wrap;gap:7px;margin-top:14px">
                       <span style="padding:6px 11px;border-radius:8px;background:#fff2cd;box-shadow:inset 0 0 0 1px rgba(168,121,42,.22);font-size:12px;font-weight:800;letter-spacing:.02em;color:#8a5a0c">${esc(p.facing)} facing</span>
-                      ${p.position === 'corner' ? `<span style="padding:6px 11px;border-radius:8px;background:#e0f2e7;box-shadow:inset 0 0 0 1px rgba(20,108,58,.2);font-size:12px;font-weight:800;letter-spacing:.02em;color:#146c3a">Corner plot</span>` : ''}
+                      ${['Corner plot', 'Park facing'].includes(p.position) ? `<span style="padding:6px 11px;border-radius:8px;background:#e0f2e7;box-shadow:inset 0 0 0 1px rgba(20,108,58,.2);font-size:12px;font-weight:800;letter-spacing:.02em;color:#146c3a">${esc(p.position)}</span>` : ''}
                     </span>
                     <span style="display:flex;align-items:center;gap:8px;margin-top:16px;font-size:14.5px;font-weight:800;letter-spacing:.01em;color:#8a5a0c">See everything <i class="ph-bold ph-arrow-right" style="font-size:15px"></i></span>
                   </span>

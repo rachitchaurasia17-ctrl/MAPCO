@@ -65,7 +65,7 @@ const REGISTRY: MapRegistry = {
   maps: [
     {
       id: 'masterplan-mohali',
-      title: 'Mohali — Master Plan',
+      title: 'New Chandigarh',
       kind: 'masterplan',
       city: 'Mohali',
       sectorOrBlock: 'Master Plan',
