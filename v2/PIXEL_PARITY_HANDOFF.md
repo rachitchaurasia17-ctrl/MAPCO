@@ -2,6 +2,21 @@
 
 Written for the next AI/engineer continuing this work. Read this fully before touching code.
 
+## Locked approved Masterplan state (2026-07-30)
+
+- Locked implementation commit: `a28dbf322f9d3e0360747496a5b78ed0da9efc4e`.
+- Branch: `feat/mapco-v2-pixel-parity`.
+- Client Presentation route: `/app/plotmap/index.html`.
+- The desktop property rail is locked at `clamp(300px, 24vw, 330px)`; at 1366 px it is approximately 328 px and the map consumes the remaining width with no inter-column gutter.
+- The initial Masterplan uses centered aspect-preserving cover-fit. The raster covers the complete map viewport, the viewport clips overflow, and cropped areas remain accessible through pointer pan.
+- `MapEngine.fit()` remains the explicit contain-fit path and centers the complete raster when Fit Map is requested.
+- Original -> 3D -> Original switching retains the active map and lazy-loads the 3D rendering only when selected.
+- Raster, authored overlays, saved highlights, and property pins all consume the canonical `cssMapTransform()` scale and translation.
+- No visual dimensions, colors, sidebar styling, controls, cards, approved design sources, routes, DataAdapterV2 contracts, or security boundaries may be changed as part of maintaining this lock.
+- Regression gate at the lock: TypeScript passed, production build passed, and 72/72 Vitest tests passed.
+
+This section supersedes older Client Presentation status notes below where they conflict with the locked behavior.
+
 ## 1. Branch and commit
 
 - Branch: feat/mapco-v2-pixel-parity
