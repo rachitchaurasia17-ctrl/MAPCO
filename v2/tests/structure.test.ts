@@ -75,6 +75,13 @@ describe('Audited adapter and accessibility boundaries', () => {
     expect(source).toContain('not survey coordinates');
   });
 
+  it('keeps presentation highlights and pins on the canonical raster transform', () => {
+    const source = readFileSync(join(root, 'src/apps/presentation/main.ts'), 'utf8');
+    expect(source).toContain('const sharedTransform = cssMapTransform(t)');
+    expect(source).toContain('highlightLayer.style.transform = sharedTransform');
+    expect(source).toContain('pinLayer.style.transform = sharedTransform');
+  });
+
   it('gives the activation modal dialog semantics and Escape handling', () => {
     const source = readFileSync(join(root, 'src/main.ts'), 'utf8');
     expect(source).toContain('role="dialog"');

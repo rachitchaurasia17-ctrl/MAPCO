@@ -1,86 +1,148 @@
 import { adapter } from '../../../packages/data/mock-adapter-v2';
-import { getInitials } from '../../../packages/auth/auth';
-import type { Client } from '../../../packages/data/types';
+import { formatINR } from '../../../packages/ui/utils';
+import type { Client, Deal, Property, WantType } from '../../../packages/data/types';
 
-function esc(s: string): string {
-  return (s || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
-}
-
-function shell(inner: string): string {
-  return `
-<div style="padding:40px;max-width:1200px;margin:0 auto">
-  <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px">
-    <div>
-      <h1 style="font-size:32px;font-weight:800;letter-spacing:-.02em;color:#1f1a12;margin-bottom:6px">My Customers</h1>
-      <p style="font-size:16px;color:#6b6156;font-weight:500">Everyone you're talking to and what they're looking for.</p>
-    </div>
-    <button style="display:flex;align-items:center;gap:8px;padding:12px 20px;border-radius:12px;background:#6533d1;color:#fff;font-size:14.5px;font-weight:700;box-shadow:0 4px 12px rgba(101,51,209,.3);border:none;cursor:pointer"><i class="ph-bold ph-plus" style="font-size:16px"></i>New Customer</button>
-  </div>
-  ${inner}
-</div>`;
-}
-
-function loadingBlock(): string {
-  return `<div style="margin-top:40px;text-align:center;color:#8d8271">Loading customers...</div>`;
-}
-
-function errorBlock(msg: string): string {
-  return `<div style="margin-top:40px;padding:30px;background:#fff3f3;border:1px solid #fecaca;border-radius:16px;color:#b91c1c;text-align:center">${esc(msg)}</div>`;
-}
+const esc = (value: string) => value.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!);
+const tel = (phone: string) => `tel:${phone.replace(/[^0-9+]/g, '')}`;
+const statusLabel = (client: Client) => client.status === 'cold' ? 'Cold' : client.status === 'active' ? 'Warm' : 'Hot';
+const statusStyle = (client: Client) => client.status === 'cold'
+  ? 'font-size:12px;font-weight:800;padding:6px 12px;border-radius:999px;background:#e8e2ef;color:#6b5b78'
+  : client.status === 'active'
+    ? 'font-size:12px;font-weight:800;padding:6px 12px;border-radius:999px;background:#fff0ba;color:#b06f0c'
+    : 'font-size:12px;font-weight:800;padding:6px 12px;border-radius:999px;background:#ffe1e6;color:#b5322a';
 
 export async function renderCustomers(el: HTMLElement): Promise<void> {
-  const controller = new AbortController();
+  let clients: Client[] = [];
+  let deals: Deal[] = [];
+  let properties: Property[] = [];
+  let search = '';
+  let filter: 'all' | 'hot' | 'warm' | 'cold' | 'done' = 'all';
+  let selectedId: string | null = null;
+  let addOpen = false;
+  let deleteArmed = false;
+  let form = { name: '', phone: '', want: 'Plot' as WantType, city: 'Mohali', budgetFrom: '', budgetTo: '', note: '' };
 
-  async function load(): Promise<void> {
-    el.innerHTML = shell(loadingBlock());
-
-    const clientsRes = await adapter.customers.list({ limit: 100 }, { signal: controller.signal });
-
-    if (!clientsRes.ok) {
-      if (clientsRes.ok === false && clientsRes.error.code === 'aborted') return;
-      el.innerHTML = shell(errorBlock('Could not load customers.'));
-      return;
-    }
-
-    const clients = clientsRes.value.items;
-
-    el.innerHTML = shell(`
-      <div style="display:flex;flex-direction:column;gap:12px">
-        ${clients.map(c => {
-          const wantsParts = c.want.split('·').map(s => s.trim()).filter(s => s);
-          // Hardcoding the tag colors from the spec, cycling through 3 styles
-          const tagStyles = [
-            'background:#f3eeff;color:#6b3fd4',
-            'background:#fff4e5;color:#c97312',
-            'background:#eef4ff;color:#1a56c4'
-          ];
-          
-          return `
-        <div style="background:#fff;border-radius:16px;padding:20px 24px;box-shadow:0 2px 8px rgba(0,0,0,.04);border:1px solid rgba(88,52,168,.08);display:flex;align-items:center;gap:24px">
-          <div style="width:48px;height:48px;border-radius:14px;background:#efe8fb;color:#5b32c4;display:grid;place-items:center;font-weight:800;font-size:17px;flex:none">${getInitials(c.name)}</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-weight:800;font-size:17px;color:#1f1a12;margin-bottom:2px">${esc(c.name)}</div>
-            <div style="font-size:14px;color:#6b6156;font-weight:600"><i class="ph-fill ph-phone" style="vertical-align:-2px"></i> ${esc(c.phone || '+91 98765 43210')}</div>
-          </div>
-          <div style="flex:2;min-width:0;display:flex;flex-direction:column;gap:6px">
-            <div style="font-size:13px;font-weight:700;color:#9a8f7c">Looking for</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap">
-              ${wantsParts.length > 0 ? wantsParts.map((w, i) => `<span style="${tagStyles[i % tagStyles.length]};padding:4px 10px;border-radius:6px;font-size:13px;font-weight:700">${esc(w)}</span>`).join('') : `<span style="${tagStyles[0]};padding:4px 10px;border-radius:6px;font-size:13px;font-weight:700">Residential</span>`}
-            </div>
-          </div>
-          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
-            <div style="font-size:13px;font-weight:700;color:#9a8f7c">Budget</div>
-            <div style="font-weight:800;font-size:16px;color:#1f1a12">${esc(c.budget)}</div>
-          </div>
-          <button style="width:40px;height:40px;border-radius:12px;background:#f8f6fc;color:#6b6156;display:grid;place-items:center;border:none;flex:none;cursor:pointer"><i class="ph-bold ph-caret-right" style="font-size:18px"></i></button>
-        </div>`;
-        }).join('')}
-      </div>
-    `);
+  const [clientResult, dealResult, propertyResult] = await Promise.all([
+    adapter.customers.list({ limit: 50 }),
+    adapter.deals.list({ limit: 50 }),
+    adapter.properties.list({ limit: 50 }),
+  ]);
+  if (!clientResult.ok || !dealResult.ok || !propertyResult.ok) {
+    el.innerHTML = '<div role="alert" style="max-width:1080px;margin:34px auto;padding:24px 26px;border-radius:18px;background:#ffe1e6;color:#9f2446">Customers could not be loaded.</div>';
+    return;
   }
+  clients = [...clientResult.value.items];
+  deals = [...dealResult.value.items];
+  properties = [...propertyResult.value.items];
 
-  const cleanup = () => { controller.abort(); };
-  window.addEventListener('pagehide', cleanup, { once: true });
+  const isDone = (client: Client) => deals.some((deal) => deal.client === client.name && deal.stage === 'closed');
+  const matchesFilter = (client: Client) => filter === 'all'
+    || (filter === 'hot' && client.status === 'hot')
+    || (filter === 'warm' && client.status === 'active')
+    || (filter === 'cold' && client.status === 'cold')
+    || (filter === 'done' && isDone(client));
 
-  await load();
+  const filterButton = (key: typeof filter, label: string, count: number) => {
+    const active = filter === key;
+    return `<button data-act="filter" data-filter="${key}" style="display:flex;align-items:center;gap:9px;height:40px;padding:0 15px;border-radius:999px;white-space:nowrap;font-size:13.5px;font-weight:800;transition:all .15s;${active ? 'background:#ffc93c;color:#241d0c' : 'background:transparent;color:#6b6156'}">${label}<span style="display:grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;font-size:11px;font-weight:800;${active ? 'background:rgba(255,255,255,.38);color:#fff' : 'background:#f3e5bc;color:#8a6a14'}">${count}</span></button>`;
+  };
+
+  const clientCard = (client: Client) => {
+    const dealCount = deals.filter((deal) => deal.client === client.name).length;
+    return `<article data-act="detail" data-id="${esc(client.id)}" style="min-width:0;background:#faf7ff;border:1px solid #e4dbf7;border-radius:18px;padding:20px 22px;cursor:pointer;box-shadow:0 1px 2px rgba(30,28,22,.03),0 14px 34px -26px rgba(30,28,22,.6);transition:border-color .12s,transform .12s">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div style="width:52px;height:52px;border-radius:50%;overflow:hidden;flex:none;background:#f7e7d9;border:1px dashed #9f8a72;display:grid;place-items:center;text-align:center;font-size:10px;color:#6b6156;line-height:1.1">Photo<br>or<br>browse</div>
+        <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:17.5px;font-weight:700;color:#2f2a2d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(client.name)}</span>${client.isNew ? '<span style="font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:#b06f0c;background:#fbeecb;padding:2px 7px;border-radius:999px;flex:none">New</span>' : ''}</div><div style="font-size:13.5px;color:#8d8271;margin-top:2px"><i class="ph ph-map-pin" style="font-size:14px;vertical-align:-2px"></i> ${esc(client.city)} · seen ${esc(client.seen)}</div></div>
+        <span style="${statusStyle(client)};flex:none">${statusLabel(client)}</span>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <div style="flex:1;background:#faf7ff;border:1px solid #f6e8c8;border-radius:12px;padding:11px 13px"><div style="font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#8d8271">Wants</div><div style="font-size:15px;font-weight:700;color:#2f2a2d;margin-top:2px">${esc(client.want)}</div></div>
+        <div style="flex:1;background:#faf7ff;border:1px solid #f6e8c8;border-radius:12px;padding:11px 13px"><div style="font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#8d8271">Budget</div><div style="font-size:15px;font-weight:800;color:#c85a1a;margin-top:2px">${esc(client.budget)}</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:14px">
+        <a href="${esc(tel(client.phone))}" data-call style="display:flex;align-items:center;justify-content:center;gap:7px;flex:1;padding:11px;border-radius:11px;background:#12a150;color:#fff;font-size:14px;font-weight:800;text-decoration:none"><i class="ph-fill ph-phone" style="font-size:16px"></i>Call</a>
+        <div style="display:flex;align-items:center;gap:6px;padding:11px 14px;border-radius:11px;background:#f7e7c6;color:#4c463d;font-size:13.5px;font-weight:700"><i class="ph-fill ph-handshake" style="font-size:16px;color:#d95d1e"></i>${dealCount} deals</div>
+      </div>
+    </article>`;
+  };
+
+  const detailMarkup = (client: Client) => {
+    const lookedAt = client.viewed.length ? client.viewed : client.interest;
+    const linkedProperties = client.interest.map((id) => properties.find((property) => property.id === id)).filter((property): property is Property => Boolean(property));
+    const clientDeals = deals.filter((deal) => deal.client === client.name);
+    const firstName = client.name.split(' ')[0] || client.name;
+    return `<div style="position:fixed;inset:0;z-index:60"><div data-act="close" style="position:absolute;inset:0;background:rgba(26,18,12,.46);animation:omVeil .25s ease both"></div><section data-scroll role="dialog" aria-modal="true" aria-label="${esc(client.name)}" style="position:absolute;right:0;top:0;height:100vh;width:500px;max-width:94vw;background:#f7f3ff;box-shadow:-24px 0 60px -30px rgba(0,0,0,.5);overflow:auto;animation:omSlide .32s cubic-bezier(.2,.8,.2,1) both">
+      <div style="position:sticky;top:0;background:#ffc93c;background-image:linear-gradient(180deg,#ffd75e,#f4ae14);color:#1f1a12;padding:24px 26px;z-index:2"><div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:12.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8a6a14">Customer</span><button data-act="close" aria-label="Close customer" style="width:38px;height:38px;border-radius:11px;background:rgba(0,0,0,.09);color:#1f1a12;display:grid;place-items:center"><i class="ph-bold ph-x" style="font-size:17px"></i></button></div><div style="display:flex;align-items:center;gap:14px;margin-top:16px"><div style="width:64px;height:64px;border-radius:50%;overflow:hidden;flex:none;background:rgba(255,255,255,.2);box-shadow:0 0 0 2px rgba(255,255,255,.35);display:grid;place-items:center;text-align:center;font-size:10px;color:#6b6156;line-height:1.1">Add<br>photo<br>browse</div><div style="flex:1"><div style="font-size:25px;font-weight:800;letter-spacing:-.01em;color:#1f1a12">${esc(client.name)}</div><div style="display:flex;align-items:center;gap:8px;font-size:15px;color:#8a6a14;margin-top:2px"><i class="ph ph-phone" style="font-size:16px"></i>${esc(client.phone)}</div></div></div><a href="${esc(tel(client.phone))}" style="display:flex;align-items:center;justify-content:center;gap:9px;margin-top:16px;padding:13px;border-radius:13px;background:#fff;color:#0b8f45;font-size:15.5px;font-weight:800;text-decoration:none"><i class="ph-fill ph-phone-call" style="font-size:18px"></i>Call ${esc(firstName)}</a></div>
+      <div style="padding:24px 26px 44px"><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div style="background:#faf7ff;border:1px solid #e4dbf7;border-radius:15px;padding:16px 18px"><div style="font-size:12.5px;color:#7d7365;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Budget</div><div style="font-size:21px;font-weight:800;color:#c85a1a;margin-top:4px">${esc(client.budget)}</div></div><div style="background:#faf7ff;border:1px solid #e4dbf7;border-radius:15px;padding:16px 18px"><div style="font-size:12.5px;color:#7d7365;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Wants</div><div style="font-size:21px;font-weight:800;color:#241f1c;margin-top:4px">${esc(client.want)} · ${esc(client.city)}</div></div></div>
+        <div style="background:#f4ecdd;border:1px solid #ece0c9;border-radius:15px;padding:16px 18px;margin-top:12px;font-size:15px;color:#4a453e;line-height:1.5"><i class="ph-fill ph-note" style="font-size:17px;color:#d95d1e;vertical-align:-2px;margin-right:6px"></i>${esc(client.note || 'No note added yet.')}</div>
+        ${lookedAt.length ? `<div style="font-size:13.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#7d7365;margin:26px 0 12px">Looked at on your map</div><div style="display:flex;flex-wrap:wrap;gap:9px">${lookedAt.map((value) => { const property = properties.find((item) => item.id === value); return `<span style="padding:8px 12px;border-radius:10px;background:#fff0c9;border:1px solid #f2dfab;color:#5b4a21;font-size:13px;font-weight:700">${esc(property ? property.area : value)}</span>`; }).join('')}</div>` : ''}
+        ${linkedProperties.length ? `<div style="font-size:13.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#7d7365;margin:26px 0 12px">Plots connected to them</div><div style="display:flex;flex-direction:column;gap:10px">${linkedProperties.map((property) => `<div style="display:flex;align-items:center;gap:12px;background:#faf7ff;border:1px solid #e4dbf7;border-radius:14px;padding:14px 16px"><div style="width:38px;height:38px;border-radius:11px;background:#fff2cf;color:#a8792a;display:grid;place-items:center;flex:none"><i class="ph-fill ph-map-pin-area" style="font-size:19px"></i></div><div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:800;color:#211c17">${esc(property.type)} · ${esc(property.size)}</div><div style="font-size:12.5px;color:#7d7365">${esc(property.loc)}</div></div><div style="font-size:16px;font-weight:800;color:#12a150;flex:none">${formatINR(property.price)}</div></div>`).join('')}</div>` : ''}
+        <div style="font-size:13.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#7d7365;margin:26px 0 12px">Their deals</div>${clientDeals.length ? `<div style="display:flex;flex-direction:column;gap:11px">${clientDeals.map((deal) => `<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:#faf7ff;border:1px solid #e4dbf7;border-radius:14px;padding:16px 18px"><div style="min-width:0"><div style="font-size:15px;font-weight:700;color:#2f2a2d">${esc(deal.name)}</div><div style="font-size:18px;font-weight:800;color:#c85a1a;font-family:'Newsreader',serif;margin-top:2px">${formatINR(deal.value)}</div></div><span style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:#fff0ba;color:#b06f0c;font-size:12px;font-weight:800;text-transform:capitalize"><span style="width:7px;height:7px;border-radius:50%;background:#d89a15"></span>${esc(deal.stage)}</span></div>`).join('')}</div>` : '<div style="font-size:14.5px;color:#8d8271;background:#faf7ff;border:1px dashed #e6cf9a;border-radius:14px;padding:16px 18px">No deal recorded yet for this customer.</div>'}
+        <div style="margin-top:28px;padding-top:20px;border-top:1px solid #e4dbf7">${deleteArmed ? `<div style="font-size:15px;color:#4c463d;line-height:1.45">Delete this customer and every private link sent to them?</div><div style="display:flex;gap:10px;margin-top:12px"><button data-act="disarm" style="flex:1;height:52px;border-radius:13px;background:#f3eeff;color:#4c463d;font-size:16px;font-weight:800">Keep them</button><button data-act="delete" data-id="${esc(client.id)}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:9px;height:52px;border-radius:13px;background:#c2185b;color:#fff;font-size:16px;font-weight:800"><i class="ph-fill ph-trash" style="font-size:18px"></i>Yes, delete</button></div>` : '<button data-act="arm-delete" style="display:flex;align-items:center;gap:9px;height:50px;padding:0 18px;border-radius:13px;background:#f3eeff;color:#8a7a52;font-size:15.5px;font-weight:800"><i class="ph-fill ph-trash" style="font-size:18px"></i>Delete this customer</button>'}</div>
+      </div></section></div>`;
+  };
+
+  const addMarkup = () => {
+    const wants: WantType[] = ['Plot', 'Flat', 'Kothi', 'Villa', 'Commercial'];
+    const ready = Boolean(form.name.trim());
+    return `<div style="position:fixed;inset:0;z-index:84;display:flex;justify-content:center;align-items:flex-start;padding:28px 24px;overflow-y:auto"><div data-act="close-add" style="position:fixed;inset:0;background:rgba(60,44,12,.58);animation:omVeil .2s ease both"></div><form id="pm-add-client" style="position:relative;width:100%;max-width:580px;border-radius:28px;background:#fffaf0;box-shadow:0 0 0 1px #e4dbf2,0 40px 80px -30px rgba(40,26,2,.8);overflow:hidden;animation:omSheet .34s cubic-bezier(.2,.8,.2,1) both">
+      <div style="display:flex;align-items:center;gap:14px;padding:22px 26px;border-bottom:1px solid #ece5f8;background:#efe8fb"><span style="width:46px;height:46px;border-radius:14px;background:#6b3fd4;color:#fff;display:grid;place-items:center;flex:none"><i class="ph-fill ph-user-plus" style="font-size:24px"></i></span><div style="flex:1;min-width:0"><div style="font-family:'Newsreader',serif;font-weight:500;font-size:26px;letter-spacing:-.02em;color:#241d0c">Add a customer</div><div style="font-size:14px;color:#6b5b8a">Name and phone is enough to start.</div></div><button type="button" data-act="close-add" style="width:38px;height:38px;border-radius:12px;background:#fffaf0;color:#6b6156;display:grid;place-items:center;flex:none"><i class="ph-bold ph-x" style="font-size:16px"></i></button></div>
+      <div data-scroll style="padding:22px 26px;max-height:62vh;overflow-y:auto"><div style="display:flex;flex-direction:column;gap:12px"><input name="name" value="${esc(form.name)}" placeholder="Full name" style="padding:16px;border-radius:13px;border:1px solid #ddd0f5;background:#faf7ff;font-size:16.5px;font-weight:600;color:#241f1c;outline:none"><input name="phone" value="${esc(form.phone)}" placeholder="Phone number" style="padding:16px;border-radius:13px;border:1px solid #ddd0f5;background:#faf7ff;font-size:16.5px;color:#241f1c;outline:none"></div><div style="margin-top:22px;font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">What do they want</div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:11px">${wants.map((want) => `<button type="button" data-act="want" data-want="${want}" style="padding:11px 15px;border-radius:12px;font-size:14.5px;font-weight:700;${form.want === want ? 'background:#6b3fd4;color:#fff;border:1px solid #6b3fd4' : 'background:#faf7ff;color:#6b6156;border:1px solid #ddd0f5'}">${want}</button>`).join('')}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px"><input name="city" value="${esc(form.city)}" placeholder="City" style="padding:15px;border-radius:13px;border:1px solid #ddd0f5;background:#faf7ff;font-size:16px;color:#241f1c;outline:none"><div style="display:flex;align-items:center;gap:8px;padding:0 14px;border-radius:13px;border:1px solid #ddd0f5;background:#faf7ff"><input name="budgetFrom" value="${esc(form.budgetFrom)}" placeholder="Budget" style="flex:1;min-width:0;border:none;outline:none;background:none;padding:15px 0;font-size:16px;color:#241f1c"><span style="font-size:14px;color:#8d8271">to</span><input name="budgetTo" value="${esc(form.budgetTo)}" placeholder="Cr" style="width:56px;border:none;outline:none;background:none;padding:15px 0;font-size:16px;color:#241f1c"></div></div><textarea name="note" rows="3" placeholder="Any note — met at site, needs loan…" style="width:100%;margin-top:12px;padding:16px;border-radius:13px;border:1px solid #ddd0f5;background:#faf7ff;font-size:16px;color:#241f1c;outline:none;resize:vertical">${esc(form.note)}</textarea></div>
+      <div style="display:flex;align-items:center;gap:11px;padding:16px 26px;border-top:1px solid #ece5f8;background:#faf7ff"><div style="flex:1;font-size:13.5px;color:#8d8271">You can send them a link right after.</div><button type="button" data-act="close-add" style="padding:15px 22px;border-radius:14px;background:#f4f0fb;color:#6b6156;font-size:15.5px;font-weight:700">Cancel</button><button id="pm-save-client" type="submit" ${ready ? '' : 'disabled'} style="padding:15px 26px;border-radius:14px;font-size:15.5px;font-weight:800;${ready ? 'background:#6b3fd4;color:#fff' : 'background:#ddd2f5;color:#b3a37a'}">Save customer</button></div>
+    </form></div>`;
+  };
+
+  const render = () => {
+    const query = search.trim().toLowerCase();
+    const visible = clients.filter((client) => matchesFilter(client) && (!query || `${client.name} ${client.city} ${client.budget}`.toLowerCase().includes(query)));
+    const selected = selectedId ? clients.find((client) => client.id === selectedId) : undefined;
+    el.innerHTML = `<div style="max-width:1080px;margin:0 auto;padding:34px 40px 70px"><div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;animation:omRise .5s cubic-bezier(.2,.8,.2,1) both"><div><h1 style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:34px;letter-spacing:-.015em;color:#241f1c">My Customers</h1><p style="margin:8px 0 0;font-size:17px;color:#6b6156">Everyone you're working with, and exactly what they want.</p></div><button data-act="add" style="display:flex;align-items:center;gap:9px;padding:15px 22px;border-radius:14px;background:#ffc93c;color:#1f1a12;font-size:16px;font-weight:800;box-shadow:0 12px 26px -14px rgba(244,174,20,.85)"><i class="ph-bold ph-plus" style="font-size:18px"></i>Add a customer</button></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:24px"><div style="background:#fff3d1;border:1px solid #f6e3ab;border-radius:20px;padding:22px 24px"><div style="font-size:14.5px;color:#6b6156;font-weight:600">Total customers</div><div style="font-family:'Newsreader',serif;font-weight:500;font-size:46px;line-height:1;color:#241f1c;margin-top:8px">${clients.length}</div></div><div style="background:#ffe1e6;border:1px solid #f7c4cd;border-radius:20px;padding:22px 24px"><div style="font-size:14.5px;color:#6b6156;font-weight:600">Hot right now</div><div style="font-family:'Newsreader',serif;font-weight:500;font-size:46px;line-height:1;color:#b5322a;margin-top:8px">${clients.filter((client) => client.status === 'hot').length}</div></div><div style="background:#efe8fb;border:1px solid #ddd0f5;border-radius:20px;padding:22px 24px"><div style="font-size:14.5px;color:#6b6156;font-weight:600">New this week</div><div style="font-family:'Newsreader',serif;font-weight:500;font-size:46px;line-height:1;color:#e79a1f;margin-top:8px">${clients.filter((client) => client.isNew).length}</div></div></div>
+      <label style="display:flex;align-items:center;gap:12px;background:#faf7ff;border:1px solid #e4dbf7;border-radius:15px;padding:15px 18px;margin:22px 0 14px"><i class="ph ph-magnifying-glass" style="font-size:21px;color:#8d8271"></i><input id="pm-client-search" value="${esc(search)}" placeholder="Search a name, city or budget…" style="border:none;outline:none;background:none;width:100%;font-size:16px;color:#241f1c"></label><div style="display:flex;align-items:center;gap:9px;margin-bottom:18px;overflow-x:auto;padding-bottom:4px">${filterButton('all', 'Everyone', clients.length)}${filterButton('hot', 'Hot', clients.filter((client) => client.status === 'hot').length)}${filterButton('warm', 'Warm', clients.filter((client) => client.status === 'active').length)}${filterButton('cold', 'Cold', clients.filter((client) => client.status === 'cold').length)}${filterButton('done', 'Done', clients.filter(isDone).length)}</div>
+      ${visible.length ? `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px">${visible.map(clientCard).join('')}</div>` : '<div style="padding:40px;text-align:center;color:#8d8271;font-size:15px;background:#faf7ff;border:1px dashed #e6cf9a;border-radius:18px">No customers match. Try another filter or add one.</div>'}</div>${selected ? detailMarkup(selected) : ''}${addOpen ? addMarkup() : ''}`;
+  };
+
+  el.addEventListener('input', (event) => {
+    const target = event.target as HTMLInputElement | HTMLTextAreaElement;
+    if (target.id === 'pm-client-search') { search = target.value; render(); el.querySelector<HTMLInputElement>('#pm-client-search')?.focus(); return; }
+    if (addOpen && target.name && target.name in form) {
+      form = { ...form, [target.name]: target.value };
+      const save = el.querySelector<HTMLButtonElement>('#pm-save-client');
+      if (save) {
+        const ready = Boolean(form.name.trim());
+        save.disabled = !ready;
+        save.style.background = ready ? '#6b3fd4' : '#ddd2f5';
+        save.style.color = ready ? '#fff' : '#b3a37a';
+      }
+    }
+  });
+  el.addEventListener('submit', (event) => {
+    const target = event.target as HTMLFormElement;
+    if (target.id !== 'pm-add-client') return;
+    event.preventDefault();
+    if (!form.name.trim()) return;
+    const budget = form.budgetFrom && form.budgetTo ? `₹${form.budgetFrom}–${form.budgetTo} Cr` : form.budgetFrom ? `₹${form.budgetFrom} Cr+` : form.budgetTo ? `Up to ₹${form.budgetTo} Cr` : '—';
+    clients.unshift({ id: `local-${Date.now()}`, name: form.name.trim(), phone: form.phone || '—', city: form.city || 'Mohali', want: form.want, budget, budgetMax: (Number(form.budgetTo || form.budgetFrom) || 0) * 10_000_000, status: 'active', seen: 'just now', note: form.note, viewed: [], interest: [], isNew: true });
+    addOpen = false;
+    form = { name: '', phone: '', want: 'Plot', city: 'Mohali', budgetFrom: '', budgetTo: '', note: '' };
+    render();
+  });
+  el.addEventListener('click', (event) => {
+    const call = (event.target as HTMLElement).closest('[data-call]');
+    if (call) { event.stopPropagation(); return; }
+    const target = (event.target as HTMLElement).closest<HTMLElement>('[data-act]');
+    if (!target) return;
+    const action = target.dataset.act;
+    if (action === 'filter') filter = (target.dataset.filter || 'all') as typeof filter;
+    if (action === 'detail') { selectedId = target.dataset.id || null; deleteArmed = false; }
+    if (action === 'close') { selectedId = null; deleteArmed = false; }
+    if (action === 'add') addOpen = true;
+    if (action === 'close-add') addOpen = false;
+    if (action === 'want') form = { ...form, want: (target.dataset.want || 'Plot') as WantType };
+    if (action === 'arm-delete') deleteArmed = true;
+    if (action === 'disarm') deleteArmed = false;
+    if (action === 'delete' && target.dataset.id) { clients = clients.filter((client) => client.id !== target.dataset.id); selectedId = null; }
+    render();
+  });
+  render();
 }

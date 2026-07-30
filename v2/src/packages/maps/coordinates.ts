@@ -19,6 +19,11 @@ export interface Transform {
   readonly ty: number;
 }
 
+/** Canonical CSS transform shared by the raster, overlays and presentation pins. */
+export function cssMapTransform(t: Transform): string {
+  return `translate(${t.tx}px, ${t.ty}px) scale(${t.scale})`;
+}
+
 export const MIN_ZOOM = 1;      // 1 = Fit Map (fully contained)
 export const MAX_ZOOM = 8;
 
@@ -38,6 +43,18 @@ export class CoordinateSystem {
   fit(viewport: Viewport): Transform {
     const base = this.baseScale(viewport);
     return this.centered(viewport, base);
+  }
+
+  /**
+   * Cover the viewport with a uniform scale. The raster stays centred and
+   * aspect-correct; any overflow is intentionally cropped by the surface.
+   */
+  cover(viewport: Viewport): Transform {
+    const scale = Math.max(
+      viewport.w / this.intrinsic.w,
+      viewport.h / this.intrinsic.h,
+    );
+    return this.centered(viewport, scale);
   }
 
   /** the contain scale (aspect-preserving) for zoom=1. */

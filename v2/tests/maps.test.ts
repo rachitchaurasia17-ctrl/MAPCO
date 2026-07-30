@@ -2,7 +2,7 @@
    overlays, and engine lifecycle (single-active, lazy 3D, cancel, cleanup). */
 import { describe, it, expect } from 'vitest';
 import { getMaps, getMap, renderingFor } from '../src/packages/maps/registry';
-import { CoordinateSystem, MAX_ZOOM } from '../src/packages/maps/coordinates';
+import { CoordinateSystem, MAX_ZOOM, cssMapTransform, type Transform } from '../src/packages/maps/coordinates';
 import { BoundedCache } from '../src/packages/maps/cache';
 import { layoutOverlay, geometryMatches } from '../src/packages/maps/overlay-engine';
 import { MapEngine, type RenderSurface } from '../src/packages/maps/map-engine';
@@ -34,6 +34,28 @@ describe('CoordinateSystem — never crops or distorts', () => {
     expect(1000 * t.scale).toBeLessThanOrEqual(vp.w + 1e-9);
     expect(500 * t.scale).toBeLessThanOrEqual(vp.h + 1e-9);
     expect(t.ty).toBeCloseTo((800 - 400) / 2);   // vertically centered
+  });
+
+  it('initial cover-fit fills every edge with no side gutters', () => {
+    const t = cs.cover(vp);
+    expect(t.scale).toBeCloseTo(1.6);
+    const left = t.tx;
+    const right = t.tx + 1000 * t.scale;
+    const top = t.ty;
+    const bottom = t.ty + 500 * t.scale;
+    expect(left).toBeLessThanOrEqual(0);
+    expect(right).toBeGreaterThanOrEqual(vp.w);
+    expect(top).toBeLessThanOrEqual(0);
+    expect(bottom).toBeGreaterThanOrEqual(vp.h);
+    expect(t.tx).toBeCloseTo((800 - 1600) / 2);
+    expect(t.ty).toBeCloseTo(0);
+  });
+
+  it('cover-fit preserves the intrinsic aspect ratio exactly', () => {
+    const t = cs.cover(vp);
+    const renderedWidth = 1000 * t.scale;
+    const renderedHeight = 500 * t.scale;
+    expect(renderedWidth / renderedHeight).toBeCloseTo(1000 / 500, 12);
   });
 
   it('screen↔intrinsic roundtrips exactly', () => {
@@ -72,11 +94,13 @@ describe('BoundedCache (LRU)', () => {
 });
 
 describe('Overlay engine', () => {
-  it('lays overlay onto the raster screen rect', () => {
-    const l = layoutOverlay({ w: 1575, h: 1132 }, { w: 1603, h: 1278 }, { scale: 0.5, tx: 10, ty: 20 });
-    expect(l.width).toBeCloseTo(801.5);
+  it('overlays use the exact same scale and translation as raster and pins', () => {
+    const transform = { scale: 0.5, tx: 10, ty: 20 };
+    const l = layoutOverlay({ w: 1575, h: 1132 }, { w: 1603, h: 1278 }, transform);
+    expect(l.width).toBe(1603);
+    expect(l.height).toBe(1278);
     expect(l.viewBox).toBe('0 0 1575 1132');
-    expect(l.transform).toContain('translate(10px, 20px)');
+    expect(l.transform).toBe(cssMapTransform(transform));
   });
   it('flags the pilot overlay/raster authoring mismatch as a DATA gap', () => {
     expect(geometryMatches({ w: 1575, h: 1132 }, { w: 1603, h: 1278 })).toBe(false);
@@ -128,6 +152,47 @@ describe('MapEngine lifecycle', () => {
     const engine = new MapEngine(surface, { imagePort: port });
     await engine.setMap('masterplan-mohali', { mode: 'threeD' });
     expect(loaded.some((s) => s.includes('mohali-3d'))).toBe(true);
+  });
+
+  it('Fit Map returns a covered Masterplan to full contain-fit', async () => {
+    const calls: Transform[] = [];
+    const surface: RenderSurface = {
+      viewport: () => ({ w: 800, h: 600 }),
+      paint: (_img, transform) => { calls.push(transform); },
+      setOverlays: () => {},
+      clear: () => {},
+    };
+    const { port } = recordingPort();
+    const engine = new MapEngine(surface, { imagePort: port });
+    await engine.setMap('masterplan-mohali');
+    engine.cover();
+    const covered = calls.at(-1)!;
+    engine.fit();
+    const contained = calls.at(-1)!;
+    expect(covered.scale).toBeGreaterThan(contained.scale);
+    expect(contained.tx).toBeCloseTo((800 - 1302 * contained.scale) / 2);
+    expect(contained.ty).toBeCloseTo((600 - 962 * contained.scale) / 2);
+    expect(1302 * contained.scale).toBeLessThanOrEqual(800);
+    expect(962 * contained.scale).toBeLessThanOrEqual(600);
+  });
+
+  it('switches Original → 3D → Original without losing the active map', async () => {
+    const { surface } = fakeSurface();
+    const { port, loaded } = recordingPort();
+    const engine = new MapEngine(surface, { imagePort: port });
+
+    expect((await engine.setMap('masterplan-mohali', { mode: 'original' })).ok).toBe(true);
+    engine.cover();
+    expect(engine.activeMode).toBe('original');
+
+    expect((await engine.setMode('threeD')).ok).toBe(true);
+    expect(engine.activeMode).toBe('threeD');
+
+    expect((await engine.setMode('original')).ok).toBe(true);
+    expect(engine.activeMode).toBe('original');
+    expect(engine.activeMapId).toBe('masterplan-mohali');
+    expect(loaded.some((src) => src.includes('newchandigarh-map'))).toBe(true);
+    expect(loaded.some((src) => src.includes('mohali-3d'))).toBe(true);
   });
 
   it('supersedes a slow load and ignores its stale result', async () => {

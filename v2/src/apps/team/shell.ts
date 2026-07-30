@@ -17,6 +17,7 @@ const NAV = [
 
 export function initTeamShell(container: HTMLElement, initialSection: string) {
   let currentSection = initialSection;
+  let pendingAction: 'add-property' | 'add-client' | 'send-link' | null = null;
 
   // Include reset + tokens globally
   const head = document.head;
@@ -27,6 +28,14 @@ export function initTeamShell(container: HTMLElement, initialSection: string) {
     head.appendChild(style);
   }
 
+  const sectionPath = (section: string) => {
+    if (section === 'properties') return '/admin/team.html#properties';
+    if (section === 'clients') return '/admin/team.html#clients';
+    if (section === 'map-studio') return '/admin/map-studio.html';
+    return '/admin/team.html';
+  };
+
+  const renderShell = () => {
   container.innerHTML = `
 <div id="pm-ws-shell" style="position:fixed;inset:0;display:flex;flex-direction:column;background:#f5efff;background-image:radial-gradient(62% 50% at -2% -4%,rgba(139,96,232,.5),transparent 62%),radial-gradient(54% 44% at 101% 4%,rgba(56,138,186,.4),transparent 62%),radial-gradient(66% 48% at 46% 108%,rgba(255,190,48,.44),transparent 64%),radial-gradient(40% 34% at 86% 66%,rgba(236,120,168,.22),transparent 68%);font-family:'Hanken Grotesk',sans-serif;color:#241f1c">
   <div id="pm-ws-header" style="display:flex;align-items:center;gap:18px;padding:12px 22px;background:#fffaf0;background-image:linear-gradient(90deg,#fff6dd,#fffaf0 40%,#f6f0ff);border-bottom:1px solid #ddd2f5;box-shadow:0 1px 0 rgba(255,255,255,.7) inset,0 8px 22px -20px rgba(60,44,12,.9);z-index:40;flex:none">
@@ -36,7 +45,7 @@ export function initTeamShell(container: HTMLElement, initialSection: string) {
     </a>
     <div style="display:flex;align-items:center;gap:4px;padding:4px;border-radius:14px;background:#f0eaff">
       ${NAV.map(n => `
-        <a href="${n.path}" style="${currentSection === n.key ? 'padding:8px 24px;border-radius:10px;font-size:15px;font-weight:700;background:#fff;color:#5b32c4;box-shadow:0 4px 10px -4px rgba(80,50,160,.4);text-decoration:none' : 'padding:8px 24px;border-radius:10px;font-size:15px;font-weight:600;color:#6d6380;text-decoration:none'}">
+        <a href="${n.path}" data-team-nav="${n.key}" style="${currentSection === n.key ? 'padding:8px 24px;border-radius:10px;font-size:15px;font-weight:700;background:#fff;color:#5b32c4;box-shadow:0 4px 10px -4px rgba(80,50,160,.4);text-decoration:none' : 'padding:8px 24px;border-radius:10px;font-size:15px;font-weight:600;color:#6d6380;text-decoration:none'}">
           ${n.label}
         </a>
       `).join('')}
@@ -50,18 +59,48 @@ export function initTeamShell(container: HTMLElement, initialSection: string) {
   <div data-scroll style="flex:1;min-height:0;overflow-y:auto;position:relative" id="pm-ws-content"></div>
 </div>`;
 
-  const content = document.getElementById('pm-ws-content')!;
-  
-  function renderSection() {
-    content.innerHTML = '';
-    switch (currentSection) {
-      case 'home': renderWorkHome(content); break;
-      case 'map-studio': renderMapStudio(content); break;
-      case 'properties': renderTeamProperties(content); break;
-      case 'clients': renderTeamClients(content); break;
-      default: renderWorkHome(content); break;
-    }
-  }
+  const content = container.querySelector<HTMLElement>('#pm-ws-content')!;
+  const actions = {
+    openProperty: () => navigate('properties', 'add-property'),
+    openClient: () => navigate('clients', 'add-client'),
+    openLink: () => navigate('clients', 'send-link'),
+    navigate: (section: string) => navigate(section),
+  };
 
-  renderSection();
+    switch (currentSection) {
+      case 'home': renderWorkHome(content, actions); break;
+      case 'map-studio': renderMapStudio(content); break;
+      case 'properties': void renderTeamProperties(content, pendingAction === 'add-property'); break;
+      case 'clients': void renderTeamClients(content, pendingAction === 'add-client' ? 'add' : pendingAction === 'send-link' ? 'link' : null); break;
+      default: renderWorkHome(content, actions); break;
+    }
+    pendingAction = null;
+
+    container.querySelectorAll<HTMLAnchorElement>('[data-team-nav]').forEach((link) => {
+      link.addEventListener('click', (event) => {
+        event.preventDefault();
+        navigate(link.dataset.teamNav || 'home');
+      });
+    });
+  };
+
+  const navigate = (section: string, action: typeof pendingAction = null) => {
+    currentSection = section;
+    pendingAction = action;
+    window.history.pushState({ teamSection: section }, '', sectionPath(section));
+    renderShell();
+  };
+
+  const syncFromLocation = () => {
+    const hash = window.location.hash.replace(/^#/, '');
+    currentSection = window.location.pathname === '/admin/map-studio.html'
+      ? 'map-studio'
+      : hash === 'properties' || hash === 'clients' ? hash : 'home';
+    pendingAction = null;
+    renderShell();
+  };
+
+  window.addEventListener('popstate', syncFromLocation);
+  window.addEventListener('hashchange', syncFromLocation);
+  renderShell();
 }

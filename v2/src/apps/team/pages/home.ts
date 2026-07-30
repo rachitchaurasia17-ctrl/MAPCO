@@ -3,7 +3,14 @@
    Source: Team Workspace.dc.html (isWork)
    ═══════════════════════════════════════════════════════════════ */
 
-export function renderWorkHome(el: HTMLElement) {
+interface WorkHomeActions {
+  openProperty(): void;
+  openClient(): void;
+  openLink(): void;
+  navigate(section: string): void;
+}
+
+export function renderWorkHome(el: HTMLElement, actions: WorkHomeActions) {
   el.innerHTML = `
     <div class="pm-work-home" style="max-width:1140px;margin:0 auto;padding:40px 34px 70px">
       <div style="animation:wRise .5s cubic-bezier(.2,.8,.2,1) both">
@@ -57,4 +64,15 @@ export function renderWorkHome(el: HTMLElement) {
       </a>
     </div>
   `;
+
+  const [propertyButton, clientButton, linkButton] = Array.from(
+    el.querySelectorAll<HTMLButtonElement>('.pm-work-actions > button'),
+  );
+  propertyButton?.addEventListener('click', actions.openProperty);
+  clientButton?.addEventListener('click', actions.openClient);
+  linkButton?.addEventListener('click', actions.openLink);
+  el.querySelector('.pm-work-studio')?.addEventListener('click', (event) => {
+    event.preventDefault();
+    actions.navigate('map-studio');
+  });
 }

@@ -41,6 +41,7 @@ export class MapEngine {
   private readonly loader: MapImageLoader;
   private token = 0;
   private disposed = false;
+  private viewportFit: 'contain' | 'cover' = 'contain';
 
   private active: {
     entry: MapEntry;
@@ -90,7 +91,9 @@ export class MapEngine {
     if (myToken !== this.token || this.disposed) return { ok: false, reason: 'superseded' };
 
     const coords = new CoordinateSystem(rendering.dims);
-    const transform = coords.fit(this.surface.viewport());
+    const transform = this.viewportFit === 'cover'
+      ? coords.cover(this.surface.viewport())
+      : coords.fit(this.surface.viewport());
     this.active = { entry, mode, coords, transform, img };
     this.paint();
     return { ok: true, mapId: id, mode };
@@ -104,7 +107,25 @@ export class MapEngine {
 
   fit(): void {
     if (!this.active) return;
+    this.viewportFit = 'contain';
     this.active.transform = this.active.coords.fit(this.surface.viewport());
+    this.paint();
+  }
+
+  /** Fill the viewport without distortion; overflow remains pannable. */
+  cover(): void {
+    if (!this.active) return;
+    this.viewportFit = 'cover';
+    this.active.transform = this.active.coords.cover(this.surface.viewport());
+    this.paint();
+  }
+
+  /** Recalculate the active fit policy after a viewport resize. */
+  resize(): void {
+    if (!this.active) return;
+    this.active.transform = this.viewportFit === 'cover'
+      ? this.active.coords.cover(this.surface.viewport())
+      : this.active.coords.fit(this.surface.viewport());
     this.paint();
   }
 

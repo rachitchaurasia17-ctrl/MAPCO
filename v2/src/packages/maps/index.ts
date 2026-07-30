@@ -6,7 +6,7 @@ export type {
   MapEntry, MapKind, RenderMode, Rendering, Dimensions,
   OverlayDescriptor, MapRegistry,
 } from './registry';
-export { CoordinateSystem, MIN_ZOOM, MAX_ZOOM } from './coordinates';
+export { CoordinateSystem, MIN_ZOOM, MAX_ZOOM, cssMapTransform } from './coordinates';
 export type { Transform, Viewport, Point } from './coordinates';
 export { BoundedCache } from './cache';
 export { layoutOverlay, geometryMatches } from './overlay-engine';

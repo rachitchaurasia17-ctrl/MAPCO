@@ -6,7 +6,7 @@
    ═══════════════════════════════════════════════════════════════ */
 
 import { MapEngine, type RenderSurface, type OverlayRender } from './map-engine';
-import type { Transform, Viewport } from './coordinates';
+import { cssMapTransform, type Transform, type Viewport } from './coordinates';
 import type { LoadedImage } from './loader';
 
 export class DomRenderSurface implements RenderSurface {
@@ -34,7 +34,7 @@ export class DomRenderSurface implements RenderSurface {
     if (this.imgEl.src !== img.el.src) this.imgEl.src = img.el.src;
     this.imgEl.width = img.width;
     this.imgEl.height = img.height;
-    this.imgEl.style.transform = `translate(${t.tx}px, ${t.ty}px) scale(${t.scale})`;
+    this.imgEl.style.transform = cssMapTransform(t);
   }
 
   setOverlays(overlays: readonly OverlayRender[]): void {
@@ -85,7 +85,7 @@ export function mountMapEngine(root: HTMLElement): MountedMap {
     lastX = e.clientX; lastY = e.clientY;
   };
   const onUp = () => { dragging = false; };
-  const onResize = () => engine.fit();
+  const onResize = () => engine.resize();
 
   root.addEventListener('wheel', onWheel, { passive: false });
   root.addEventListener('pointerdown', onDown);

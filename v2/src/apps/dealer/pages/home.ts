@@ -1,8 +1,12 @@
 import { getProfile } from '../../../packages/auth/auth';
-import { formatDateShort } from '../../../packages/ui/utils';
-import { MockDataAdapterV2 } from '../../../packages/data/mock-adapter-v2';
+import { formatDateShort, formatINR } from '../../../packages/ui/utils';
+import { adapter } from '../../../packages/data/mock-adapter-v2';
+import type { WantType } from '../../../packages/data/types';
 
-export function renderHome(container: HTMLElement) {
+const WANTS: WantType[] = ['Plot', 'Flat', 'Kothi', 'Villa', 'Commercial'];
+const PIE_COLORS = ['#f4ae14', '#6b3fd4', '#1b7a46', '#fb923c', '#c2185b', '#1f6f6b', '#e6cf9a'];
+
+export async function renderHome(container: HTMLElement) {
   const profile = getProfile();
   const firstName = (profile.name || profile.dealerName || '').split(' ')[0] || 'There';
   
@@ -11,40 +15,86 @@ export function renderHome(container: HTMLElement) {
   if (h >= 12 && h < 17) greeting = 'Good afternoon';
   else if (h >= 17) greeting = 'Good evening';
 
+  container.innerHTML = '<div role="status" aria-live="polite" style="max-width:1120px;margin:0 auto;padding:40px;color:#6b6156">Loading your presentation activity…</div>';
+  const [signalsResult, linksResult, propertiesResult] = await Promise.all([
+    adapter.demandSignals.get(),
+    adapter.clientLinks.list({ limit: 100 }),
+    adapter.properties.list({ limit: 100 }),
+  ]);
+  if (!signalsResult.ok || !linksResult.ok || !propertiesResult.ok) {
+    container.innerHTML = '<div role="alert" style="max-width:1120px;margin:34px auto;padding:24px 26px;border-radius:18px;background:#ffe1e6;color:#9f2446">Your dashboard activity could not be loaded.</div>';
+    return;
+  }
+
+  const signals = [...signalsResult.value].sort((a, b) => b.opens - a.opens);
+  const links = linksResult.value.items;
+  const properties = propertiesResult.value.items;
+  const dOpens = signals.reduce((sum, signal) => sum + signal.opens, 0);
+  const dLinkOpens = links.reduce((sum, link) => sum + link.events.opens, 0);
+  const activeLinks = links.filter((link) => link.status === 'active').length;
+  const hot = signals[0] ?? { city: 'No activity yet', opens: 0, color: PIE_COLORS[0]! };
+  const hotStock = properties.filter((property) => property.city === hot.city && !property.sold).length;
+  const pieTotal = Math.max(1, dOpens);
   const CIRC = 2 * Math.PI * 62;
+  let cumulative = 0;
   const stats = {
-    dOpens: 192,
-    dLinkOpens: 24,
-    dLinkSub: '3',
-    dHot: 'New Chandigarh',
-    dHotSub: '83 opens this month',
-    segs: [
-      { city: 'New Chandigarh', pct: 43, color: '#ffc93c', dash: CIRC * 0.43, offset: 0 },
-      { city: 'Mohali', pct: 27, color: '#8a63e8', dash: CIRC * 0.27, offset: -CIRC * 0.43 },
-      { city: 'Chandigarh', pct: 15, color: '#12a150', dash: CIRC * 0.15, offset: -CIRC * 0.70 },
-      { city: 'Panchkula', pct: 7, color: '#d97b38', dash: CIRC * 0.07, offset: -CIRC * 0.85 }
-    ],
-    wantBars: [
-      { want: 'New Chandigarh', tag: 'Source stock', tagStyle: 'font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#b5322a;background:#ffe1e6;padding:3px 9px;border-radius:999px', opens: '83', barStyle: 'width:83%;height:100%;background:#ffc93c' },
-      { want: 'Mohali', tag: 'Source stock', tagStyle: 'font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#b5322a;background:#ffe1e6;padding:3px 9px;border-radius:999px', opens: '51', barStyle: 'width:51%;height:100%;background:#8a63e8' },
-      { want: 'Chandigarh', tag: 'Stock is fine', tagStyle: 'font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#8a6a14;background:#fff3d1;padding:3px 9px;border-radius:999px', opens: '29', barStyle: 'width:29%;height:100%;background:#12a150' },
-      { want: 'Panchkula', tag: 'Quiet', tagStyle: 'font-size:10.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#8a8070;background:#f5f0e6;padding:3px 9px;border-radius:999px', opens: '14', barStyle: 'width:14%;height:100%;background:#d97b38' }
-    ],
-    vsCols: [
-      { city: 'New Chandigarh', opens: 46, stock: 2, barA: 'flex:1;min-width:0;height:92%;background:#8a63e8;border-radius:4px 4px 0 0;position:relative', labA: 'position:absolute;bottom:100%;left:50%;transform:translate(-50%, -4px);font-size:12px;font-weight:800;color:#5b32c4', barB: 'flex:1;min-width:0;height:4%;background:#ffc93c;border-radius:4px 4px 0 0;position:relative', labB: 'position:absolute;bottom:100%;left:50%;transform:translate(-50%, -4px);font-size:12px;font-weight:800;color:#a8600c', chipStyle: 'display:inline-block;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:#ffe1e6;color:#b5322a', chip: 'Source more' },
-      { city: 'Aerocity', opens: 41, stock: 2, barA: 'flex:1;min-width:0;height:82%;background:#8a63e8;border-radius:4px 4px 0 0;position:relative', labA: 'position:absolute;bottom:100%;left:50%;transform:translate(-50%, -4px);font-size:12px;font-weight:800;color:#5b32c4', barB: 'flex:1;min-width:0;height:4%;background:#ffc93c;border-radius:4px 4px 0 0;position:relative', labB: 'position:absolute;bottom:100%;left:50%;transform:translate(-50%, -4px);font-size:12px;font-weight:800;color:#a8600c', chipStyle: 'display:inline-block;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:#ffe1e6;color:#b5322a', chip: 'Source more' },
-      { city: 'Mohali', opens: 34, stock: 12, barA: 'flex:1;min-width:0;height:68%;background:#8a63e8;border-radius:4px 4px 0 0;position:relative', labA: 'position:absolute;bottom:100%;left:50%;transform:translate(-50%, -4px);font-size:12px;font-weight:800;color:#5b32c4', barB: 'flex:1;min-width:0;height:24%;background:#ffc93c;border-radius:4px 4px 0 0;position:relative', labB: 'position:absolute;bottom:100%;left:50%;transform:translate(-50%, -4px);font-size:12px;font-weight:800;color:#a8600c', chipStyle: 'display:inline-block;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:#c9f0d9;color:#0b8f45', chip: 'Covered' },
-      { city: 'Chandigarh', opens: 26, stock: 1, barA: 'flex:1;min-width:0;height:52%;background:#8a63e8;border-radius:4px 4px 0 0;position:relative', labA: 'position:absolute;bottom:100%;left:50%;transform:translate(-50%, -4px);font-size:12px;font-weight:800;color:#5b32c4', barB: 'flex:1;min-width:0;height:2%;background:#ffc93c;border-radius:4px 4px 0 0;position:relative', labB: 'position:absolute;bottom:100%;left:50%;transform:translate(-50%, -4px);font-size:12px;font-weight:800;color:#a8600c', chipStyle: 'display:inline-block;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:#ffe1e6;color:#b5322a', chip: 'Source more' },
-      { city: 'Aerotropolis', opens: 22, stock: 2, barA: 'flex:1;min-width:0;height:44%;background:#8a63e8;border-radius:4px 4px 0 0;position:relative', labA: 'position:absolute;bottom:100%;left:50%;transform:translate(-50%, -4px);font-size:12px;font-weight:800;color:#5b32c4', barB: 'flex:1;min-width:0;height:4%;background:#ffc93c;border-radius:4px 4px 0 0;position:relative', labB: 'position:absolute;bottom:100%;left:50%;transform:translate(-50%, -4px);font-size:12px;font-weight:800;color:#a8600c', chipStyle: 'display:inline-block;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:#c9f0d9;color:#0b8f45', chip: 'Covered' },
-      { city: 'Zirakpur', opens: 18, stock: 1, barA: 'flex:1;min-width:0;height:36%;background:#8a63e8;border-radius:4px 4px 0 0;position:relative', labA: 'position:absolute;bottom:100%;left:50%;transform:translate(-50%, -4px);font-size:12px;font-weight:800;color:#5b32c4', barB: 'flex:1;min-width:0;height:2%;background:#ffc93c;border-radius:4px 4px 0 0;position:relative', labB: 'position:absolute;bottom:100%;left:50%;transform:translate(-50%, -4px);font-size:12px;font-weight:800;color:#a8600c', chipStyle: 'display:inline-block;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:#ffe1e6;color:#b5322a', chip: 'Source more' }
-    ],
-    attentionRows: [
-      { rank: 1, rankStyle: 'position:absolute;top:-10px;left:-10px;width:32px;height:32px;border-radius:50%;background:#1f1a12;color:#ffc93c;font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 12px rgba(31,26,18,.2);z-index:2', cardStyle: 'position:relative;background:#fff;border-radius:20px;padding:12px;text-align:left;border:none;cursor:pointer;box-shadow:0 4px 12px rgba(31,26,18,.05);transition:transform .2s, box-shadow .2s', photoStyle: 'display:block;position:relative;width:100%;aspect-ratio:4/3;background:#f5f0e6 url(https://images.unsplash.com/photo-1513694203232-719a280e022f?w=600&q=80) center/cover;border-radius:12px', plotNo: 'Plot 104', size: '500 sq yd', price: '₹2.35 Cr', loc: 'Eco City', views: 31, viewsStyle: 'display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:800;color:#ff5e4d;background:#fff0f0;padding:4px 8px;border-radius:999px;margin-top:10px' },
-      { rank: 2, rankStyle: 'position:absolute;top:-10px;left:-10px;width:32px;height:32px;border-radius:50%;background:#1f1a12;color:#ffc93c;font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 12px rgba(31,26,18,.2);z-index:2', cardStyle: 'position:relative;background:#fff;border-radius:20px;padding:12px;text-align:left;border:none;cursor:pointer;box-shadow:0 4px 12px rgba(31,26,18,.05);transition:transform .2s, box-shadow .2s', photoStyle: 'display:block;position:relative;width:100%;aspect-ratio:4/3;background:#f5f0e6 url(https://images.unsplash.com/photo-1516455590571-18256e5bb9ff?w=600&q=80) center/cover;border-radius:12px', plotNo: 'Plot 45', size: '300 sq yd', price: '₹2.75 Cr', loc: 'Aerocity', views: 27, viewsStyle: 'display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:800;color:#ff5e4d;background:#fff0f0;padding:4px 8px;border-radius:999px;margin-top:10px' },
-      { rank: 3, rankStyle: 'position:absolute;top:-10px;left:-10px;width:32px;height:32px;border-radius:50%;background:#1f1a12;color:#ffc93c;font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 12px rgba(31,26,18,.2);z-index:2', cardStyle: 'position:relative;background:#fff;border-radius:20px;padding:12px;text-align:left;border:none;cursor:pointer;box-shadow:0 4px 12px rgba(31,26,18,.05);transition:transform .2s, box-shadow .2s', photoStyle: 'display:block;position:relative;width:100%;aspect-ratio:4/3;background:#f5f0e6 url(https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&q=80) center/cover;border-radius:12px', plotNo: 'Plot 112', size: '250 sq yd', price: '₹1.65 Cr', loc: 'Sector 79', views: 24, viewsStyle: 'display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:800;color:#a8600c;background:#fff3d1;padding:4px 8px;border-radius:999px;margin-top:10px' },
-      { rank: 4, rankStyle: 'position:absolute;top:-10px;left:-10px;width:32px;height:32px;border-radius:50%;background:#e0d8c8;color:#4c463d;font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 12px rgba(31,26,18,.1);z-index:2', cardStyle: 'position:relative;background:#fff;border-radius:20px;padding:12px;text-align:left;border:none;cursor:pointer;box-shadow:0 4px 12px rgba(31,26,18,.05);transition:transform .2s, box-shadow .2s', photoStyle: 'display:block;position:relative;width:100%;aspect-ratio:4/3;background:#f5f0e6 url(https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=600&q=80) center/cover;border-radius:12px', plotNo: 'Plot 8', size: '400 sq yd', price: '₹4.8 Cr', loc: 'Omaxe', views: 21, viewsStyle: 'display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:800;color:#4c463d;background:#f5f0e6;padding:4px 8px;border-radius:999px;margin-top:10px' },
-      { rank: 5, rankStyle: 'position:absolute;top:-10px;left:-10px;width:32px;height:32px;border-radius:50%;background:#e0d8c8;color:#4c463d;font-size:16px;font-weight:800;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 12px rgba(31,26,18,.1);z-index:2', cardStyle: 'position:relative;background:#fff;border-radius:20px;padding:12px;text-align:left;border:none;cursor:pointer;box-shadow:0 4px 12px rgba(31,26,18,.05);transition:transform .2s, box-shadow .2s', photoStyle: 'display:block;position:relative;width:100%;aspect-ratio:4/3;background:#f5f0e6 url(https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=600&q=80) center/cover;border-radius:12px', plotNo: 'Plot 9', size: '300 sq yd', price: '₹3.2 Cr', loc: 'Sector 9', views: 18, viewsStyle: 'display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:800;color:#4c463d;background:#f5f0e6;padding:4px 8px;border-radius:999px;margin-top:10px' }
-    ]
+    dOpens,
+    dLinkOpens,
+    dLinkSub: String(activeLinks),
+    dHot: hot.city,
+    dHotSub: `${hot.opens} opens · ${hotStock} plots you can show`,
+    segs: signals.slice(0, 6).map((signal, index) => {
+      const pct = signal.opens / pieTotal;
+      const segment = { city: signal.city, pct: Math.round(pct * 100), color: PIE_COLORS[index]!, dash: pct * CIRC, offset: -cumulative * CIRC };
+      cumulative += pct;
+      return segment;
+    }),
+    wantBars: (() => {
+      const rows = WANTS.map((want) => ({
+        want,
+        opens: properties.filter((property) => property.want === want).reduce((sum, property) => sum + property.views, 0),
+        stock: properties.filter((property) => property.want === want && !property.sold).length,
+      })).sort((a, b) => b.opens - a.opens);
+      const max = Math.max(1, ...rows.map((row) => row.opens));
+      return rows.map((row) => ({
+        ...row,
+        tag: row.opens === 0 ? 'never opened yet' : `${row.stock} in stock`,
+        tagStyle: `font-size:12.5px;font-weight:800;padding:4px 10px;border-radius:999px;white-space:nowrap;${row.opens === 0 ? 'background:#f3eeff;color:#8a7a52' : 'background:#ded0fa;color:#5b32c4'}`,
+        barStyle: `height:100%;width:${Math.max(6, Math.round(row.opens / max * 100))}%;border-radius:999px;background:${row.opens === 0 ? '#c4b183' : '#6b3fd4'};transform-origin:left;animation:barGrow .85s cubic-bezier(.2,.8,.2,1) both`,
+      }));
+    })(),
+    vsCols: (() => {
+      const maxOpens = Math.max(1, ...signals.map((signal) => signal.opens));
+      const maxStock = Math.max(1, ...signals.map((signal) => properties.filter((property) => property.city === signal.city && !property.sold).length));
+      return signals.slice(0, 6).map((signal) => {
+        const stock = properties.filter((property) => property.city === signal.city && !property.sold).length;
+        const short = signal.opens / maxOpens > stock / maxStock;
+        const bar = (height: number, background: string) => `width:30px;height:${height}px;border-radius:9px 9px 4px 4px;background:${background};display:flex;align-items:flex-start;justify-content:center;padding-top:4px;transform-origin:bottom;animation:barGrow .8s cubic-bezier(.2,.8,.2,1) both`;
+        return {
+          city: signal.city,
+          opens: signal.opens,
+          stock,
+          barA: bar(Math.max(16, Math.round(signal.opens / maxOpens * 146)), 'linear-gradient(180deg,#8a63e8,#5b32c4)'),
+          labA: 'font-size:12px;font-weight:800;color:#fff',
+          barB: bar(Math.max(16, Math.round(stock / maxStock * 146)), 'linear-gradient(180deg,#ffdc7a,#f4ae14)'),
+          labB: 'font-size:12px;font-weight:800;color:#241d0c',
+          chip: short ? 'Source more' : 'Covered',
+          chipStyle: `font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;white-space:nowrap;${short ? 'background:#ffd3de;color:#c2185b' : 'background:#c9f0d9;color:#0b8f45'}`,
+        };
+      });
+    })(),
+    attentionRows: properties.filter((property) => !property.sold).sort((a, b) => b.views - a.views).slice(0, 5).map((property, index) => ({
+      id: property.id,
+      rank: `#${index + 1}`,
+      rankStyle: 'position:absolute;top:8px;left:8px;display:grid;place-items:center;min-width:26px;height:26px;padding:0 7px;border-radius:9px;background:rgba(255,253,247,.94);color:#241d0c;font-size:12.5px;font-weight:800',
+      cardStyle: 'min-width:0;background:#faf7ff;border:1.5px solid #e4dbf7;border-radius:18px;overflow:hidden;cursor:pointer;text-align:left;box-shadow:0 1px 2px rgba(30,28,22,.03),0 14px 32px -26px rgba(30,28,22,.7);transition:transform .14s',
+      photoStyle: `display:block;position:relative;height:112px;background-image:url('${property.photos[0] ?? ''}');background-color:#efe8fb;background-size:cover;background-position:center`,
+      loc: `${property.size} · ${property.loc.split(', ')[0]}`,
+      priceFmt: formatINR(property.price),
+      views: property.views,
+      dotStyle: `width:11px;height:11px;border-radius:50%;flex:none;background:${property.photos.length ? '#12a150' : '#c2185b'}`,
+      chip: property.photos.length ? 'Ready' : 'Add photo',
+    }))
   };
 
   container.innerHTML = `
@@ -58,7 +108,7 @@ export function renderHome(container: HTMLElement) {
               <h1 style="margin:8px 0 0;font-family:'Newsreader',serif;font-weight:500;font-size:40px;letter-spacing:-.02em;color:#fff8e6">${greeting}, ${firstName}.</h1>
               <p style="margin:8px 0 0;font-size:17px;color:#c9b48a">Only from your own presentations and the links you sent.</p>
             </div>
-            <a href="Client Presentation.dc.html" style="display:flex;align-items:center;gap:11px;height:62px;padding:0 26px;border-radius:16px;background:#ffc93c;color:#241d0c;font-size:18px;font-weight:800;text-decoration:none;box-shadow:0 16px 34px -16px rgba(244,174,20,.95)" onmouseover="this.style.background='#f4ae14'" onmouseout="this.style.background='#ffc93c'"><i class="ph-fill ph-projector-screen-chart" style="font-size:22px"></i>Show the map</a>
+            <a href="/app/plotmap/index.html" style="display:flex;align-items:center;gap:11px;height:62px;padding:0 26px;border-radius:16px;background:#ffc93c;color:#241d0c;font-size:18px;font-weight:800;text-decoration:none;box-shadow:0 16px 34px -16px rgba(244,174,20,.95)" onmouseover="this.style.background='#f4ae14'" onmouseout="this.style.background='#ffc93c'"><i class="ph-fill ph-projector-screen-chart" style="font-size:22px"></i>Show the map</a>
           </div>
 
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:26px">
@@ -163,7 +213,7 @@ export function renderHome(container: HTMLElement) {
           </div>
           <div>
             <div style="font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#a8600c">Hottest Area · ${stats.dHot}</div>
-            <p style="margin:6px 0 0;font-size:17.5px;color:#6b5a34">New Chandigarh is your most looked-at area with 46 opens, and you have 2 plots ready. Lead with these.</p>
+            <p style="margin:6px 0 0;font-size:17.5px;color:#6b5a34">${stats.dHot} is your most looked-at area with ${hot.opens} opens, and you have ${hotStock} plots ready. Lead with these.</p>
           </div>
         </div>
 

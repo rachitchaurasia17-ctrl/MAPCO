@@ -9,7 +9,7 @@
    ═══════════════════════════════════════════════════════════════ */
 
 import type { Dimensions } from './registry';
-import type { Transform } from './coordinates';
+import { cssMapTransform, type Transform } from './coordinates';
 
 export interface OverlayLayout {
   /** CSS transform string for the overlay <svg> wrapper. */
@@ -34,12 +34,10 @@ export function layoutOverlay(
   rasterDims: Dimensions,
   t: Transform,
 ): OverlayLayout {
-  const width = rasterDims.w * t.scale;
-  const height = rasterDims.h * t.scale;
   return {
-    transform: `translate(${t.tx}px, ${t.ty}px)`,
-    width,
-    height,
+    transform: cssMapTransform(t),
+    width: rasterDims.w,
+    height: rasterDims.h,
     viewBox: `0 0 ${overlayViewBox.w} ${overlayViewBox.h}`,
   };
 }

@@ -1,6 +1,7 @@
 import './packages/ui/tokens.css';
 import './packages/ui/reset.css';
 import { getGreeting, getInitials, getFirstName, getProfile } from './packages/auth/auth';
+import { adapter } from './packages/data/mock-adapter-v2';
 
 // Load Phosphor Icons from CDN
 const iconLinks = [
@@ -70,10 +71,10 @@ function initLanding(container: HTMLElement) {
         <i class="ph-bold ph-key"></i>Activate Device
       </button>
       <div style="text-align:right;line-height:1.25">
-        <div id="pm-land-greeting" style="font-size:14px;font-weight:800;color:#3a332c">\${greeting}</div>
-        <div id="pm-land-date" style="font-size:12px;color:#94886c">\${today}</div>
+        <div id="pm-land-greeting" style="font-size:14px;font-weight:800;color:#3a332c">${greeting}</div>
+        <div id="pm-land-date" style="font-size:12px;color:#94886c">${today}</div>
       </div>
-      <div style="width:38px;height:38px;border-radius:12px;background:#1a2f24;color:#ffd75e;display:grid;place-items:center;font-size:14px;font-weight:800;flex:none;box-shadow:0 10px 20px -12px rgba(26,47,36,.9)">\${initials}</div>
+      <div style="width:38px;height:38px;border-radius:12px;background:#1a2f24;color:#ffd75e;display:grid;place-items:center;font-size:14px;font-weight:800;flex:none;box-shadow:0 10px 20px -12px rgba(26,47,36,.9)">${initials}</div>
     </div>
   </div>
 
@@ -168,7 +169,7 @@ function initLanding(container: HTMLElement) {
         
         <div id="pm-act-error" role="alert" aria-live="assertive" style="display:none;color:#c2185b;font-size:13px;font-weight:700;text-align:center;padding:8px;background:#ffe1e6;border-radius:8px">Invalid activation code.</div>
         
-        <button id="pm-act-submit" disabled aria-disabled="true" title="Backend-only future work" style="width:100%;height:52px;border-radius:14px;background:#ffc93c;color:#231a04;font-size:16px;font-weight:800;border:none;cursor:not-allowed;opacity:.65;box-shadow:0 8px 16px -8px rgba(255,194,30,.6)">Activation backend not connected</button>
+        <button id="pm-act-submit" disabled aria-disabled="true" style="width:100%;height:52px;border-radius:14px;background:#ffc93c;color:#231a04;font-size:16px;font-weight:800;border:none;cursor:not-allowed;opacity:.65;box-shadow:0 8px 16px -8px rgba(255,194,30,.6)">Activate this device</button>
       </div>
     </div>
   </div>
@@ -191,6 +192,7 @@ function initLanding(container: HTMLElement) {
   const btnOpen = document.getElementById('pm-activate-btn')!;
   const btnClose = document.getElementById('pm-close-modal')!;
   const inputCode = document.getElementById('pm-act-code') as HTMLInputElement;
+  const submitCode = document.getElementById('pm-act-submit') as HTMLButtonElement;
   const errorMsg = document.getElementById('pm-act-error')!;
   let previouslyFocused: HTMLElement | null = null;
 
@@ -207,6 +209,10 @@ function initLanding(container: HTMLElement) {
       modal.setAttribute('aria-hidden', 'false');
       inputCode.value = '';
       errorMsg.style.display = 'none';
+      submitCode.disabled = true;
+      submitCode.setAttribute('aria-disabled', 'true');
+      submitCode.textContent = 'Activate this device';
+      submitCode.style.cssText += ';cursor:not-allowed;opacity:.65;background:#ffc93c;color:#231a04';
       inputCode.focus();
     });
   }
@@ -241,8 +247,46 @@ function initLanding(container: HTMLElement) {
       if (val.length > 3) val = val.slice(0, 3) + '-' + val.slice(3, 6);
       inputCode.value = val;
       errorMsg.style.display = 'none';
+      const ready = val.replace(/\D/g, '').length === 6;
+      submitCode.disabled = !ready;
+      submitCode.setAttribute('aria-disabled', String(!ready));
+      submitCode.style.cursor = ready ? 'pointer' : 'not-allowed';
+      submitCode.style.opacity = ready ? '1' : '.65';
     });
   }
+
+  const submitActivation = async () => {
+    if (submitCode.disabled) return;
+    submitCode.disabled = true;
+    submitCode.textContent = 'Checking…';
+    const result = await adapter.auth.submitActivationCode(inputCode.value);
+    if (!result.ok) {
+      errorMsg.textContent = 'Could not verify the code. Please try again.';
+      errorMsg.style.display = 'block';
+    } else if (result.value.kind === 'activated') {
+      submitCode.textContent = 'Device activated';
+      submitCode.style.background = '#12a150';
+      submitCode.style.color = '#fff';
+      btnOpen.innerHTML = '<i class="ph-fill ph-check-circle"></i>Device active';
+      window.setTimeout(closeModal, 550);
+      return;
+    } else {
+      const messages: Record<string, string> = {
+        'invalid-code': 'That activation code is not valid.',
+        'expired-code': 'That activation code has expired.',
+        'device-limit-reached': 'The device limit has already been reached.',
+        'device-approval-required': 'This device is waiting for administrator approval.',
+      };
+      errorMsg.textContent = messages[result.value.kind] || 'This device could not be activated.';
+      errorMsg.style.display = 'block';
+    }
+    submitCode.textContent = 'Activate this device';
+    submitCode.disabled = false;
+  };
+  submitCode.addEventListener('click', () => { void submitActivation(); });
+  inputCode.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') { event.preventDefault(); void submitActivation(); }
+  });
 
 }
 
