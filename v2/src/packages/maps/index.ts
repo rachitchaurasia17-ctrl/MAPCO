@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════
    PlotMap V2 — Maps package public API (doc 11 stable surface)
    ═══════════════════════════════════════════════════════════════ */
-export { getMaps, getMap, renderingFor } from './registry';
+export { getMaps, getMap, renderingFor, addPropertyToMap } from './registry';
 export type {
   MapEntry, MapKind, RenderMode, Rendering, Dimensions,
   OverlayDescriptor, MapRegistry,

@@ -107,3 +107,9 @@ export function renderingFor(entry: MapEntry, mode: RenderMode): Rendering | und
   if (mode === 'threeD') return entry.threeD;
   return entry.original;
 }
+export function addPropertyToMap(mapId: string, propertyId: string) {
+  const m = REGISTRY.maps.find(m => m.id === mapId);
+  if (m) {
+    (m.linkedPropertyIds as string[]).push(propertyId);
+  }
+}

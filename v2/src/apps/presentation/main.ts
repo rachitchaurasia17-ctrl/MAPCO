@@ -139,6 +139,10 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
   }
 
   function pinPositionFor(propertyId: string): PinPosition | undefined {
+    const prop = props.find((p) => p.id === propertyId);
+    if (prop?.mapPlacement?.mapId === activeMapId) {
+      return { x: prop.mapPlacement.x, y: prop.mapPlacement.y, provenance: 'map-authored' };
+    }
     return pinPositionsByMap.get(activeMapId)?.get(propertyId);
   }
 

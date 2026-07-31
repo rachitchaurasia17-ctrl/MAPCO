@@ -14,7 +14,7 @@ export function formatDate(): string {
 }
 
 export function formatDateShort(): string {
-  return new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  return new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 }
 
 /** Generate a street-view URL for a location */

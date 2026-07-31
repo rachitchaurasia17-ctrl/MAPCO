@@ -29,6 +29,7 @@ export interface Property {
   published: boolean;
   sold: boolean;
   views: number;
+  mapPlacement?: { mapId: string; x: number; y: number };
 }
 
 export interface Client {
