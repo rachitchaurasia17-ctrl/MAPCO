@@ -30,3 +30,28 @@ Generated from the local Tri-City source library (`maps with svg/`, `3d maps/`, 
 ## Remaining to onboard (next: batch script)
 
 Everything above marked "— not yet". Recommended batch order: New Chandigarh (Mullanpur/Eco City) → remaining Mohali sectors → Zirakpur → Panchkula → Chandigarh → Derabassi → Kharar → Aerotropolis. Each city needs: masterplan raster + 3D + sector maps + overlay SVG uploaded to the `maps` bucket and a `prebuilt_maps` record created via `plotmap_upsert_map` (published when verified).
+
+---
+
+## Onboarding results (session 5) — batch onboarder live
+
+Tool: `v2/scripts/onboard-maps.mjs` (classify → group renders → dedupe → read dims →
+upload to Storage `maps/` → register `prebuilt_maps`; idempotent, skip-with-reasons).
+
+- **80 logical maps** classified from 171 source files; **83 registered** on MAPCO-DEV
+  (11 masterplans published + client-visible, 72 sectors draft), **143 assets uploaded**, **0 failures**.
+- Relationships: **0 orphan sectors** (every `parent_map_id` resolves), **0 masterplans missing dims**.
+- Per city: Mohali 4 master + 45 sector · Chandigarh 1 + 26 · New Chandigarh 2 + 1 ·
+  Zirakpur / Panchkula / Derabassi / Kharar 1 master each.
+- 65 maps carry a 3D rendering; 7 carry an SVG overlay.
+
+### Skipped (with reasons)
+- `3d maps/sector 16.png`, `non 3d maps/sector 83.png` — no city token in the filename
+  (genuinely ambiguous; needs a manual city assignment). Everything else was recovered by the
+  classifier (typos `aetropolis`/`zirkpur`/`mohalli`/`mohli`, double extensions `*.png.png`,
+  no-extension `panchulka`, and project→city mapping for gillco/jlpl/shivalik/industrial/etc.).
+
+### Known cleanup (minor)
+- Legacy test records `map-nc-master` / `map-mohali-master` / `map-mohali-sec` (from the
+  session-4 verify script) coexist with the clean onboarded ids (`new-chandigarh-master`,
+  `mohali-master`, …). Harmless; a dedupe pass can drop the `map-*` test ids.

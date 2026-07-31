@@ -267,6 +267,22 @@ async function main() {
   const evil = await b.c.rpc('plotmap_set_map_status', { p_map_id: 'map-nc-master', p_status: 'archived' });
   (evil.error || evil.data === null) ? ok('dealer-b CANNOT modify dealer-demo maps') : no('LEAK: dealer-b modified demo map');
 
+  console.log('\n[library] onboarded map library integrity');
+  const lib = await admin.from('prebuilt_maps').select('id,kind,status,parent_map_id,dims').eq('dealer_id', 'dealer-demo');
+  if (lib.error) { no('library query: ' + lib.error.message); }
+  else {
+    const rows = lib.data;
+    const ids = new Set(rows.map((r) => r.id));
+    const masters = rows.filter((r) => r.kind === 'masterplan');
+    const sectors = rows.filter((r) => r.kind === 'sector');
+    const orphans = sectors.filter((r) => r.parent_map_id && !ids.has(r.parent_map_id));
+    const noDims = masters.filter((r) => !r.dims || !(r.dims.original || r.dims.threeD));
+    rows.length >= 60 ? ok(`library onboarded: ${rows.length} maps (${masters.length} master, ${sectors.length} sector)`) : no(`only ${rows.length} maps`);
+    orphans.length === 0 ? ok('every sector resolves to an existing parent masterplan') : no(`${orphans.length} orphan sectors`);
+    noDims.length === 0 ? ok('every masterplan has intrinsic dimensions') : no(`${noDims.length} masterplans missing dims`);
+    masters.every((r) => r.status === 'published') ? ok('all masterplans published (client-visible)') : no('some masterplans not published');
+  }
+
   console.log(`\n=== RESULT: ${pass} passed, ${fail} failed ===`);
   await Promise.all(USERS.map(() => 0));
   process.exit(fail ? 1 : 0);

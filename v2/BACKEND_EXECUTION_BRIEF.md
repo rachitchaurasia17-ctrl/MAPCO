@@ -206,7 +206,21 @@ Map library inventory → `v2/MAP_LIBRARY_INVENTORY.md` (170 source files, per-c
 Frontend gate: tsc clean, 72/72 tests, build OK; presentation browser-verified (0 CDN links,
 masterplan loads, no console errors).
 
-## 7. NEXT MILESTONE — bulk map-library onboarding + full presentation wiring
+## 6d. Full-library onboarding (session 5) — 36/36 live PASS
+
+- **`v2/scripts/onboard-maps.mjs`** — dependable batch onboarder. Classifies every source
+  file (city via typo-tolerant rules + project→city fallback; masterplan/sector/project; render
+  original/threeD/overlay), groups renders into one map, dedupes across folders (prefers the
+  annotated `maps with svg` original), reads PNG/JPEG intrinsic dims, uploads to Storage
+  `maps/<city>/<map>-<render>.<ext>` (idempotent), and registers `prebuilt_maps` via admin
+  (masterplans published, sectors draft, `parent_map_id` = city masterplan). `--dry` / `--cities=` /
+  `--all`. Every skip reported with a reason.
+- **Result:** 83 maps on MAPCO-DEV (11 masterplans published, 72 sectors), 143 assets uploaded,
+  0 failures, 0 orphan sectors, 0 masterplans missing dims. Only 2 files skipped (no city token).
+- **Harness:** backend-verify.mjs now includes a library-integrity block → 36/36.
+- See `v2/MAP_LIBRARY_INVENTORY.md` for per-city results + skip reasons + minor cleanup note.
+
+## 7. NEXT MILESTONE — presentation catalog wiring + Map Studio UI
 
 The linked model + Map Studio RPCs + Storage are proven. Next:
 1. **Batch-onboard the rest of Tri-City** (see `v2/MAP_LIBRARY_INVENTORY.md`): a script that
