@@ -286,30 +286,36 @@ class SupaClientLinks implements ClientLinkRepository {
     try {
       const c = await client();
       const { data, error } = await c.rpc('plotmap_resolve_client_link', { p_token: token });
-      if (error) {
-        if (/expired/i.test(error.message)) return ok({ kind: 'expired' });
-        if (/revoked/i.test(error.message)) return ok({ kind: 'revoked' });
-        return ok({ kind: 'unavailable' });
+      if (error) return ok({ kind: 'unavailable' });
+      const env = (data ?? {}) as { ok?: boolean; reason?: string; link?: Record<string, unknown> };
+      if (env.ok !== true) {
+        switch (env.reason) {
+          case 'expired': return ok({ kind: 'expired' });
+          case 'revoked': return ok({ kind: 'revoked' });
+          case 'rate_limited':
+          case 'unavailable': return ok({ kind: 'unavailable' });
+          default: return ok({ kind: 'invalid-token' });
+        }
       }
-      if (!data) return ok({ kind: 'invalid-token' });
-      const snap = data as Record<string, unknown>;
-      const status = String(snap.status ?? '');
-      if (status === 'expired') return ok({ kind: 'expired' });
-      if (status === 'revoked') return ok({ kind: 'revoked' });
+      const snap = env.link ?? {};
+      const vis = (snap.visibility as { price?: string; location?: string }) ?? {};
+      const priceVisible = vis.price === 'shown';
+      const locationVisible = vis.location === 'area' || vis.location === 'exact';
+      const branding = (snap.branding as { brandName?: string }) ?? {};
+      const audio = snap.audio as { available?: boolean; seconds?: number } | null;
       const rawProps = (snap.properties as Record<string, unknown>[]) ?? [];
-      const priceVisible = snap.price === 'shown' || snap.price_visible === true;
-      const locationVisible = snap.loc !== 'hidden' && snap.location_visible !== false;
       const payload: ClientSafePayload = {
-        dealerDisplayName: String(snap.dealer_name ?? snap.dealerDisplayName ?? 'Your dealer'),
+        dealerDisplayName: String(branding.brandName ?? 'Your dealer'),
         priceVisible, locationVisible,
+        ...(audio?.available ? { voiceNote: { url: '', seconds: Number(audio.seconds ?? 0) } } : {}),
         properties: rawProps.map((p) => ({
-          id: String(p.id ?? ''), area: String(p.area ?? ''),
-          size: String(p.size ?? ''), facing: String(p.facing ?? ''), position: String(p.position ?? ''),
-          photos: (p.photos as string[]) ?? [],
-          approvals: (p.approvals as string[]) ?? [],
-          landmarks: ((p.landmarks as { name: string; distance: string; icon?: string }[]) ?? [])
-            .map((l) => ({ name: l.name, distance: l.distance, icon: l.icon ?? 'ph-fill ph-map-pin' })),
-          ...(locationVisible && p.loc ? { loc: String(p.loc) } : {}),
+          id: String(p.id ?? ''),
+          area: String(p.area ?? p.title ?? ''),
+          size: String(p.size ?? ''), facing: String(p.facing ?? ''),
+          position: String(p.roadWidth ?? p.plotNumber ?? ''),
+          photos: ((p.photos as { url?: string }[]) ?? []).map((x) => x.url).filter((u): u is string => !!u),
+          approvals: [], landmarks: [],
+          ...(locationVisible && p.area ? { loc: String(p.area) } : {}),
           ...(priceVisible && p.price != null ? { price: Number(p.price) } : {}),
         })),
       };

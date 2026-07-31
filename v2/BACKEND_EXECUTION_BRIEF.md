@@ -147,6 +147,34 @@ RPCs in `000500_multi_dealer_rpc_setup` (status/client_visible/deleted, event id
   tsc clean, 72/72 tests, build OK. **Remaining:** demo auth user + live isolation run (service-role),
   edge deploy, login/device UI wiring. Then the map-linking milestone (§7).
 
+## 6b. Live verification (session 3) — 23/23 PASS
+
+Run: `node v2/scripts/backend-verify.mjs supabase/.env` (reads gitignored `supabase/.env`;
+prints only PASS/FAIL, never secrets). Created demo users `demo-owner`/`demo-team`/`b-owner`.
+- **Auth:** real email/password login issues sessions (owner, team, dealer-b). ✓
+- **Data:** demo owner reads its seeded properties in Supabase mode. ✓
+- **Isolation (RLS):** dealer-b sees only its own rows; neither dealer sees the other; cross-tenant
+  fetch-by-id returns nothing; team member is tenant-isolated too. ✓ (the core security property)
+- **Account state:** demo dealer reads its trial `dealer_settings`. ✓
+- **Storage:** `property-photos` is PRIVATE; 15-min signed URL works; anon direct download blocked. ✓
+- **Client links:** create→64-hex token (once); anon resolve→valid snapshot; price-hidden hides price;
+  snapshot carries NO commission/seller/notes/internal fields; revoke→revoked; expiry→expired. ✓
+- **Roles:** team member has staff read but is not a platform admin. ✓
+- **Fix applied:** `20260801002200_service_role_grants.sql` (service_role backend grants — the kit
+  assumed Supabase defaults not applied to migration-created tables). Adapter `resolve()` corrected
+  to the real `{ok,reason,link}` envelope + client-safe snapshot mapping.
+
+**Edge functions:** all three deployed to MAPCO-DEV — `resolve-client-link` (`--no-verify-jwt`,
+smoke-tested live: junk token → `{"ok":false,"reason":"invalid"}`, no crash/leak), `provision-dealer`,
+`delete-dealer` (JWT-verified). Origin allowlists set as function secrets. Supabase auto-injects the
+service-role key into the edge runtime (never in Git/frontend).
+
+**Frontend gate:** tsc clean, 72/72 Vitest, build OK (mock still default).
+
+Remaining before "production-real": wire the login + device-activation UI onto the real auth repo;
+exercise the edge media broker on a live valid token; broader role-matrix coverage. None block the
+map-linking milestone.
+
 ## 7. NEXT MILESTONE — map database linking (do not start yet)
 
 Kept deliberately out of this phase. The data is prepared for it:

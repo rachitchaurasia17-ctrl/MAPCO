@@ -6,3 +6,7 @@
 .env.keys
 .env.local
 .env.*.local
+
+# local admin env (service-role key — never commit)
+.env
+scripts/.env

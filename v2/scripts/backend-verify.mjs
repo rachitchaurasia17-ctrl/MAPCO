@@ -1,0 +1,198 @@
+/* ═══════════════════════════════════════════════════════════════
+   MAPCO V2 — backend verification (dev only, service-role)
+   ---------------------------------------------------------------
+   Reads secrets from the gitignored supabase/.env. Creates demo
+   users + profiles, then verifies: login, data loading, dealer-A/
+   dealer-B isolation, account states, storage signed URLs.
+   Prints only PASS/FAIL — never keys, tokens, or passwords.
+   Run:  node v2/scripts/backend-verify.mjs
+   ═══════════════════════════════════════════════════════════════ */
+import { readFileSync } from 'node:fs';
+import { createClient } from '@supabase/supabase-js';
+
+// ── load gitignored env ───────────────────────────────────────
+const envPath = process.argv[2] ?? 'supabase/.env';
+const env = Object.fromEntries(
+  readFileSync(envPath, 'utf8').split('\n').filter(Boolean).map((l) => {
+    const i = l.indexOf('='); return [l.slice(0, i).trim(), l.slice(i + 1).trim()];
+  }),
+);
+const URL = env.SUPABASE_URL, SERVICE = env.SUPABASE_SERVICE_ROLE_KEY, ANON = env.SUPABASE_ANON_KEY, PW = env.DEMO_PASSWORD;
+if (!URL || !SERVICE || !ANON || !PW) { console.error('missing env'); process.exit(1); }
+
+const admin = createClient(URL, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
+
+let pass = 0, fail = 0;
+const ok = (m) => { console.log('  PASS ' + m); pass++; };
+const no = (m) => { console.log('  FAIL ' + m); fail++; };
+
+// ── demo actors ───────────────────────────────────────────────
+const USERS = [
+  { key: 'demoOwner', email: 'demo-owner@mapco.dev', role: 'owner', dealer: 'dealer-demo' },
+  { key: 'demoTeam',  email: 'demo-team@mapco.dev',  role: 'team',  dealer: 'dealer-demo' },
+  { key: 'bOwner',    email: 'b-owner@mapco.dev',    role: 'owner', dealer: 'dealer-b' },
+];
+const ids = {};
+
+async function ensureUser(u) {
+  // idempotent create
+  let { data, error } = await admin.auth.admin.createUser({
+    email: u.email, password: PW, email_confirm: true,
+    user_metadata: { dealer_id: u.dealer, role: u.role },
+  });
+  if (error && /registered|exists/i.test(error.message)) {
+    // find existing
+    const list = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
+    data = { user: list.data.users.find((x) => x.email === u.email) };
+  } else if (error) { throw error; }
+  const id = data.user.id;
+  ids[u.key] = id;
+  const { error: pe } = await admin.from('profiles').upsert({
+    id, email: u.email, role: u.role, dealer_id: u.dealer, status: 'active',
+  });
+  if (pe) throw pe;
+}
+
+async function seedDealerB() {
+  await admin.from('dealer_settings').upsert({
+    dealer_id: 'dealer-b', brand_name: 'Rival Realty', subscription_status: 'active', account_status: 'active',
+  });
+  await admin.from('crm_records').upsert({
+    id: 'b-prop-1', dealer_id: 'dealer-b', entity_type: 'properties', deleted: false,
+    payload: { type: 'Villa', area: 'Sector 20', loc: 'Sector 20, Panchkula', size: '400 sq yd',
+      facing: 'South', position: 'Inside', approvals: ['HUDA'], landmarks: [], price: 12000000,
+      photos: [], published: true, sold: false, views: 0 },
+  });
+}
+
+function anon() { return createClient(URL, ANON, { auth: { persistSession: false, autoRefreshToken: false } }); }
+
+async function signIn(email) {
+  const c = anon();
+  const { data, error } = await c.auth.signInWithPassword({ email, password: PW });
+  if (error) throw error;
+  return { c, session: data.session };
+}
+
+async function main() {
+  console.log('\n[setup] demo users + profiles');
+  for (const u of USERS) await ensureUser(u);
+  await seedDealerB();
+  ok('created/linked ' + USERS.length + ' users to profiles');
+
+  console.log('\n[auth] real Supabase-mode login');
+  const demo = await signIn('demo-owner@mapco.dev');
+  demo.session?.access_token ? ok('demo owner login → session issued') : no('demo owner login');
+  const b = await signIn('b-owner@mapco.dev');
+  b.session ? ok('dealer-b owner login → session issued') : no('dealer-b owner login');
+
+  console.log('\n[data] dealer-scoped loading');
+  const demoProps = await demo.c.from('crm_records').select('id').eq('entity_type', 'properties');
+  const demoIds = (demoProps.data ?? []).map((r) => r.id).sort();
+  demoIds.length >= 3 && demoIds.includes('ecocity')
+    ? ok('demo owner sees seeded properties: ' + demoIds.join(','))
+    : no('demo owner property load (' + JSON.stringify(demoProps.error ?? demoIds) + ')');
+
+  console.log('\n[isolation] dealer-A vs dealer-B (RLS)');
+  const bProps = await b.c.from('crm_records').select('id').eq('entity_type', 'properties');
+  const bIds = (bProps.data ?? []).map((r) => r.id);
+  bIds.length === 1 && bIds[0] === 'b-prop-1'
+    ? ok('dealer-b sees ONLY its own property')
+    : no('dealer-b scoping wrong: ' + JSON.stringify(bIds));
+  !bIds.includes('ecocity') ? ok('dealer-b CANNOT see dealer-demo rows') : no('LEAK: dealer-b saw dealer-demo');
+  !demoIds.includes('b-prop-1') ? ok('dealer-demo CANNOT see dealer-b rows') : no('LEAK: dealer-demo saw dealer-b');
+  // targeted cross-tenant fetch by id
+  const cross = await demo.c.from('crm_records').select('id').eq('id', 'b-prop-1').maybeSingle();
+  (!cross.data) ? ok('cross-tenant fetch by id returns nothing') : no('LEAK: cross-tenant id fetch returned a row');
+
+  console.log('\n[account] account-state source');
+  const ds = await demo.c.from('dealer_settings').select('subscription_status,account_status,trial_end').maybeSingle();
+  ds.data?.subscription_status === 'trial' ? ok('demo dealer reads its trial dealer_settings') : no('account-state read: ' + JSON.stringify(ds.error ?? ds.data));
+
+  console.log('\n[storage] private buckets + signed URL');
+  const buckets = await admin.storage.listBuckets();
+  const pp = (buckets.data ?? []).find((x) => x.id === 'property-photos');
+  pp && pp.public === false ? ok('property-photos bucket is PRIVATE') : no('property-photos bucket state: ' + JSON.stringify(pp));
+  // upload a tiny object as admin under dealer path, sign it
+  const path = 'dealer-demo/verify-' + Date.now() + '.png';
+  // 1x1 PNG (the bucket restricts to image mime types by policy — verify a valid image works).
+  const png = Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='), (c) => c.charCodeAt(0));
+  const up = await admin.storage.from('property-photos').upload(path, png, { upsert: true, contentType: 'image/png' });
+  if (up.error) no('upload: ' + up.error.message);
+  else {
+    const signed = await admin.storage.from('property-photos').createSignedUrl(path, 900);
+    signed.data?.signedUrl ? ok('15-min signed URL minted for private object') : no('signed URL: ' + JSON.stringify(signed.error));
+    // anon must NOT read the object without a signed URL
+    const anonRead = await anon().storage.from('property-photos').download(path);
+    anonRead.error ? ok('anon direct download blocked (private)') : no('LEAK: anon downloaded private object');
+    await admin.storage.from('property-photos').remove([path]);
+  }
+
+  console.log('\n[client-links] create → resolve → safety → revoke → expiry');
+  // a link needs an APPROVED https photo per property; seed one.
+  await admin.from('crm_records').upsert({
+    id: 'clink-prop', dealer_id: 'dealer-demo', entity_type: 'properties', deleted: false,
+    payload: { type: 'Residential Plot', title: 'Link Test Plot', area: 'Eco City', loc: 'Eco City, New Chandigarh',
+      sector: 'Eco City', size: '400 sq yd', facing: 'East', roadWidth: '30 ft', price: 8000000,
+      photos: ['https://cdn.mapco.dev/clink-1.jpg'], published: true, clientVisible: true, sold: false, views: 0 },
+  });
+  const SEL = { 'clink-prop': ['external:0'] };
+  // create a link as demo owner (price hidden, location area)
+  const created = await demo.c.rpc('plotmap_create_client_link', {
+    p_payload: { clientId: 'c1', propertyIds: ['clink-prop'], photoSelections: SEL, priceVisibility: 'hidden', locationVisibility: 'area', expiresInDays: 7 },
+  });
+  const token = created.data?.token;
+  token && /^[0-9a-f]{64}$/.test(token) ? ok('link created, 64-hex raw token returned once') : no('create link: ' + JSON.stringify(created.error ?? created.data));
+  if (token) {
+    // resolve via ANON (buyer path)
+    const r1 = await anon().rpc('plotmap_resolve_client_link', { p_token: token });
+    const link = r1.data?.link;
+    r1.data?.ok === true && Array.isArray(link?.properties) && link.properties.length === 1
+      ? ok('anon resolve → valid snapshot with 1 property') : no('resolve valid: ' + JSON.stringify(r1.data));
+    // safety: price hidden ⇒ no price; no forbidden fields anywhere in payload
+    const blob = JSON.stringify(link ?? {});
+    (link?.visibility?.price === 'hidden' && !/"price":\s*"?\d/.test(blob))
+      ? ok('price hidden ⇒ no price in snapshot') : no('price leak: ' + blob.slice(0, 200));
+    !/commission|sellerPhone|"internalStatus"|negotiation|"note"/i.test(blob)
+      ? ok('snapshot has no commission/seller/notes/internal fields') : no('FORBIDDEN field in snapshot');
+    // token is a hash server-side: raw token must not equal stored hash (verify hint only)
+    // revoke
+    const idRow = await admin.from('share_links').select('id').eq('dealer_id', 'dealer-demo').order('created_at', { ascending: false }).limit(1).maybeSingle();
+    const linkId = idRow.data?.id;
+    const rev = await demo.c.rpc('plotmap_revoke_client_link', { p_link_id: linkId });
+    rev.data?.ok === true ? ok('owner revoked the link') : no('revoke: ' + JSON.stringify(rev.error ?? rev.data));
+    const r2 = await anon().rpc('plotmap_resolve_client_link', { p_token: token });
+    r2.data?.ok === false && r2.data?.reason === 'revoked' ? ok('revoked link resolves → revoked') : no('post-revoke: ' + JSON.stringify(r2.data));
+  }
+  // expiry: new link, force expiry in the past via admin, resolve → expired
+  const created2 = await demo.c.rpc('plotmap_create_client_link', {
+    p_payload: { clientId: 'c1', propertyIds: ['clink-prop'], photoSelections: SEL, priceVisibility: 'shown', locationVisibility: 'exact', expiresInDays: 7 },
+  });
+  const token2 = created2.data?.token;
+  if (token2) {
+    const id2 = await admin.from('share_links').select('id').eq('dealer_id', 'dealer-demo').order('created_at', { ascending: false }).limit(1).maybeSingle();
+    await admin.from('share_links').update({ expires_at: new Date(Date.now() - 3600_000).toISOString() }).eq('id', id2.data?.id);
+    const r3 = await anon().rpc('plotmap_resolve_client_link', { p_token: token2 });
+    r3.data?.ok === false && r3.data?.reason === 'expired' ? ok('expired link resolves → expired') : no('expiry: ' + JSON.stringify(r3.data));
+    // clean up: revoke the 2nd link too
+    await admin.from('share_links').update({ status: 'revoked', revoked_at: new Date().toISOString() }).eq('id', id2.data?.id);
+  } else { no('create link #2 for expiry: ' + JSON.stringify(created2.error ?? created2.data)); }
+
+  console.log('\n[roles] team member scope vs owner');
+  const team = await signIn('demo-team@mapco.dev');
+  team.session ? ok('team member login → session issued') : no('team login');
+  const teamProps = await team.c.from('crm_records').select('id').eq('entity_type', 'properties');
+  (teamProps.data ?? []).some((r) => r.id === 'ecocity')
+    ? ok('team member reads own dealer data (staff read)') : no('team read: ' + JSON.stringify(teamProps.error ?? teamProps.data));
+  const teamCross = await team.c.from('crm_records').select('id').eq('id', 'b-prop-1').maybeSingle();
+  !teamCross.data ? ok('team member is tenant-isolated (no dealer-b)') : no('LEAK: team saw dealer-b');
+  // owner-only helper: team must NOT be a platform admin
+  const isAdmin = await team.c.rpc('plotmap_is_platform_admin');
+  isAdmin.data === false || isAdmin.data == null ? ok('team member is not a platform admin') : no('team elevated to platform admin');
+
+  console.log(`\n=== RESULT: ${pass} passed, ${fail} failed ===`);
+  await Promise.all(USERS.map(() => 0));
+  process.exit(fail ? 1 : 0);
+}
+
+main().catch((e) => { console.error('ERROR', e.message); process.exit(2); });
