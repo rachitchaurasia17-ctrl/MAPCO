@@ -83,13 +83,28 @@ node supabase/verification/verify-isolation.js     # needs PLOTMAP_SUPABASE_* en
 psql "$MAPCO_DEV_DB_URL" -f supabase/verification/verify-private-client-links.sql
 ```
 
-## 5. Blockers
+## 4b. Base-schema reconstruction (important)
 
-- **DB password required** to `db push` + run verification against MAPCO-DEV (secret — user must
-  supply or run push locally). The Supabase **MCP connector cannot reach MAPCO-DEV** (scoped to
-  the PROPERTY org); the **CLI cached access token can** (verified via `supabase projects list`).
-- Migrations not yet applied/validated on the live dev DB (pending password).
-- Real Supabase adapters behind `DataAdapterV2` not yet written (next phase).
+The migration-kit is INCREMENTAL and assumed a retired `supabase_setup.sql` base. On a fresh
+project migrations 02+ failed with `relation public.crm_records does not exist`. Reconstructed
+the missing base in `20260801000150_base_core_tables_and_client_safe_view.sql`:
+`crm_records`, `presentation_events`, `prebuilt_maps`, `map_overlays` (RLS enabled, no permissive
+policies — enforced migrations attach the real dealer-scoped policies) and the client-safe
+`client_safe_properties` VIEW (projects only buyer-safe property columns; never price/seller/
+commission/notes; `security_invoker=true`). Column contracts taken verbatim from the public read
+RPCs in `000500_multi_dealer_rpc_setup` (status/client_visible/deleted, event id text, etc.).
+
+## 5. Blockers / open items
+
+- ~~DB password / MCP access~~ **RESOLVED:** the CLI's cached access token reaches MAPCO-DEV and
+  `db push` applied all migrations with no password prompt. (MCP connector still can't; use the CLI.)
+- **All 17 migrations applied + in sync on MAPCO-DEV** (000100→001600), verified via
+  `supabase migration list --linked`.
+- Not yet done: live RLS isolation run (`verify-isolation.js` needs anon+service keys + 2 dealers);
+  Storage buckets not yet created; edge functions not yet deployed; real Supabase adapters behind
+  `DataAdapterV2` not yet written; seed data pending.
+- Secrets: anon key (publishable) can go in a gitignored `v2/.env` for the frontend; **service-role
+  key must live only in edge-function env**, never in Git/frontend.
 
 ## 6. Next steps
 
@@ -104,6 +119,9 @@ psql "$MAPCO_DEV_DB_URL" -f supabase/verification/verify-private-client-links.sq
 ## Status log
 
 - **2026-07-31 (session 1):** Verified MAPCO-DEV identity via CLI; `supabase init` + `link` done.
-  Ported all 16 proven migrations to `supabase/migrations/` (valid 14-digit order), edge functions,
-  and verification scripts. Secret-scanned (only the reject-guard regex present). Brief created.
-  **Blocked on DB password** to apply + verify on MAPCO-DEV.
+  Ported all 16 proven migrations (valid 14-digit order) + edge functions + verification scripts.
+- **2026-07-31 (session 1, cont.):** Applied migrations to MAPCO-DEV via `supabase db push` (CLI
+  cached token — no password prompt). Hit the missing-base gap; authored
+  `20260801000150_base_core_tables_and_client_safe_view.sql`. **All 17 migrations now applied +
+  in sync on MAPCO-DEV.** Next: Storage buckets, real Supabase adapters behind DataAdapterV2,
+  edge-function deploy, seed data, live isolation/security verification.
