@@ -14,6 +14,7 @@ const esc = (value: string) =>
 export class AddPropertyFlow {
   private el: HTMLElement;
   private addStep = 1;
+  private mapToggle: 'masterplan' | 'sector' = 'masterplan';
   private activeMap: MountedMap | null = null;
   private selectedMapPin: { mapId: string, x: number, y: number } | null = null;
   private addForm = {
@@ -83,15 +84,21 @@ export class AddPropertyFlow {
     
     const details = `<section style="border:1px solid #eadfc9;border-radius:18px;background:rgba(255,255,255,.68);padding:20px 24px"><div style="display:flex;align-items:center;gap:13px"><span style="width:44px;height:44px;border-radius:11px;background:#f0eaff;color:#6b3fd4;display:grid;place-items:center"><i class="ph ph-image" style="font-size:22px"></i></span><h3 style="margin:0;font-family:'Newsreader',serif;font-size:22px;font-weight:600">Photos &amp; Details</h3></div><div style="margin-top:14px;font-size:13px;font-weight:700;color:#4c463d">Main photo (cover image) <b style="color:#db3d53">*</b></div><button type="button" data-act="plot-photo" style="width:100%;height:78px;margin-top:7px;border:1px dashed #c9b8d8;border-radius:11px;background:#fbf8ff;color:#4c463d;display:flex;align-items:center;justify-content:center;gap:12px"><i class="ph ph-upload-simple" style="font-size:28px;color:#6b3fd4"></i><span style="text-align:left"><b style="display:block;font-size:13px">Upload cover photo <span style="font-weight:500">or drag &amp; drop</span></b><small style="display:block;margin-top:3px;color:#8d8271">Recommended size: 16:9 or 4:3</small></span></button><div style="margin-top:12px;font-size:13px;font-weight:700;color:#4c463d">Gallery photos</div><div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:7px">${Array.from({ length: 6 }, (_, index) => index < 2 ? `<button type="button" data-act="plot-photo" style="height:85px;border-radius:10px;position:relative;background:url('${esc(previewPhotos[index] || "/assets/ph-plot-1.png")}') center/cover"><span style="position:absolute;right:5px;top:5px;width:22px;height:22px;border-radius:50%;background:#fff;color:#241f1c;display:grid;place-items:center"><i class="ph-bold ph-x" style="font-size:11px"></i></span></button>` : index === 5 ? `<button type="button" data-act="plot-photo" style="height:85px;border:1px solid #7b4ee5;border-radius:10px;background:#fbf8ff;color:#6b3fd4;display:grid;place-items:center"><span><i class="ph ph-plus" style="display:block;font-size:25px"></i><small style="font-size:11px">Add more</small></span></button>` : `<button type="button" data-act="plot-photo" style="height:85px;border:1px dashed #d7ccbd;border-radius:10px;background:#faf8f5;color:#b7ada1;display:grid;place-items:center"><i class="ph ph-image" style="font-size:25px"></i></button>`).join("")}</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:14px"><label style="${labelStyle}">Property type <b style="color:#db3d53">*</b><select name="type" style="${inputStyle}">${["Residential Plot", "Flat", "Floor", "Kothi", "Villa", "Commercial"].map((item) => `<option ${item === this.addForm.type ? "selected" : ""}>${item}</option>`).join("")}</select></label><label style="${labelStyle}">Listing status <b style="color:#db3d53">*</b><select name="status" style="${inputStyle}"><option>Available</option><option>Draft</option></select></label><label style="${labelStyle}">Possession <b style="color:#db3d53">*</b><select name="possession" style="${inputStyle}"><option>Ready to build</option><option>Immediate</option><option>Later</option></select></label></div><label style="${labelStyle};margin-top:13px">Property description <b style="color:#db3d53">*</b><textarea name="description" maxlength="500" rows="3" style="display:block;width:100%;margin-top:7px;border:1px solid #e6c980;border-radius:11px;background:#fff;padding:11px 14px;font-size:13px;line-height:1.45;color:#241f1c;outline:none;resize:none">${esc(this.addForm.description)}</textarea><span style="display:block;text-align:right;font-size:11px;font-weight:500;color:#8d8271;margin-top:3px">${this.addForm.description.length} / 500</span></label><div style="font-size:13px;font-weight:700;color:#4c463d;margin-top:8px">Nearby places</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:7px">${[["ph-graduation-cap", "Chandigarh University", "10 min"], ["ph-storefront", "CP67 Mall", "8 min"], ["ph-first-aid-kit", "PGIMER Hospital", "22 min"]].map(([icon, name, time]) => `<span style="display:flex;align-items:center;gap:8px;height:40px;border:1px solid #eadfc9;border-radius:9px;padding:0 10px;font-size:10.5px;font-weight:700"><i class="ph-fill ${icon}" style="font-size:15px;color:#e5a90e"></i><span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</span><b style="color:#12a150">${time}</b></span>`).join("")}</div></section>`;
     
-    const mapLocation = `<section style="border:1px solid #eadfc9;border-radius:18px;background:rgba(255,255,255,.68);display:flex;flex-direction:column;overflow:hidden">
-      <div style="flex:none;display:flex;align-items:center;gap:13px;padding:20px 24px">
-        <span style="width:44px;height:44px;border-radius:11px;background:#f0eaff;color:#6b3fd4;display:grid;place-items:center"><i class="ph ph-map-pin" style="font-size:22px"></i></span>
-        <div>
-          <h3 style="margin:0;font-family:'Newsreader',serif;font-size:22px;font-weight:600">Map Location</h3>
-          <p style="margin:3px 0 0;color:#8d8271;font-size:13px">Click on the map below to drop a pin for this property.</p>
+    const mapLocation = `<section style="border:1px solid #eadfc9;border-radius:18px;background:rgba(255,255,255,.68);display:flex;flex-direction:column;overflow:hidden;height:100%">
+      <div style="flex:none;display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid #eadfc9">
+        <div style="display:flex;align-items:center;gap:13px">
+          <span style="width:44px;height:44px;border-radius:11px;background:#f0eaff;color:#6b3fd4;display:grid;place-items:center"><i class="ph ph-map-pin" style="font-size:22px"></i></span>
+          <div>
+            <h3 style="margin:0;font-family:'Newsreader',serif;font-size:22px;font-weight:600">Map Location</h3>
+            <p style="margin:3px 0 0;color:#8d8271;font-size:13px">Click on the map below to drop a pin for this property.</p>
+          </div>
+        </div>
+        <div style="display:flex;background:#f0eaff;border-radius:11px;padding:4px">
+           <button type="button" data-act="toggle-map" data-kind="sector" style="padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;${this.mapToggle === 'sector' ? 'background:#fff;color:#6b3fd4;box-shadow:0 2px 4px rgba(0,0,0,.05)' : 'color:#6b6156'}">Sector Map</button>
+           <button type="button" data-act="toggle-map" data-kind="masterplan" style="padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;${this.mapToggle === 'masterplan' ? 'background:#fff;color:#6b3fd4;box-shadow:0 2px 4px rgba(0,0,0,.05)' : 'color:#6b6156'}">Masterplan</button>
         </div>
       </div>
-      <div style="flex:1;min-height:300px;position:relative;background:#e7e0d2">
+      <div style="flex:1;min-height:400px;position:relative;background:#e7e0d2">
         <div id="pm-add-map" style="position:absolute;inset:0"></div>
         <div style="position:absolute;bottom:15px;left:50%;transform:translateX(-50%);background:rgba(28,21,51,.8);color:#fff;padding:8px 16px;border-radius:99px;font-size:13px;font-weight:600;pointer-events:none;z-index:20">
           ${this.selectedMapPin ? `Pin placed on ${this.selectedMapPin.mapId}` : 'Click map to place pin'}
@@ -116,7 +123,7 @@ export class AddPropertyFlow {
         </header>
         <div data-scroll style="flex:1;min-height:0;overflow:auto;padding:22px 30px 18px">
           <div style="display:flex;align-items:center;gap:14px;max-width:650px">${step(1, "Property Basics")}<span style="height:1px;flex:1;background:#ddd4c6"></span>${step(2, "Photos & Details")}<span style="height:1px;flex:1;background:#ddd4c6"></span>${step(3, "Map Location")}</div>
-          <div style="display:grid;grid-template-columns:minmax(0,1.48fr) minmax(330px,.92fr);gap:30px;margin-top:20px;align-items:stretch">${body}${preview}</div>
+          <div style="display:grid;${this.addStep === 3 ? 'grid-template-columns:1fr;' : 'grid-template-columns:minmax(0,1.48fr) minmax(330px,.92fr);'}gap:30px;margin-top:20px;align-items:stretch;height:${this.addStep === 3 ? 'calc(100% - 70px)' : 'auto'}">${body}${this.addStep === 3 ? '' : preview}</div>
         </div>
         <footer style="height:104px;flex:none;display:flex;align-items:center;gap:16px;padding:0 30px;border-top:1px solid #eadfc9;background:rgba(255,250,240,.96)">
           <button type="button" data-act="add-back" style="display:flex;align-items:center;gap:8px;height:54px;padding:0 20px;border-radius:12px;background:#f0eaff;color:#4c463d;font-size:15px;font-weight:700"><i class="ph ph-arrow-left"></i>Back</button>
@@ -135,8 +142,10 @@ export class AddPropertyFlow {
     if (this.addStep === 3) {
       const mapEl = this.el.querySelector<HTMLElement>('#pm-add-map');
       const maps = getMaps();
-      const mapId = this.addForm.city === "New Chandigarh" ? "masterplan-mohali" : maps[0]?.id || "";
-      const targetMap = maps.find((m) => m.id === mapId) || maps[0];
+      const masterplanMap = maps.find((m) => m.kind === 'masterplan' && m.city === this.addForm.city) || maps.find(m => m.kind === 'masterplan');
+      const sectorMap = maps.find((m) => m.kind === 'sector' && m.sectorOrBlock === this.addForm.sector) || maps.find(m => m.kind === 'sector');
+      
+      const targetMap = (this.mapToggle === 'masterplan' ? masterplanMap : sectorMap) || masterplanMap;
       if (mapEl && targetMap) {
         this.activeMap = mountMapEngine(mapEl);
         this.activeMap.engine.setMap(targetMap.id, { mode: 'original' });
@@ -246,6 +255,11 @@ export class AddPropertyFlow {
       if (!target) return;
       
       const action = target.dataset.act;
+      if (action === "toggle-map") {
+        this.mapToggle = target.dataset.kind as 'masterplan' | 'sector';
+        this.render();
+        return;
+      }
       if (action === "add-step") {
         this.addStep = Math.max(1, Math.min(3, Number(target.dataset.step) || 1));
         this.render();
