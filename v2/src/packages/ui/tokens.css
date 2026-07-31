@@ -9,17 +9,22 @@
 
 :root {
   /* ── Base surfaces ────────────────────────────────────────── */
-  --pm-base: #f5efff;
+  /* Base deepened from #f5efff so the violet-dusk reads as violet, not
+     near-white, on bright dealer laptops (founder feedback 2026-08-01). */
+  --pm-base: #e7ddfb;
   --pm-surface: #fffaf0;
   --pm-surface-alt: #faf7ff;
-  --pm-surface-violet: #f0eaff;
+  --pm-surface-violet: #ece4ff;
   --pm-hairline: #ddd2f5;
   --pm-hairline-2: #e4dbf7;
 
   /* ── Bloom gradient (standard app background) ─────────────── */
-  --pm-bloom: radial-gradient(62% 50% at -2% -4%, rgba(139,96,232,.50), transparent 62%),
-              radial-gradient(54% 44% at 104% 0%, rgba(255,201,60,.42), transparent 60%),
-              radial-gradient(70% 60% at 50% 108%, rgba(255,225,230,.55), transparent 65%);
+  /* Stronger violet corner + a broad violet wash so the tint is visible
+     across the whole surface, not just the extreme corners. */
+  --pm-bloom: radial-gradient(64% 52% at -2% -4%, rgba(123,78,224,.60), transparent 64%),
+              radial-gradient(54% 44% at 104% 0%, rgba(255,201,60,.40), transparent 60%),
+              radial-gradient(72% 62% at 50% 108%, rgba(155,110,235,.40), transparent 66%),
+              radial-gradient(120% 120% at 50% 40%, rgba(139,96,232,.14), transparent 70%);
 
   /* ── Accent / semantic ────────────────────────────────────── */
   --pm-gold: #ffc93c;

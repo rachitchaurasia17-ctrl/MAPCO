@@ -175,7 +175,50 @@ Remaining before "production-real": wire the login + device-activation UI onto t
 exercise the edge media broker on a live valid token; broader role-matrix coverage. None block the
 map-linking milestone.
 
-## 7. NEXT MILESTONE — map database linking (do not start yet)
+## 6c. Map linking phase (session 4) — DONE, 32/32 live PASS
+
+Migrations `20260801002300_map_linking` + `..002400_authenticated_published_maps`:
+- **Schema:** `prebuilt_maps` extended with `parent_map_id` (sector→masterplan), `area`,
+  and an `assets` bundle (`{original,threeD,overlay}` = storage path + w/h). Map states:
+  `draft|published|hidden|archived` + `client_visible`.
+- **Relationships:** masterplan ↔ sector via `parent_map_id`; properties link via payload
+  `masterplanId`/`sectorMapId` + normalized 0–1 `mapPlacement{mapId,x,y}`.
+- **Dealer RPCs (Map Studio):** `plotmap_upsert_map`, `plotmap_set_map_status`,
+  `plotmap_link_property_to_map`, `plotmap_dealer_maps` (all states) — SECURITY DEFINER,
+  re-check dealer + `plotmap_can_edit_maps/properties`. Presentation read:
+  `plotmap_published_maps` / `plotmap_published_overlays` (authenticated, published+visible only).
+  Kept the deliberate anon device-gating (did NOT re-grant the revoked raw anon RPC).
+- **Storage:** public `maps` bucket (rasters aren't secret; only published maps surface).
+- **Assets onboarded (vertical slice):** New Chandigarh masterplan+overlay, Mohali
+  masterplan+3D+overlay+Sector-90-91, uploaded to `maps/` and created via the dealer RPCs;
+  properties `ecocity`/`omx` placed on the NC masterplan.
+- **Adapter:** `SupaMaps` now reads through the RPCs (RLS-safe); `rowToMapMeta` maps the
+  asset bundle → `MapData` (raster, dims.original/threeD).
+- **Verified live (backend-verify.mjs, 32/32):** upload, dealer CRUD, parent link, property
+  place, Map-Studio-lists-all, presentation-published-only (draft excluded), archive hides,
+  cross-dealer edit blocked.
+
+**Also this session:** violet-dusk background deepened (`#f5efff`→`#e7ddfb` + stronger violet
+bloom) in dealer/team shells + tokens (founder: "too white"). Presentation perf: removed the
+regressed render-blocking CDN font/icon `<link>`s from `app/plotmap/index.html` (self-hosted
+already loaded via JS), added preconnect to Storage + preload of the first masterplan + fonts.
+Map library inventory → `v2/MAP_LIBRARY_INVENTORY.md` (170 source files, per-city coverage).
+Frontend gate: tsc clean, 72/72 tests, build OK; presentation browser-verified (0 CDN links,
+masterplan loads, no console errors).
+
+## 7. NEXT MILESTONE — bulk map-library onboarding + full presentation wiring
+
+The linked model + Map Studio RPCs + Storage are proven. Next:
+1. **Batch-onboard the rest of Tri-City** (see `v2/MAP_LIBRARY_INVENTORY.md`): a script that
+   uploads each city's masterplan/3D/sector/overlay to `maps/` and calls `plotmap_upsert_map`.
+2. **Wire the presentation map picker to `adapter.maps`** in supabase mode (currently the static
+   engine registry drives the locked masterplan render; bridge the catalog without changing the
+   locked cover-fit / `cssMapTransform` math).
+3. **Map Studio UI** on the dealer side (list/create/publish/hide/link/place) calling the new RPCs.
+4. Device-gated buyer map reads (`plotmap_client_maps_for_device`) once device-activation UI lands.
+Locked Masterplan visual + engine math stay frozen throughout.
+
+## 7-old. (superseded) map database linking prep
 
 Kept deliberately out of this phase. The data is prepared for it:
 - `prebuilt_maps` (registry: masterplan/sector, city/sector, raster, dims, status, client_visible).

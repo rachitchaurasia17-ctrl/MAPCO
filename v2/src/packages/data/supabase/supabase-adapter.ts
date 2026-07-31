@@ -202,20 +202,30 @@ class SupaDemandSignals implements DemandSignalsRepository {
 
 /* ── maps / presentation / events ─────────────────────────────── */
 
+function rowToMapMeta(m: Record<string, unknown>): Omit<MapData, 'sets'> {
+  const assets = (m.assets as { original?: { path?: string; w?: number; h?: number }; threeD?: { path?: string; w?: number; h?: number } }) ?? {};
+  const dims = (m.dims as { original?: { w: number; h: number }; threeD?: { w: number; h: number } }) ?? {};
+  return {
+    id: m.id, kind: m.kind, city: m.city ?? '', sector: m.sector ?? '',
+    label: m.label ?? m.area ?? '', raster: assets.original?.path ?? m.raster ?? '',
+    dims: {
+      original: dims.original ?? { w: assets.original?.w ?? 0, h: assets.original?.h ?? 0 },
+      ...(assets.threeD || dims.threeD ? { threeD: dims.threeD ?? { w: assets.threeD!.w ?? 0, h: assets.threeD!.h ?? 0 } } : {}),
+    },
+    published: m.status === 'published', hidden: m.client_visible === false,
+    linkedProperties: [],
+  } as unknown as Omit<MapData, 'sets'>;
+}
+
 class SupaMaps implements MapRepository {
   async listRegistry(p?: PageParams, o?: QueryOptions): Promise<Result<Page<Omit<MapData, 'sets'>>>> {
     const a = aborted<Page<Omit<MapData, 'sets'>>>(o); if (a) return a;
     try {
       const c = await client();
-      const { data, error } = await c.from('prebuilt_maps')
-        .select('id,kind,city,sector,label,raster,dims,status,client_visible,deleted')
-        .eq('deleted', false).order('created_at', { ascending: true }).limit(Math.min(p?.limit ?? MAX_LIMIT, 200));
+      // Authenticated presentation path: dealer's published + client-visible maps only.
+      const { data, error } = await c.rpc('plotmap_published_maps');
       if (error) return toErr(error);
-      const items = (data ?? []).map((m: Record<string, unknown>) => ({
-        id: m.id, kind: m.kind, city: m.city ?? '', sector: m.sector ?? '', label: m.label ?? '',
-        raster: m.raster ?? '', dims: (m.dims as object) ?? {},
-        published: m.status === 'published', hidden: m.client_visible === false, linkedProperties: [],
-      })) as unknown as Omit<MapData, 'sets'>[];
+      const items = ((data ?? []) as Record<string, unknown>[]).map(rowToMapMeta);
       return ok({ items, nextCursor: null, total: items.length });
     } catch (e) { return toErr(e); }
   }
@@ -223,20 +233,16 @@ class SupaMaps implements MapRepository {
     const a = aborted<MapData>(o); if (a) return a;
     try {
       const c = await client();
-      const { data, error } = await c.from('prebuilt_maps').select('*').eq('id', id).maybeSingle();
+      // Full dealer catalog (all states) so Map Studio + detail can open any map.
+      const { data, error } = await c.rpc('plotmap_dealer_maps');
       if (error) return toErr(error);
-      if (!data) return err('not_found', 'Map not found');
-      const ov = await c.from('map_overlays').select('id,name,payload').eq('map_id', id).eq('deleted', false);
-      const sets = (ov.data ?? []).map((s: Record<string, unknown>) => ({
+      const m = ((data ?? []) as Record<string, unknown>[]).find((x) => x.id === id);
+      if (!m) return err('not_found', 'Map not found');
+      const ov = await c.rpc('plotmap_published_overlays', { p_map_id: id });
+      const sets = ((ov.data ?? []) as Record<string, unknown>[]).map((s) => ({
         id: s.id, name: s.name ?? '', marks: ((s.payload as { marks?: unknown[] })?.marks ?? []),
       }));
-      const m = data as Record<string, unknown>;
-      return ok({
-        id: m.id, kind: m.kind, city: m.city ?? '', sector: m.sector ?? '', label: m.label ?? '',
-        raster: m.raster ?? '', dims: (m.dims as object) ?? {},
-        published: m.status === 'published', hidden: m.client_visible === false,
-        sets, linkedProperties: [],
-      } as unknown as MapData);
+      return ok({ ...rowToMapMeta(m), sets } as unknown as MapData);
     } catch (e) { return toErr(e); }
   }
 }

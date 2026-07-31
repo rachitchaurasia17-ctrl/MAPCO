@@ -4,12 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>PlotMap — Client Presentation</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
-  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
-  <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
+  <!-- Perf: fonts + icons are self-hosted (loaded via tokens.css / loadIcons()).
+       No render-blocking CDNs. Warm the map-asset origin and preload the first
+       masterplan so the map paints instantly when a client is watching. -->
+  <link rel="preconnect" href="https://lswzrkvdwirhvggtvuch.supabase.co" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="/fonts/hanken-grotesk-800.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="/fonts/newsreader-500.woff2" crossorigin>
+  <link rel="preload" as="image" href="/assets/newchandigarh-map.png" fetchpriority="high">
 </head>
 <body>
   <div id="app"></div>

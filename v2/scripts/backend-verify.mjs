@@ -190,6 +190,83 @@ async function main() {
   const isAdmin = await team.c.rpc('plotmap_is_platform_admin');
   isAdmin.data === false || isAdmin.data == null ? ok('team member is not a platform admin') : no('team elevated to platform admin');
 
+  console.log('\n[maps] storage upload → dealer CRUD → publish → link → client visibility');
+  const pngDims = (buf) => ({ w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) });
+  const ROOT = 'maps with svg';
+  const assets = [
+    { local: `${ROOT}/new chd normal.png`, path: 'newchandigarh/masterplan.png', ct: 'image/png' },
+    { local: `${ROOT}/new chd svg with id attribute.svg`, path: 'newchandigarh/overlay.svg', ct: 'image/svg+xml' },
+    { local: `${ROOT}/mohali normal.png`, path: 'mohali/masterplan.png', ct: 'image/png' },
+    { local: `${ROOT}/mohali 3d map.png`, path: 'mohali/3d.png', ct: 'image/png' },
+    { local: `${ROOT}/mohali svg with id attribute.svg`, path: 'mohali/overlay.svg', ct: 'image/svg+xml' },
+  ];
+  const url = {};
+  let uploaded = 0;
+  for (const a of assets) {
+    try {
+      const buf = readFileSync(a.local);
+      const up = await admin.storage.from('maps').upload(a.path, buf, { contentType: a.ct, upsert: true });
+      if (up.error) { no('upload ' + a.path + ': ' + up.error.message); continue; }
+      url[a.path] = admin.storage.from('maps').getPublicUrl(a.path).data.publicUrl;
+      if (a.ct === 'image/png') a.dims = pngDims(buf);
+      uploaded++;
+    } catch (e) { no('read ' + a.local + ': ' + e.message); }
+  }
+  uploaded === assets.length ? ok(`uploaded ${uploaded} map assets to public 'maps' bucket`) : no(`uploaded ${uploaded}/${assets.length}`);
+  const dim = (p) => assets.find((a) => a.path === p)?.dims ?? { w: 0, h: 0 };
+
+  // create maps via the dealer RPC (Map Studio path)
+  const ncMaster = await demo.c.rpc('plotmap_upsert_map', { p_payload: {
+    id: 'map-nc-master', kind: 'masterplan', city: 'New Chandigarh', area: 'Master Plan', label: 'New Chandigarh — Master Plan',
+    raster: url['newchandigarh/masterplan.png'], dims: { original: dim('newchandigarh/masterplan.png') },
+    assets: { original: { path: url['newchandigarh/masterplan.png'], ...dim('newchandigarh/masterplan.png') },
+              overlay: { path: url['newchandigarh/overlay.svg'] } },
+  } });
+  ncMaster.data?.id ? ok('dealer created New Chandigarh masterplan (draft)') : no('upsert nc master: ' + JSON.stringify(ncMaster.error ?? ncMaster.data));
+  const mohMaster = await demo.c.rpc('plotmap_upsert_map', { p_payload: {
+    id: 'map-mohali-master', kind: 'masterplan', city: 'Mohali', area: 'Master Plan', label: 'Mohali — Master Plan',
+    raster: url['mohali/masterplan.png'], dims: { original: dim('mohali/masterplan.png'), threeD: dim('mohali/3d.png') },
+    assets: { original: { path: url['mohali/masterplan.png'], ...dim('mohali/masterplan.png') },
+              threeD: { path: url['mohali/3d.png'], ...dim('mohali/3d.png') },
+              overlay: { path: url['mohali/overlay.svg'] } },
+  } });
+  mohMaster.data?.id ? ok('dealer created Mohali masterplan with 3D + overlay') : no('upsert mohali: ' + JSON.stringify(mohMaster.error));
+  const mohSector = await demo.c.rpc('plotmap_upsert_map', { p_payload: {
+    id: 'map-mohali-sec', kind: 'sector', city: 'Mohali', sector: 'Sector 90-91', area: 'Janta Township',
+    parentMapId: 'map-mohali-master', label: 'Mohali — Sector 90-91',
+    raster: url['mohali/masterplan.png'], dims: { original: dim('mohali/masterplan.png') },
+  } });
+  mohSector.data?.parent_map_id === 'map-mohali-master' ? ok('sector map linked to its masterplan (parent_map_id)') : no('sector parent: ' + JSON.stringify(mohSector.error ?? mohSector.data));
+
+  // publish two, leave the sector as draft
+  await demo.c.rpc('plotmap_set_map_status', { p_map_id: 'map-nc-master', p_status: 'published', p_client_visible: true });
+  await demo.c.rpc('plotmap_set_map_status', { p_map_id: 'map-mohali-master', p_status: 'published', p_client_visible: true });
+
+  // link + place properties on the New Chandigarh masterplan
+  const link1 = await demo.c.rpc('plotmap_link_property_to_map', { p_property_id: 'ecocity', p_map_id: 'map-nc-master', p_x: 0.42, p_y: 0.31 });
+  const placed = link1.data?.payload?.mapPlacement;
+  (placed?.mapId === 'map-nc-master' && placed?.x === 0.42 && link1.data?.payload?.masterplanId === 'map-nc-master')
+    ? ok('property linked+placed on masterplan (masterplanId + normalized xy)') : no('link property: ' + JSON.stringify(link1.error ?? link1.data?.payload));
+  await demo.c.rpc('plotmap_link_property_to_map', { p_property_id: 'omx', p_map_id: 'map-nc-master', p_x: 0.6, p_y: 0.55 });
+
+  // dealer sees ALL its maps (incl draft sector); client sees only published+visible
+  const dealerMaps = await demo.c.rpc('plotmap_dealer_maps');
+  const dmIds = (dealerMaps.data ?? []).map((m) => m.id);
+  dmIds.includes('map-mohali-sec') && dmIds.includes('map-nc-master')
+    ? ok('Map Studio lists all dealer maps incl draft (' + dmIds.length + ')') : no('dealer maps: ' + JSON.stringify(dealerMaps.error ?? dmIds));
+  const clientMaps = await demo.c.rpc('plotmap_published_maps');
+  const cmIds = (clientMaps.data ?? []).map((m) => m.id);
+  (cmIds.includes('map-nc-master') && cmIds.includes('map-mohali-master') && !cmIds.includes('map-mohali-sec'))
+    ? ok('presentation sees only PUBLISHED maps (draft sector excluded)') : no('published maps: ' + JSON.stringify(clientMaps.error ?? cmIds));
+  // archive one → disappears from presentation
+  await demo.c.rpc('plotmap_set_map_status', { p_map_id: 'map-mohali-master', p_status: 'archived' });
+  const cm2 = await demo.c.rpc('plotmap_published_maps');
+  !(cm2.data ?? []).map((m) => m.id).includes('map-mohali-master') ? ok('archived map removed from presentation view') : no('archive leak');
+  await demo.c.rpc('plotmap_set_map_status', { p_map_id: 'map-mohali-master', p_status: 'published', p_client_visible: true });
+  // cross-dealer: dealer-b cannot edit dealer-demo maps
+  const evil = await b.c.rpc('plotmap_set_map_status', { p_map_id: 'map-nc-master', p_status: 'archived' });
+  (evil.error || evil.data === null) ? ok('dealer-b CANNOT modify dealer-demo maps') : no('LEAK: dealer-b modified demo map');
+
   console.log(`\n=== RESULT: ${pass} passed, ${fail} failed ===`);
   await Promise.all(USERS.map(() => 0));
   process.exit(fail ? 1 : 0);

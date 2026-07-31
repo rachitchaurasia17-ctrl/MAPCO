@@ -49,7 +49,7 @@ export async function initDealerShell(container: HTMLElement, initialSection: st
   }
 
   container.innerHTML = `
-<div id="pm-dash-shell" style="display:flex;height:100vh;min-height:0;width:100%;overflow:hidden;background:#f5efff;background-image:radial-gradient(62% 50% at -2% -4%,rgba(139,96,232,.5),transparent 62%),radial-gradient(54% 44% at 101% 4%,rgba(56,138,186,.4),transparent 62%),radial-gradient(66% 48% at 46% 108%,rgba(255,190,48,.44),transparent 64%),radial-gradient(40% 34% at 86% 66%,rgba(236,120,168,.22),transparent 68%)">
+<div id="pm-dash-shell" style="display:flex;height:100vh;min-height:0;width:100%;overflow:hidden;background:#e7ddfb;background-image:radial-gradient(64% 52% at -2% -4%,rgba(123,78,224,.62),transparent 64%),radial-gradient(54% 44% at 101% 4%,rgba(56,138,186,.36),transparent 62%),radial-gradient(66% 48% at 46% 108%,rgba(255,190,48,.4),transparent 64%),radial-gradient(120% 120% at 55% 45%,rgba(139,96,232,.16),transparent 70%)">
 
 
   <aside id="pm-dash-sidebar" style="width:270px;flex:none;height:100%;min-height:0;overflow:hidden;background:rgba(252,250,255,.82);background-image:linear-gradient(180deg,rgba(253,251,255,.95),rgba(243,236,255,.76) 55%,rgba(236,227,255,.66));backdrop-filter:blur(16px);box-shadow:inset -1px 0 0 rgba(88,52,168,.14);display:flex;flex-direction:column;border-right:1px solid #ddd2f5">
