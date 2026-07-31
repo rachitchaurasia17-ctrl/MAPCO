@@ -2,7 +2,7 @@
    PlotMap V2 — Property Insights
    System-derived, extended consistently.
    ═══════════════════════════════════════════════════════════════ */
-import { adapter } from '../../../packages/data/mock-adapter-v2';
+import { adapter } from '../../../packages/data/adapter';
 
 export async function renderPropertyInsights(el: HTMLElement) {
   const res = await adapter.properties.list({ limit: 4 });

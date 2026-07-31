@@ -1,7 +1,7 @@
 import './packages/ui/tokens.css';
 import './packages/ui/reset.css';
 import { getGreeting, getInitials, getFirstName, getProfile } from './packages/auth/auth';
-import { adapter } from './packages/data/mock-adapter-v2';
+import { adapter } from './packages/data/adapter';
 
 // Load Phosphor Icons from CDN
 const iconLinks = [

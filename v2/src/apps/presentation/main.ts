@@ -11,7 +11,7 @@
 import '../../packages/ui/tokens.css';
 import '../../packages/ui/reset.css';
 import './presentation.css';
-import { adapter } from '../../packages/data/mock-adapter-v2';
+import { adapter } from '../../packages/data/adapter';
 import { cssMapTransform, getMaps, mountMapEngine, type RenderMode, type MountedMap } from '../../packages/maps';
 import { streetViewUrl } from '../../packages/ui/utils';
 import type { Mark, Property } from '../../packages/data/types';

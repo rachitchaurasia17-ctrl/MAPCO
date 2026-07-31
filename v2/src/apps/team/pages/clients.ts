@@ -1,4 +1,4 @@
-import { adapter } from '../../../packages/data/mock-adapter-v2';
+import { adapter } from '../../../packages/data/adapter';
 import type { Client, Property, WantType } from '../../../packages/data/types';
 
 const esc = (value: unknown) => String(value ?? '')

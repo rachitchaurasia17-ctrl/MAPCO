@@ -1,6 +1,6 @@
 import { getProfile } from '../../../packages/auth/auth';
 import { formatDateShort, formatINR } from '../../../packages/ui/utils';
-import { adapter } from '../../../packages/data/mock-adapter-v2';
+import { adapter } from '../../../packages/data/adapter';
 import type { WantType } from '../../../packages/data/types';
 
 const WANTS: WantType[] = ['Plot', 'Flat', 'Kothi', 'Villa', 'Commercial'];

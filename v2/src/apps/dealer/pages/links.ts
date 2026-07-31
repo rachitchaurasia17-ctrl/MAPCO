@@ -1,4 +1,4 @@
-import { adapter } from '../../../packages/data/mock-adapter-v2';
+import { adapter } from '../../../packages/data/adapter';
 import { getInitials } from '../../../packages/auth/auth';
 import type { Client, ClientLink, Property } from '../../../packages/data/types';
 import { GenerateLinkFlow } from '../../../packages/ui/shared-modals';

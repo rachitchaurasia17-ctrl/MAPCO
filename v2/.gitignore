@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local env (anon key is publishable but kept out of git)
+.env
+.env.*
+!.env.example

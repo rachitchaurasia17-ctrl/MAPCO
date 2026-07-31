@@ -10,7 +10,7 @@
      type and payload, not hidden with CSS.
    ═══════════════════════════════════════════════════════════════ */
 import { formatINR } from '../../packages/ui/utils';
-import { adapter } from '../../packages/data/mock-adapter-v2';
+import { adapter } from '../../packages/data/adapter';
 import type { ClientSafePayload, ClientSafeProperty, ClientLinkState } from '../../packages/data/contracts';
 
 /* ── token handling ──────────────────────────────────────────── */

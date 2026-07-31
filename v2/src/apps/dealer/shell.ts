@@ -8,7 +8,7 @@ import { renderLinks } from './pages/links';
 import { renderAreaIntelligence } from './pages/area-intelligence';
 import { renderPropertyInsights } from './pages/property-insights';
 import { renderDemand } from './pages/demand';
-import { adapter } from '../../packages/data/mock-adapter-v2';
+import { adapter } from '../../packages/data/adapter';
 
 const NAV = [
   { key: 'areas', label: 'Home', icon: 'ph ph-house', iconFill: 'ph-fill ph-house', badge: '', path: '/admin/owner.html' },

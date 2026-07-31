@@ -62,7 +62,8 @@ describe('Audited adapter and accessibility boundaries', () => {
   it('keeps migrated dealer screens on DataAdapterV2', () => {
     for (const p of ['src/apps/dealer/pages/home.ts', 'src/apps/dealer/pages/links.ts']) {
       const source = readFileSync(join(root, p), 'utf8');
-      expect(source).toContain('mock-adapter-v2');
+      // Screens import the mode-switched adapter entry, never a concrete adapter.
+      expect(source).toMatch(/packages\/data\/adapter['"]/);
       expect(source).not.toMatch(/mock-adapter['"]/);
     }
   });

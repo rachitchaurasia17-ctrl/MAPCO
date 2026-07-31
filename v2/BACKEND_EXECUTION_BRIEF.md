@@ -106,15 +106,32 @@ RPCs in `000500_multi_dealer_rpc_setup` (status/client_visible/deleted, event id
 - Secrets: anon key (publishable) can go in a gitignored `v2/.env` for the frontend; **service-role
   key must live only in edge-function env**, never in Git/frontend.
 
+## 5c. Real adapter layer (DONE this session)
+
+- `@supabase/supabase-js` added (runtime dep; dynamically imported so mock bundles stay lean).
+- `packages/data/supabase/client.ts` — singleton client; **rejects service-role/`sb_secret_` keys**
+  and non-`*.supabase.co` URLs (invariant #5); reads `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`.
+- `packages/data/supabase/supabase-adapter.ts` — implements the full `DataAdapterV2`: properties/
+  customers/deals/demand over `crm_records` (dealer-scoped by RLS), demand matching (deterministic),
+  demand signals from `presentation_events`, maps via `prebuilt_maps`+`map_overlays`, presentation
+  events via `plotmap_record_presentation_event`, client links via `plotmap_list_client_links` /
+  `plotmap_resolve_client_link` (client-safe payload), media via private-storage signed URLs, auth/
+  account-state from session + `dealer_settings`. Never throws — always typed `Result`.
+- `packages/data/adapter.ts` — **mode switch** `VITE_DATA_MODE=mock|supabase` (mock default). All 13
+  screen imports re-pointed to this entry; tests updated. `.env` gitignored, `.env.example` added,
+  anon key stored locally only.
+- Storage: `property-photos` + `client-link-audio` buckets created **private** (`20260801002000`).
+- Seed: `dealer-demo` settings + map + 3 properties / 2 clients / 2 deals / 2 demand (`20260801002100`).
+- Gate: `tsc` clean, **72/72 tests pass**, build OK (supabase-js in its own lazy chunk).
+
 ## 6. Next steps
 
-1. Apply migrations (`db push`) once password available; fix any fresh-DB ordering issues.
-2. Run both verification scripts; confirm dealer-A/dealer-B isolation + client-link security.
-3. Configure Storage buckets (private) + confirm not-public.
-4. Write typed Supabase adapters (`packages/data/supabase-adapter*`) behind DataAdapterV2, env
-   switch `VITE_DATA_MODE=mock|supabase`; keep mocks default for tests.
-5. Deploy edge functions to MAPCO-DEV with env (URL, anon key, service-role key, origins).
-6. Seed data for a demo dealer; integration + RLS security tests; tsc/tests/build.
+1. **Create a demo auth user** (dealer-demo) to read seeded rows — needs the **service-role key**
+   (admin API). Provide it as an env secret or run the admin script; then Supabase mode reads live data.
+2. Run `verify-isolation.js` + `verify-private-client-links.sql` (dealer-A/dealer-B) — needs 2 users.
+3. Deploy edge functions with env (URL, anon key, **service-role key**, origins).
+4. Wire login UI + device-activation RPCs into the real auth repo (currently session-based only).
+5. NEXT MILESTONE: map database linking (properties↔sectors↔overlays↔prebuilt_maps) — see §7.
 
 ## Status log
 
@@ -123,5 +140,22 @@ RPCs in `000500_multi_dealer_rpc_setup` (status/client_visible/deleted, event id
 - **2026-07-31 (session 1, cont.):** Applied migrations to MAPCO-DEV via `supabase db push` (CLI
   cached token — no password prompt). Hit the missing-base gap; authored
   `20260801000150_base_core_tables_and_client_safe_view.sql`. **All 17 migrations now applied +
-  in sync on MAPCO-DEV.** Next: Storage buckets, real Supabase adapters behind DataAdapterV2,
-  edge-function deploy, seed data, live isolation/security verification.
+  in sync on MAPCO-DEV.**
+- **2026-07-31 (session 2):** Built the real Supabase adapter layer behind DataAdapterV2 (client +
+  service-role rejection + full adapter + mode switch), added `@supabase/supabase-js`, created private
+  Storage buckets + demo-dealer seed (both applied to MAPCO-DEV), gitignored `.env` with anon key.
+  tsc clean, 72/72 tests, build OK. **Remaining:** demo auth user + live isolation run (service-role),
+  edge deploy, login/device UI wiring. Then the map-linking milestone (§7).
+
+## 7. NEXT MILESTONE — map database linking (do not start yet)
+
+Kept deliberately out of this phase. The data is prepared for it:
+- `prebuilt_maps` (registry: masterplan/sector, city/sector, raster, dims, status, client_visible).
+- `map_overlays` (marks/highlight sets, `map_id` FK-by-convention, payload.marks, status/client_visible).
+- Properties carry `mapPlacement {mapId,x,y}` (normalized 0–1) in their payload; the presentation
+  already reads pin positions via `adapter.maps.listRegistry` + `adapter.maps.get`.
+Starting point next session: (a) author dealer-side map CRUD RPCs/policies for `prebuilt_maps` +
+`map_overlays` (currently only public read RPCs exist); (b) a linking model connecting
+property → sector map → masterplan region; (c) migrate the map-engine registry to read
+`adapter.maps` in Supabase mode; (d) onboard the real map library. Keep the locked Masterplan
+visual + engine math unchanged.

@@ -1,4 +1,4 @@
-import { adapter } from '../../../packages/data/mock-adapter-v2';
+import { adapter } from '../../../packages/data/adapter';
 import { formatINR } from '../../../packages/ui/utils';
 import type { Client, Deal, Property, WantType } from '../../../packages/data/types';
 import { AddClientFlow } from '../../../packages/ui/shared-modals';

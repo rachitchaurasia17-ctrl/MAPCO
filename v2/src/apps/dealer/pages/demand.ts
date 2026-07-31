@@ -7,7 +7,7 @@
    interactions through delegated listeners with cleanup.
    ═══════════════════════════════════════════════════════════════ */
 import './demand.css';
-import { adapter } from '../../../packages/data/mock-adapter-v2';
+import { adapter } from '../../../packages/data/adapter';
 import { getInitials } from '../../../packages/auth/auth';
 import { formatINR } from '../../../packages/ui/utils';
 import type { DemandRecord, DemandMatch } from '../../../packages/data/contracts';

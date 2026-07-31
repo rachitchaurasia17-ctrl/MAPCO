@@ -2,7 +2,7 @@
    PlotMap V2 — Team Workspace: Map Studio
    Integrates MapEngine for the editor canvas.
    ═══════════════════════════════════════════════════════════════ */
-import { adapter } from '../../../packages/data/mock-adapter-v2';
+import { adapter } from '../../../packages/data/adapter';
 import { mountMapEngine, type MountedMap } from '../../../packages/maps/dom-surface';
 
 export async function renderMapStudio(el: HTMLElement) {
