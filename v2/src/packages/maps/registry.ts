@@ -113,3 +113,71 @@ export function addPropertyToMap(mapId: string, propertyId: string) {
     (m.linkedPropertyIds as string[]).push(propertyId);
   }
 }
+
+/* ── backend catalog bridge ────────────────────────────────────
+   The static entries above are the LOCKED pilot (do not change).
+   These helpers let the real Supabase catalog be merged in as
+   first-class engine entries WITHOUT disturbing the locked default. */
+
+/** Structural shape the data layer already returns (no import needed). */
+export interface MapCatalogInput {
+  readonly id: string;
+  readonly kind: MapKind;
+  readonly city?: string;
+  readonly sector?: string;
+  readonly area?: string;
+  readonly label?: string;
+  readonly raster?: string;
+  readonly parentMapId?: string;
+  readonly dims?: { original?: Dimensions; threeD?: Dimensions };
+  readonly assets?: {
+    original?: { path?: string; w?: number; h?: number };
+    threeD?: { path?: string; w?: number; h?: number };
+    overlay?: { path?: string; w?: number; h?: number };
+  };
+  readonly linkedProperties?: readonly string[];
+}
+
+/** Convert a backend map record into a MapEntry the engine can render.
+ *  Returns null when there is no usable original raster (missing-asset). */
+export function mapEntryFromData(d: MapCatalogInput): MapEntry | null {
+  const originalSrc = d.assets?.original?.path ?? d.raster;
+  if (!originalSrc) return null;
+  const ow = d.assets?.original?.w ?? d.dims?.original?.w ?? 0;
+  const oh = d.assets?.original?.h ?? d.dims?.original?.h ?? 0;
+  if (!ow || !oh) return null; // incompatible/unknown dimensions → skip, never distort
+  const threeDPath = d.assets?.threeD?.path;
+  const overlayPath = d.assets?.overlay?.path;
+  const entry: MapEntry = {
+    id: d.id,
+    title: d.label || d.area || d.city || d.id,
+    kind: d.kind,
+    city: d.city || 'Other',
+    sectorOrBlock: d.sector || d.area || '',
+    original: { src: originalSrc, dims: { w: ow, h: oh } },
+    ...(threeDPath ? { threeD: { src: threeDPath, dims: { w: d.assets!.threeD!.w || ow, h: d.assets!.threeD!.h || oh } } } : {}),
+    overlays: overlayPath
+      ? [{ id: `${d.id}-ov`, src: overlayPath, viewBox: { w: d.assets!.overlay!.w || ow, h: d.assets!.overlay!.h || oh }, appliesTo: 'original' }]
+      : [],
+    linkedMapIds: d.parentMapId ? [d.parentMapId] : [],
+    linkedPropertyIds: d.linkedProperties ? [...d.linkedProperties] : [],
+    status: 'active',
+  };
+  return entry;
+}
+
+/** Merge backend entries into the registry (idempotent; never replaces a
+ *  locked pilot id). Entries without a usable raster are skipped. */
+export function registerMaps(inputs: readonly MapCatalogInput[]): MapEntry[] {
+  const seen = new Set(REGISTRY.maps.map((m) => m.id));
+  const added: MapEntry[] = [];
+  for (const input of inputs) {
+    if (seen.has(input.id)) continue;
+    const entry = mapEntryFromData(input);
+    if (!entry) continue;
+    (REGISTRY.maps as MapEntry[]).push(entry);
+    seen.add(entry.id);
+    added.push(entry);
+  }
+  return added;
+}

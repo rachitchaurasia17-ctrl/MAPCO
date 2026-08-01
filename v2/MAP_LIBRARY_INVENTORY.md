@@ -55,3 +55,16 @@ upload to Storage `maps/` → register `prebuilt_maps`; idempotent, skip-with-re
 - Legacy test records `map-nc-master` / `map-mohali-master` / `map-mohali-sec` (from the
   session-4 verify script) coexist with the clean onboarded ids (`new-chandigarh-master`,
   `mohali-master`, …). Harmless; a dedupe pass can drop the `map-*` test ids.
+
+---
+
+## Session 6 — manual overrides + presentation integration
+
+- **Manual overrides** (remembered in `onboard-maps.mjs` `OVERRIDES`, idempotent):
+  `3d maps/sector 16.png` → **Chandigarh · Sector 16** (parent `chandigarh-master`);
+  `non 3d maps/sector 83.png` → **Aerocity · Sector 83** (parent `aerocity-master`).
+  **0 files now skipped.**
+- **Legacy test records removed** (`map-nc-master`/`map-mohali-master`/`map-mohali-sec`);
+  the verify harness now self-cleans so they never repopulate.
+- **Final catalog:** 81 maps — **9 published city masterplans** (Mohali, Aerocity, Aerotropolis,
+  New Chandigarh, Chandigarh, Zirakpur, Panchkula, Derabassi, Kharar) + 72 draft sectors.

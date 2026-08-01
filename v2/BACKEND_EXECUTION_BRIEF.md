@@ -220,7 +220,29 @@ masterplan loads, no console errors).
 - **Harness:** backend-verify.mjs now includes a library-integrity block → 36/36.
 - See `v2/MAP_LIBRARY_INVENTORY.md` for per-city results + skip reasons + minor cleanup note.
 
-## 7. NEXT MILESTONE — presentation catalog wiring + Map Studio UI
+## 6e. Presentation catalog integration (session 6) — DONE, browser-verified
+
+- **Manual overrides** for the 2 previously-skipped files (Chandigarh Sector 16, Aerocity
+  Sector 83), remembered in `onboard-maps.mjs` `OVERRIDES` → idempotent, **0 skips**. Both
+  connected to their correct parent masterplans.
+- **Catalog bridge** (`maps/registry.ts`): `mapEntryFromData()` (backend `MapData`→engine
+  `MapEntry`; skips missing raster / zero dims — never distorts) + `registerMaps()` (additive,
+  idempotent, **never replaces a locked pilot id**). `MapData` extended with `assets`
+  (original/threeD/overlay URLs) + `parentMapId` + `area`; adapter populates them.
+- **Presentation wired** (`apps/presentation/main.ts`): `loadCatalog()` merges the real
+  Supabase catalog into the engine registry after the initial paint; the **map picker is now
+  grouped by city → masterplans → sectors** (scrollable); load-failure shows a glass message.
+  The locked masterplan stays the default (activeMapId unchanged).
+- **Browser-verified (supabase mode, live MAPCO-DEV, dealer session):**
+  picker shows 7 cities / 9 published masterplans, **72 draft sectors excluded** (published-only);
+  locked masterplan unchanged as default; selecting a DB map renders from **Storage**;
+  **Original↔3D switching** loads distinct rasters; 6× repeated switching stays stable with a
+  **single active image** (no leak); **zero console errors**. Mock mode still works.
+- **Cleanup:** legacy `map-*` test records removed; verify harness self-cleans. Catalog = 81 maps,
+  9 published masterplans, 72 draft sectors.
+- **Tests:** +8 bridge unit tests (`tests/catalog.test.ts`) → **80/80**; live **36/36**.
+
+## 7. NEXT MILESTONE — Map Studio UI + remaining polish
 
 The linked model + Map Studio RPCs + Storage are proven. Next:
 1. **Batch-onboard the rest of Tri-City** (see `v2/MAP_LIBRARY_INVENTORY.md`): a script that

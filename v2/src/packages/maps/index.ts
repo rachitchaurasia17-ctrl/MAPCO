@@ -1,10 +1,10 @@
 /* ═══════════════════════════════════════════════════════════════
    PlotMap V2 — Maps package public API (doc 11 stable surface)
    ═══════════════════════════════════════════════════════════════ */
-export { getMaps, getMap, renderingFor, addPropertyToMap } from './registry';
+export { getMaps, getMap, renderingFor, addPropertyToMap, registerMaps, mapEntryFromData } from './registry';
 export type {
   MapEntry, MapKind, RenderMode, Rendering, Dimensions,
-  OverlayDescriptor, MapRegistry,
+  OverlayDescriptor, MapRegistry, MapCatalogInput,
 } from './registry';
 export { CoordinateSystem, MIN_ZOOM, MAX_ZOOM, cssMapTransform } from './coordinates';
 export type { Transform, Viewport, Point } from './coordinates';

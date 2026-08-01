@@ -266,6 +266,8 @@ async function main() {
   // cross-dealer: dealer-b cannot edit dealer-demo maps
   const evil = await b.c.rpc('plotmap_set_map_status', { p_map_id: 'map-nc-master', p_status: 'archived' });
   (evil.error || evil.data === null) ? ok('dealer-b CANNOT modify dealer-demo maps') : no('LEAK: dealer-b modified demo map');
+  // Clean up this section's throwaway test maps so they never pollute the real catalog.
+  await admin.from('prebuilt_maps').delete().in('id', ['map-nc-master', 'map-mohali-master', 'map-mohali-sec']);
 
   console.log('\n[library] onboarded map library integrity');
   const lib = await admin.from('prebuilt_maps').select('id,kind,status,parent_map_id,dims').eq('dealer_id', 'dealer-demo');

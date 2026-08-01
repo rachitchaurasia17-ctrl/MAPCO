@@ -59,7 +59,20 @@ function stripExt(f) {
   const m = n.match(/\.(png|jpe?g|svg)$/i);
   return { base: n.replace(/\.(png|jpe?g|svg)$/i, ''), ext: m ? m[1].toLowerCase().replace('jpeg', 'jpg') : null };
 }
+// Manual overrides for files the classifier cannot resolve from the name alone.
+// Keyed by "<folder>/<filename>". Remembered here so every rerun is idempotent.
+const OVERRIDES = {
+  '3d maps/sector 16.png': { city: 'Chandigarh', cslug: 'chandigarh', kind: 'sector', label: 'Sector 16', sectorSlug: 'sector-16', render: 'threeD' },
+  'non 3d maps/sector 83.png': { city: 'Mohali', cslug: 'aerocity', kind: 'sector', label: 'Aerocity — Sector 83', sectorSlug: 'sector-83', render: 'original' },
+};
+
 function classify(folder, file) {
+  const ov = OVERRIDES[`${folder}/${file}`];
+  if (ov) {
+    const { ext } = stripExt(file);
+    return { file, folder, ext, render: ov.render, city: ov.city, cslug: ov.cslug, kind: ov.kind,
+      label: ov.label, mapSlug: ov.kind === 'masterplan' ? `${ov.cslug}-master` : `${ov.cslug}-${ov.sectorSlug}` };
+  }
   const { base, ext } = stripExt(file);
   if (!ext) return { skip: 'no file extension', file };
   const city = cityOf(base);

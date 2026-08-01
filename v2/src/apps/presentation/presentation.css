@@ -88,8 +88,12 @@
 .pm-pcard-act:focus-visible { outline: 2px solid #5b32c4; outline-offset: 2px; }
 
 /* ── map picker / filter popovers ──────────────────────────── */
-.pm-pop { position: absolute; top: calc(100% + 9px); left: 0; min-width: 260px; background: #fffdfb; border-radius: 16px; padding: 9px; z-index: 40;
+.pm-pop { position: absolute; top: calc(100% + 9px); left: 0; min-width: 290px; max-width: 340px; max-height: min(70vh, 520px); overflow-y: auto; background: #fffdfb; border-radius: 16px; padding: 9px; z-index: 40;
   box-shadow: 0 0 0 1px rgba(88,52,168,.14), 0 26px 60px -20px rgba(28,21,51,.55); animation: rowIn .16s ease both; }
+.pm-pop-city { position: sticky; top: -9px; display: flex; justify-content: space-between; align-items: center; padding: 8px 12px 4px; margin: 4px 0 2px; font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #a8792a; background: #fffdfb; }
+.pm-pop-city span { font-size: 10.5px; font-weight: 800; color: #8a5a0c; background: rgba(138,90,12,.1); padding: 1px 7px; border-radius: 999px; }
+.pm-pop-item.is-sector { padding-left: 28px; }
+.pm-pop-item.is-sector .lbl { font-weight: 600; color: #3a332c; }
 .pm-pop-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px; border-radius: 11px; text-align: left; transition: background .12s; }
 .pm-pop-item:hover:not(:disabled) { background: #fff6e2; }
 .pm-pop-item:disabled { opacity: .45; cursor: not-allowed; }

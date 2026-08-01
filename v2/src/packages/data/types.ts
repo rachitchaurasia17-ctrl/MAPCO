@@ -78,13 +78,21 @@ export interface ClientLink {
   lastOpen: string;
 }
 
+export interface MapAsset { path: string; w?: number; h?: number; }
+
 export interface MapData {
   id: string;
   kind: 'masterplan' | 'sector';
   city: string;
   sector: string;
+  /** the sector/area subtitle within its city. */
+  area?: string;
+  /** for a sector map, the id of its parent masterplan. */
+  parentMapId?: string;
   label: string;
   raster: string;
+  /** Original / 3D / overlay asset URLs (Storage) — the render sources. */
+  assets?: { original?: MapAsset; threeD?: MapAsset; overlay?: MapAsset };
   dims: { original: { w: number; h: number }; threeD?: { w: number; h: number } };
   published: boolean;
   hidden: boolean;

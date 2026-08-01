@@ -12,7 +12,7 @@ import '../../packages/ui/tokens.css';
 import '../../packages/ui/reset.css';
 import './presentation.css';
 import { adapter } from '../../packages/data/adapter';
-import { cssMapTransform, getMaps, mountMapEngine, type RenderMode, type MountedMap } from '../../packages/maps';
+import { cssMapTransform, getMaps, registerMaps, mountMapEngine, type RenderMode, type MountedMap, type MapCatalogInput } from '../../packages/maps';
 import { streetViewUrl } from '../../packages/ui/utils';
 import type { Mark, Property } from '../../packages/data/types';
 
@@ -66,7 +66,9 @@ function loadIcons(): void {
 
 export async function initPresentation(container: HTMLElement): Promise<() => void> {
   loadIcons();
-  const maps = getMaps();
+  // The locked pilot registry is the default; the real Supabase catalog is
+  // merged in additively by loadCatalog() without changing the initial map.
+  let maps = getMaps();
   let view: View = 'masterplan';
   let mode: RenderMode = 'original';
   let activeMapId = maps[0]?.id ?? '';
@@ -255,6 +257,30 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
   }
 
   // ── renderers ─────────────────────────────────────────────
+  /** Map picker grouped by city → masterplans then sectors. */
+  function mapPickerHtml(): string {
+    const byCity = new Map<string, typeof maps[number][]>();
+    for (const m of maps) {
+      const c = m.city || 'Other';
+      const arr = byCity.get(c); if (arr) arr.push(m); else byCity.set(c, [m]);
+    }
+    let html = '';
+    for (const city of [...byCity.keys()].sort()) {
+      const cityMaps = byCity.get(city)!;
+      const ordered = [...cityMaps.filter((m) => m.kind === 'masterplan'), ...cityMaps.filter((m) => m.kind === 'sector')];
+      html += `<div class="pm-pop-city">${esc(city)}<span>${cityMaps.length}</span></div>`;
+      for (const m of ordered) {
+        const active = m.id === activeMapId;
+        html += `<button class="pm-pop-item${m.kind === 'sector' ? ' is-sector' : ''}" role="menuitem" data-act="pick-map" data-id="${esc(m.id)}">
+          <i class="ph-fill ph-${m.kind === 'masterplan' ? 'map-trifold' : 'squares-four'}" style="font-size:16px;color:#a8792a"></i>
+          <span class="lbl">${esc(m.title)}</span>
+          <span class="tag" style="background:${active ? '#dcf3e5' : '#f0eaff'};color:${active ? '#12704a' : '#5b32c4'}">${active ? 'Open' : m.kind === 'masterplan' ? 'master' : 'sector'}</span>
+        </button>`;
+      }
+    }
+    return html;
+  }
+
   function renderTopbar(): void {
     const map = maps.find((m) => m.id === activeMapId);
     topbar.innerHTML = `
@@ -272,13 +298,7 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
           <span class="pm-mapname">${esc(map?.title ?? 'Select map')}</span>
           <i class="ph-bold ph-caret-${mapsOpen ? 'up' : 'down'}" style="font-size:12px;color:#ffd76b"></i>
         </button>
-        ${mapsOpen ? `<div class="pm-pop" role="menu">
-          ${maps.map((m) => `<button class="pm-pop-item" role="menuitem" data-act="pick-map" data-id="${m.id}" ${m.status !== 'active' ? 'disabled' : ''}>
-            <i class="ph-fill ph-${m.kind === 'masterplan' ? 'map-trifold' : 'squares-four'}" style="font-size:18px;color:#a8792a"></i>
-            <span class="lbl">${esc(m.title)}</span>
-            <span class="tag" style="background:${m.id === activeMapId ? '#dcf3e5' : '#f0eaff'};color:${m.id === activeMapId ? '#12704a' : '#5b32c4'}">${m.id === activeMapId ? 'Open' : m.kind}</span>
-          </button>`).join('')}
-        </div>` : ''}
+        ${mapsOpen ? `<div class="pm-pop" role="menu">${mapPickerHtml()}</div>` : ''}
       </div>
       <div class="pm-viewtabs pm-glass" role="tablist">
         ${VIEWS.map((v) => `<button class="pm-viewtab ${view === v.k ? 'active' : ''}" role="tab" aria-selected="${view === v.k}" aria-controls="pm-grid" tabindex="${view === v.k ? '0' : '-1'}" data-act="view" data-view="${v.k}">${v.l}</button>`).join('')}
@@ -448,10 +468,40 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
     railList.innerHTML = props.map(pcard).join('');
   }
 
+  /** Show/clear a centered glass message over the map (load failures). */
+  function mapMsg(text: string | null): void {
+    let el = container.querySelector<HTMLElement>('#pm-mapmsg');
+    if (!text) { el?.remove(); return; }
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'pm-mapmsg';
+      el.setAttribute('role', 'alert');
+      el.style.cssText = 'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:20;padding:14px 20px;border-radius:14px;background:rgba(24,16,4,.72);backdrop-filter:blur(10px);color:#fff8e6;font-size:15px;font-weight:700;text-align:center;max-width:340px';
+      container.querySelector('.pm-pres-map')?.appendChild(el);
+    }
+    el.innerHTML = `<i class="ph-fill ph-warning-circle" style="font-size:20px;display:block;margin-bottom:6px;color:#ffd76b"></i>${esc(text)}`;
+  }
+
   async function applyMap(): Promise<void> {
     if (!mounted) return;
+    mapMsg(null);
     const result = await mounted.engine.setMap(activeMapId, { mode });
-    if (result.ok && view === 'masterplan') mounted.engine.cover();
+    if (result.ok) { if (view === 'masterplan') mounted.engine.cover(); }
+    else if (result.reason !== 'superseded' && result.reason !== 'disposed') {
+      mapMsg(result.reason === 'no-rendering' ? 'This view is not available for this map.' : 'This map could not be loaded.');
+    }
+  }
+
+  /** Merge the real Supabase map catalog into the engine registry, additively.
+   *  Keeps the locked pilot masterplan as the default (activeMapId unchanged). */
+  async function loadCatalog(): Promise<void> {
+    const reg = await adapter.maps.listRegistry({ limit: 300 }, { signal: controller.signal });
+    if (!reg.ok) return; // keep the pilot registry; presentation still works offline
+    const added = registerMaps(reg.value.items as unknown as MapCatalogInput[]);
+    if (!added.length) return;
+    maps = getMaps();
+    renderTopbar();
+    renderMapControls();
   }
 
   // ── interaction (single delegated listener) ───────────────
@@ -550,6 +600,7 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
   renderMapControls();
   renderRail();
   void applyMap();
+  void loadCatalog();
 
   // load published plots (client-safe: price never read)
   const [res] = await Promise.all([
