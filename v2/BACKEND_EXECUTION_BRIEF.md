@@ -294,7 +294,45 @@ Browser-verified in supabase mode with a real dealer session: **Home, Client Lin
 Deals, Customers all render real data**, no console errors, navigation + refresh work. Mock mode
 still works; tsc clean; **80/80 tests**; build OK.
 
-## 7. NEXT MILESTONE — Map Studio polish + remaining dealer-app data accuracy
+## 6h. Full Screen mode (session 8) — DONE
+
+- `packages/ui/fullscreen.ts`: reusable Fullscreen API control. `mountFullscreenButton(host,
+  {variant:'bar'|'floating', onResize})` — syncs button state via the `fullscreenchange` event
+  (so **Esc** updates it), calls `onResize` on the next frame, single set of listeners + cleanup,
+  graceful fallback when the API is unavailable. `toggleFullscreen`/`isFullscreen`/`fullscreenSupported`.
+- Wired into the **dealer shell** header (top-right "Full Screen"/"Exit Full Screen" pill) and the
+  **Client Presentation** (compact floating glass square, top-right) where `onResize` calls
+  `engine.resize()` so cover-fit recomputes; the pin/highlight rAF loop follows automatically.
+  Browser-verified: both buttons render, aria labels correct, no errors. (True fullscreen needs a
+  real user gesture — verify on the deploy.) No PWA/offline added, per spec.
+
+## 7. NEXT MILESTONE — Client Presentation highlight system + SVG calibration (full spec captured)
+
+Founder spec (2026-08-01), to build next. Do NOT enable highlights while misaligned.
+
+**Model:** one map record = Original rendering + 3D rendering + a **transparent SVG highlight
+overlay** (the authored geometry — `<g id="sectors">` + road groups; 106 sector `<path id="<num>">`).
+Never redraw/approximate shapes. Raster + SVG overlay + pins must always share ONE synchronized
+transform (the existing `cssMapTransform`), across Original↔3D, zoom, pan.
+
+**Calibration FIRST (per-map, reusable):** SVG viewBox 1575×1132 vs raster 1603×1278. Compute
+scale + x/y offset from shared landmarks/boundaries (account for cropping/margins; preserve aspect;
+NOT independent width/height stretch). Apply BEFORE the engine zoom/pan transform. Store calibration
+metadata per map; add a Map Studio calibration control + a geometry-match status
+(calibrated / needs-review / unavailable). Verify at top-left, centre, bottom-right, roads, sector
+boundaries. **Only activate highlights when `calibrated`;** else show raster normally and disable the
+Highlights control with an "Alignment pending" state. Only show the overlay on a 3D rendering when its
+geometry is verified-aligned; otherwise keep the highlight on Original. **Calibrate New Chandigarh first.**
+
+**Two highlight levels:** (1) broad A/B/C sets from the SVG's real authored groups (roads /
+sectors-blocks / places); (2) individual sector or linked-property spotlight (exact SVG polygon +
+real normalized property pin). Search/tap a sector (Sector 66/83, Eco City, Block 5); select a property
+→ open its linked masterplan/sector, activate the sector polygon, show its pin, gently focus; return
+from a sector to its parent masterplan. **Highlight state persists** across Original↔3D↔Original, zoom,
+pan, opening/closing property detail. Never invent a pin coordinate for an unplaced property.
+
+**Visual language:** roads = cyan/glass glow; sectors/blocks = gold lift; landmarks = amber frame;
+property pins = blue. Preserve the approved map layout, cover-fit, and current map-engine geometry.
 
 The linked model + Map Studio RPCs + Storage are proven. Next:
 1. **Batch-onboard the rest of Tri-City** (see `v2/MAP_LIBRARY_INVENTORY.md`): a script that

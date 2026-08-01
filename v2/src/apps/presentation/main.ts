@@ -14,6 +14,7 @@ import './presentation.css';
 import { adapter } from '../../packages/data/adapter';
 import { cssMapTransform, getMaps, registerMaps, mountMapEngine, type RenderMode, type MountedMap, type MapCatalogInput } from '../../packages/maps';
 import { streetViewUrl } from '../../packages/ui/utils';
+import { mountFullscreenButton } from '../../packages/ui/fullscreen';
 import type { Mark, Property } from '../../packages/data/types';
 
 type View = 'masterplan' | 'properties' | 'sectors';
@@ -96,6 +97,7 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
     <div class="pm-pres-topbar" id="pm-topbar"></div>
     <div class="pm-botleft pm-glass-lite" id="pm-botleft"></div>
     <div class="pm-botright pm-glass" id="pm-botright"></div>
+    <div id="pm-fs" style="position:absolute;top:14px;right:14px;z-index:35"></div>
   </div>
   <aside class="pm-rail" id="pm-rail">
     <div class="pm-rail-head" id="pm-rail-head"></div>
@@ -120,6 +122,12 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
   const pinLayer = document.createElement('div');
   pinLayer.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:2;transform-origin:0 0;';
   stage.append(highlightLayer, pinLayer);
+
+  // Full Screen (small floating control). On enter/exit/Esc, recompute the
+  // map's cover-fit for the new viewport; the pin/highlight rAF loop follows.
+  const fsCleanup = mountFullscreenButton(container.querySelector<HTMLElement>('#pm-fs')!, {
+    variant: 'floating', onResize: () => mounted?.engine.resize(),
+  });
 
   async function loadPinPositions(): Promise<void> {
     const registry = await adapter.maps.listRegistry({ limit: 100 }, { signal: controller.signal });
@@ -624,6 +632,7 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
     document.removeEventListener('keydown', onKey);
     document.removeEventListener('click', onDocClick, true);
     controller.abort();
+    fsCleanup();
     mounted?.dispose();
     mounted = null;
   };

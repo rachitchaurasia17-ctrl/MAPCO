@@ -1,4 +1,5 @@
 import { getProfile, getInitials } from '../../packages/auth/auth';
+import { mountFullscreenButton } from '../../packages/ui/fullscreen';
 import { formatDateShort } from '../../packages/ui/utils';
 import { renderHome } from './pages/home';
 import { renderDeals } from './pages/deals';
@@ -102,11 +103,15 @@ export async function initDealerShell(container: HTMLElement, initialSection: st
       <div style="width:1px;height:22px;background:#e6cf9a"></div>
       <div style="display:flex;align-items:center;gap:8px;background:#e2f2e6;color:#186c3c;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:800"><span style="width:9px;height:9px;border-radius:50%;background:#12a150;animation:omGlow 1.8s ease-in-out infinite"></span>A client is on your map now</div>
       <div style="display:flex;align-items:center;gap:7px;background:#f3eeff;color:#a86a08;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700"><i class="ph-fill ph-seal-check" style="font-size:15px"></i>Trial &middot; 12 days left</div>
+      <span id="pm-dash-fs" style="margin-left:auto"></span>
     </header>
     <div data-scroll style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden" id="pm-dash-content"></div>
   </main>
 </div>
 `;
+
+  const fsHost = container.querySelector<HTMLElement>('#pm-dash-fs');
+  if (fsHost) mountFullscreenButton(fsHost, { variant: 'bar' });
 
   const content = document.getElementById('pm-dash-content')!;
   
