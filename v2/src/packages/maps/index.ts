@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   PlotMap V2 — Maps package public API (doc 11 stable surface)
+   MAPCO V2 — Maps package public API (doc 11 stable surface)
    ═══════════════════════════════════════════════════════════════ */
 export { getMaps, getMap, renderingFor, addPropertyToMap, registerMaps, mapEntryFromData } from './registry';
 export type {

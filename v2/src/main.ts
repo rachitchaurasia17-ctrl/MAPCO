@@ -90,7 +90,7 @@ function initLanding(container: HTMLElement) {
         </svg>
       </div>
 
-      <h1 style="margin:clamp(10px,1.8vh,18px) 0 0;font-family:var(--pm-font-display);font-weight:500;font-size:clamp(46px,9.4vh,96px);line-height:.9;letter-spacing:-.035em;color:#16281e;animation:lRise 1s cubic-bezier(.2,.8,.2,1) both;animation-delay:.08s">PlotMap</h1>
+      <h1 style="margin:clamp(10px,1.8vh,18px) 0 0;font-family:var(--pm-font-display);font-weight:500;font-size:clamp(46px,9.4vh,96px);line-height:.9;letter-spacing:-.035em;color:#16281e;animation:lRise 1s cubic-bezier(.2,.8,.2,1) both;animation-delay:.08s">MAPCO</h1>
 
       <div style="margin-top:clamp(8px,1.5vh,15px);font-size:clamp(10px,1.35vh,13px);font-weight:800;letter-spacing:.34em;text-transform:uppercase;color:#a8792a;animation:lWide 1.4s cubic-bezier(.2,.8,.2,1) both;animation-delay:.3s">Property Presentation System</div>
 
@@ -161,7 +161,7 @@ function initLanding(container: HTMLElement) {
         <h2 id="pm-activation-title" style="font-family:var(--pm-font-display);font-size:24px;font-weight:500;color:#241f1c;letter-spacing:-.02em">Activate Device</h2>
         <button id="pm-close-modal" aria-label="Close device activation" style="background:none;border:none;cursor:pointer;color:#9a8f7c;padding:4px"><i class="ph-bold ph-x" style="font-size:20px"></i></button>
       </div>
-      <p style="font-size:15px;color:#6b6156;line-height:1.5;margin-bottom:24px">Enter the 6-digit activation code provided by your PlotMap platform administrator.</p>
+      <p style="font-size:15px;color:#6b6156;line-height:1.5;margin-bottom:24px">Enter the 6-digit activation code provided by your MAPCO platform administrator.</p>
       
       <div style="display:flex;flex-direction:column;gap:16px">
         <label for="pm-act-code" class="pm-sr-only">Six-digit activation code</label>

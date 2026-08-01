@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   PlotMap V2 — Lazy Map Image Loader
+   MAPCO V2 — Lazy Map Image Loader
    ---------------------------------------------------------------
    • lazy: a rendering is fetched only when requested (never preload
      all maps; the 3D rendering is fetched only on explicit select)

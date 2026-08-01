@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   PlotMap V2 — Data Types
+   MAPCO V2 — Data Types
    Source: data-model.md + design .dc.html seed data
    ═══════════════════════════════════════════════════════════════ */
 

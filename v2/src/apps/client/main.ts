@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   PlotMap V2 — Buyer Page (/client/?token=...)
+   MAPCO V2 — Buyer Page (/client/?token=...)
    Dark magazine layout, framework-free, strict CSP.
    ---------------------------------------------------------------
    SECURITY (20_SECURITY_INVARIANTS + 13_PRIVATE_CLIENT_LINKS):
@@ -37,7 +37,7 @@ function stateScreen(icon: string, title: string, body: string): string {
     <div style="width:64px;height:64px;border-radius:20px;background:rgba(255,201,60,.14);color:#ffc93c;display:grid;place-items:center;margin:0 auto 20px"><i class="${icon}" style="font-size:30px"></i></div>
     <h1 style="font-family:var(--pm-font-display);font-weight:500;font-size:24px;color:#fff;margin:0 0 8px">${title}</h1>
     <p style="font-size:15px;color:#9a8aad;line-height:1.5;margin:0">${body}</p>
-    <div style="margin-top:24px;font-size:12px;color:#6b5a90;display:flex;align-items:center;justify-content:center;gap:6px"><i class="ph-fill ph-shield-check"></i>Powered by PlotMap · Private link</div>
+    <div style="margin-top:24px;font-size:12px;color:#6b5a90;display:flex;align-items:center;justify-content:center;gap:6px"><i class="ph-fill ph-shield-check"></i>Powered by MAPCO · Private link</div>
   </div>
 </div>`;
 }
@@ -125,7 +125,7 @@ function renderValid(container: HTMLElement, payload: ClientSafePayload, noPhoto
       `).join('')}
     </div>`;
 
-  const waText = encodeURIComponent('Hi, I saw ' + p.area + ' on PlotMap');
+  const waText = encodeURIComponent('Hi, I saw ' + p.area + ' on MAPCO');
   
   container.innerHTML = `
 <div class="pm-buyer" style="background:#0f0a18;min-height:100vh;display:flex;justify-content:center;position:relative">
@@ -135,7 +135,7 @@ function renderValid(container: HTMLElement, payload: ClientSafePayload, noPhoto
       <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,10,24,.62) 0%,rgba(15,10,24,.05) 38%,rgba(20,13,32,.96) 100%)"></div>
       <div style="position:absolute;top:16px;left:16px;right:16px;display:flex;align-items:center;gap:10px">
         <div style="width:38px;height:38px;border-radius:50%;background:#ffc93c;color:#241d0c;display:grid;place-items:center;font-size:14px;font-weight:800;flex:none">${esc(dealerDisplayName.charAt(0))}</div>
-        <div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:800;color:#fff6e0">PlotMap Private</div><div style="font-size:11.5px;font-weight:700;color:#c9b6ef">Chosen for you by ${esc(dealerDisplayName)}</div></div>
+        <div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:800;color:#fff6e0">MAPCO Private</div><div style="font-size:11.5px;font-weight:700;color:#c9b6ef">Chosen for you by ${esc(dealerDisplayName)}</div></div>
       </div>
       <div style="position:absolute;bottom:14px;left:16px;right:16px">
         ${dotsHtml}
@@ -171,7 +171,7 @@ function renderValid(container: HTMLElement, payload: ClientSafePayload, noPhoto
       <div style="margin-top:24px;display:flex;gap:10px">
         <a href="https://wa.me/?text=${waText}" target="_blank" rel="noopener" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;height:52px;border-radius:15px;background:#12a150;color:#fff;font-size:15px;font-weight:800;text-decoration:none"><i class="ph-fill ph-whatsapp-logo" style="font-size:19px"></i>WhatsApp</a>
       </div>
-      <div style="text-align:center;padding:20px 0 0;font-size:12px;color:#6b5a90"><div style="display:flex;align-items:center;justify-content:center;gap:6px"><i class="ph-fill ph-shield-check" style="font-size:14px"></i>Powered by PlotMap · Private link</div></div>
+      <div style="text-align:center;padding:20px 0 0;font-size:12px;color:#6b5a90"><div style="display:flex;align-items:center;justify-content:center;gap:6px"><i class="ph-fill ph-shield-check" style="font-size:14px"></i>Powered by MAPCO · Private link</div></div>
     </div>
   </div>
 </div>`;

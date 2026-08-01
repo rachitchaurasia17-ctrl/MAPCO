@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   PlotMap V2 — Real SVG highlight overlay
+   MAPCO V2 — Real SVG highlight overlay
    ---------------------------------------------------------------
    Renders the authored masterplan SVG INLINE (real <g>/<path> geometry)
    over the Original raster so we can spotlight the actual authored

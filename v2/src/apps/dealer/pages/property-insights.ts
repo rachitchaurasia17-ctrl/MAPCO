@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   PlotMap V2 — Property Insights
+   MAPCO V2 — Property Insights
    System-derived, extended consistently.
    ═══════════════════════════════════════════════════════════════ */
 import { adapter } from '../../../packages/data/adapter';

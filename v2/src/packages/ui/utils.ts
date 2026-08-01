@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   PlotMap V2 — Utility: Currency formatting
+   MAPCO V2 — Utility: Currency formatting
    ═══════════════════════════════════════════════════════════════ */
 export function formatINR(n: number): string {
   if (n >= 10000000) return '₹' + (n / 10000000).toFixed(1).replace(/\.0$/, '') + ' Cr';

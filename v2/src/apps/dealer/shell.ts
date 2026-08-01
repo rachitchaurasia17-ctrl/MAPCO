@@ -55,14 +55,9 @@ export async function initDealerShell(container: HTMLElement, initialSection: st
 
 
   <aside id="pm-dash-sidebar" style="width:270px;flex:none;height:100%;min-height:0;overflow:hidden;background:rgba(252,250,255,.82);background-image:linear-gradient(180deg,rgba(253,251,255,.95),rgba(243,236,255,.76) 55%,rgba(236,227,255,.66));backdrop-filter:blur(16px);box-shadow:inset -1px 0 0 rgba(88,52,168,.14);display:flex;flex-direction:column;border-right:1px solid #ddd2f5">
-    <div style="display:flex;align-items:center;gap:12px;padding:26px 24px 18px">
-      <svg viewBox="0 0 40 40" style="width:40px;height:40px;flex:none;display:block">
-        <rect x="0" y="0" width="40" height="40" rx="12" fill="#241d0c"></rect>
-        <path d="M20 8.5 L33 16 L20 23.5 L7 16 Z" fill="#ffc93c"></path>
-        <path d="M7 22 L20 29.5 L33 22 L33 25.5 L20 33 L7 25.5 Z" fill="#f4ae14" opacity="0.55"></path>
-        <circle cx="20" cy="16" r="3.6" fill="#241d0c"></circle>
-      </svg>
-      <div style="font-weight:800;font-size:22px;letter-spacing:-.02em;color:#1f1a12">Plot<span style="color:#c2622a">Map</span></div>
+    <div style="display:flex;align-items:center;gap:11px;padding:26px 24px 18px">
+      <img src="/assets/mapco-logo.png" alt="MAPCO" style="width:40px;height:40px;flex:none;display:block;object-fit:contain">
+      <div style="font-weight:800;font-size:22px;letter-spacing:-.01em;color:#1f1a12">MAPCO</div>
     </div>
     <nav data-scroll style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:4px;padding:6px 16px 8px">
       ${NAV.map(n => {

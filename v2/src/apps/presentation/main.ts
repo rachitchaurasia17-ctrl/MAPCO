@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   PlotMap V2 — Client Presentation (approved map-first design)
+   MAPCO V2 — Client Presentation (approved map-first design)
    ---------------------------------------------------------------
    The hero meeting screen. Full-bleed dark map with transparent glass
    chrome; compact right property rail. Integrates the real map engine
@@ -73,6 +73,7 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
   let activeMapId = '';
   let mapsOpen = false;
   let highlightsOpen = false;
+  let railHidden = false;
   let props: Property[] = [];
   let selectedPropertyId: string | null = null;
   let selectedSectorId: string | null = null;
@@ -106,6 +107,7 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
     <div class="pm-botleft pm-glass-lite" id="pm-botleft"></div>
     <div class="pm-botright pm-glass" id="pm-botright"></div>
     <div id="pm-fs" style="position:absolute;top:14px;right:14px;z-index:35"></div>
+    <button class="pm-rail-reopen pm-glass" id="pm-rail-reopen" data-act="rail-show" aria-label="Show properties panel" style="display:none"><i class="ph-fill ph-list-dashes" style="font-size:17px;color:#ffd76b"></i>Properties</button>
   </div>
   <aside class="pm-rail" id="pm-rail">
     <div class="pm-rail-head" id="pm-rail-head"></div>
@@ -122,12 +124,15 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
   const railHead = container.querySelector<HTMLElement>('#pm-rail-head')!;
   const railList = container.querySelector<HTMLElement>('#pm-rail-list')!;
   const rail = container.querySelector<HTMLElement>('#pm-rail')!;
+  const railReopen = container.querySelector<HTMLElement>('#pm-rail-reopen')!;
   const detail = container.querySelector<HTMLElement>('#pm-detail')!;
 
   mounted = mountMapEngine(stage);
   const highlightLayer = document.createElement('div');
+  highlightLayer.className = 'pm-map-smooth';
   highlightLayer.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:1;transform-origin:0 0;';
   const pinLayer = document.createElement('div');
+  pinLayer.className = 'pm-map-smooth';
   pinLayer.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:2;transform-origin:0 0;';
   stage.append(highlightLayer, pinLayer);
 
@@ -360,12 +365,7 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
         <i class="ph-bold ph-arrow-left" style="font-size:18px;color:#ffd76b"></i>
       </button>
       <div class="pm-brand pm-glass">
-        <svg viewBox="0 0 40 40" style="width:34px;height:34px;flex:none;display:block">
-          <rect width="40" height="40" rx="12" fill="#ffc21e"></rect>
-          <path d="M20 8.5 L33 16 L20 23.5 L7 16 Z" fill="#231a04"></path>
-          <path d="M7 22 L20 29.5 L33 22 L33 25.5 L20 33 L7 25.5 Z" fill="#231a04" opacity=".45"></path>
-        </svg>
-        <span class="pm-brand-name">Plot<b>Map</b></span>
+        <img src="/assets/mapco-logo.png" alt="MAPCO" class="pm-brand-logo">
       </div>
       <div style="position:relative">
         <button class="pm-mapbtn pm-glass" data-act="toggle-maps" aria-haspopup="true" aria-expanded="${mapsOpen}">
@@ -418,10 +418,11 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
   function renderMapControls(): void {
     const map = maps.find((m) => m.id === activeMapId);
     const has3D = !!map?.threeD;
-    botleft.innerHTML = `
-      <button class="pm-ctl ${mode === 'original' ? 'active' : ''}" data-act="mode" data-mode="original"><i class="ph-fill ph-map-trifold" style="font-size:15px"></i>Original</button>
-      <button class="pm-ctl ${mode === 'threeD' ? 'active' : ''}" data-act="mode" data-mode="threeD" ${has3D ? '' : 'disabled style="opacity:.4"'}><i class="ph-fill ph-cube" style="font-size:15px"></i>3D Map</button>
-      ${highlightsControlHtml()}`;
+    // ONE cycling view button: shows the current view; a tap flips Original ↔ 3D.
+    const modeBtn = has3D
+      ? `<button class="pm-ctl active" data-act="mode-toggle" aria-label="Switch between Original and 3D map" title="Tap to switch Original ↔ 3D"><i class="ph-fill ph-${mode === 'original' ? 'map-trifold' : 'cube'}" style="font-size:15px"></i>${mode === 'original' ? 'Original' : '3D Map'}<i class="ph-bold ph-arrows-clockwise" style="font-size:12px;opacity:.7;margin-left:3px"></i></button>`
+      : `<button class="pm-ctl active" disabled title="Only the original map is available for this map"><i class="ph-fill ph-map-trifold" style="font-size:15px"></i>Original</button>`;
+    botleft.innerHTML = `${modeBtn}${highlightsControlHtml()}`;
     botright.innerHTML = `
       <i class="ph-fill ph-map-pin" style="font-size:18px;color:#ffd76b"></i>
       <span class="pm-pincount">${pinned.size} pinned</span>
@@ -432,11 +433,15 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
     botright.style.display = showMap && pinned.size > 0 ? 'flex' : 'none';
     stage.style.display = showMap ? 'block' : 'none';
     grid.style.display = !detailOpen && (view === 'properties' || view === 'sectors') ? 'block' : 'none';
-    rail.style.display = showMap ? 'flex' : 'none';
+    rail.style.display = showMap && !railHidden ? 'flex' : 'none';
+    // Floating "Show properties" chip when the rail is hidden (map view only).
+    railReopen.style.display = showMap && railHidden ? 'inline-flex' : 'none';
     topbar.style.display = detailOpen ? 'none' : 'flex';
     if (!detailOpen && (view === 'properties' || view === 'sectors')) renderGrid();
     renderDetail();
     applyHighlights();
+    // The map's usable width changed when the rail toggles → recompute cover-fit.
+    if (showMap) requestAnimationFrame(() => mounted?.engine.resize());
     syncPins();
   }
 
@@ -573,6 +578,7 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
           <span class="pm-filter-label">Everything</span>
         </span>
         <span class="pm-filter-count">${loadState === 'ready' ? props.length : 0}</span>
+        <button class="pm-rail-close" data-act="rail-hide" aria-label="Hide properties panel" title="Hide panel"><i class="ph-bold ph-x" style="font-size:15px"></i></button>
       </div>`;
     if (loadState === 'loading') { railList.innerHTML = '<span class="pm-sr-only" role="status">Loading published plots…</span>' + '<div class="pm-skel"></div>'.repeat(3); return; }
     if (loadState === 'error') { railList.innerHTML = `<div class="pm-rail-state" role="alert"><i class="ph-fill ph-warning-circle"></i>Could not load plots.</div>`; return; }
@@ -727,9 +733,15 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
         break;
       }
       case 'sector-mode': sectorMode = t.dataset.mode === 'threeD' ? 'threeD' : 'original'; renderDetail(); break;
-      case 'mode': {
+      case 'mode':
+      case 'mode-toggle': {
         if ((t as HTMLButtonElement).disabled) break;
-        const next = t.dataset.mode as RenderMode;
+        const m = maps.find((x) => x.id === activeMapId);
+        // Combined button flips Original ↔ 3D; legacy 'mode' honors data-mode.
+        const next: RenderMode = act === 'mode-toggle'
+          ? (mode === 'original' ? 'threeD' : 'original')
+          : (t.dataset.mode as RenderMode);
+        if (next === 'threeD' && !m?.threeD) break;
         if (next === mode) break;
         mode = next; highlightsOpen = false;
         // Highlight STATE (broadCat/spotId) is preserved; the SVG is simply
@@ -738,6 +750,8 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
         void mounted!.engine.setMode(mode).then(() => { if (view === 'masterplan') mounted!.engine.cover(); applyHighlights(); });
         break;
       }
+      case 'rail-hide': railHidden = true; renderMapControls(); break;
+      case 'rail-show': railHidden = false; renderMapControls(); break;
       case 'fit': mounted!.engine.fit(); break;
       case 'highlight': highlightsOpen = !highlightsOpen; mapsOpen = false; renderMapControls(); break;
       case 'broad': {

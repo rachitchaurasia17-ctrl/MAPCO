@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   PlotMap V2 — Overlay Engine
+   MAPCO V2 — Overlay Engine
    ---------------------------------------------------------------
    Positions an SVG overlay (roads / blocks / regions) over the
    active rendering at the correct scale. The overlay keeps its own

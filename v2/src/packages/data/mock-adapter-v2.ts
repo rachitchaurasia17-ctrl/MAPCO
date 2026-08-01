@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   PlotMap V2 — Mock Adapter (implements DataAdapterV2)
+   MAPCO V2 — Mock Adapter (implements DataAdapterV2)
    ---------------------------------------------------------------
    Deterministic, bounded fixtures. No randomness, no fabricated
    live market intelligence. Scenario-switchable in dev only.

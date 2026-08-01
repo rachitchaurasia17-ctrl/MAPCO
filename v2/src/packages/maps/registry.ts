@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   PlotMap V2 — Map Pilot Registry
+   MAPCO V2 — Map Pilot Registry
    ---------------------------------------------------------------
    Mirrors the proven `window.PM_MAP_REGISTRY` contract (doc 11):
    every rendering carries its OWN intrinsic pixel dimensions so the

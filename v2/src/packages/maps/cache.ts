@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   PlotMap V2 — Bounded LRU cache
+   MAPCO V2 — Bounded LRU cache
    Documented maximum; no permanent global cache for every map/photo.
    Evicted entries are disposed (image refs / object URLs released).
    ═══════════════════════════════════════════════════════════════ */

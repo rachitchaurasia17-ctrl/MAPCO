@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   PlotMap V2 — DOM RenderSurface + interaction mount
+   MAPCO V2 — DOM RenderSurface + interaction mount
    ---------------------------------------------------------------
    The browser implementation of RenderSurface plus a helper that
    wires pointer-drag pan and wheel zoom with FULL listener cleanup.
@@ -20,6 +20,8 @@ export class DomRenderSurface implements RenderSurface {
     this.imgEl = document.createElement('img');
     this.imgEl.alt = '';
     this.imgEl.draggable = false;
+    // `pm-map-smooth` eases zoom transforms; the drag handler disables it while panning.
+    this.imgEl.className = 'pm-map-smooth';
     this.imgEl.style.cssText = 'position:absolute;top:0;left:0;transform-origin:0 0;user-select:none;pointer-events:none;max-width:none';
     this.overlayLayer = document.createElement('div');
     this.overlayLayer.style.cssText = 'position:absolute;inset:0;pointer-events:none';
@@ -73,10 +75,15 @@ export function mountMapEngine(root: HTMLElement): MountedMap {
 
   const onWheel = (e: WheelEvent) => {
     e.preventDefault();
-    engine.zoom(e.deltaY < 0 ? 1.15 : 1 / 1.15, { x: e.offsetX, y: e.offsetY });
+    // Finer step + CSS eased transform (pm-map-smooth) = smooth zoom.
+    // deltaY magnitude scales the step so trackpads and mice both feel natural.
+    const intensity = Math.min(Math.abs(e.deltaY) / 100, 2.5);
+    const factor = e.deltaY < 0 ? 1 + 0.12 * intensity : 1 / (1 + 0.12 * intensity);
+    engine.zoom(factor, { x: e.offsetX, y: e.offsetY });
   };
   const onDown = (e: PointerEvent) => {
     dragging = true; lastX = e.clientX; lastY = e.clientY;
+    root.classList.add('pm-dragging');   // disable transform easing while panning
     root.setPointerCapture(e.pointerId);
   };
   const onMove = (e: PointerEvent) => {
@@ -84,7 +91,7 @@ export function mountMapEngine(root: HTMLElement): MountedMap {
     engine.pan(e.clientX - lastX, e.clientY - lastY);
     lastX = e.clientX; lastY = e.clientY;
   };
-  const onUp = () => { dragging = false; };
+  const onUp = () => { dragging = false; root.classList.remove('pm-dragging'); };
   const onResize = () => engine.resize();
 
   root.addEventListener('wheel', onWheel, { passive: false });

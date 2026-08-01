@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   PlotMap V2 — Developer Control
+   MAPCO V2 — Developer Control
    Platform admin page (shell chrome + placeholder content)
    ═══════════════════════════════════════════════════════════════ */
 import { getProfile } from '../../packages/auth/auth';
@@ -37,8 +37,8 @@ function initDeveloperControl(container: HTMLElement) {
   <header style="display:flex;align-items:center;gap:16px;padding:14px 34px;border-bottom:1px solid #ddd2f5;background:rgba(252,250,255,.86);backdrop-filter:blur(12px);flex:none;z-index:30">
     <button id="pm-dev-back" aria-label="Go back" title="Go back" style="display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 13px;border-radius:11px;background:#f0eaff;color:#4b2ea6;font:inherit;font-size:14px;font-weight:800;cursor:pointer;border:1px solid rgba(120,80,220,.16)"><i class="ph-bold ph-arrow-left" style="font-size:16px"></i>Back</button>
     <a href="/" style="display:flex;align-items:center;gap:10px;text-decoration:none">
-      <svg viewBox="0 0 40 40" style="width:36px;height:36px;flex:none"><rect width="40" height="40" rx="12" fill="#241d0c"></rect><path d="M20 8.5 L33 16 L20 23.5 L7 16 Z" fill="#ffc93c"></path><path d="M7 22 L20 29.5 L33 22 L33 25.5 L20 33 L7 25.5 Z" fill="#f4ae14" opacity="0.55"></path><circle cx="20" cy="16" r="3.6" fill="#241d0c"></circle></svg>
-      <span style="font-weight:800;font-size:20px;letter-spacing:-.02em;color:#1f1a12">Plot<span style="color:#c2622a">Map</span></span>
+      <img src="/assets/mapco-logo.png" alt="MAPCO" style="width:36px;height:36px;flex:none;object-fit:contain">
+      <span style="font-weight:800;font-size:20px;letter-spacing:-.01em;color:#1f1a12">MAPCO</span>
     </a>
     <div style="width:1px;height:22px;background:#ddd2f5"></div>
     <span style="font-size:16px;font-weight:800;color:#5b32c4"><i class="ph-fill ph-shield-check" style="font-size:18px;margin-right:6px"></i>Developer Control</span>

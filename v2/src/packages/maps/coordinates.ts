@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   PlotMap V2 — Map Coordinate System
+   MAPCO V2 — Map Coordinate System
    ---------------------------------------------------------------
    Pure geometry. Preserves aspect ratio at all times — Fit Map,
    zoom and pan NEVER crop or stretch the raster (doc 11/12 risk:

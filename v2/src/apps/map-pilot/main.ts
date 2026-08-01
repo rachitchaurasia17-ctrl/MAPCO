@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   PlotMap V2 — Map Engine Pilot page (controlled demo)
+   MAPCO V2 — Map Engine Pilot page (controlled demo)
    Exercises the reusable maps package: masterplan ↔ sector, 3D on
    demand, pan/zoom/Fit Map, overlays, single-active + cleanup.
    ═══════════════════════════════════════════════════════════════ */

@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   PlotMap V2 — Area Intelligence
+   MAPCO V2 — Area Intelligence
    System-derived, extended consistently.
    ═══════════════════════════════════════════════════════════════ */
 

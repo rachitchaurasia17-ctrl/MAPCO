@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   PlotMap V2 — Mock Data Adapter
+   MAPCO V2 — Mock Data Adapter
    Seed data matches the design .dc.html files exactly
    ═══════════════════════════════════════════════════════════════ */
 import type { DataAdapter, Property, Client, Deal, ClientLink, MapData, DemandSignal } from './types';

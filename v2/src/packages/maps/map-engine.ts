@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   PlotMap V2 — Map Engine (lifecycle controller)
+   MAPCO V2 — Map Engine (lifecycle controller)
    ---------------------------------------------------------------
    Reusable across Client Presentation, Map Studio and Client Links.
    Guarantees:

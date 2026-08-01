@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   PlotMap V2 — Team Workspace: Work Table (Home)
+   MAPCO V2 — Team Workspace: Work Table (Home)
    Source: Team Workspace.dc.html (isWork)
    ═══════════════════════════════════════════════════════════════ */
 

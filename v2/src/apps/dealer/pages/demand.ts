@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   PlotMap V2 — Dealer Dashboard: Demand
+   MAPCO V2 — Dealer Dashboard: Demand
    ---------------------------------------------------------------
    Consumes the hardened DataAdapterV2 DemandRepository (NOT the
    legacy getClients()). Renders typed loading/empty/error states,

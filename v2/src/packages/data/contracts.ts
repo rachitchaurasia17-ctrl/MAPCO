@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════
-   PlotMap V2 — Data Architecture Contracts
+   MAPCO V2 — Data Architecture Contracts
    ---------------------------------------------------------------
    The single boundary every UI module talks to. UI modules import
    ONLY from here (and types.ts). They must never import Supabase,
