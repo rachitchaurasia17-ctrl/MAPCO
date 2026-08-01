@@ -12,10 +12,11 @@ import '../../packages/ui/tokens.css';
 import '../../packages/ui/reset.css';
 import './presentation.css';
 import { adapter } from '../../packages/data/adapter';
-import { cssMapTransform, getMaps, registerMaps, mountMapEngine, type RenderMode, type MountedMap, type MapCatalogInput } from '../../packages/maps';
+import { cssMapTransform, getMap, registerMaps, mountMapEngine, loadSvgOverlay, type RenderMode, type MountedMap, type MapCatalogInput, type MapEntry, type SvgOverlayHandle, type HighlightCategory } from '../../packages/maps';
 import { streetViewUrl } from '../../packages/ui/utils';
 import { mountFullscreenButton } from '../../packages/ui/fullscreen';
-import type { Mark, Property } from '../../packages/data/types';
+import { hasSafeInAppHistory } from '../../packages/ui/back-button';
+import type { Property } from '../../packages/data/types';
 
 type View = 'masterplan' | 'properties' | 'sectors';
 
@@ -39,11 +40,8 @@ const PROPERTY_NAMES: Record<string, string> = {
 
 const CAPTIONS = ['Site view', 'Approach road', 'Surroundings', 'Front road', 'Wide angle', 'Evening view'];
 
-const HIGHLIGHT_SETS = [
-  { id: 'A', name: 'Approach roads', color: '#ffc21e', shapes: [[26, 24, 34, 4], [43, 38, 4, 30]] },
-  { id: 'B', name: 'Prime blocks', color: '#976eeb', shapes: [[28, 43, 18, 15], [48, 48, 17, 14]] },
-  { id: 'C', name: 'Green belt', color: '#12a150', shapes: [[18, 61, 26, 6], [55, 66, 22, 6]] },
-] as const;
+/** Preferred default hero map (per founder). Falls back to first masterplan. */
+const DEFAULT_MAP_ID = 'mohali-master';
 
 const VIEWS: { k: View; l: string }[] = [
   { k: 'masterplan', l: 'Masterplan' },
@@ -67,23 +65,33 @@ function loadIcons(): void {
 
 export async function initPresentation(container: HTMLElement): Promise<() => void> {
   loadIcons();
-  // The locked pilot registry is the default; the real Supabase catalog is
-  // merged in additively by loadCatalog() without changing the initial map.
-  let maps = getMaps();
+  // Client Presentation is fully catalog-driven: the map list + default hero
+  // come from the real Supabase catalog (loadCatalog). No pilot placeholder.
+  let maps: MapEntry[] = [];
   let view: View = 'masterplan';
   let mode: RenderMode = 'original';
-  let activeMapId = maps[0]?.id ?? '';
+  let activeMapId = '';
   let mapsOpen = false;
+  let highlightsOpen = false;
   let props: Property[] = [];
   let selectedPropertyId: string | null = null;
   let selectedSectorId: string | null = null;
   let propertyShot = 0;
   let sectorMode: 'original' | 'threeD' = 'original';
-  let highlightIndex = -1;
+  // Highlight state — persists across Original↔3D↔Original, zoom, pan, and
+  // opening/closing property detail. Reset only when the active MAP changes.
+  let broadCat: HighlightCategory | null = null;
+  let spotId: string | null = null;
+  let mapLoadState: 'idle' | 'loading' | 'ready' | 'unavailable' = 'idle';
   let loadState: 'loading' | 'ready' | 'empty' | 'error' = 'loading';
   const pinned = new Set<string>();
-  type PinPosition = { x: number; y: number; provenance: NonNullable<Mark['coordinateProvenance']> };
-  const pinPositionsByMap = new Map<string, Map<string, PinPosition>>();
+
+  // The real authored SVG highlight overlay for the active Original map.
+  let overlay: SvgOverlayHandle | null = null;
+  let overlayMapId: string | null = null;
+  let overlayToken = 0;
+  // A property→sector spotlight queued while the overlay is still loading.
+  let pendingSpotQuery: string | null = null;
 
   let mounted: MountedMap | null = null;
   const controller = new AbortController();
@@ -129,31 +137,21 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
     variant: 'floating', onResize: () => mounted?.engine.resize(),
   });
 
-  async function loadPinPositions(): Promise<void> {
-    const registry = await adapter.maps.listRegistry({ limit: 100 }, { signal: controller.signal });
-    if (!registry.ok) return;
-    const details = await Promise.all(
-      registry.value.items.map((entry) => adapter.maps.get(entry.id, { signal: controller.signal })),
-    );
-    details.forEach((result) => {
-      if (!result.ok) return;
-      result.value.sets.forEach((set) => {
-        const positions = pinPositionsByMap.get(set.id) ?? new Map<string, PinPosition>();
-        set.marks.forEach((mark) => {
-          if (mark.kind !== 'pin' || !mark.propertyId || Array.isArray(mark.points) || !mark.coordinateProvenance) return;
-          positions.set(mark.propertyId, { ...mark.points, provenance: mark.coordinateProvenance });
-        });
-        pinPositionsByMap.set(set.id, positions);
-      });
-    });
-  }
+  type PinPosition = { x: number; y: number; provenance: 'map-authored' };
 
+  /** Pins come ONLY from a property's real stored normalized placement on the
+   *  active map. Never invented — an unplaced property simply has no pin. */
   function pinPositionFor(propertyId: string): PinPosition | undefined {
     const prop = props.find((p) => p.id === propertyId);
     if (prop?.mapPlacement?.mapId === activeMapId) {
       return { x: prop.mapPlacement.x, y: prop.mapPlacement.y, provenance: 'map-authored' };
     }
-    return pinPositionsByMap.get(activeMapId)?.get(propertyId);
+    return undefined;
+  }
+
+  /** True when the property has a real placement on the active map (pinnable). */
+  function isPinnable(propertyId: string): boolean {
+    return !!pinPositionFor(propertyId);
   }
 
   function propertyName(property: Property): string {
@@ -220,16 +218,83 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
   }
   updatePins();
 
-  function syncHighlights(): void {
-    const map = maps.find((item) => item.id === activeMapId);
-    const set = HIGHLIGHT_SETS[highlightIndex];
-    highlightLayer.innerHTML = '';
-    if (!map || !set || view !== 'masterplan' || mode !== 'original') return;
-    set.shapes.forEach(([x, y, width, height], index) => {
-      const shape = document.createElement('div');
-      shape.style.cssText = `position:absolute;left:${x / 100 * map.original.dims.w}px;top:${y / 100 * map.original.dims.h}px;width:${width / 100 * map.original.dims.w}px;height:${height / 100 * map.original.dims.h}px;border-radius:${index ? 18 : 999}px;background:${set.color}55;border:4px solid ${set.color};box-shadow:0 0 0 7px ${set.color}2b,0 0 34px 12px ${set.color}66;animation:rowIn .28s ease both`;
-      highlightLayer.appendChild(shape);
-    });
+  const activeMap = (): MapEntry | undefined => maps.find((item) => item.id === activeMapId);
+  /** Highlights are only trustworthy when the overlay is calibrated. */
+  const highlightsAvailable = (): boolean => activeMap()?.calibration?.status === 'calibrated' && !!activeMap()?.overlay;
+
+  /** Load (or reuse) the authored SVG overlay for the active Original map into
+   *  the shared highlight layer. Never loads for uncalibrated maps or 3D. */
+  async function ensureOverlay(): Promise<void> {
+    const map = activeMap();
+    if (overlayMapId === activeMapId && overlay) { applyPendingSpot(); return; } // already loaded
+    // active map changed → drop the old overlay + reset highlight state
+    overlay?.destroy(); overlay = null; overlayMapId = activeMapId;
+    broadCat = null; spotId = null;
+    if (!map || !highlightsAvailable()) { pendingSpotQuery = null; return; }
+    const spec = map.overlay!;
+    const myToken = ++overlayToken;
+    const handle = await loadSvgOverlay(spec.src, spec.viewBox, { signal: controller.signal });
+    if (myToken !== overlayToken || activeMapId !== map.id) { handle?.destroy(); return; } // superseded
+    if (!handle) { pendingSpotQuery = null; return; }          // fetch failed → raster-only
+    overlay = handle;
+    highlightLayer.appendChild(handle.el);
+    applyHighlights();
+    applyPendingSpot();
+    renderMapControls();
+  }
+
+  /** Center + zoom the map onto a spotlighted authored shape (bbox in the
+   *  SVG's own coordinate space, which equals the raster intrinsic space). */
+  function focusOnSpot(id: string): void {
+    if (!overlay || !mounted) return;
+    const el = overlay.el.querySelector(`[id="${id.replace(/["\\]/g, '\\$&')}"]`) as SVGGraphicsElement | null;
+    if (!el || typeof el.getBBox !== 'function') return;
+    try { const b = el.getBBox(); if (b.width && b.height) mounted.engine.focusOn({ x: b.x, y: b.y, w: b.width, h: b.height }); } catch { /* not measurable */ }
+  }
+
+  /** Resolve a queued property→sector spotlight once the overlay is ready. */
+  function applyPendingSpot(): void {
+    if (!overlay || !pendingSpotQuery) return;
+    const id = overlay.findTarget(pendingSpotQuery);
+    pendingSpotQuery = null;
+    if (!id) return;                                           // no matching authored sector — pin still shows
+    broadCat = null; spotId = id;
+    applyHighlights();
+    focusOnSpot(id);
+    renderMapControls();
+  }
+
+  /** Apply the persisted highlight state to the live overlay + toggle its
+   *  visibility. SVG geometry is hidden on the 3D rendering and off the
+   *  masterplan view; highlight STATE (broadCat/spotId) is preserved. */
+  function applyHighlights(): void {
+    if (!overlay) return;
+    const showOverlay = view === 'masterplan' && mode === 'original' && !selectedPropertyId && !selectedSectorId;
+    overlay.setVisible(showOverlay);
+    overlay.setBroad(showOverlay ? broadCat : null);
+    overlay.spotlight(showOverlay ? spotId : null);
+  }
+
+  /** Cycle the broad highlight sets present in this map's authored SVG:
+   *  off → set₁ → … → setₙ → off. */
+  function cycleBroad(): void {
+    if (!overlay) return;
+    const sets = overlay.broadSets();
+    if (!sets.length) return;
+    const cur = broadCat ? sets.findIndex((s) => s.category === broadCat) : -1;
+    const next = cur + 1 >= sets.length ? null : sets[cur + 1]!.category;
+    broadCat = next;
+    spotId = null; // broad and spotlight are mutually exclusive selections
+    applyHighlights();
+    renderMapControls();
+  }
+
+  /** Spotlight a single authored shape (sector/landmark) and gently focus it. */
+  function spotlightSector(id: string | null): void {
+    spotId = id;
+    if (id) broadCat = null;
+    applyHighlights();
+    if (id) focusOnSpot(id);
   }
 
   function syncPins(): void {
@@ -244,20 +309,19 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
       const py = pt.y * map.original.dims.h;
       const prop = props.find(x => x.id === id);
       const propLabel = prop ? esc(prop.area) : 'Pinned property';
-      const provenanceLabel = pt.provenance === 'development-mock'
-        ? 'Development-only mock position; not survey coordinates'
-        : pt.provenance === 'map-authored' ? 'Map-authored position' : 'Survey coordinate';
+      const provenanceLabel = 'Placed from its stored map position';
       const is3d = mode === 'threeD';
       const upright = is3d ? 'rotateZ(5deg) rotateX(-44deg)' : '';
 
+      // Visual language: property pins are BLUE (distinct from gold highlights).
       const el = document.createElement('div');
       el.style.cssText = `position:absolute;left:${px}px;top:${py}px;z-index:6;transform-style:preserve-3d;pointer-events:none`;
       el.innerHTML = `
-        <div style="position:absolute;left:0;top:0;width:70px;height:70px;border-radius:50%;background:rgba(255,194,30,.5);animation:ringPulse 1.8s ease-out infinite;transform:translate(-50%,-50%);pointer-events:none"></div>
+        <div style="position:absolute;left:0;top:0;width:70px;height:70px;border-radius:50%;background:rgba(47,123,255,.45);animation:ringPulse 1.8s ease-out infinite;transform:translate(-50%,-50%);pointer-events:none"></div>
         <div data-pin-marker role="img" aria-label="${propLabel}: ${provenanceLabel}" title="${provenanceLabel}" style="position:relative;transform:translate(-50%,-100%) ${upright};transform-origin:bottom center;display:flex;flex-direction:column;align-items:center;animation:pinIn .4s cubic-bezier(.2,.9,.3,1.3) both;pointer-events:auto">
-          <span style="display:flex;align-items:center;gap:7px;background:#ffc21e;color:#231a04;border-radius:12px;padding:9px 14px;white-space:nowrap;font-size:15px;font-weight:800;border:2.5px solid #fffdf7;box-shadow:0 10px 22px -8px rgba(40,26,2,.7)"><i class="ph-fill ph-map-pin" style="font-size:15px"></i>${propLabel}</span>
-          <span style="display:block;width:3px;height:14px;background:#ffc21e"></span>
-          <span style="display:block;width:14px;height:14px;border-radius:50%;background:#ffc21e;border:3px solid #fffdfb;margin-top:-2px"></span>
+          <span style="display:flex;align-items:center;gap:7px;background:#2f7bff;color:#fff;border-radius:12px;padding:9px 14px;white-space:nowrap;font-size:15px;font-weight:800;border:2.5px solid #eaf1ff;box-shadow:0 10px 22px -8px rgba(10,30,80,.7)"><i class="ph-fill ph-map-pin" style="font-size:15px"></i>${propLabel}</span>
+          <span style="display:block;width:3px;height:14px;background:#2f7bff"></span>
+          <span style="display:block;width:14px;height:14px;border-radius:50%;background:#2f7bff;border:3px solid #eaf1ff;margin-top:-2px"></span>
         </div>
       `;
       pinLayer.appendChild(el);
@@ -292,6 +356,9 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
   function renderTopbar(): void {
     const map = maps.find((m) => m.id === activeMapId);
     topbar.innerHTML = `
+      <button class="pm-glass pm-topback" data-act="back" aria-label="Back to dashboard" title="Back to dashboard">
+        <i class="ph-bold ph-arrow-left" style="font-size:18px;color:#ffd76b"></i>
+      </button>
       <div class="pm-brand pm-glass">
         <svg viewBox="0 0 40 40" style="width:34px;height:34px;flex:none;display:block">
           <rect width="40" height="40" rx="12" fill="#ffc21e"></rect>
@@ -313,14 +380,48 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
       </div>`;
   }
 
+  /** The Highlights control: real broad sets + sector/place search, or a
+   *  clean "Alignment pending" state when the overlay isn't calibrated. */
+  function highlightsControlHtml(): string {
+    // 3D never shows SVG geometry; the control is hidden there.
+    if (mode !== 'original') return '';
+    if (!highlightsAvailable()) {
+      return `<span class="pm-ctl pm-ctl--pending" title="This map has no aligned highlight layer yet." aria-disabled="true"><i class="ph-fill ph-highlighter-circle" style="font-size:16px;opacity:.6"></i>Alignment pending</span>`;
+    }
+    const sets = overlay?.broadSets() ?? [];
+    const active = broadCat || spotId;
+    const label = spotId
+      ? (overlay?.spotTargets().find((t) => t.id === spotId)?.label ?? 'Sector')
+      : broadCat ? (sets.find((s) => s.category === broadCat)?.label ?? 'Highlights') : 'Highlights';
+    let pop = '';
+    if (highlightsOpen && overlay) {
+      const targets = overlay.spotTargets();
+      const chips = sets.map((s) =>
+        `<button class="pm-hl-chip${broadCat === s.category ? ' active' : ''}" data-act="broad" data-cat="${s.category}" data-tone="${s.category}">${esc(s.label)}</button>`).join('');
+      const list = targets.length
+        ? `<div class="pm-hl-search"><i class="ph-bold ph-magnifying-glass"></i><input id="pm-hl-input" type="search" placeholder="Find a sector or place" autocomplete="off" aria-label="Find a sector or place"></div>
+           <div class="pm-hl-list" id="pm-hl-list" data-scroll>${targets.slice(0, 60).map((t) =>
+             `<button class="pm-hl-item${spotId === t.id ? ' active' : ''}" data-act="spot" data-id="${esc(t.id)}"><i class="ph-fill ph-${t.category === 'places' ? 'map-pin-area' : 'squares-four'}"></i>${esc(t.label)}</button>`).join('')}</div>`
+        : `<div class="pm-hl-empty">This map highlights broad areas only — it has no individually named sectors.</div>`;
+      pop = `<div class="pm-hl-pop" role="menu">
+          <div class="pm-hl-row">${chips}${active ? `<button class="pm-hl-clear" data-act="hl-clear">Clear</button>` : ''}</div>
+          ${list}
+        </div>`;
+    }
+    return `<span class="pm-ctl-sep"></span>
+      <div style="position:relative">
+        <button class="pm-ctl ${active ? 'active' : ''}" data-act="highlight" aria-haspopup="true" aria-expanded="${highlightsOpen}"><i class="ph-fill ph-highlighter-circle" style="font-size:16px"></i>${esc(label)}</button>
+        ${pop}
+      </div>`;
+  }
+
   function renderMapControls(): void {
     const map = maps.find((m) => m.id === activeMapId);
     const has3D = !!map?.threeD;
     botleft.innerHTML = `
       <button class="pm-ctl ${mode === 'original' ? 'active' : ''}" data-act="mode" data-mode="original"><i class="ph-fill ph-map-trifold" style="font-size:15px"></i>Original</button>
       <button class="pm-ctl ${mode === 'threeD' ? 'active' : ''}" data-act="mode" data-mode="threeD" ${has3D ? '' : 'disabled style="opacity:.4"'}><i class="ph-fill ph-cube" style="font-size:15px"></i>3D Map</button>
-      <span class="pm-ctl-sep"></span>
-      <button class="pm-ctl ${highlightIndex >= 0 ? 'active' : ''}" data-act="highlight"><i class="ph-fill ph-highlighter-circle" style="font-size:16px"></i>${highlightIndex >= 0 ? `${HIGHLIGHT_SETS[highlightIndex]!.id} · ${HIGHLIGHT_SETS[highlightIndex]!.name}` : 'Highlights'}</button>`;
+      ${highlightsControlHtml()}`;
     botright.innerHTML = `
       <i class="ph-fill ph-map-pin" style="font-size:18px;color:#ffd76b"></i>
       <span class="pm-pincount">${pinned.size} pinned</span>
@@ -335,7 +436,7 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
     topbar.style.display = detailOpen ? 'none' : 'flex';
     if (!detailOpen && (view === 'properties' || view === 'sectors')) renderGrid();
     renderDetail();
-    syncHighlights();
+    applyHighlights();
     syncPins();
   }
 
@@ -430,7 +531,7 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
       const sectorIndex = SECTORS.indexOf(sector);
       const pinPositions = [[48, 44], [66, 36], [43, 58]];
       detail.innerHTML = `<div style="position:absolute;inset:0;z-index:30;display:flex;background:#1d1405;background-image:radial-gradient(75% 55% at 88% -4%,rgba(255,201,60,.34),transparent 60%),radial-gradient(65% 50% at 4% 10%,rgba(151,110,235,.28),transparent 60%),radial-gradient(80% 60% at 50% 106%,rgba(31,161,110,.22),transparent 60%);animation:veil .2s ease both">
-        <div style="flex:1;min-width:0;display:flex;flex-direction:column;padding:22px 24px 22px 26px;gap:16px;min-height:0"><div style="flex:none;display:flex;align-items:center;gap:10px"><button data-act="close-sec" style="flex:none;white-space:nowrap;display:flex;align-items:center;gap:8px;height:44px;padding:0 17px;border-radius:14px;background:rgba(255,248,230,.12);color:#fff8e6;font-size:15px;font-weight:800"><i class="ph-bold ph-arrow-left" style="font-size:16px"></i>All sectors</button><div style="flex:0 1 auto;min-width:0;display:flex;align-items:center;gap:9px;height:44px;padding:0 17px;border-radius:14px;background:rgba(255,248,230,.09);box-shadow:inset 0 0 0 1px rgba(255,248,230,.14)"><i class="ph-fill ph-map-pin-area" style="font-size:18px;color:#ffc21e;flex:none"></i><span style="font-size:15.5px;font-weight:800;color:#fff8e6">${esc(sector.name)}</span></div><div style="flex:1"></div><div style="display:flex;align-items:center;gap:5px;padding:5px;border-radius:15px;background:rgba(255,248,230,.09);box-shadow:inset 0 0 0 1px rgba(255,248,230,.14)"><button data-act="sector-mode" data-mode="original" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:10px;font-size:13.5px;font-weight:800;${sectorMode === 'original' ? 'background:#ffc21e;color:#231a04' : 'background:rgba(255,248,230,.14);color:#fff8e6'}"><i class="ph-fill ph-map-trifold" style="font-size:16px"></i>Original</button><button data-act="sector-mode" data-mode="threeD" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:10px;font-size:13.5px;font-weight:800;${sectorMode === 'threeD' ? 'background:#ffc21e;color:#231a04' : 'background:rgba(255,248,230,.14);color:#fff8e6'}"><i class="ph-fill ph-cube" style="font-size:16px"></i>3D map</button></div></div><div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center"><div style="position:relative;flex:1 1 auto;min-width:0;width:100%;height:100%;max-width:1040px;border-radius:20px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,248,230,.14),0 40px 80px -34px rgba(0,0,0,.85);transition:transform .5s cubic-bezier(.2,.8,.2,1);transform:${sectorMode === 'threeD' ? 'perspective(1500px) rotateX(42deg) rotateZ(-4deg) scale(.86)' : 'none'}"><div style="position:absolute;inset:0;pointer-events:none;${motifStyle(sectorIndex, 34)}"></div>${sectorProps.map((property, index) => { const pos = pinPositions[index % pinPositions.length]!; return `<div style="position:absolute;left:${pos[0]}%;top:${pos[1]}%;z-index:6"><button data-act="open-prop" data-id="${esc(property.id)}" style="position:relative;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center"><span style="display:flex;align-items:center;gap:7px;background:#ffc21e;color:#231a04;border-radius:12px;padding:9px 14px;white-space:nowrap;font-size:15px;font-weight:800;border:2.5px solid #fffdf7;box-shadow:0 10px 22px -8px rgba(40,26,2,.7)"><i class="ph-fill ph-map-pin-area" style="font-size:15px"></i>${esc(propertyName(property))}</span><span style="display:block;width:3px;height:14px;background:#ffc21e"></span><span style="display:block;width:14px;height:14px;border-radius:50%;background:#ffc21e;border:3px solid #fffdfb;margin-top:-2px"></span></button></div>`; }).join('')}</div></div></div>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;padding:22px 24px 22px 26px;gap:16px;min-height:0"><div style="flex:none;display:flex;align-items:center;gap:10px"><button data-act="close-sec" style="flex:none;white-space:nowrap;display:flex;align-items:center;gap:8px;height:44px;padding:0 17px;border-radius:14px;background:rgba(255,248,230,.12);color:#fff8e6;font-size:15px;font-weight:800"><i class="ph-bold ph-arrow-left" style="font-size:16px"></i>All sectors</button><div style="flex:0 1 auto;min-width:0;display:flex;align-items:center;gap:9px;height:44px;padding:0 17px;border-radius:14px;background:rgba(255,248,230,.09);box-shadow:inset 0 0 0 1px rgba(255,248,230,.14)"><i class="ph-fill ph-map-pin-area" style="font-size:18px;color:#ffc21e;flex:none"></i><span style="font-size:15.5px;font-weight:800;color:#fff8e6">${esc(sector.name)}</span></div><button data-act="sector-to-plan" style="flex:none;white-space:nowrap;display:flex;align-items:center;gap:8px;height:44px;padding:0 15px;border-radius:14px;background:rgba(255,248,230,.12);color:#fff8e6;font-size:14.5px;font-weight:800"><i class="ph-fill ph-map-trifold" style="font-size:17px;color:#ffd76b"></i>On masterplan</button><div style="flex:1"></div><div style="display:flex;align-items:center;gap:5px;padding:5px;border-radius:15px;background:rgba(255,248,230,.09);box-shadow:inset 0 0 0 1px rgba(255,248,230,.14)"><button data-act="sector-mode" data-mode="original" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:10px;font-size:13.5px;font-weight:800;${sectorMode === 'original' ? 'background:#ffc21e;color:#231a04' : 'background:rgba(255,248,230,.14);color:#fff8e6'}"><i class="ph-fill ph-map-trifold" style="font-size:16px"></i>Original</button><button data-act="sector-mode" data-mode="threeD" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:10px;font-size:13.5px;font-weight:800;${sectorMode === 'threeD' ? 'background:#ffc21e;color:#231a04' : 'background:rgba(255,248,230,.14);color:#fff8e6'}"><i class="ph-fill ph-cube" style="font-size:16px"></i>3D map</button></div></div><div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center"><div style="position:relative;flex:1 1 auto;min-width:0;width:100%;height:100%;max-width:1040px;border-radius:20px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,248,230,.14),0 40px 80px -34px rgba(0,0,0,.85);transition:transform .5s cubic-bezier(.2,.8,.2,1);transform:${sectorMode === 'threeD' ? 'perspective(1500px) rotateX(42deg) rotateZ(-4deg) scale(.86)' : 'none'}"><div style="position:absolute;inset:0;pointer-events:none;${motifStyle(sectorIndex, 34)}"></div>${sectorProps.map((property, index) => { const pos = pinPositions[index % pinPositions.length]!; return `<div style="position:absolute;left:${pos[0]}%;top:${pos[1]}%;z-index:6"><button data-act="open-prop" data-id="${esc(property.id)}" style="position:relative;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center"><span style="display:flex;align-items:center;gap:7px;background:#ffc21e;color:#231a04;border-radius:12px;padding:9px 14px;white-space:nowrap;font-size:15px;font-weight:800;border:2.5px solid #fffdf7;box-shadow:0 10px 22px -8px rgba(40,26,2,.7)"><i class="ph-fill ph-map-pin-area" style="font-size:15px"></i>${esc(propertyName(property))}</span><span style="display:block;width:3px;height:14px;background:#ffc21e"></span><span style="display:block;width:14px;height:14px;border-radius:50%;background:#ffc21e;border:3px solid #fffdfb;margin-top:-2px"></span></button></div>`; }).join('')}</div></div></div>
         <aside data-scroll style="width:344px;flex:none;overflow-y:auto;background:rgba(255,248,230,.06);box-shadow:inset 1px 0 0 rgba(255,248,230,.14);padding:26px 22px 24px"><div style="font-size:11.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#ffc93c">In this sector</div><div style="margin-top:4px;font-family:'Newsreader',serif;font-weight:500;font-size:29px;letter-spacing:-.028em;color:#fffdf7">${sectorProps.length ? `${sectorProps.length} ${sectorProps.length === 1 ? 'plot' : 'plots'} of ours` : 'No plots here'}</div><div style="display:flex;flex-direction:column;gap:13px;margin-top:16px">${sectorProps.map((property) => `<button data-act="open-prop" data-id="${esc(property.id)}" style="display:block;width:100%;overflow:hidden;border-radius:16px;background:rgba(255,248,230,.09);box-shadow:inset 0 0 0 1px rgba(255,248,230,.16)"><span style="display:block;width:100%;height:150px;background-image:url('${esc(plotPhoto(property, 1))}');background-size:cover;background-position:center"></span><span style="display:block;padding:13px 15px 15px;text-align:left"><span style="display:block;font-size:17.5px;font-weight:800;color:#fffdf7">${esc(propertyName(property))}</span><span style="display:block;margin-top:5px;font-size:13.5px;font-weight:600;color:#e2cf9f">${esc(property.size)} · ${esc(property.facing)} facing</span></span></button>`).join('') || '<div style="padding:22px 14px;text-align:center;font-size:15px;background:rgba(255,248,230,.07);border-radius:16px;color:#e2cf9f">No plots of ours in this sector yet.</div>'}</div></aside>
       </div>`;
       return;
@@ -441,8 +542,9 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
 
   function pcard(p: Property): string {
     const photo = p.photos[0];
-    const pin = pinPositionFor(p.id);
-    const mockPin = pin?.provenance === 'development-mock';
+    // A property is pinnable only if it has a real stored placement on SOME
+    // published map. Unplaced properties never get an invented pin.
+    const placed = !!p.mapPlacement?.mapId && maps.some((m) => m.id === p.mapPlacement!.mapId);
     return `
     <article class="pm-pcard">
       <button class="pm-pcard-title" data-act="open-prop" data-id="${esc(p.id)}">${esc(p.area)} · ${esc(p.size)}</button>
@@ -452,7 +554,9 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
       </button>
       <div class="pm-pcard-body">
         <div class="pm-pcard-actions">
-          <button class="pm-pcard-act pm-pcard-act--pin" data-act="pin" data-id="${esc(p.id)}" ${mockPin ? 'title="Development preview position"' : ''}><i class="ph-fill ph-map-pin"></i>${pinned.has(p.id) ? 'Pinned' : 'Pin on map'}</button>
+          ${placed
+            ? `<button class="pm-pcard-act pm-pcard-act--pin" data-act="pin" data-id="${esc(p.id)}"><i class="ph-fill ph-map-pin"></i>${pinned.has(p.id) ? 'Pinned' : 'Pin on map'}</button>`
+            : `<button class="pm-pcard-act pm-pcard-act--pin" disabled title="No map position set for this plot yet" style="opacity:.45;cursor:not-allowed"><i class="ph-fill ph-map-pin"></i>Not on map</button>`}
           <a class="pm-pcard-act pm-pcard-act--sv" href="${esc(streetViewUrl(p.loc))}" target="_blank" rel="noopener"><i class="ph-fill ph-street-view"></i>Street view</a>
         </div>
       </div>
@@ -487,29 +591,54 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
       el.style.cssText = 'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:20;padding:14px 20px;border-radius:14px;background:rgba(24,16,4,.72);backdrop-filter:blur(10px);color:#fff8e6;font-size:15px;font-weight:700;text-align:center;max-width:340px';
       container.querySelector('.pm-pres-map')?.appendChild(el);
     }
-    el.innerHTML = `<i class="ph-fill ph-warning-circle" style="font-size:20px;display:block;margin-bottom:6px;color:#ffd76b"></i>${esc(text)}`;
+    const loading = /loading/i.test(text);
+    const icon = loading ? 'ph-circle-notch pm-spin' : 'ph-warning-circle';
+    el.innerHTML = `<i class="ph-fill ${icon}" style="font-size:20px;display:block;margin-bottom:6px;color:#ffd76b"></i>${esc(text)}`;
   }
 
   async function applyMap(): Promise<void> {
-    if (!mounted) return;
+    if (!mounted || !activeMapId) return;
     mapMsg(null);
     const result = await mounted.engine.setMap(activeMapId, { mode });
-    if (result.ok) { if (view === 'masterplan') mounted.engine.cover(); }
-    else if (result.reason !== 'superseded' && result.reason !== 'disposed') {
+    if (result.ok) {
+      if (view === 'masterplan') mounted.engine.cover();
+      // Load the authored SVG overlay for the (Original) map; hidden on 3D.
+      void ensureOverlay();
+    } else if (result.reason !== 'superseded' && result.reason !== 'disposed') {
       mapMsg(result.reason === 'no-rendering' ? 'This view is not available for this map.' : 'This map could not be loaded.');
     }
   }
 
-  /** Merge the real Supabase map catalog into the engine registry, additively.
-   *  Keeps the locked pilot masterplan as the default (activeMapId unchanged). */
+  /** Pick the default hero map: the founder's preferred map, else the first
+   *  published masterplan, else the first available map. */
+  function pickDefaultMapId(): string {
+    if (maps.some((m) => m.id === DEFAULT_MAP_ID)) return DEFAULT_MAP_ID;
+    return (maps.find((m) => m.kind === 'masterplan') ?? maps[0])?.id ?? '';
+  }
+
+  /** Load the real Supabase catalog and drive the FIRST map render from it.
+   *  The presentation is fully catalog-driven — no pilot placeholder. */
   async function loadCatalog(): Promise<void> {
+    mapLoadState = 'loading';
     const reg = await adapter.maps.listRegistry({ limit: 300 }, { signal: controller.signal });
-    if (!reg.ok) return; // keep the pilot registry; presentation still works offline
-    const added = registerMaps(reg.value.items as unknown as MapCatalogInput[]);
-    if (!added.length) return;
-    maps = getMaps();
+    if (!reg.ok) {
+      if (reg.error.code === 'aborted') return;
+      mapLoadState = 'unavailable';
+      mapMsg('Maps could not be loaded. Check the connection and refresh.');
+      return;
+    }
+    registerMaps(reg.value.items as unknown as MapCatalogInput[]);
+    // Only client-visible, published maps belong in the presentation picker.
+    maps = reg.value.items
+      .filter((m) => m.published && !m.hidden)
+      .map((m) => getMap(m.id))
+      .filter((m): m is MapEntry => !!m);
+    if (!maps.length) { mapLoadState = 'unavailable'; mapMsg('No maps are published yet.'); return; }
+    mapLoadState = 'ready';
+    if (!activeMapId || !maps.some((m) => m.id === activeMapId)) activeMapId = pickDefaultMapId();
     renderTopbar();
     renderMapControls();
+    await applyMap();
   }
 
   // ── interaction (single delegated listener) ───────────────
@@ -518,9 +647,23 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
     if (!t) return;
     const act = t.dataset.act;
     switch (act) {
-      case 'toggle-maps': mapsOpen = !mapsOpen; renderTopbar(); break;
+      case 'back': {
+        // Close an open overlay first (stays in the presentation, keeps
+        // fullscreen); otherwise return to the dealer surface. Never exposes
+        // dealer-private routes beyond a normal same-origin history entry.
+        if (selectedPropertyId) { selectedPropertyId = null; renderMapControls(); break; }
+        if (selectedSectorId) { selectedSectorId = null; view = 'sectors'; renderTopbar(); renderMapControls(); break; }
+        if (highlightsOpen || mapsOpen) { highlightsOpen = false; mapsOpen = false; renderTopbar(); renderMapControls(); break; }
+        if (view !== 'masterplan') { view = 'masterplan'; renderTopbar(); renderMapControls(); void applyMap(); break; }
+        if (hasSafeInAppHistory()) window.history.back();
+        else window.location.assign('/admin/owner.html');
+        break;
+      }
+      case 'toggle-maps': mapsOpen = !mapsOpen; highlightsOpen = false; renderTopbar(); break;
       case 'pick-map': {
-        activeMapId = t.dataset.id!; mapsOpen = false; mode = 'original';
+        if (t.dataset.id === activeMapId) { mapsOpen = false; renderTopbar(); break; }
+        activeMapId = t.dataset.id!; mapsOpen = false; highlightsOpen = false; mode = 'original';
+        broadCat = null; spotId = null; pendingSpotQuery = null;
         const m = maps.find((x) => x.id === activeMapId);
         view = m?.kind === 'sector' ? 'sectors' : 'masterplan';
         renderTopbar(); renderMapControls(); void applyMap(); break;
@@ -551,25 +694,77 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
       case 'prop-next': propertyShot = (propertyShot + 1) % 6; renderDetail(); break;
       case 'prop-shot': propertyShot = Number(t.dataset.index || 0); renderDetail(); break;
       case 'prop-plan': {
+        // View this property on its masterplan: switch to the linked map, pin
+        // it, and spotlight its sector (property-linked highlighting).
         const property = props.find((item) => item.id === selectedPropertyId);
-        if (property) pinned.add(property.id);
-        selectedPropertyId = null; selectedSectorId = null; view = 'masterplan';
-        renderTopbar(); renderMapControls(); void applyMap(); break;
+        selectedPropertyId = null; selectedSectorId = null; view = 'masterplan'; mode = 'original';
+        highlightsOpen = false;
+        if (property) {
+          pinned.add(property.id);
+          const targetMapId = property.mapPlacement?.mapId;
+          const sameMap = !targetMapId || targetMapId === activeMapId;
+          if (!sameMap && maps.some((m) => m.id === targetMapId)) {
+            activeMapId = targetMapId!; broadCat = null; spotId = null;
+          }
+          pendingSpotQuery = property.sector || property.area || null;
+          renderTopbar(); renderMapControls();
+          if (sameMap) { void ensureOverlay(); if (activeMapId) void applyMap(); }
+          else void applyMap();
+        } else { renderTopbar(); renderMapControls(); void applyMap(); }
+        break;
       }
       case 'prop-sector': selectedPropertyId = null; selectedSectorId = t.dataset.id || null; sectorMode = 'original'; renderMapControls(); break;
+      case 'sector-to-plan': {
+        // Return from a sector layout to its parent masterplan, spotlighting it.
+        const sector = SECTORS.find((s) => s.id === selectedSectorId);
+        selectedSectorId = null; view = 'masterplan'; mode = 'original'; highlightsOpen = false;
+        if (sector) {
+          const parent = maps.find((m) => m.kind === 'masterplan' && m.city === sector.city);
+          if (parent && parent.id !== activeMapId) { activeMapId = parent.id; broadCat = null; spotId = null; }
+          pendingSpotQuery = sector.name;
+        }
+        renderTopbar(); renderMapControls(); void applyMap();
+        break;
+      }
       case 'sector-mode': sectorMode = t.dataset.mode === 'threeD' ? 'threeD' : 'original'; renderDetail(); break;
       case 'mode': {
         if ((t as HTMLButtonElement).disabled) break;
-        mode = t.dataset.mode as RenderMode; renderMapControls(); void mounted!.engine.setMode(mode); break;
+        const next = t.dataset.mode as RenderMode;
+        if (next === mode) break;
+        mode = next; highlightsOpen = false;
+        // Highlight STATE (broadCat/spotId) is preserved; the SVG is simply
+        // hidden on 3D and restored on Original.
+        renderMapControls();
+        void mounted!.engine.setMode(mode).then(() => { if (view === 'masterplan') mounted!.engine.cover(); applyHighlights(); });
+        break;
       }
       case 'fit': mounted!.engine.fit(); break;
-      case 'highlight': highlightIndex = highlightIndex + 1 >= HIGHLIGHT_SETS.length ? -1 : highlightIndex + 1; renderMapControls(); break;
+      case 'highlight': highlightsOpen = !highlightsOpen; mapsOpen = false; renderMapControls(); break;
+      case 'broad': {
+        const cat = t.dataset.cat as HighlightCategory;
+        broadCat = broadCat === cat ? null : cat; spotId = null;
+        applyHighlights(); renderMapControls(); break;
+      }
+      case 'spot': {
+        spotlightSector(t.dataset.id!); highlightsOpen = false; renderMapControls(); break;
+      }
+      case 'hl-clear': broadCat = null; spotId = null; applyHighlights(); renderMapControls(); break;
       case 'zoom-in': mounted!.engine.zoom(1.3); break;
       case 'zoom-out': mounted!.engine.zoom(1 / 1.3); break;
       case 'clear-pins': pinned.clear(); renderMapControls(); renderRail(); break;
       case 'pin': {
         const id = t.dataset.id!;
-        if (pinned.has(id)) pinned.delete(id); else pinned.add(id);
+        const prop = props.find((p) => p.id === id);
+        const placedMap = prop?.mapPlacement?.mapId;
+        if (pinned.has(id)) { pinned.delete(id); }
+        else {
+          pinned.add(id);
+          // Show the pin where it actually lives: switch to its map if needed.
+          if (placedMap && placedMap !== activeMapId && maps.some((m) => m.id === placedMap)) {
+            activeMapId = placedMap; mode = 'original'; broadCat = null; spotId = null; view = 'masterplan';
+            renderTopbar(); renderMapControls(); void applyMap(); renderRail(); break;
+          }
+        }
         if (view !== 'masterplan') { view = 'masterplan'; renderTopbar(); }
         renderMapControls(); renderRail(); break;
       }
@@ -579,11 +774,34 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
 
   const onKey = (e: KeyboardEvent) => {
     if (e.key !== 'Escape') return;
+    if (highlightsOpen) { highlightsOpen = false; renderMapControls(); return; }
     if (selectedPropertyId) { selectedPropertyId = null; renderMapControls(); return; }
     if (selectedSectorId) { selectedSectorId = null; view = 'sectors'; renderTopbar(); renderMapControls(); return; }
     if (mapsOpen) { mapsOpen = false; renderTopbar(); }
   };
   document.addEventListener('keydown', onKey);
+
+  // Live-filter the highlight search list; Enter spotlights the first match.
+  const onHlInput = (e: Event) => {
+    const input = (e.target as HTMLElement).closest<HTMLInputElement>('#pm-hl-input');
+    if (!input || !overlay) return;
+    const q = input.value.trim().toLowerCase();
+    const list = container.querySelector<HTMLElement>('#pm-hl-list');
+    if (!list) return;
+    list.querySelectorAll<HTMLElement>('.pm-hl-item').forEach((item) => {
+      const label = (item.textContent || '').toLowerCase();
+      item.style.display = !q || label.includes(q) ? '' : 'none';
+    });
+  };
+  container.addEventListener('input', onHlInput);
+  const onHlEnter = (e: KeyboardEvent) => {
+    const input = (e.target as HTMLElement).closest<HTMLInputElement>('#pm-hl-input');
+    if (!input || e.key !== 'Enter' || !overlay) return;
+    e.preventDefault();
+    const id = overlay.findTarget(input.value);
+    if (id) { spotlightSector(id); highlightsOpen = false; renderMapControls(); }
+  };
+  container.addEventListener('keydown', onHlEnter);
 
   const onTabKey = (e: KeyboardEvent) => {
     const target = (e.target as HTMLElement).closest<HTMLElement>('[role="tab"]');
@@ -599,7 +817,9 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
   container.addEventListener('keydown', onTabKey);
 
   const onDocClick = (e: MouseEvent) => {
-    if (mapsOpen && !(e.target as HTMLElement).closest('.pm-mapbtn, .pm-pop')) { mapsOpen = false; renderTopbar(); }
+    const el = e.target as HTMLElement;
+    if (mapsOpen && !el.closest('.pm-mapbtn, .pm-pop')) { mapsOpen = false; renderTopbar(); }
+    if (highlightsOpen && !el.closest('[data-act="highlight"], .pm-hl-pop')) { highlightsOpen = false; renderMapControls(); }
   };
   document.addEventListener('click', onDocClick, true);
 
@@ -607,14 +827,12 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
   renderTopbar();
   renderMapControls();
   renderRail();
-  void applyMap();
+  mapMsg('Loading maps…');
+  // Catalog drives the first map render (no pilot placeholder).
   void loadCatalog();
 
   // load published plots (client-safe: price never read)
-  const [res] = await Promise.all([
-    adapter.properties.list({ limit: 24 }, { signal: controller.signal }),
-    loadPinPositions(),
-  ]);
+  const res = await adapter.properties.list({ limit: 24 }, { signal: controller.signal });
   if (res.ok) {
     props = res.value.items.filter((p) => p.published && !p.sold);
     loadState = props.length ? 'ready' : 'empty';
@@ -629,10 +847,14 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
     cancelAnimationFrame(animFrame);
     container.removeEventListener('click', onClick);
     container.removeEventListener('keydown', onTabKey);
+    container.removeEventListener('input', onHlInput);
+    container.removeEventListener('keydown', onHlEnter);
     document.removeEventListener('keydown', onKey);
     document.removeEventListener('click', onDocClick, true);
     controller.abort();
     fsCleanup();
+    overlay?.destroy();
+    overlay = null;
     mounted?.dispose();
     mounted = null;
   };

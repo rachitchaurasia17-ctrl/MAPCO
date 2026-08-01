@@ -96,6 +96,12 @@ export interface MapData {
   /** Original / 3D / overlay asset URLs (Storage) — the render sources. */
   assets?: { original?: MapAsset; threeD?: MapAsset; overlay?: MapAsset };
   dims: { original: { w: number; h: number }; threeD?: { w: number; h: number } };
+  /** Geometry trust for this map's SVG overlay (drives the Highlights control). */
+  calibration?: {
+    status: 'calibrated' | 'needs-review' | 'unavailable';
+    overlayViewBox?: { w: number; h: number } | null;
+    raster?: { w: number; h: number } | null;
+  };
   published: boolean;
   hidden: boolean;
   sets: MarkSet[];

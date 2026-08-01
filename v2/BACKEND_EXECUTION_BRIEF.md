@@ -306,7 +306,59 @@ still works; tsc clean; **80/80 tests**; build OK.
   Browser-verified: both buttons render, aria labels correct, no errors. (True fullscreen needs a
   real user gesture — verify on the deploy.) No PWA/offline added, per spec.
 
+## 6i. Real SVG highlight system + Aerocity recovery + perf (session 9) — DONE
+
+Built the real authored-SVG highlight system and removed the fake rectangle highlights and the
+old "new chd" placeholder default. Founder decisions applied: **default hero = Mohali**, **merge
+Aerocity** (single map from the aligned aerotropolis pair), non-aligned cities **shown with
+highlights disabled**.
+
+**Data (MAPCO-DEV).** `v2/scripts/relink-aligned-maps.mjs` connected the newly ALIGNED
+raster+SVG pairs (viewBox === raster → 1:1, zero offset) to `chandigarh/mohali/new-chandigarh-master`
+and reused the proven `aerotropolis-overlays.svg.svg` (+ `aerotropolis-original.png.png`,
+4599×3069) as `aerocity-master`; retired the duplicate `aerotropolis-master`; wrote
+`payload.calibration` per map. Non-aligned masterplans (Zirakpur/Panchkula/Derabassi/Kharar) had
+their old mismatched overlay stripped and calibration set to `unavailable`. Live verify
+`v2/scripts/verify-highlights.mjs` (signs in as demo owner, reads `plotmap_published_maps`, fetches
+each SVG) → **31/31 PASS**.
+
+**Engine + package.** New `packages/maps/svg-overlay.ts` — fetches + sanitizes the authored SVG,
+injects it INLINE, classifies real groups into broad sets (roads/sectors/places), exposes
+individual spotlight + fuzzy search, hides on 3D. `MapEntry` gained `overlay` + `calibration`;
+`mapEntryFromData` no longer flat-renders the SVG (raw strokes never show). Added
+`MapEngine.focusOn(rect)` to gently center a spotlighted sector. Calibration flows
+`payload.calibration` → adapter `rowToMapMeta` → `MapData.calibration` → `MapEntry`.
+
+**Presentation (`apps/presentation/main.ts`).** Fully catalog-driven (no pilot placeholder); default
+Mohali. Removed the fake `HIGHLIGHT_SETS`. Highlights control shows real broad-set chips + a sector
+search/list, or a clean **"Alignment pending"** state when uncalibrated. Highlight STATE persists
+across Original↔3D↔Original, zoom, pan, and opening/closing detail; the SVG is hidden on 3D and
+restored on Original. Property-linked highlighting: "Masterplan"/pin switches to the property's
+linked map and spotlights its sector; "On masterplan" returns from a sector to its parent.
+Pins are BLUE and come ONLY from real `mapPlacement` (unplaced plots show "Not on map"). Visual
+language: roads cyan, sectors gold, places amber, pins blue.
+
+**Perf.** Removed the presentation's N+1 pin load (was `listRegistry` + `adapter.maps.get` per map,
+~9–100 RPC round-trips, several returning the full catalog) — pins now derive from already-loaded
+property placements; the catalog loads in a single `plotmap_published_maps` call. The old placeholder
+raster preload + `public/assets/newchandigarh-map.png` were deleted.
+
+**Product hardening.** Reusable `packages/ui/back-button.ts` (history-first, safe same-origin only,
+logical fallback, accessible). Wired: Client Presentation (in-chrome Back — closes overlays first,
+never exposes dealer routes to clients), dealer shell (subpages → Dealer Home, in-shell so
+fullscreen is preserved), Map Studio (→ prev/Dealer Home), Developer Control (→ prev/Dealer Home).
+Fullscreen module re-reviewed against spec (label toggle, Esc sync, onResize, single listeners) — OK.
+
+**Gate.** tsc clean, **81/81 Vitest**, `vite build` OK (13 entries). Browser-verified in mock mode:
+default Mohali, Back on subpages (hidden on home), Original↔3D hides/restores the highlights control,
+grouped picker with no placeholder, **zero console errors**. Highlight alignment confirmed in-browser
+against the live public overlay (raster 1603×1278 === viewBox, 80 sector shapes, sector 66 bbox
+inside frame). Final on-screen visual approval is the founder's (supabase mode, real login).
+
 ## 7. NEXT MILESTONE — Client Presentation highlight system + SVG calibration (full spec captured)
+
+> **Status: implemented in §6i above.** The spec below is retained for reference.
+
 
 Founder spec (2026-08-01), to build next. Do NOT enable highlights while misaligned.
 

@@ -9,6 +9,7 @@
    ═══════════════════════════════════════════════════════════════ */
 import { adapter } from '../../../packages/data/adapter';
 import { getMapStudio, type StudioMap, type MapStatus } from '../../../packages/data/map-studio';
+import { hasSafeInAppHistory } from '../../../packages/ui/back-button';
 import type { Property } from '../../../packages/data/types';
 
 const STATUS_META: Record<MapStatus, { label: string; bg: string; fg: string }> = {
@@ -186,6 +187,7 @@ export async function renderMapStudio(el: HTMLElement): Promise<void> {
     </style>
     <div class="ms-wrap">
       <aside class="ms-side" data-scroll>
+        <button class="ms-fchip" data-act="back" style="margin-bottom:10px;display:inline-flex;align-items:center;gap:6px" aria-label="Back to dashboard"><i class="ph-bold ph-arrow-left"></i>Back</button>
         <h1>Map Studio</h1>
         <div class="ms-filters">
           ${(['all', 'draft', 'published', 'hidden', 'archived'] as const).map((f) =>
@@ -205,7 +207,8 @@ export async function renderMapStudio(el: HTMLElement): Promise<void> {
     const t = (ev.target as HTMLElement).closest('[data-act]') as HTMLElement | null;
     if (!t) return;
     const act = t.dataset.act;
-    if (act === 'select') { selectedId = t.dataset.id!; previewMode = 'original'; placing = false; render(); }
+    if (act === 'back') { if (hasSafeInAppHistory()) window.history.back(); else window.location.assign('/admin/owner.html'); }
+    else if (act === 'select') { selectedId = t.dataset.id!; previewMode = 'original'; placing = false; render(); }
     else if (act === 'filter') { statusFilter = t.dataset.filter as typeof statusFilter; render(); }
     else if (act === 'mode') { if (!(t as HTMLButtonElement).disabled) { previewMode = t.dataset.mode as 'original' | 'threeD'; render(); } }
     else if (act === 'overlay') { showOverlay = !showOverlay; render(); }

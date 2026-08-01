@@ -68,3 +68,36 @@ upload to Storage `maps/` → register `prebuilt_maps`; idempotent, skip-with-re
   the verify harness now self-cleans so they never repopulate.
 - **Final catalog:** 81 maps — **9 published city masterplans** (Mohali, Aerocity, Aerotropolis,
   New Chandigarh, Chandigarh, Zirakpur, Panchkula, Derabassi, Kharar) + 72 draft sectors.
+
+---
+
+## Session 9 — aligned SVG highlight system (calibration status per masterplan)
+
+The founder produced newly **aligned** exports where each raster and its SVG overlay share
+IDENTICAL pixel dimensions (viewBox === raster), so they overlay **1:1 with no calibration
+offset**. `v2/scripts/relink-aligned-maps.mjs` connected each aligned pair to its Original
+masterplan record and wrote `payload.calibration` (status + overlay viewBox + raster dims).
+Aerocity reuses the proven earlier PlotMap overlay unchanged. Verified live by
+`node v2/scripts/verify-highlights.mjs` → **31/31 PASS**.
+
+| Map record | Raster asset (Storage `maps/…`) | SVG overlay (source) | Raster dims | SVG viewBox | Status |
+|---|---|---|---|---|---|
+| `chandigarh-master` | `chandigarh/chandigarh-master-original.png` | `alligned svg/chandigarh masterplan.svg` | 1603×1278 | 1603×1278 | **calibrated** |
+| `mohali-master` | `mohali/mohali-master-original.png` | `alligned svg/mohali masterplan.svg` | 1603×1278 | 1603×1278 | **calibrated** |
+| `new-chandigarh-master` | `newchandigarh/new-chandigarh-master-original.png` | `alligned svg/new chd 1.svg` (raster `new chd 2.png`) | 1603×1278 | 1603×1278 | **calibrated** |
+| `aerocity-master` | `aerocity/aerocity-master-original.png` | `maps with svg/aerotropolis-overlays.svg.svg` (recovered) | 4599×3069 | 4599×3069 | **calibrated** |
+| `zirakpur-master` | `zirakpur/…-original.png` | — (old mismatched overlay stripped) | 1449×1089 | — | unavailable (alignment pending) |
+| `panchkula-master` | `panchkula/…-original.png` | — | 1024×1536 | — | unavailable (alignment pending) |
+| `derabassi-master` | `derabassi/…-original.png` | — | 1349×1083 | — | unavailable (alignment pending) |
+| `kharar-master` | `kharar/…-original.png` | — | 1422×1132 | — | unavailable (alignment pending) |
+
+**Authored highlight groups (broad sets derived at runtime from the real SVG):**
+- Chandigarh — `roads`, `sectors`, `extra pockets`.
+- Mohali — `roads`, `sectors` (sector paths carry the real sector numbers as ids → `66`, `79`, … individually spotlightable/searchable).
+- New Chandigarh — `major roads`, `ZONE-1/2/3`, `BLOCK E`, `OTHER BLOCKS`, `block 3 saini majra`, `PINS` (named landmarks).
+- Aerocity — flat cyan road overlay (no authored groups) → one broad "Roads & approaches" set.
+
+**Aerocity consolidation:** the duplicate `aerotropolis-master` (4599×3069) was retired
+(`deleted=true`, sectors re-parented); `aerocity-master` now carries the aligned raster+overlay
+and is the single **Aerocity** map. Non-aligned cities remain client-visible with highlights
+disabled ("Alignment pending") — never showing visibly wrong geometry.

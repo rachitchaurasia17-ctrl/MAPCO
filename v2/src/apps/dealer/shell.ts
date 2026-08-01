@@ -1,5 +1,6 @@
 import { getProfile, getInitials } from '../../packages/auth/auth';
 import { mountFullscreenButton } from '../../packages/ui/fullscreen';
+import { mountBackButton } from '../../packages/ui/back-button';
 import { formatDateShort } from '../../packages/ui/utils';
 import { renderHome } from './pages/home';
 import { renderDeals } from './pages/deals';
@@ -97,6 +98,7 @@ export async function initDealerShell(container: HTMLElement, initialSection: st
 
   <main id="pm-dash-main" style="flex:1;min-width:0;min-height:0;display:flex;flex-direction:column">
 <header id="pm-dash-header" style="display:flex;align-items:center;gap:14px;padding:16px 40px;border-bottom:1px solid #ddd2f5;background:rgba(247,243,234,.86);backdrop-filter:blur(8px);position:sticky;top:0;z-index:30">
+      <span id="pm-dash-back"></span>
       <i class="${SECMETA[currentSection].icon}" style="font-size:21px;color:#d95d1e"></i>
       <span style="font-size:17px;font-weight:800;letter-spacing:-.01em;color:#2f2a2d">${SECMETA[currentSection].name}</span>
         <div style="display:flex;align-items:center;gap:8px;color:#6b6156;font-size:14.5px;font-weight:600"><i class="ph ph-calendar-blank" style="font-size:17px"></i>${formatDateShort()}</div>
@@ -112,6 +114,15 @@ export async function initDealerShell(container: HTMLElement, initialSection: st
 
   const fsHost = container.querySelector<HTMLElement>('#pm-dash-fs');
   if (fsHost) mountFullscreenButton(fsHost, { variant: 'bar' });
+
+  // Subtle Back on dealer subpages → Dealer Home (in-shell, preserves fullscreen).
+  const backHost = container.querySelector<HTMLElement>('#pm-dash-back');
+  if (backHost && currentSection !== 'areas') {
+    mountBackButton(backHost, {
+      variant: 'bar', label: 'Back to home',
+      onBack: () => { window.history.pushState({}, '', '/admin/owner.html'); initDealerShell(container, 'areas'); return true; },
+    });
+  }
 
   const content = document.getElementById('pm-dash-content')!;
   

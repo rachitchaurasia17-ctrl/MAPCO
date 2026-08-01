@@ -5,12 +5,15 @@ export { getMaps, getMap, renderingFor, addPropertyToMap, registerMaps, mapEntry
 export type {
   MapEntry, MapKind, RenderMode, Rendering, Dimensions,
   OverlayDescriptor, MapRegistry, MapCatalogInput,
+  MapOverlaySpec, MapCalibration, CalibrationStatus,
 } from './registry';
 export { CoordinateSystem, MIN_ZOOM, MAX_ZOOM, cssMapTransform } from './coordinates';
 export type { Transform, Viewport, Point } from './coordinates';
 export { BoundedCache } from './cache';
 export { layoutOverlay, geometryMatches } from './overlay-engine';
 export type { OverlayLayout } from './overlay-engine';
+export { loadSvgOverlay } from './svg-overlay';
+export type { SvgOverlayHandle, BroadSet, SpotTarget, HighlightCategory } from './svg-overlay';
 export { MapImageLoader, domImagePort } from './loader';
 export type { LoadedImage, ImagePort } from './loader';
 export { MapEngine } from './map-engine';

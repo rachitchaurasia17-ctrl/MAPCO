@@ -247,9 +247,13 @@ class MockDemandRepository implements DemandRepository {
 
 const MAP_REGISTRY: MapData[] = [
   {
-    id: 'nc-master', kind: 'masterplan', city: 'New Chandigarh', sector: 'Master Plan',
-    label: 'New Chandigarh — Master Plan', raster: '/assets/newchandigarh-map.png',
-    dims: { original: { w: 2400, h: 1600 } }, published: true, hidden: false,
+    id: 'mohali-master', kind: 'masterplan', city: 'Mohali', sector: 'Master Plan',
+    label: 'Mohali — Master Plan', raster: '/maps-pilot/mohali-masterplan.png',
+    dims: { original: { w: 1603, h: 1278 }, threeD: { w: 1448, h: 1086 } },
+    assets: { original: { path: '/maps-pilot/mohali-masterplan.png', w: 1603, h: 1278 }, threeD: { path: '/maps-pilot/mohali-3d.png', w: 1448, h: 1086 } },
+    // Mock mode has no aligned overlay asset → highlights show "Alignment pending".
+    calibration: { status: 'unavailable', overlayViewBox: null, raster: { w: 1603, h: 1278 } },
+    published: true, hidden: false,
     linkedProperties: ['ecocity', 'block5', 'omx'],
     sets: [
       {

@@ -68,12 +68,15 @@ describe('Audited adapter and accessibility boundaries', () => {
     }
   });
 
-  it('loads presentation pins through the map repository and labels mock provenance', () => {
+  it('drives the presentation from the real catalog and places pins only from stored coordinates', () => {
     const source = readFileSync(join(root, 'src/apps/presentation/main.ts'), 'utf8');
+    // Catalog-driven map list; no invented pin coordinates.
     expect(source).toContain('adapter.maps.listRegistry');
-    expect(source).toContain('adapter.maps.get');
     expect(source).not.toContain('PIN_COORDS');
-    expect(source).toContain('not survey coordinates');
+    // The old New Chandigarh placeholder raster must never be referenced again.
+    expect(source).not.toContain('newchandigarh-map.png');
+    // Pins come only from a property's real stored placement.
+    expect(source).toContain('prop.mapPlacement');
   });
 
   it('keeps presentation highlights and pins on the canonical raster transform', () => {

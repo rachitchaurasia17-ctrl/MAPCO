@@ -205,12 +205,14 @@ class SupaDemandSignals implements DemandSignalsRepository {
 function rowToMapMeta(m: Record<string, unknown>): Omit<MapData, 'sets'> {
   const assets = (m.assets as MapData['assets']) ?? {};
   const dims = (m.dims as { original?: { w: number; h: number }; threeD?: { w: number; h: number } }) ?? {};
+  const payload = (m.payload as { calibration?: MapData['calibration'] }) ?? {};
   return {
     id: m.id, kind: m.kind, city: m.city ?? '', sector: m.sector ?? '',
     area: (m.area as string) ?? undefined,
     parentMapId: (m.parent_map_id as string) ?? undefined,
     label: m.label ?? m.area ?? '', raster: assets.original?.path ?? m.raster ?? '',
     assets,
+    calibration: payload.calibration,
     dims: {
       original: dims.original ?? { w: assets.original?.w ?? 0, h: assets.original?.h ?? 0 },
       ...(assets.threeD || dims.threeD ? { threeD: dims.threeD ?? { w: assets.threeD!.w ?? 0, h: assets.threeD!.h ?? 0 } } : {}),

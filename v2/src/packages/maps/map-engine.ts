@@ -145,6 +145,21 @@ export class MapEngine {
     this.paint();
   }
 
+  /** Gently center + zoom onto an intrinsic-coordinate rectangle (e.g. a
+   *  spotlighted SVG sector). Aspect-preserving, clamped so no gutter shows. */
+  focusOn(rect: { x: number; y: number; w: number; h: number }, opts: { maxZoom?: number; pad?: number } = {}): void {
+    if (!this.active || rect.w <= 0 || rect.h <= 0) return;
+    const vp = this.surface.viewport();
+    const base = this.active.coords.baseScale(vp);
+    const pad = opts.pad ?? 0.72;                       // leave breathing room
+    const fitZoom = Math.min(vp.w / (rect.w * base), vp.h / (rect.h * base)) * pad;
+    const z = Math.max(1, Math.min(fitZoom, opts.maxZoom ?? 3));
+    const scale = base * z;
+    const cx = rect.x + rect.w / 2, cy = rect.y + rect.h / 2;
+    this.active.transform = this.active.coords.clampPan(vp, { scale, tx: vp.w / 2 - cx * scale, ty: vp.h / 2 - cy * scale });
+    this.paint();
+  }
+
   private paint(): void {
     if (!this.active) return;
     const { img, transform, coords, entry, mode } = this.active;

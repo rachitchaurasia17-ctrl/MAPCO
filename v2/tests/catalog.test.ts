@@ -21,15 +21,26 @@ describe('mapEntryFromData', () => {
     expect(e.original.src).toContain('original.png');
     expect(e.original.dims).toEqual({ w: 1600, h: 1278 });
     expect(e.threeD?.src).toContain('3d.png');
-    expect(e.overlays).toHaveLength(1);
+    // The authored SVG is exposed as a single inline overlay (not flat-rendered),
+    // and is NOT added to `overlays` (which the engine would flat-render).
+    expect(e.overlays).toHaveLength(0);
+    expect(e.overlay?.src).toContain('overlay.svg');
+    expect(e.overlay?.viewBox).toEqual({ w: 1600, h: 1278 });
     expect(e.linkedPropertyIds).toEqual(['ecocity']);
   });
 
-  it('omits 3D and overlays when absent', () => {
+  it('marks an aligned overlay (viewBox === raster) as calibrated', () => {
+    const e = mapEntryFromData({ ...full, calibration: { status: 'calibrated', overlayViewBox: { w: 1600, h: 1278 } } })!;
+    expect(e.calibration?.status).toBe('calibrated');
+    expect(e.overlay?.status).toBe('calibrated');
+  });
+
+  it('omits 3D and the overlay when absent', () => {
     const e = mapEntryFromData({ id: 's1', kind: 'sector', city: 'Mohali', label: 'S1',
       assets: { original: { path: 'https://x/s1.png', w: 800, h: 600 } } })!;
     expect(e.threeD).toBeUndefined();
     expect(e.overlays).toHaveLength(0);
+    expect(e.overlay).toBeUndefined();
   });
 
   it('links a sector to its parent masterplan', () => {

@@ -170,10 +170,10 @@ describe('MapEngine lifecycle', () => {
     engine.fit();
     const contained = calls.at(-1)!;
     expect(covered.scale).toBeGreaterThan(contained.scale);
-    expect(contained.tx).toBeCloseTo((800 - 1302 * contained.scale) / 2);
-    expect(contained.ty).toBeCloseTo((600 - 962 * contained.scale) / 2);
-    expect(1302 * contained.scale).toBeLessThanOrEqual(800);
-    expect(962 * contained.scale).toBeLessThanOrEqual(600);
+    expect(contained.tx).toBeCloseTo((800 - 1603 * contained.scale) / 2);
+    expect(contained.ty).toBeCloseTo((600 - 1278 * contained.scale) / 2);
+    expect(1603 * contained.scale).toBeLessThanOrEqual(800);
+    expect(1278 * contained.scale).toBeLessThanOrEqual(600);
   });
 
   it('switches Original → 3D → Original without losing the active map', async () => {
@@ -191,7 +191,7 @@ describe('MapEngine lifecycle', () => {
     expect((await engine.setMode('original')).ok).toBe(true);
     expect(engine.activeMode).toBe('original');
     expect(engine.activeMapId).toBe('masterplan-mohali');
-    expect(loaded.some((src) => src.includes('newchandigarh-map'))).toBe(true);
+    expect(loaded.some((src) => src.includes('mohali-masterplan'))).toBe(true);
     expect(loaded.some((src) => src.includes('mohali-3d'))).toBe(true);
   });
 
