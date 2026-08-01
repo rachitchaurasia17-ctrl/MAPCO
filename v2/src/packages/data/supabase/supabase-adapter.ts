@@ -284,7 +284,26 @@ class SupaClientLinks implements ClientLinkRepository {
       const c = await client();
       const { data, error } = await c.rpc('plotmap_list_client_links');
       if (error) return toErr(error);
-      const items = (data ?? []) as ClientLink[];
+      // The list RPC returns {id,label,status,propertyCount,tokenHint,expiresAt,
+      // createdAt,openedAt,lastOpenedAt,hasAudio,events:{opens,audioPlays,calls,
+      // whatsapp,visits}} — map it to the ClientLink shape the dealer pages expect
+      // so rendering never crashes on missing fields (e.g. clientName).
+      const now = Date.now();
+      const items: ClientLink[] = ((data ?? []) as Record<string, unknown>[]).map((r) => {
+        const ev = (r.events as Record<string, number>) ?? {};
+        const exp = r.expiresAt ? Math.max(0, Math.ceil((Date.parse(String(r.expiresAt)) - now) / 86400000)) : null;
+        const last = r.lastOpenedAt ? new Date(String(r.lastOpenedAt)).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'not yet';
+        return {
+          id: String(r.id), clientId: '', clientName: String(r.label ?? 'Client'),
+          props: [], propNames: [], propertyCount: Number(r.propertyCount ?? 0),
+          expiry: exp === null ? '—' : `${exp}d`,
+          loc: 'area', price: 'hidden',
+          audio: r.hasAudio ? 'done' : 'none', audioSecs: 0,
+          status: (r.status as ClientLink['status']) ?? 'active',
+          events: { opens: ev.opens ?? 0, played: ev.audioPlays ?? 0, called: ev.calls ?? 0, wa: ev.whatsapp ?? 0, visit: ev.visits ?? 0 },
+          lastOpen: last,
+        } as ClientLink;
+      });
       return ok({ items, nextCursor: null, total: items.length });
     } catch (e) { return toErr(e); }
   }

@@ -267,7 +267,34 @@ masterplan loads, no console errors).
   the browser/Vercel env by design.
 - Gate: tsc clean, **80/80 tests**, build OK (13 HTML entries in dist). No secrets committed.
 
-## 7. NEXT MILESTONE — Map Studio polish + dealer-app real-data wiring
+## 6g. Dealer pages stuck/blank in supabase mode — FIXED (session 8)
+
+Symptom: after login on the deployed build, Dealer Home stuck on "Loading…", Client Links blank.
+Diagnosis (deployed/supabase mode, real dealer session): the raw REST/RPC calls responded fine
+(~360ms) but the adapter methods hung with **no network request and no error** — while the
+presentation (which never calls `getSession()`) worked in the same build+session. Root causes:
+
+1. **Auth-lock deadlock (the hang).** `requireSession()` called `supabase.auth.getSession()`
+   before the page's data calls, deadlocking supabase-js's `navigator.locks` auth lock so every
+   later `.from()/.rpc()` hung forever. **Fix:** gate on the persisted `sb-<ref>-auth-token` in
+   localStorage directly (no `getSession()`), and **reload after login** so data calls run on a
+   clean page — the same pattern the working presentation uses. Also pass a no-op `auth.lock` to
+   the client as defence-in-depth (`packages/data/supabase/client.ts`).
+2. **Client-links shape mismatch (the blank Links page).** `clientLinks.list` cast the list RPC
+   output (`{label,propertyCount,events:{...}}`) straight to `ClientLink`, so `getInitials(link.
+   clientName)` threw. **Fix:** proper mapper (label→clientName, events remap, `propertyCount`,
+   expiry from `expiresAt`); `ClientLink` gained `propertyCount?`.
+3. **Empty-data crash (Home).** The donut read `stats.segs[0].pct` with 0 `presentation_events`
+   → threw. **Fix:** guard `segs[0]?.pct ?? 0` / `?? 'No activity yet'`.
+4. **Robust states.** Home now handles loading / success / empty / **session-expiry** (`unauthorized`
+   → "Sign in again" via `?signout`) / error, with a 12s hard-timeout safety net and a render
+   try/catch. No permanent loading screens.
+
+Browser-verified in supabase mode with a real dealer session: **Home, Client Links, Properties,
+Deals, Customers all render real data**, no console errors, navigation + refresh work. Mock mode
+still works; tsc clean; **80/80 tests**; build OK.
+
+## 7. NEXT MILESTONE — Map Studio polish + remaining dealer-app data accuracy
 
 The linked model + Map Studio RPCs + Storage are proven. Next:
 1. **Batch-onboard the rest of Tri-City** (see `v2/MAP_LIBRARY_INVENTORY.md`): a script that

@@ -64,11 +64,29 @@ function renderLogin(mount: HTMLElement, onReady: () => void): void {
     errEl.style.display = 'none';
     btn.disabled = true; btn.textContent = 'Signing in…';
     const res = await signIn(email, password);
-    if (res.ok) { onReady(); return; }
+    // Reload so data calls run on a clean page load where the session is simply
+    // read from storage — the same pattern the (working) presentation uses.
+    // Calling adapter methods in the same tick as signIn/getSession deadlocks
+    // supabase-js's auth lock and leaves dealer pages stuck on "Loading…".
+    if (res.ok) { location.reload(); return; }
     errEl.textContent = res.error ?? 'Sign in failed'; errEl.style.display = 'block';
     btn.disabled = false; btn.textContent = 'Sign in';
   });
   mount.querySelector<HTMLInputElement>('#pm-email')!.focus();
+}
+
+/** supabase-js persists the session under sb-<ref>-auth-token. Read it directly
+ *  (no getSession() auth call) so the gate never touches the auth lock. */
+function persistedSessionValid(): boolean {
+  try {
+    const env = (import.meta as { env?: Record<string, string | undefined> }).env ?? {};
+    const ref = (env.VITE_SUPABASE_URL ?? '').match(/https:\/\/([a-z0-9-]+)\.supabase\.co/)?.[1];
+    if (!ref) return false;
+    const raw = localStorage.getItem(`sb-${ref}-auth-token`);
+    if (!raw) return false;
+    const s = JSON.parse(raw);
+    return !!s?.access_token && (!s.expires_at || s.expires_at * 1000 > Date.now() + 5000);
+  } catch { return false; }
 }
 
 /** Gate protected routes: in supabase mode, require a session first.
@@ -79,7 +97,11 @@ export async function requireSession(mount: HTMLElement, onReady: () => void): P
     const c = await getSupabase();
     if (c) await c.auth.signOut();
     history.replaceState(null, '', location.pathname);
+    renderLogin(mount, onReady);
+    return;
   }
-  if (await getSession()) { onReady(); return; }
+  // Gate on the persisted token only — do NOT call getSession() here; it would
+  // poison supabase-js's auth lock and hang the page's first data calls.
+  if (persistedSessionValid()) { onReady(); return; }
   renderLogin(mount, onReady);
 }

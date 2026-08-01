@@ -3,6 +3,9 @@ import { formatDateShort, formatINR } from '../../../packages/ui/utils';
 import { adapter } from '../../../packages/data/adapter';
 import type { WantType } from '../../../packages/data/types';
 
+const errorState = (msg: string): string =>
+  `<div role="alert" style="max-width:1120px;margin:34px auto;padding:24px 26px;border-radius:18px;background:#ffe1e6;color:#9f2446;font-size:15px;line-height:1.5">${msg}</div>`;
+
 const WANTS: WantType[] = ['Plot', 'Flat', 'Kothi', 'Villa', 'Commercial'];
 const PIE_COLORS = ['#f4ae14', '#6b3fd4', '#1b7a46', '#fb923c', '#c2185b', '#1f6f6b', '#e6cf9a'];
 
@@ -16,16 +19,30 @@ export async function renderHome(container: HTMLElement) {
   else if (h >= 17) greeting = 'Good evening';
 
   container.innerHTML = '<div role="status" aria-live="polite" style="max-width:1120px;margin:0 auto;padding:40px;color:#6b6156">Loading your presentation activity…</div>';
-  const [signalsResult, linksResult, propertiesResult] = await Promise.all([
-    adapter.demandSignals.get(),
-    adapter.clientLinks.list({ limit: 100 }),
-    adapter.properties.list({ limit: 100 }),
+  // A hard timeout guarantees the page never hangs forever if a call stalls.
+  const withTimeout = <T,>(p: Promise<T>): Promise<T> => Promise.race([
+    p, new Promise<T>((_, rej) => setTimeout(() => rej(new Error('timeout')), 12000)),
   ]);
+  let signalsResult, linksResult, propertiesResult;
+  try {
+    [signalsResult, linksResult, propertiesResult] = await Promise.all([
+      withTimeout(adapter.demandSignals.get()),
+      withTimeout(adapter.clientLinks.list({ limit: 100 })),
+      withTimeout(adapter.properties.list({ limit: 100 })),
+    ]);
+  } catch {
+    container.innerHTML = errorState('We could not reach your dashboard. Check your connection and refresh.');
+    return;
+  }
   if (!signalsResult.ok || !linksResult.ok || !propertiesResult.ok) {
-    container.innerHTML = '<div role="alert" style="max-width:1120px;margin:34px auto;padding:24px 26px;border-radius:18px;background:#ffe1e6;color:#9f2446">Your dashboard activity could not be loaded.</div>';
+    const unauth = [signalsResult, linksResult, propertiesResult].some((r) => !r.ok && r.error.code === 'unauthorized');
+    container.innerHTML = unauth
+      ? errorState('Your session has expired. <a href="?signout" style="color:#5b32c4;font-weight:800">Sign in again</a>.')
+      : errorState('Your dashboard activity could not be loaded. Please refresh.');
     return;
   }
 
+  try {
   const signals = [...signalsResult.value].sort((a, b) => b.opens - a.opens);
   const links = linksResult.value.items;
   const properties = propertiesResult.value.items;
@@ -144,8 +161,8 @@ export async function renderHome(container: HTMLElement) {
                   `).join('')}
                 </svg>
                 <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none">
-                  <div style="font-family:'Newsreader',serif;font-weight:600;font-size:30px;line-height:1;color:#241f1c">${stats.segs[0].pct}%</div>
-                  <div style="font-size:11.5px;font-weight:800;color:#8a6a14;text-align:center;max-width:96px;line-height:1.25;margin-top:3px">${stats.segs[0].city}</div>
+                  <div style="font-family:'Newsreader',serif;font-weight:600;font-size:30px;line-height:1;color:#241f1c">${stats.segs[0]?.pct ?? 0}%</div>
+                  <div style="font-size:11.5px;font-weight:800;color:#8a6a14;text-align:center;max-width:96px;line-height:1.25;margin-top:3px">${stats.segs[0]?.city ?? 'No activity yet'}</div>
                 </div>
               </div>
               <div style="flex:1 1 150px;min-width:0;display:flex;flex-direction:column;gap:8px">
@@ -240,6 +257,10 @@ export async function renderHome(container: HTMLElement) {
           `).join('')}
         </div>
       </div>
-      
+
   `;
+  } catch {
+    container.innerHTML = errorState('Something went wrong showing your dashboard. Please refresh.');
+  }
 }
+

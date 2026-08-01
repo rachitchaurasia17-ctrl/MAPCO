@@ -68,6 +68,8 @@ export interface ClientLink {
   clientName: string;
   props: string[];
   propNames: string[];
+  /** count of plots on the link when the ids aren't returned (Supabase list RPC). */
+  propertyCount?: number;
   expiry: string;
   loc: LocationVisibility;
   price: PriceVisibility;

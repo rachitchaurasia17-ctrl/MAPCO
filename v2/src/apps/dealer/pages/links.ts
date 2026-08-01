@@ -37,9 +37,10 @@ export async function renderLinks(el: HTMLElement): Promise<void> {
     const firstProperty = link.props.length === 1
       ? properties.find((item) => item.id === link.props[0])
       : undefined;
+    const plotCount = link.props.length || link.propertyCount || 0;
     const plotsText = firstProperty
       ? `${firstProperty.type} · ${firstProperty.loc}`
-      : `${link.props.length} ${link.props.length === 1 ? 'plot' : 'plots'} in this link`;
+      : `${plotCount} ${plotCount === 1 ? 'plot' : 'plots'} in this link`;
     return `<article style="background:#faf7ff;border:1px solid #e4dbf7;border-radius:20px;padding:20px 22px;box-shadow:0 1px 2px rgba(30,28,22,.03),0 16px 34px -28px rgba(30,28,22,.7)">
       <div style="display:flex;align-items:center;gap:14px"><div style="width:48px;height:48px;border-radius:50%;background:#efe8fb;color:#6b3fd4;display:grid;place-items:center;font-size:16px;font-weight:800;flex:none">${getInitials(link.clientName)}</div><div style="flex:1;min-width:0"><div style="font-size:19px;font-weight:800;color:#241f1c">${esc(link.clientName)}</div><div style="font-size:13.5px;color:#8d8271">Sent ${created} · expires ${esc(link.expiry)}</div></div><div style="text-align:right;flex:none"><div style="font-family:'Newsreader',serif;font-weight:600;font-size:26px;color:#241f1c">${link.events.opens} ${link.events.opens === 1 ? 'open' : 'opens'}</div><div style="font-size:12.5px;color:#8d8271">Last: ${esc(link.lastOpen)}</div></div><span style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:800;${active ? 'background:#d9f5e3;color:#0b8f45' : 'background:#f3eeff;color:#8a7a52'}">${active ? 'Live' : titleCase(link.status)}</span></div>
       <div style="font-size:15px;font-weight:700;color:#4c463d;margin-top:14px">${esc(plotsText)}</div><div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:9px">${propChips}</div>
