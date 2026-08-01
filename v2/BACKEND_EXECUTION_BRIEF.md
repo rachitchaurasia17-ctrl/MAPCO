@@ -355,9 +355,37 @@ grouped picker with no placeholder, **zero console errors**. Highlight alignment
 against the live public overlay (raster 1603×1278 === viewBox, 80 sector shapes, sector 66 bbox
 inside frame). Final on-screen visual approval is the founder's (supabase mode, real login).
 
+## 6j. MAPCO rebrand + premium highlights + Map Studio + send-link (session 10) — DONE
+
+Big founder pass (12 items), all committed + pushed to `feat/mapco-v2-backend`.
+- **Rebrand → MAPCO** everywhere (logo `v2/public/assets/mapco-logo.png`; Client
+  Presentation shows the logo, name removed). RPC names `plotmap_*`/route unchanged.
+- **Client Presentation controls:** Original+3D → one cycling button (default Original);
+  right-rail ×-hide + reopen chip; smoother eased zoom (instant pan mid-drag).
+- **Premium highlight renderer** (`svg-overlay.ts`, the blueprint): dimming mask, 3D
+  extruded blocks, glowing flow-roads, hit layer. Tap roads/blocks on the Original map
+  to highlight instantly, multi-select. Uses the real aligned SVG paths.
+- **Map Studio rebuild** (3 flows): Publish Masterplan = click shapes → name + save
+  highlight **sets** (delete any); Publish Sector Map = drop pin → link a plot; Manage
+  Published = linked plots + unlink/link/unpublish. Backend migration
+  `20260802000100_highlight_sets_and_unlink` (plotmap_save/delete/dealer_overlays +
+  unlink_property). Per-dealer. Verified live.
+- **Cycling Highlights button** in presentation plays saved sets (published overlays).
+- **Sector maps tab** now lists the whole real catalog; tap opens the map.
+- **Team Workspace Properties** fixed (defensive array spread + empty/error states).
+- **Unified property detail** (`packages/ui/property-detail.ts`, price + Edit) opened
+  from Home hot cards in-place. **Gold glow** (`.pm-hot-glow`) on hot properties + hot clients.
+- **Send-Link** now real: migration `20260802000200` grants create/revoke/extend to
+  authenticated; adapter create()/revoke() (audio upload to client-link-audio bucket);
+  GenerateLinkFlow rebuilt (customer + 1–4 plots, price/location visibility, expiry,
+  MediaRecorder voice note w/ playback, Preview, real shareable URL + copy + WhatsApp);
+  "Stop this link" revokes. Verified live (create→64-hex token, revoke ok).
+- Gate each phase: tsc clean, 81/81 tests, build OK. Browser testing deferred to founder
+  (visual approval) per instruction.
+
 ## 7. NEXT MILESTONE — Client Presentation highlight system + SVG calibration (full spec captured)
 
-> **Status: implemented in §6i above.** The spec below is retained for reference.
+> **Status: implemented in §6i + §6j above.** The spec below is retained for reference.
 
 
 Founder spec (2026-08-01), to build next. Do NOT enable highlights while misaligned.
