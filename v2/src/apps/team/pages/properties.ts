@@ -9,9 +9,12 @@ const propertyTypes: PropertyType[] = ['Residential Plot', 'Flat', 'Floor', 'Kot
 
 export async function renderTeamProperties(el: HTMLElement, openAddInitially = false) {
   const res = await adapter.properties.list({ limit: 100 });
+  // Defensive: supabase payloads may omit these arrays — spreading undefined
+  // would throw and blank the whole section.
   let properties: Property[] = res.ok
-    ? res.value.items.map((property) => ({ ...property, photos: [...property.photos], approvals: [...property.approvals], landmarks: [...property.landmarks] }))
+    ? res.value.items.map((property) => ({ ...property, photos: [...(property.photos ?? [])], approvals: [...(property.approvals ?? [])], landmarks: [...(property.landmarks ?? [])] }))
     : [];
+  const loadFailed = !res.ok;
   let selectedId: string | null = null;
   let addOpen = openAddInitially;
 
@@ -22,9 +25,13 @@ export async function renderTeamProperties(el: HTMLElement, openAddInitially = f
           <div><h1 style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:38px;letter-spacing:-.02em">Properties</h1><p style="margin:9px 0 0;font-size:16.5px;color:#6b6156">Everything the team has entered. Toggle a plot to put it on the client screen.</p></div>
           <button data-action="add" style="display:flex;align-items:center;gap:9px;padding:14px 20px;border-radius:14px;background:#ffc93c;color:#1f1a12;font-size:15.5px;font-weight:800;box-shadow:0 14px 26px -16px rgba(168,121,42,.9)"><i class="ph-bold ph-plus"></i>Add a property</button>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-top:26px">
-          ${properties.map((property) => propertyCard(property)).join('')}
-        </div>
+        ${loadFailed
+          ? `<div style="margin-top:40px;padding:40px;text-align:center;background:#fffaf0;border:1px solid #ddd2f5;border-radius:20px;color:#8d8271"><i class="ph-fill ph-warning-circle" style="font-size:34px;color:#c2622a;display:block;margin-bottom:10px"></i>Could not load properties. Check the connection and refresh.</div>`
+          : properties.length === 0
+            ? `<div style="margin-top:40px;padding:44px;text-align:center;background:#fffaf0;border:1px solid #ddd2f5;border-radius:20px;color:#8d8271"><i class="ph-fill ph-buildings" style="font-size:36px;color:#b5924a;display:block;margin-bottom:10px"></i>No properties yet. Use “Add a property” to enter your first plot.</div>`
+            : `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-top:26px">
+                ${properties.map((property) => propertyCard(property)).join('')}
+              </div>`}
       </div>
       ${addOpen ? addDialog() : selectedId ? editDialog(properties.find((property) => property.id === selectedId)!) : ''}
     `;

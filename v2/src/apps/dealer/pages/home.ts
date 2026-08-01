@@ -1,6 +1,7 @@
 import { getProfile } from '../../../packages/auth/auth';
 import { formatDateShort, formatINR } from '../../../packages/ui/utils';
 import { adapter } from '../../../packages/data/adapter';
+import { openPropertyDetail } from '../../../packages/ui/property-detail';
 import type { WantType } from '../../../packages/data/types';
 
 const errorState = (msg: string): string =>
@@ -102,6 +103,7 @@ export async function renderHome(container: HTMLElement) {
     })(),
     attentionRows: properties.filter((property) => !property.sold).sort((a, b) => b.views - a.views).slice(0, 5).map((property, index) => ({
       id: property.id,
+      hot: index < 3 && property.views > 0,
       rank: `#${index + 1}`,
       rankStyle: 'position:absolute;top:8px;left:8px;display:grid;place-items:center;min-width:26px;height:26px;padding:0 7px;border-radius:9px;background:rgba(255,253,247,.94);color:#241d0c;font-size:12.5px;font-weight:800',
       cardStyle: 'min-width:0;background:#faf7ff;border:1.5px solid #e4dbf7;border-radius:18px;overflow:hidden;cursor:pointer;text-align:left;box-shadow:0 1px 2px rgba(30,28,22,.03),0 14px 32px -26px rgba(30,28,22,.7);transition:transform .14s',
@@ -240,8 +242,9 @@ export async function renderHome(container: HTMLElement) {
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:12px;animation:omRise .6s cubic-bezier(.2,.8,.2,1) both;animation-delay:.14s">
           ${stats.attentionRows.map((a: any) => `
-            <button class="pm-hover-card" style="${a.cardStyle}" >
+            <button class="pm-hover-card${a.hot ? ' pm-hot-glow' : ''}" data-prop-id="${a.id}" style="${a.cardStyle}" >
               <span style="${a.photoStyle}">
+                ${a.hot ? '<span style="position:absolute;top:8px;right:8px;z-index:2;display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:999px;background:#f4ae14;color:#241d0c;font-size:11px;font-weight:800"><i class="ph-fill ph-fire" style="font-size:12px"></i>HOT</span>' : ''}
                 <span style="${a.rankStyle}">${a.rank}</span>
                 <span style="position:absolute;left:0;right:0;bottom:0;padding:22px 10px 9px;background:linear-gradient(180deg,rgba(20,14,2,0),rgba(20,14,2,.86));display:flex;align-items:flex-end;justify-content:space-between;gap:6px">
                   <span style="font-family:'Newsreader',serif;font-weight:600;font-size:23px;line-height:1;color:#ffd75e">${a.views}</span>
@@ -259,6 +262,14 @@ export async function renderHome(container: HTMLElement) {
       </div>
 
   `;
+    // Clicking a hot/attention plot opens the SAME full detail as Client
+    // Presentation, but internal (price + Edit). No page redirect.
+    container.addEventListener('click', (e) => {
+      const card = (e.target as HTMLElement).closest<HTMLElement>('[data-prop-id]');
+      if (!card) return;
+      const prop = properties.find((p) => p.id === card.dataset.propId);
+      if (prop) openPropertyDetail(prop, { onEdit: () => window.location.assign('/admin/properties.html') });
+    });
   } catch {
     container.innerHTML = errorState('Something went wrong showing your dashboard. Please refresh.');
   }

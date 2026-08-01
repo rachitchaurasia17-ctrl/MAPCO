@@ -491,20 +491,37 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
         </div>
       `;
     } else if (view === 'sectors') {
-      const cities = ['All', ...new Set(SECTORS.map((sector) => sector.city))];
+      // ALL maps in the catalog, grouped by city; tap a card to open that map.
+      const byCity = new Map<string, MapEntry[]>();
+      for (const m of maps) { const c = m.city || 'Other'; const a = byCity.get(c); if (a) a.push(m); else byCity.set(c, [m]); }
+      const plotCount = (mapId: string) => props.filter((p) => p.mapPlacement?.mapId === mapId).length;
+      const cityBlocks = [...byCity.keys()].sort().map((city) => {
+        const cityMaps = [...byCity.get(city)!].sort((a, b) => (a.kind === 'masterplan' ? -1 : 1) - (b.kind === 'masterplan' ? -1 : 1));
+        return `<div style="margin-top:26px">
+          <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#a8792a;margin-bottom:12px">${esc(city)} <span style="color:#8d8271">· ${cityMaps.length} map${cityMaps.length === 1 ? '' : 's'}</span></div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(266px,1fr));gap:18px">
+            ${cityMaps.map((m) => {
+              const raster = m.original?.src || '';
+              const n = plotCount(m.id);
+              const isActive = m.id === activeMapId;
+              return `<button data-act="pick-map" data-id="${esc(m.id)}" style="display:flex;flex-direction:column;overflow:hidden;border-radius:20px;background:#fffdf9;box-shadow:0 0 0 ${isActive ? '2px #ffc21e' : '1px rgba(88,52,168,.1)'},0 24px 46px -36px rgba(60,40,5,.8);cursor:pointer;text-align:left;transition:transform .18s" onmouseenter="this.style.transform='translateY(-5px)'" onmouseleave="this.style.transform='none'">
+                <span style="position:relative;display:block;height:160px;background:#0b0714 ${raster ? `url('${esc(raster)}') center/cover` : ''}">
+                  <span style="position:absolute;top:12px;left:12px;padding:5px 10px;border-radius:8px;background:rgba(28,21,51,.72);backdrop-filter:blur(8px);font-size:11.5px;font-weight:800;color:#fff8e6">${m.kind === 'masterplan' ? 'Masterplan' : 'Sector'}</span>
+                  ${n ? `<span style="position:absolute;right:12px;bottom:12px;display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;background:#2f7bff;font-size:12px;font-weight:800;color:#fff"><i class="ph-fill ph-map-pin" style="font-size:12px"></i>${n} plot${n === 1 ? '' : 's'}</span>` : ''}
+                </span>
+                <span style="display:block;padding:16px 18px 18px">
+                  <span style="display:block;font-family:'Newsreader',serif;font-weight:500;font-size:23px;letter-spacing:-.02em;color:#1c1533;line-height:1.1">${esc(m.title)}</span>
+                  <span style="display:flex;align-items:center;gap:7px;margin-top:12px;font-size:14px;font-weight:800;color:#8a5a0c">${isActive ? 'Showing now' : 'Open this map'} <i class="ph-bold ph-arrow-right" style="font-size:14px"></i></span>
+                </span></button>`;
+            }).join('')}
+          </div></div>`;
+      }).join('');
       grid.innerHTML = `
         <div style="position:absolute;inset:0;overflow-y:auto;background:#f5efff;background-image:radial-gradient(62% 50% at -2% -4%,rgba(139,96,232,.5),transparent 62%),radial-gradient(54% 44% at 101% 4%,rgba(56,138,186,.4),transparent 62%),radial-gradient(66% 48% at 46% 108%,rgba(255,190,48,.44),transparent 64%),radial-gradient(40% 34% at 86% 66%,rgba(236,120,168,.22),transparent 68%)">
-          <div style="max-width:1260px;margin:0 auto;padding:84px 34px 56px">
-            <div style="display:flex;gap:8px;flex-wrap:wrap;animation:rowIn .45s ease both">
-              ${cities.map((cityName, index) => `<button style="display:flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:10px;font-size:14px;font-weight:800;white-space:nowrap;${index === 0 ? 'background:#2a1f4d;color:#ffd75e;box-shadow:0 10px 20px -12px rgba(42,31,77,.9)' : 'background:rgba(255,253,249,.86);color:#5c5474;box-shadow:inset 0 0 0 1px rgba(88,52,168,.16)'}">${cityName === 'All' ? 'All cities' : esc(cityName)}<span style="padding:2px 7px;border-radius:6px;font-size:11.5px;font-weight:800;${index === 0 ? 'background:rgba(255,215,94,.2);color:#ffd75e' : 'background:rgba(88,52,168,.09);color:#7a6f96'}">${cityName === 'All' ? SECTORS.length : SECTORS.filter((sector) => sector.city === cityName).length}</span></button>`).join('')}
-            </div>
-            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(288px,1fr));gap:20px;margin-top:22px">
-              ${SECTORS.map((sector, index) => `
-                <button data-act="open-sec" data-id="${sector.id}" style="display:flex;flex-direction:column;overflow:hidden;border-radius:20px;background:#fffdf9;box-shadow:0 0 0 1px rgba(88,52,168,.09),0 1px 2px rgba(40,26,2,.05),0 26px 50px -38px rgba(60,40,5,.9);transition:transform .34s cubic-bezier(.2,.8,.2,1),box-shadow .34s;cursor:pointer;text-align:left">
-                  <span style="position:relative;display:block;height:172px;overflow:hidden"><span style="position:absolute;inset:0;display:block;${motifStyle(index)}"></span><span style="position:absolute;top:13px;left:13px;padding:6px 11px;border-radius:8px;background:rgba(28,21,51,.72);backdrop-filter:blur(10px);font-size:12px;font-weight:800;color:#fff8e6">${esc(sector.city)}</span>${sector.propertyIds.length ? `<span style="position:absolute;right:13px;bottom:13px;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:#ffc21e;font-size:12px;font-weight:800;color:#231a04"><i class="ph-fill ph-map-pin-area" style="font-size:13px"></i>${sector.propertyIds.length} ${sector.propertyIds.length === 1 ? 'plot' : 'plots'} of ours</span>` : ''}</span>
-                  <span style="display:block;padding:18px 20px 20px;text-align:left"><span style="display:block;font-family:'Newsreader',serif;font-weight:500;font-size:26px;letter-spacing:-.025em;color:#1c1533;line-height:1.06">${esc(sector.name)}</span><span style="display:block;margin-top:5px;font-size:14px;font-weight:600;color:#6f6489">${esc(sector.sub)}</span><span style="display:flex;align-items:center;gap:8px;margin-top:16px;font-size:15px;font-weight:800;color:#8a5a0c">Open the layout <i class="ph-bold ph-arrow-right" style="font-size:15px"></i></span></span>
-                </button>`).join('')}
-            </div>
+          <div style="max-width:1260px;margin:0 auto;padding:80px 34px 56px">
+            <h2 style="font-family:'Newsreader',serif;font-weight:500;font-size:30px;color:#1c1533;margin:0">All maps</h2>
+            <p style="margin:6px 0 0;font-size:14px;color:#6f6489">Every published map — tap one to show it on the main screen.</p>
+            ${cityBlocks || '<div style="margin-top:24px;color:#6f6489">No maps published yet.</div>'}
           </div>
         </div>`;
     }
@@ -679,8 +696,7 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
         if (t.dataset.id === activeMapId) { mapsOpen = false; renderTopbar(); break; }
         activeMapId = t.dataset.id!; mapsOpen = false; mode = 'original';
         activeSetIndex = -1; pendingSpotQuery = null;
-        const m = maps.find((x) => x.id === activeMapId);
-        view = m?.kind === 'sector' ? 'sectors' : 'masterplan';
+        view = 'masterplan'; // show the chosen map on the main stage
         void loadSavedSets(activeMapId);
         renderTopbar(); renderMapControls(); void applyMap(); break;
       }
