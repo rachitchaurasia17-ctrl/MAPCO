@@ -1,4 +1,7 @@
+import '../../packages/ui/tokens.css';
+import '../../packages/ui/reset.css';
 import { initDealerShell } from './shell';
+import { requireSession } from '../../packages/data/session';
 
 const pathMap: Record<string, string> = {
   '/admin/owner.html': 'areas',
@@ -20,5 +23,6 @@ const section = HASH_SECTIONS.has(hash) ? hash : (pathMap[path] || 'areas');
 
 const app = document.getElementById('app');
 if (app) {
-  initDealerShell(app, section);
+  // supabase mode → login gate; mock mode → straight through.
+  void requireSession(app, () => initDealerShell(app, section));
 }

@@ -242,7 +242,32 @@ masterplan loads, no console errors).
   9 published masterplans, 72 draft sectors.
 - **Tests:** +8 bridge unit tests (`tests/catalog.test.ts`) → **80/80**; live **36/36**.
 
-## 7. NEXT MILESTONE — Map Studio UI + remaining polish
+## 6f. Map Studio + dealer login + Vercel setup (session 7) — DONE
+
+- **Dealer login/session** (`packages/data/session.ts`): real Supabase email/password
+  (`signIn`/`signOut`/`getSession`) + `requireSession()` gate. In supabase mode the dealer
+  app shows a login card until signed in; mock mode passes straight through. Wired into
+  `apps/team/main.ts` + `apps/dealer/main.ts`. `?signout` on any dealer URL clears the session.
+  This is what makes the deployed app usable end to end.
+- **Map Studio data layer** (`packages/data/map-studio.ts`): `getMapStudio()` → Supabase repo
+  over the real RPCs (`plotmap_dealer_maps` / `_set_map_status` / `_link_property_to_map`) with a
+  mock fixture fallback. Throw-free.
+- **Map Studio UI** (`apps/team/pages/map-studio.ts`, route `/admin/map-studio.html`): two-panel
+  studio — left tree grouped by **city → masterplan → sector** with state chips + state filter;
+  right detail with **Original/3D/overlay preview** (overlay overlaid on the raster for alignment
+  checks), **asset checklist** (missing-asset + unknown-dimension flags), parent-masterplan link
+  (flags orphan sectors), **Publish / Hide / Archive / Restore**, and **Link a plot + Place pin**
+  (click-to-drop normalized 0–1 coordinate). Low-jargon copy; delegated listeners; violet tokens.
+- **Verified (data level, real dealer session):** dealer maps list (all states); publish a draft
+  **sector → it appears in `plotmap_published_maps`** (would show in the presentation); link+place a
+  property (placement persisted); reverted cleanly. Existing live suite still 36/36.
+- **Vercel setup for self-serve visual testing:** `v2/vercel.json` (Vite build, security headers,
+  `/client` noindex/no-referrer) + `v2/DEPLOY_VERCEL.md` (dashboard + CLI paths, Root Dir `v2`,
+  env vars incl. `VITE_DATA_MODE=supabase`, demo login + `?signout`). Service-role key never in
+  the browser/Vercel env by design.
+- Gate: tsc clean, **80/80 tests**, build OK (13 HTML entries in dist). No secrets committed.
+
+## 7. NEXT MILESTONE — Map Studio polish + dealer-app real-data wiring
 
 The linked model + Map Studio RPCs + Storage are proven. Next:
 1. **Batch-onboard the rest of Tri-City** (see `v2/MAP_LIBRARY_INVENTORY.md`): a script that
