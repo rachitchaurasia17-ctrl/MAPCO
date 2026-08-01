@@ -28,6 +28,25 @@ export interface StudioMap {
 
 export interface StudioResult<T> { ok: boolean; data?: T; error?: string; }
 
+/** A saved highlight combination on a masterplan (one state of the cycling
+ *  Highlights button in Client Presentation). */
+export interface HighlightSet {
+  id: string;
+  mapId: string;
+  name: string;
+  itemIds: string[];
+  accent: string;
+}
+
+function rowToHighlightSet(m: Record<string, unknown>): HighlightSet {
+  const p = (m.payload as { itemIds?: unknown[]; accent?: string }) ?? {};
+  return {
+    id: String(m.id), mapId: String(m.map_id ?? ''), name: (m.name as string) ?? 'Highlights',
+    itemIds: (p.itemIds ?? []).filter((x): x is string => typeof x === 'string'),
+    accent: p.accent ?? '#F59E0B',
+  };
+}
+
 function rowToStudioMap(m: Record<string, unknown>): StudioMap {
   const status = ((m.deleted ? 'archived' : m.status) as MapStatus) ?? 'draft';
   return {
@@ -50,6 +69,10 @@ export interface MapStudioRepo {
   listMaps(): Promise<StudioResult<StudioMap[]>>;
   setStatus(id: string, status: MapStatus, clientVisible?: boolean): Promise<StudioResult<StudioMap>>;
   linkProperty(propertyId: string, mapId: string, x?: number, y?: number): Promise<StudioResult<void>>;
+  unlinkProperty(propertyId: string): Promise<StudioResult<void>>;
+  listHighlightSets(mapId: string): Promise<StudioResult<HighlightSet[]>>;
+  saveHighlightSet(set: { id?: string; mapId: string; name: string; itemIds: string[]; accent?: string }): Promise<StudioResult<HighlightSet>>;
+  deleteHighlightSet(id: string): Promise<StudioResult<void>>;
 }
 
 class SupabaseMapStudio implements MapStudioRepo {
@@ -77,10 +100,45 @@ class SupabaseMapStudio implements MapStudioRepo {
       return { ok: true };
     } catch (e) { return { ok: false, error: (e as Error).message }; }
   }
+  async unlinkProperty(propertyId: string): Promise<StudioResult<void>> {
+    try {
+      const c = await getSupabase(); if (!c) return { ok: false, error: 'not configured' };
+      const { error } = await c.rpc('plotmap_unlink_property_from_map', { p_property_id: propertyId });
+      if (error) return { ok: false, error: error.message };
+      return { ok: true };
+    } catch (e) { return { ok: false, error: (e as Error).message }; }
+  }
+  async listHighlightSets(mapId: string): Promise<StudioResult<HighlightSet[]>> {
+    try {
+      const c = await getSupabase(); if (!c) return { ok: false, error: 'not configured' };
+      const { data, error } = await c.rpc('plotmap_dealer_overlays', { p_map_id: mapId });
+      if (error) return { ok: false, error: error.message };
+      const rows = ((data ?? []) as Record<string, unknown>[]).filter((r) => r.kind === 'highlight-set');
+      return { ok: true, data: rows.map(rowToHighlightSet) };
+    } catch (e) { return { ok: false, error: (e as Error).message }; }
+  }
+  async saveHighlightSet(set: { id?: string; mapId: string; name: string; itemIds: string[]; accent?: string }): Promise<StudioResult<HighlightSet>> {
+    try {
+      const c = await getSupabase(); if (!c) return { ok: false, error: 'not configured' };
+      const { data, error } = await c.rpc('plotmap_save_highlight_set', { p_payload: { id: set.id, mapId: set.mapId, name: set.name, itemIds: set.itemIds, accent: set.accent ?? '#F59E0B' } });
+      if (error) return { ok: false, error: error.message };
+      return { ok: true, data: data ? rowToHighlightSet(data as Record<string, unknown>) : undefined };
+    } catch (e) { return { ok: false, error: (e as Error).message }; }
+  }
+  async deleteHighlightSet(id: string): Promise<StudioResult<void>> {
+    try {
+      const c = await getSupabase(); if (!c) return { ok: false, error: 'not configured' };
+      const { error } = await c.rpc('plotmap_delete_highlight_set', { p_id: id });
+      if (error) return { ok: false, error: error.message };
+      return { ok: true };
+    } catch (e) { return { ok: false, error: (e as Error).message }; }
+  }
 }
 
 class MockMapStudio implements MapStudioRepo {
   private maps = MOCK.map((m) => ({ ...m }));
+  private sets: HighlightSet[] = [];
+  private seq = 0;
   async listMaps(): Promise<StudioResult<StudioMap[]>> { return { ok: true, data: this.maps.map((m) => ({ ...m })) }; }
   async setStatus(id: string, status: MapStatus, clientVisible?: boolean): Promise<StudioResult<StudioMap>> {
     const m = this.maps.find((x) => x.id === id);
@@ -90,6 +148,21 @@ class MockMapStudio implements MapStudioRepo {
     return { ok: true, data: { ...m } };
   }
   async linkProperty(): Promise<StudioResult<void>> { return { ok: true }; }
+  async unlinkProperty(): Promise<StudioResult<void>> { return { ok: true }; }
+  async listHighlightSets(mapId: string): Promise<StudioResult<HighlightSet[]>> {
+    return { ok: true, data: this.sets.filter((s) => s.mapId === mapId).map((s) => ({ ...s })) };
+  }
+  async saveHighlightSet(set: { id?: string; mapId: string; name: string; itemIds: string[]; accent?: string }): Promise<StudioResult<HighlightSet>> {
+    const id = set.id ?? `hlset-mock-${++this.seq}`;
+    const row: HighlightSet = { id, mapId: set.mapId, name: set.name, itemIds: [...set.itemIds], accent: set.accent ?? '#F59E0B' };
+    const i = this.sets.findIndex((s) => s.id === id);
+    if (i >= 0) this.sets[i] = row; else this.sets.push(row);
+    return { ok: true, data: { ...row } };
+  }
+  async deleteHighlightSet(id: string): Promise<StudioResult<void>> {
+    this.sets = this.sets.filter((s) => s.id !== id);
+    return { ok: true };
+  }
 }
 
 export function getMapStudio(): MapStudioRepo {

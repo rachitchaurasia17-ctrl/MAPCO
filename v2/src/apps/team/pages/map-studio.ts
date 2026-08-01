@@ -1,23 +1,23 @@
 /* ═══════════════════════════════════════════════════════════════
-   MAPCO V2 — Map Studio (dealer-facing map management)
+   MAPCO V2 — Map Studio (three flows)
    ---------------------------------------------------------------
-   Browse maps by city → masterplan → sector, preview Original/3D/
-   overlay, publish/hide/archive/restore, link + place properties,
-   and verify overlay alignment / spot missing assets. Wired to the
-   real Supabase RPCs via getMapStudio(); mock mode uses a fixture.
-   Clear and low-jargon for a non-technical dealer.
+   "What are we publishing?" landing → three flows:
+    1. Publish Masterplan  — click roads/blocks on the map to build a
+       highlight SET (combination), name + save it. Save many; delete any.
+       Each set becomes a state of the cycling Highlights button in
+       Client Presentation. No sidebar — you select directly on the map.
+    2. Publish Sector Map  — place a pin on the map, pick a property, link.
+    3. Manage Published    — every live map + its linked properties;
+       unlink a property, link one, or unpublish the map.
+   Throw-free; supabase RPCs via getMapStudio(); mock fixture offline.
    ═══════════════════════════════════════════════════════════════ */
 import { adapter } from '../../../packages/data/adapter';
-import { getMapStudio, type StudioMap, type MapStatus } from '../../../packages/data/map-studio';
+import { getMapStudio, type StudioMap, type HighlightSet } from '../../../packages/data/map-studio';
+import { loadSvgOverlay, type SvgHighlightHandle } from '../../../packages/maps';
 import { hasSafeInAppHistory } from '../../../packages/ui/back-button';
 import type { Property } from '../../../packages/data/types';
 
-const STATUS_META: Record<MapStatus, { label: string; bg: string; fg: string }> = {
-  draft: { label: 'Draft', bg: '#f0eaff', fg: '#5b32c4' },
-  published: { label: 'Live', bg: '#dcf3e5', fg: '#12704a' },
-  hidden: { label: 'Hidden', bg: '#fff3d1', fg: '#8a5a0c' },
-  archived: { label: 'Archived', bg: '#f1ece4', fg: '#8d8271' },
-};
+type Flow = 'home' | 'masterplan' | 'sector' | 'manage';
 
 function esc(s: string): string {
   return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
@@ -25,223 +25,277 @@ function esc(s: string): string {
 
 export async function renderMapStudio(el: HTMLElement): Promise<void> {
   const repo = getMapStudio();
+  let flow: Flow = 'home';
   let maps: StudioMap[] = [];
-  let properties: Property[] = [];
-  let selectedId: string | null = null;
-  let previewMode: 'original' | 'threeD' = 'original';
-  let showOverlay = true;
-  let statusFilter: MapStatus | 'all' = 'all';
-  let placing = false;
-  let linkProp = '';
-  let toast: string | null = null;
+  let props: Property[] = [];
+  let selectedMapId = '';
+  let overlay: SvgHighlightHandle | null = null;
+  let overlayToken = 0;
+  let sets: HighlightSet[] = [];
+  let toast = '';
+  // sector-link flow state
+  let pin: { x: number; y: number } | null = null;
+  let linkPropId = '';
 
-  async function load(): Promise<void> {
-    const [m, p] = await Promise.all([repo.listMaps(), adapter.properties.list({ limit: 50 })]);
-    maps = m.ok ? (m.data ?? []) : [];
-    properties = p.ok ? [...p.value.items] : [];
-    if ((!selectedId || !maps.some((x) => x.id === selectedId)) && maps.length) selectedId = maps[0]!.id;
+  const [mapsRes, propsRes] = await Promise.all([
+    repo.listMaps(),
+    adapter.properties.list({ limit: 50 }),
+  ]);
+  if (mapsRes.ok && mapsRes.data) maps = mapsRes.data;
+  if (propsRes.ok) props = [...propsRes.value.items];
+
+  const masterplans = () => maps.filter((m) => m.kind === 'masterplan' && m.status !== 'archived');
+  const selectedMap = () => maps.find((m) => m.id === selectedMapId);
+  const flash = (msg: string) => { toast = msg; render(); setTimeout(() => { toast = ''; render(); }, 2200); };
+
+  function disposeOverlay(): void { overlay?.destroy(); overlay = null; }
+
+  /** Load the premium overlay for the selected map into #ms-ovhost (interactive). */
+  async function mountOverlay(interactive: boolean): Promise<void> {
+    disposeOverlay();
+    const m = selectedMap();
+    const host = el.querySelector<HTMLElement>('#ms-ovhost');
+    const ov = m?.assets?.overlay;
+    if (!m || !ov?.path || !host) return;
+    const vb = { w: ov.w || m.dims?.original?.w || 1000, h: ov.h || m.dims?.original?.h || 1000 };
+    const token = ++overlayToken;
+    const handle = await loadSvgOverlay(ov.path, vb);
+    if (token !== overlayToken || !handle) { handle?.destroy(); return; }
+    overlay = handle;
+    handle.el.style.width = '100%'; handle.el.style.height = '100%';
+    handle.setInteractive(interactive);
+    handle.onSelectChange(() => { const c = el.querySelector('#ms-selcount'); if (c) c.textContent = String(handle.selection().length); const b = el.querySelector<HTMLButtonElement>('#ms-saveset'); if (b) b.disabled = handle.selection().length === 0; });
+    host.appendChild(handle.el);
+  }
+
+  // ── flow openers ──────────────────────────────────────────────
+  async function openMasterplan(mapId: string): Promise<void> {
+    flow = 'masterplan'; selectedMapId = mapId;
+    const r = await repo.listHighlightSets(mapId); sets = r.ok && r.data ? r.data : [];
     render();
+    await mountOverlay(true);
+  }
+  async function openSector(mapId: string): Promise<void> {
+    flow = 'sector'; selectedMapId = mapId; pin = null; linkPropId = '';
+    render();
+    await mountOverlay(false); // overlay shown non-interactive for context
   }
 
-  const selected = (): StudioMap | undefined => maps.find((m) => m.id === selectedId);
-
-  function tree(): string {
-    const shown = maps.filter((m) => statusFilter === 'all' || m.status === statusFilter);
-    const byCity = new Map<string, StudioMap[]>();
-    for (const m of shown) { const a = byCity.get(m.city); if (a) a.push(m); else byCity.set(m.city, [m]); }
-    let html = '';
-    for (const city of [...byCity.keys()].sort()) {
-      const cm = byCity.get(city)!;
-      const ordered = [...cm.filter((m) => m.kind === 'masterplan'), ...cm.filter((m) => m.kind === 'sector')];
-      html += `<div class="ms-city">${esc(city)}<span>${cm.length}</span></div>`;
-      for (const m of ordered) {
-        const s = STATUS_META[m.status];
-        html += `<button class="ms-row${m.id === selectedId ? ' sel' : ''}${m.kind === 'sector' ? ' sec' : ''}" data-act="select" data-id="${esc(m.id)}">
-          <i class="ph-fill ph-${m.kind === 'masterplan' ? 'map-trifold' : 'squares-four'}"></i>
-          <span class="ms-row-lbl">${esc(m.label)}</span>
-          <span class="ms-badge" style="background:${s.bg};color:${s.fg}">${s.label}</span>
-        </button>`;
-      }
-    }
-    return html || `<div class="ms-empty">No maps in this filter.</div>`;
-  }
-
-  function assetRow(name: string, a?: { path?: string; w?: number; h?: number }): string {
-    const present = !!a?.path;
-    return `<div class="ms-asset"><i class="ph-fill ph-${present ? 'check-circle' : 'x-circle'}" style="color:${present ? '#12a150' : '#c2185b'}"></i>
-      <span>${name}</span><span class="ms-asset-dim">${a?.w ? `${a.w}×${a.h}` : present ? '' : 'missing'}</span></div>`;
-  }
-
-  function detail(): string {
-    const m = selected();
-    if (!m) return `<div class="ms-empty" style="padding:60px">Select a map to manage it.</div>`;
-    const asset = previewMode === 'threeD' ? m.assets.threeD : m.assets.original;
-    const src = asset?.path;
-    const has3d = !!m.assets.threeD?.path;
-    const hasOverlay = !!m.assets.overlay?.path;
-    const parent = m.parentMapId ? maps.find((x) => x.id === m.parentMapId) : undefined;
-    const s = STATUS_META[m.status];
-    const statusBtns: string[] = [];
-    if (m.status !== 'published' && m.status !== 'archived') statusBtns.push(`<button class="ms-btn ms-btn-go" data-act="status" data-status="published">Publish</button>`);
-    if (m.status === 'published') statusBtns.push(`<button class="ms-btn" data-act="status" data-status="hidden">Hide</button>`);
-    if (m.status === 'hidden') statusBtns.push(`<button class="ms-btn ms-btn-go" data-act="status" data-status="published">Show again</button>`);
-    if (m.status !== 'archived') statusBtns.push(`<button class="ms-btn ms-btn-warn" data-act="status" data-status="archived">Archive</button>`);
-    if (m.status === 'archived') statusBtns.push(`<button class="ms-btn ms-btn-go" data-act="status" data-status="draft">Restore</button>`);
-
+  // ── views ─────────────────────────────────────────────────────
+  function mapPreviewHtml(placing: boolean): string {
+    const m = selectedMap();
+    const raster = m?.assets?.original?.path || m?.assets?.threeD?.path || '';
+    const w = m?.dims?.original?.w || 4, h = m?.dims?.original?.h || 3;
+    const noOverlay = !m?.assets?.overlay?.path;
     return `
-    <div class="ms-detail-head">
-      <div>
-        <div class="ms-eyebrow">${esc(m.city)}${m.sector ? ' · ' + esc(m.sector) : ''}</div>
-        <h2>${esc(m.label)}</h2>
-        <div class="ms-sub">${m.kind === 'masterplan' ? 'Masterplan' : 'Sector map'}${parent ? ` · under ${esc(parent.label)}` : m.kind === 'sector' ? ' · <b style="color:#c2185b">no parent masterplan</b>' : ''}</div>
-      </div>
-      <span class="ms-badge lg" style="background:${s.bg};color:${s.fg}">${s.label}${m.clientVisible ? ' · visible' : ''}</span>
-    </div>
+      <div id="ms-stage" style="position:relative;width:100%;max-width:980px;margin:0 auto;aspect-ratio:${w}/${h};background:#0b0714;border-radius:18px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,248,230,.14),0 30px 60px -30px rgba(0,0,0,.7);${placing ? 'cursor:crosshair' : ''}">
+        ${raster ? `<img src="${esc(raster)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill;user-select:none;-webkit-user-drag:none">` : '<div style="position:absolute;inset:0;display:grid;place-items:center;color:#8d8271">No image</div>'}
+        <div id="ms-ovhost" style="position:absolute;inset:0;pointer-events:${flow === 'masterplan' ? 'auto' : 'none'}"></div>
+        ${flow === 'sector' && pin ? `<div style="position:absolute;left:${pin.x * 100}%;top:${pin.y * 100}%;transform:translate(-50%,-100%);z-index:5"><i class="ph-fill ph-map-pin" style="font-size:34px;color:#2f7bff;filter:drop-shadow(0 3px 4px rgba(0,0,0,.5))"></i></div>` : ''}
+        ${flow === 'masterplan' && noOverlay ? `<div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(24,16,4,.8);color:#fff8e6;padding:12px 18px;border-radius:12px;font-size:14px;font-weight:700">This map has no aligned highlight layer yet.</div>` : ''}
+      </div>`;
+  }
 
-    <div class="ms-preview" data-act="preview">
-      ${src ? `<img src="${esc(src)}" alt="${esc(m.label)} ${previewMode}" draggable="false">
-        ${hasOverlay && showOverlay && previewMode === 'original' ? `<img class="ms-ov" src="${esc(m.assets.overlay!.path!)}" alt="overlay" draggable="false">` : ''}
-        ${placing ? `<div class="ms-place-hint">Click on the map to drop the pin</div>` : ''}`
-        : `<div class="ms-noimg"><i class="ph-fill ph-image-broken" style="font-size:40px"></i><div>No ${previewMode === 'threeD' ? '3D' : 'original'} asset</div></div>`}
-    </div>
-
-    <div class="ms-preview-ctl">
-      <button class="ms-chip${previewMode === 'original' ? ' on' : ''}" data-act="mode" data-mode="original">Original</button>
-      <button class="ms-chip${previewMode === 'threeD' ? ' on' : ''}" data-act="mode" data-mode="threeD" ${has3d ? '' : 'disabled'}>3D</button>
-      ${hasOverlay ? `<button class="ms-chip${showOverlay ? ' on' : ''}" data-act="overlay">Overlay</button>` : ''}
-      <span style="flex:1"></span>
-      ${hasOverlay ? `<span class="ms-hint"><i class="ph-fill ph-info"></i>Check the overlay lines up with the roads/blocks.</span>` : ''}
-    </div>
-
-    <div class="ms-cols">
-      <div class="ms-card">
-        <h3>Assets</h3>
-        ${assetRow('Original map', m.assets.original)}
-        ${assetRow('3D map', m.assets.threeD)}
-        ${assetRow('Overlay (SVG)', m.assets.overlay)}
-        ${m.assets.original?.path && !m.assets.original?.w ? `<div class="ms-warn"><i class="ph-fill ph-warning"></i>Dimensions unknown — may not scale correctly.</div>` : ''}
-      </div>
-      <div class="ms-card">
-        <h3>Publishing</h3>
-        <p class="ms-note">${m.status === 'published' ? 'This map is on the client screen.' : m.status === 'archived' ? 'Archived maps are hidden everywhere.' : 'Not on the client screen yet.'}</p>
-        <div class="ms-btns">${statusBtns.join('')}</div>
-      </div>
-      <div class="ms-card">
-        <h3>Link a plot</h3>
-        <p class="ms-note">Pick a plot, then click <b>Place pin</b> and tap the map.</p>
-        <select class="ms-select" data-act="linkprop">
-          <option value="">Choose a plot…</option>
-          ${properties.map((p) => `<option value="${esc(p.id)}"${p.id === linkProp ? ' selected' : ''}>${esc(p.area)} — ${esc(p.loc)}</option>`).join('')}
-        </select>
-        <div class="ms-btns">
-          <button class="ms-btn ${placing ? 'ms-btn-go' : ''}" data-act="place" ${linkProp ? '' : 'disabled'}>${placing ? 'Click the map…' : 'Place pin'}</button>
-          <button class="ms-btn" data-act="link" ${linkProp ? '' : 'disabled'}>Link without pin</button>
+  function homeHtml(): string {
+    const liveCount = maps.filter((m) => m.status === 'published').length;
+    const card = (n: string, tag: string, title: string, desc: string, act: string, cta: string, bg: string, ic: string, icbg: string) => `
+      <button class="ms-card3" data-act="${act}" style="text-align:left;display:flex;flex-direction:column;border-radius:22px;overflow:hidden;background:#fffdf9;box-shadow:0 0 0 1px rgba(88,52,168,.1),0 20px 40px -28px rgba(60,40,10,.6);cursor:pointer;transition:transform .15s,box-shadow .15s" onmouseenter="this.style.transform='translateY(-6px)'" onmouseleave="this.style.transform='none'">
+        <span style="position:relative;display:block;height:150px;background:${bg}">
+          <span style="position:absolute;top:18px;left:18px;width:56px;height:56px;border-radius:16px;background:${icbg};display:grid;place-items:center"><i class="ph-fill ${ic}" style="font-size:26px;color:#241d0c"></i></span>
+          <span style="position:absolute;top:16px;right:22px;font-family:var(--pm-font-display);font-size:30px;color:rgba(0,0,0,.18)">${n}</span>
+        </span>
+        <span style="display:block;padding:20px 22px 22px">
+          <span style="display:block;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#a8792a">${tag}</span>
+          <span style="display:block;font-family:var(--pm-font-display);font-weight:500;font-size:26px;color:#1c1533;margin-top:4px">${title}</span>
+          <span style="display:block;margin-top:8px;font-size:14px;color:#6b6156;line-height:1.45">${desc}</span>
+          <span style="display:inline-flex;align-items:center;gap:6px;margin-top:14px;font-size:14.5px;font-weight:800;color:#5b32c4">${cta}<i class="ph-bold ph-arrow-right"></i></span>
+        </span>
+      </button>`;
+    return `
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#a8792a">MAP STUDIO</div>
+          <h1 style="font-family:var(--pm-font-display);font-weight:500;font-size:40px;letter-spacing:-.02em;color:#241f1c;margin:4px 0 0">What are we publishing?</h1>
+          <p style="margin:8px 0 0;font-size:15px;color:#6b6156">Everything here lands on the client screen the moment you save it.</p>
         </div>
       </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:26px">
+        ${card('01', 'Big city map', 'Publish Masterplan', 'Pick roads, blocks and sectors that light up when your client taps a highlight set.', 'go-masterplan', 'Open', 'linear-gradient(135deg,#ffdc7a,#f4ae14)', 'ph-map-trifold', '#fff6d8')}
+        ${card('02', 'Detailed proof map', 'Publish Sector Map', 'Drop a pin on the map and link it to one of your plots. That is it.', 'go-sector', 'Open', 'linear-gradient(135deg,#b79bf5,#7c4fe0)', 'ph-map-pin-area', '#efe6ff')}
+        ${card('03', 'Everything live', 'Manage Published', `Every map a client can open right now — link a property, unlink one, or hide it.`, 'go-manage', `${liveCount} map${liveCount === 1 ? '' : 's'} live`, 'linear-gradient(135deg,#7fd3a6,#137a56)', 'ph-squares-four', '#d9f5e3')}
+      </div>`;
+  }
+
+  function pickerHtml(kind: 'masterplan' | 'any', act: string): string {
+    const list = kind === 'masterplan' ? masterplans() : maps.filter((m) => m.status !== 'archived');
+    if (!list.length) return `<div class="ms-empty" style="padding:24px;color:#6b6156">No maps yet. Onboard maps first.</div>`;
+    let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:18px">';
+    for (const m of list) {
+      const raster = m.assets?.original?.path || m.assets?.threeD?.path || '';
+      html += `<button data-act="${act}" data-id="${esc(m.id)}" style="text-align:left;border-radius:16px;overflow:hidden;background:#fffdf9;box-shadow:0 0 0 1px rgba(88,52,168,.1);cursor:pointer">
+        <span style="display:block;height:110px;background:#efe6da ${raster ? `url('${esc(raster)}') center/cover` : ''}"></span>
+        <span style="display:block;padding:12px 14px">
+          <span style="display:block;font-size:15px;font-weight:800;color:#1c1533">${esc(m.label)}</span>
+          <span style="display:block;font-size:12.5px;color:#8d8271;margin-top:2px">${esc(m.city)} · ${m.kind}${m.status === 'published' ? ' · live' : ''}</span>
+        </span></button>`;
+    }
+    return html + '</div>';
+  }
+
+  function masterplanFlowHtml(): string {
+    const m = selectedMap();
+    if (!m) return `<div>${headerHtml('Publish Masterplan')}${pickerHtml('masterplan', 'pick-master')}</div>`;
+    const setChips = sets.length
+      ? sets.map((sset) => `<div class="ms-setchip" style="display:inline-flex;align-items:center;gap:8px;background:#fff2cd;color:#8a5a0c;border-radius:999px;padding:7px 8px 7px 14px;font-size:13.5px;font-weight:800">
+          <button data-act="play-set" data-id="${esc(sset.id)}" title="Preview this set" style="background:none;color:inherit;font-weight:800;cursor:pointer">${esc(sset.name)} · ${sset.itemIds.length}</button>
+          <button data-act="del-set" data-id="${esc(sset.id)}" aria-label="Delete set" title="Delete" style="width:22px;height:22px;border-radius:50%;background:rgba(138,90,12,.15);display:grid;place-items:center;cursor:pointer"><i class="ph-bold ph-x" style="font-size:12px"></i></button>
+        </div>`).join('')
+      : `<span style="font-size:13.5px;color:#8d8271">No sets yet — tap roads/blocks on the map, name them, and save.</span>`;
+    return `
+      <div>
+        ${headerHtml('Publish Masterplan', m.label)}
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:14px 0 16px">
+          <div style="font-size:14px;color:#3a332c;font-weight:700"><i class="ph-fill ph-cursor-click" style="color:#a8792a;margin-right:6px"></i>Tap roads &amp; blocks on the map to build a set. <span style="color:#8d8271">Selected: <b id="ms-selcount">0</b></span></div>
+          <span style="flex:1"></span>
+          <input id="ms-setname" placeholder="Set name (e.g. Approach roads)" style="height:40px;border:1px solid #ddd2f5;border-radius:11px;padding:0 12px;font:inherit;font-size:14px;min-width:220px">
+          <button id="ms-saveset" data-act="save-set" disabled style="height:40px;padding:0 16px;border-radius:11px;background:#ffc93c;color:#231a04;font-weight:800;cursor:pointer">Save set</button>
+          <button data-act="clear-sel" style="height:40px;padding:0 14px;border-radius:11px;background:#f0eaff;color:#5b32c4;font-weight:800;cursor:pointer">Clear</button>
+        </div>
+        ${mapPreviewHtml(false)}
+        <div style="margin-top:16px">
+          <div style="font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8d8271;margin-bottom:8px">Saved highlight sets (client sees these on one cycling button)</div>
+          <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">${setChips}</div>
+        </div>
+      </div>`;
+  }
+
+  function sectorFlowHtml(): string {
+    const m = selectedMap();
+    if (!m) return `<div>${headerHtml('Publish Sector Map')}${pickerHtml('any', 'pick-sector')}</div>`;
+    return `
+      <div>
+        ${headerHtml('Publish Sector Map', m.label)}
+        <div style="font-size:14px;color:#3a332c;font-weight:700;margin:14px 0 16px"><i class="ph-fill ph-map-pin" style="color:#2f7bff;margin-right:6px"></i>Click the map to drop a pin, then pick the plot it belongs to.</div>
+        ${mapPreviewHtml(true)}
+        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:16px;max-width:980px;margin-left:auto;margin-right:auto">
+          <span style="font-size:14px;color:${pin ? '#137a56' : '#8d8271'};font-weight:800">${pin ? `Pin set at ${(pin.x * 100).toFixed(0)}%, ${(pin.y * 100).toFixed(0)}%` : 'No pin yet'}</span>
+          <span style="flex:1"></span>
+          <select id="ms-linkprop" style="height:42px;border:1px solid #ddd2f5;border-radius:11px;padding:0 12px;font:inherit;font-size:14px;min-width:240px;background:#fff">
+            <option value="">Choose a plot…</option>
+            ${props.map((p) => `<option value="${esc(p.id)}"${linkPropId === p.id ? ' selected' : ''}>${esc(p.area)}${p.size ? ` · ${esc(p.size)}` : ''}</option>`).join('')}
+          </select>
+          <button data-act="do-link" ${(!pin || !linkPropId) ? 'disabled' : ''} style="height:42px;padding:0 18px;border-radius:11px;background:#ffc93c;color:#231a04;font-weight:800;cursor:pointer;${(!pin || !linkPropId) ? 'opacity:.45' : ''}">Link plot to this pin</button>
+        </div>
+      </div>`;
+  }
+
+  function manageFlowHtml(): string {
+    const live = maps.filter((m) => m.status === 'published');
+    const propById = new Map(props.map((p) => [p.id, p]));
+    const linkedFor = (mapId: string) => props.filter((p) => p.mapPlacement?.mapId === mapId);
+    const rows = live.length ? live.map((m) => {
+      const linked = linkedFor(m.id);
+      return `<div style="background:#fffdf9;border:1px solid #eadff7;border-radius:16px;padding:16px 18px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <div style="font-size:16px;font-weight:800;color:#1c1533">${esc(m.label)}</div>
+          <span style="font-size:12px;font-weight:800;color:#137a56;background:#d9f5e3;border-radius:999px;padding:3px 10px">live${m.clientVisible ? '' : ' · hidden'}</span>
+          <span style="flex:1"></span>
+          <button data-act="unpublish" data-id="${esc(m.id)}" style="height:34px;padding:0 12px;border-radius:9px;background:#ffe1e6;color:#c2185b;font-weight:800;font-size:13px;cursor:pointer">Unpublish</button>
+        </div>
+        <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+          ${linked.length ? linked.map((p) => `<span style="display:inline-flex;align-items:center;gap:7px;background:#eef4ff;color:#1a56c4;border-radius:999px;padding:6px 8px 6px 12px;font-size:13px;font-weight:700"><i class="ph-fill ph-map-pin"></i>${esc(propById.get(p.id)?.area ?? p.id)}<button data-act="unlink" data-id="${esc(p.id)}" aria-label="Unlink" title="Unlink" style="width:20px;height:20px;border-radius:50%;background:rgba(26,86,196,.15);display:grid;place-items:center;cursor:pointer"><i class="ph-bold ph-x" style="font-size:11px"></i></button></span>`).join('') : '<span style="font-size:13px;color:#8d8271">No plots linked yet.</span>'}
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+          <select data-linkmap="${esc(m.id)}" style="height:38px;border:1px solid #ddd2f5;border-radius:10px;padding:0 10px;font:inherit;font-size:13.5px;background:#fff">
+            <option value="">Link a plot…</option>
+            ${props.filter((p) => p.mapPlacement?.mapId !== m.id).map((p) => `<option value="${esc(p.id)}">${esc(p.area)}</option>`).join('')}
+          </select>
+          <button data-act="link-here" data-id="${esc(m.id)}" style="height:38px;padding:0 14px;border-radius:10px;background:#f0eaff;color:#5b32c4;font-weight:800;font-size:13.5px;cursor:pointer">Link</button>
+        </div>
+      </div>`;
+    }).join('') : '<div class="ms-empty" style="padding:24px;color:#6b6156">No published maps yet.</div>';
+    return `<div>${headerHtml('Manage Published')}<div style="margin-top:18px">${rows}</div></div>`;
+  }
+
+  function headerHtml(title: string, sub?: string): string {
+    return `<div style="display:flex;align-items:center;gap:14px">
+      <button data-act="${flow === 'home' ? 'exit' : 'home'}" aria-label="Back" style="display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 13px;border-radius:11px;background:#f0eaff;color:#4b2ea6;font-weight:800;font-size:14px;cursor:pointer"><i class="ph-bold ph-arrow-left"></i>Back</button>
+      <div><div style="font-size:11.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#a8792a">Map Studio</div>
+      <div style="font-family:var(--pm-font-display);font-weight:500;font-size:26px;color:#241f1c">${esc(title)}${sub ? ` <span style="color:#8d8271;font-size:18px">· ${esc(sub)}</span>` : ''}</div></div>
     </div>`;
   }
 
   function render(): void {
+    const body = flow === 'home' ? homeHtml()
+      : flow === 'masterplan' ? masterplanFlowHtml()
+      : flow === 'sector' ? sectorFlowHtml()
+      : manageFlowHtml();
     el.innerHTML = `
-    <style>
-      .ms-wrap{--b:#e4dbf7;display:flex;gap:18px;max-width:1240px;margin:0 auto;padding:26px 30px 60px;align-items:flex-start}
-      .ms-side{width:300px;flex:none;background:#fffdf9;border:1px solid var(--b);border-radius:20px;padding:12px;position:sticky;top:18px;max-height:calc(100vh - 40px);overflow:auto}
-      .ms-side h1{font-family:var(--pm-font-display);font-weight:500;font-size:24px;margin:8px 10px 4px;color:#241f1c}
-      .ms-filters{display:flex;flex-wrap:wrap;gap:5px;padding:6px 8px 10px}
-      .ms-fchip{font-size:12px;font-weight:800;padding:5px 10px;border-radius:999px;background:#f0eaff;color:#5b32c4}
-      .ms-fchip.on{background:#5b32c4;color:#fff}
-      .ms-city{display:flex;justify-content:space-between;font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#a8792a;padding:10px 10px 4px}
-      .ms-city span{background:rgba(138,90,12,.1);color:#8a5a0c;border-radius:999px;padding:1px 7px;font-size:10.5px}
-      .ms-row{display:flex;align-items:center;gap:9px;width:100%;text-align:left;padding:9px 10px;border-radius:11px;transition:background .12s}
-      .ms-row:hover{background:#f6f1ff}.ms-row.sel{background:#efe8fb;box-shadow:inset 0 0 0 1px #d6c6f5}
-      .ms-row.sec{padding-left:24px}.ms-row.sec .ms-row-lbl{font-weight:600;color:#3a332c}
-      .ms-row i{font-size:16px;color:#a8792a;flex:none}.ms-row-lbl{flex:1;font-size:14px;font-weight:700;color:#241f1c;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-      .ms-badge{font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:999px;flex:none}.ms-badge.lg{font-size:12px;padding:5px 12px}
-      .ms-main{flex:1;min-width:0;background:#fffaf0;border:1px solid #ecdca6;border-radius:22px;padding:24px 26px;box-shadow:var(--pm-shadow-card)}
-      .ms-detail-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:16px}
-      .ms-eyebrow{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#a8792a}
-      .ms-detail-head h2{font-family:var(--pm-font-display);font-weight:500;font-size:28px;margin:4px 0 2px;color:#241f1c}
-      .ms-sub{font-size:13.5px;color:#6b6156}
-      .ms-preview{position:relative;width:100%;aspect-ratio:16/10;background:#efe6da;border-radius:16px;overflow:hidden}
-      .ms-preview img{width:100%;height:100%;object-fit:contain;display:block}
-      .ms-preview .ms-ov{position:absolute;inset:0;object-fit:contain;pointer-events:none;mix-blend-mode:multiply}
-      .ms-preview.placing{cursor:crosshair}
-      .ms-noimg{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:8px;color:#b3a894;text-align:center;font-size:14px;font-weight:700}
-      .ms-place-hint{position:absolute;left:50%;top:14px;transform:translateX(-50%);background:rgba(24,16,4,.8);color:#fff8e6;font-size:13px;font-weight:700;padding:7px 14px;border-radius:999px;z-index:3}
-      .ms-preview-ctl{display:flex;align-items:center;gap:8px;margin:12px 0 18px;flex-wrap:wrap}
-      .ms-chip{font-size:13px;font-weight:800;padding:7px 14px;border-radius:10px;background:#f0eaff;color:#5b32c4}
-      .ms-chip.on{background:#ffc93c;color:#231a04}.ms-chip:disabled{opacity:.4}
-      .ms-hint{font-size:12.5px;color:#8a5a0c;display:flex;align-items:center;gap:5px}
-      .ms-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-      .ms-card{background:#fffdf9;border:1px solid var(--b);border-radius:16px;padding:16px}
-      .ms-card h3{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#8d8271;margin:0 0 10px}
-      .ms-asset{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#3a332c;padding:4px 0}.ms-asset i{font-size:17px}.ms-asset-dim{margin-left:auto;font-size:12px;color:#8d8271;font-weight:700}
-      .ms-note{font-size:13px;color:#6b6156;margin:0 0 12px;line-height:1.4}
-      .ms-btns{display:flex;flex-wrap:wrap;gap:8px}
-      .ms-btn{font-size:13.5px;font-weight:800;padding:9px 14px;border-radius:11px;background:#f0eaff;color:#5b32c4}
-      .ms-btn-go{background:#ffc93c;color:#231a04}.ms-btn-warn{background:#ffe1e6;color:#c2185b}.ms-btn:disabled{opacity:.45}
-      .ms-select{width:100%;height:42px;border:1px solid var(--b);border-radius:11px;padding:0 10px;font-family:inherit;font-size:14px;margin-bottom:12px;background:#fff}
-      .ms-warn{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:#c2185b;margin-top:8px}
-      .ms-empty{color:#8d8271;font-size:14px;text-align:center;padding:20px}
-      @media(max-width:900px){.ms-wrap{flex-direction:column}.ms-side{width:100%;position:static}.ms-cols{grid-template-columns:1fr}}
-    </style>
-    <div class="ms-wrap">
-      <aside class="ms-side" data-scroll>
-        <button class="ms-fchip" data-act="back" style="margin-bottom:10px;display:inline-flex;align-items:center;gap:6px" aria-label="Back to dashboard"><i class="ph-bold ph-arrow-left"></i>Back</button>
-        <h1>Map Studio</h1>
-        <div class="ms-filters">
-          ${(['all', 'draft', 'published', 'hidden', 'archived'] as const).map((f) =>
-            `<button class="ms-fchip${statusFilter === f ? ' on' : ''}" data-act="filter" data-filter="${f}">${f === 'all' ? 'All' : STATUS_META[f].label}</button>`).join('')}
-        </div>
-        ${tree()}
-      </aside>
-      <main class="ms-main">${detail()}</main>
-    </div>
-    ${toast ? `<div style="position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#1f4d3a;color:#fff;font-size:14px;font-weight:700;padding:11px 20px;border-radius:999px;z-index:50;box-shadow:0 14px 30px -12px rgba(0,0,0,.4)">${esc(toast)}</div>` : ''}`;
-    if (placing) el.querySelector('.ms-preview')?.classList.add('placing');
+      <div style="min-height:100%;background:#f5efff;background-image:radial-gradient(60% 50% at 0% 0%,rgba(139,96,232,.16),transparent 60%),radial-gradient(60% 50% at 100% 100%,rgba(255,201,60,.14),transparent 60%)">
+        <div style="max-width:1180px;margin:0 auto;padding:28px 32px 60px">${body}</div>
+      </div>
+      ${toast ? `<div style="position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#1f4d3a;color:#fff;font-weight:700;padding:11px 20px;border-radius:999px;z-index:50;box-shadow:0 14px 30px -12px rgba(0,0,0,.4)">${esc(toast)}</div>` : ''}`;
   }
 
-  function flash(msg: string): void { toast = msg; render(); setTimeout(() => { toast = null; render(); }, 2600); }
-
+  // ── interaction ───────────────────────────────────────────────
   el.addEventListener('click', async (ev) => {
     const t = (ev.target as HTMLElement).closest('[data-act]') as HTMLElement | null;
+    // pin placement (sector flow) — clicking the stage
+    if (flow === 'sector' && !t) {
+      const stage = (ev.target as HTMLElement).closest('#ms-stage') as HTMLElement | null;
+      if (stage) {
+        const r = stage.getBoundingClientRect();
+        pin = { x: Math.min(1, Math.max(0, ((ev as MouseEvent).clientX - r.left) / r.width)), y: Math.min(1, Math.max(0, ((ev as MouseEvent).clientY - r.top) / r.height)) };
+        render(); await mountOverlay(false);
+      }
+      return;
+    }
     if (!t) return;
-    const act = t.dataset.act;
-    if (act === 'back') { if (hasSafeInAppHistory()) window.history.back(); else window.location.assign('/admin/owner.html'); }
-    else if (act === 'select') { selectedId = t.dataset.id!; previewMode = 'original'; placing = false; render(); }
-    else if (act === 'filter') { statusFilter = t.dataset.filter as typeof statusFilter; render(); }
-    else if (act === 'mode') { if (!(t as HTMLButtonElement).disabled) { previewMode = t.dataset.mode as 'original' | 'threeD'; render(); } }
-    else if (act === 'overlay') { showOverlay = !showOverlay; render(); }
-    else if (act === 'status') {
-      const m = selected(); if (!m) return;
-      const status = t.dataset.status as MapStatus;
-      const res = await repo.setStatus(m.id, status, status === 'published' ? true : undefined);
-      if (res.ok) { flash(`“${m.label}” → ${STATUS_META[status].label}`); await load(); }
-      else flash(res.error ?? 'Could not update');
-    }
-    else if (act === 'place') { if (linkProp) { placing = !placing; render(); } }
-    else if (act === 'link') {
-      const m = selected(); if (!m || !linkProp) return;
-      const res = await repo.linkProperty(linkProp, m.id);
-      flash(res.ok ? 'Plot linked to this map' : (res.error ?? 'Could not link'));
-      if (res.ok) { linkProp = ''; }
-    }
-    else if (act === 'preview' && placing) {
-      const m = selected(); if (!m || !linkProp) return;
-      const box = (t.closest('.ms-preview') as HTMLElement).getBoundingClientRect();
-      const me = ev as MouseEvent;
-      const x = Math.min(1, Math.max(0, (me.clientX - box.left) / box.width));
-      const y = Math.min(1, Math.max(0, (me.clientY - box.top) / box.height));
-      const res = await repo.linkProperty(linkProp, m.id, +x.toFixed(4), +y.toFixed(4));
-      placing = false;
-      flash(res.ok ? `Pin placed at ${(x * 100).toFixed(0)}%, ${(y * 100).toFixed(0)}%` : (res.error ?? 'Could not place'));
+    const act = t.dataset.act; const id = t.dataset.id;
+    switch (act) {
+      case 'exit': if (hasSafeInAppHistory()) window.history.back(); else window.location.assign('/admin/owner.html'); break;
+      case 'home': disposeOverlay(); flow = 'home'; selectedMapId = ''; render(); break;
+      case 'go-masterplan': flow = 'masterplan'; selectedMapId = ''; render(); break;
+      case 'go-sector': flow = 'sector'; selectedMapId = ''; render(); break;
+      case 'go-manage': flow = 'manage'; selectedMapId = ''; render(); break;
+      case 'pick-master': await openMasterplan(id!); break;
+      case 'pick-sector': await openSector(id!); break;
+      case 'clear-sel': overlay?.clear(); break;
+      case 'save-set': {
+        if (!overlay) break;
+        const ids = overlay.selection();
+        if (!ids.length) { flash('Select some roads or blocks first'); break; }
+        const nameEl = el.querySelector<HTMLInputElement>('#ms-setname');
+        const name = (nameEl?.value || '').trim() || `Set ${sets.length + 1}`;
+        const res = await repo.saveHighlightSet({ mapId: selectedMapId, name, itemIds: ids });
+        if (res.ok) { const r = await repo.listHighlightSets(selectedMapId); sets = r.ok && r.data ? r.data : sets; overlay.clear(); render(); await mountOverlay(true); flash(`Saved “${name}”`); }
+        else flash(res.error ?? 'Could not save');
+        break;
+      }
+      case 'play-set': { const set = sets.find((x) => x.id === id); if (set && overlay) { overlay.setAccent(set.accent); overlay.setSelection(set.itemIds); } break; }
+      case 'del-set': { const res = await repo.deleteHighlightSet(id!); if (res.ok) { sets = sets.filter((x) => x.id !== id); render(); await mountOverlay(true); flash('Set deleted'); } else flash(res.error ?? 'Could not delete'); break; }
+      case 'do-link': {
+        if (!pin || !linkPropId) break;
+        const res = await repo.linkProperty(linkPropId, selectedMapId, pin.x, pin.y);
+        if (res.ok) { const p = props.find((x) => x.id === linkPropId); if (p) p.mapPlacement = { mapId: selectedMapId, x: pin.x, y: pin.y }; flash('Plot linked to the map'); pin = null; linkPropId = ''; render(); await mountOverlay(false); }
+        else flash(res.error ?? 'Could not link');
+        break;
+      }
+      case 'unlink': { const res = await repo.unlinkProperty(id!); if (res.ok) { const p = props.find((x) => x.id === id); if (p) delete p.mapPlacement; flash('Plot unlinked'); render(); } else flash(res.error ?? 'Could not unlink'); break; }
+      case 'link-here': {
+        const sel = el.querySelector<HTMLSelectElement>(`select[data-linkmap="${id}"]`);
+        const pid = sel?.value; if (!pid) { flash('Choose a plot first'); break; }
+        const res = await repo.linkProperty(pid, id!);
+        if (res.ok) { const p = props.find((x) => x.id === pid); if (p) p.mapPlacement = { mapId: id!, x: p.mapPlacement?.x ?? 0.5, y: p.mapPlacement?.y ?? 0.5 }; flash('Plot linked'); render(); } else flash(res.error ?? 'Could not link');
+        break;
+      }
+      case 'unpublish': { const res = await repo.setStatus(id!, 'hidden', false); if (res.ok) { const m = maps.find((x) => x.id === id); if (m) { m.status = 'hidden'; m.clientVisible = false; } flash('Map unpublished'); render(); } else flash(res.error ?? 'Could not unpublish'); break; }
     }
   });
   el.addEventListener('change', (ev) => {
     const t = ev.target as HTMLElement;
-    if (t.matches('[data-act="linkprop"]')) { linkProp = (t as HTMLSelectElement).value; render(); }
+    if (t.id === 'ms-linkprop') linkPropId = (t as HTMLSelectElement).value;
   });
 
-  el.innerHTML = `<div class="ms-empty" style="padding:80px">Loading maps…</div>`;
-  await load();
+  render();
 }
