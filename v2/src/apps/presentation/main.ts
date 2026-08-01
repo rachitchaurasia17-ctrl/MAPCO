@@ -12,7 +12,10 @@ import '../../packages/ui/tokens.css';
 import '../../packages/ui/reset.css';
 import './presentation.css';
 import { adapter } from '../../packages/data/adapter';
-import { cssMapTransform, getMap, registerMaps, mountMapEngine, loadSvgOverlay, type RenderMode, type MountedMap, type MapCatalogInput, type MapEntry, type SvgOverlayHandle, type HighlightCategory } from '../../packages/maps';
+import { cssMapTransform, getMap, registerMaps, mountMapEngine, loadSvgOverlay, type RenderMode, type MountedMap, type MapCatalogInput, type MapEntry, type SvgHighlightHandle } from '../../packages/maps';
+
+/** A saved highlight combination (built in Map Studio). */
+type SavedSet = { id: string; name: string; itemIds: string[]; accent?: string };
 import { streetViewUrl } from '../../packages/ui/utils';
 import { mountFullscreenButton } from '../../packages/ui/fullscreen';
 import { hasSafeInAppHistory } from '../../packages/ui/back-button';
@@ -72,26 +75,26 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
   let mode: RenderMode = 'original';
   let activeMapId = '';
   let mapsOpen = false;
-  let highlightsOpen = false;
   let railHidden = false;
   let props: Property[] = [];
   let selectedPropertyId: string | null = null;
   let selectedSectorId: string | null = null;
   let propertyShot = 0;
   let sectorMode: 'original' | 'threeD' = 'original';
-  // Highlight state — persists across Original↔3D↔Original, zoom, pan, and
-  // opening/closing property detail. Reset only when the active MAP changes.
-  let broadCat: HighlightCategory | null = null;
-  let spotId: string | null = null;
+  // Highlight state — the live selection lives in the overlay handle; it
+  // persists across Original↔3D↔Original, zoom, pan, and opening/closing detail.
+  // Saved sets (built in Map Studio) drive the single cycling Highlights button.
+  let savedSets: SavedSet[] = [];
+  let activeSetIndex = -1;
   let mapLoadState: 'idle' | 'loading' | 'ready' | 'unavailable' = 'idle';
   let loadState: 'loading' | 'ready' | 'empty' | 'error' = 'loading';
   const pinned = new Set<string>();
 
-  // The real authored SVG highlight overlay for the active Original map.
-  let overlay: SvgOverlayHandle | null = null;
+  // The premium authored-SVG highlight overlay for the active Original map.
+  let overlay: SvgHighlightHandle | null = null;
   let overlayMapId: string | null = null;
   let overlayToken = 0;
-  // A property→sector spotlight queued while the overlay is still loading.
+  // A property→sector highlight queued while the overlay is still loading.
   let pendingSpotQuery: string | null = null;
 
   let mounted: MountedMap | null = null;
@@ -227,15 +230,16 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
   /** Highlights are only trustworthy when the overlay is calibrated. */
   const highlightsAvailable = (): boolean => activeMap()?.calibration?.status === 'calibrated' && !!activeMap()?.overlay;
 
-  /** Load (or reuse) the authored SVG overlay for the active Original map into
-   *  the shared highlight layer. Never loads for uncalibrated maps or 3D. */
+  /** Load (or reuse) the premium highlight overlay for the active Original map.
+   *  Clicking a road/block on the map highlights it instantly (multi-select).
+   *  Never loads for uncalibrated maps; hidden on 3D. */
   async function ensureOverlay(): Promise<void> {
     const map = activeMap();
     if (overlayMapId === activeMapId && overlay) { applyPendingSpot(); return; } // already loaded
-    // active map changed → drop the old overlay + reset highlight state
+    // active map changed → drop the old overlay + its selection/sets
     overlay?.destroy(); overlay = null; overlayMapId = activeMapId;
-    broadCat = null; spotId = null;
-    if (!map || !highlightsAvailable()) { pendingSpotQuery = null; return; }
+    activeSetIndex = -1;
+    if (!map || !highlightsAvailable()) { pendingSpotQuery = null; renderMapControls(); return; }
     const spec = map.overlay!;
     const myToken = ++overlayToken;
     const handle = await loadSvgOverlay(spec.src, spec.viewBox, { signal: controller.signal });
@@ -243,63 +247,77 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
     if (!handle) { pendingSpotQuery = null; return; }          // fetch failed → raster-only
     overlay = handle;
     highlightLayer.appendChild(handle.el);
+    // Re-render controls when the selection changes (keeps the count/Clear fresh).
+    handle.onSelectChange(() => renderMapControls());
     applyHighlights();
     applyPendingSpot();
     renderMapControls();
   }
 
-  /** Center + zoom the map onto a spotlighted authored shape (bbox in the
-   *  SVG's own coordinate space, which equals the raster intrinsic space). */
+  /** Center + zoom the map onto an authored shape by id (property-linked focus). */
   function focusOnSpot(id: string): void {
     if (!overlay || !mounted) return;
-    const el = overlay.el.querySelector(`[id="${id.replace(/["\\]/g, '\\$&')}"]`) as SVGGraphicsElement | null;
+    const el = overlay.el.querySelector(`[data-hit="${id.replace(/["\\]/g, '\\$&')}"]`) as SVGGraphicsElement | null;
     if (!el || typeof el.getBBox !== 'function') return;
     try { const b = el.getBBox(); if (b.width && b.height) mounted.engine.focusOn({ x: b.x, y: b.y, w: b.width, h: b.height }); } catch { /* not measurable */ }
   }
 
-  /** Resolve a queued property→sector spotlight once the overlay is ready. */
+  /** Resolve a queued property→sector highlight once the overlay is ready:
+   *  match the property's sector/area to an authored shape id/label. */
   function applyPendingSpot(): void {
     if (!overlay || !pendingSpotQuery) return;
-    const id = overlay.findTarget(pendingSpotQuery);
+    const q = pendingSpotQuery.trim().toLowerCase();
     pendingSpotQuery = null;
-    if (!id) return;                                           // no matching authored sector — pin still shows
-    broadCat = null; spotId = id;
+    const num = q.match(/(\d+[a-z]?)/)?.[1];
+    const target = overlay.items().find((it) => it.id.toLowerCase() === q)
+      ?? (num ? overlay.items().find((it) => it.id.toLowerCase() === num) : undefined)
+      ?? overlay.items().find((it) => it.label.toLowerCase().includes(q));
+    if (!target) return;                                       // no authored shape — pin still shows
+    activeSetIndex = -1;
+    overlay.setSelection([target.id]);
     applyHighlights();
-    focusOnSpot(id);
+    focusOnSpot(target.id);
     renderMapControls();
   }
 
-  /** Apply the persisted highlight state to the live overlay + toggle its
-   *  visibility. SVG geometry is hidden on the 3D rendering and off the
-   *  masterplan view; highlight STATE (broadCat/spotId) is preserved. */
+  /** Toggle overlay visibility + interactivity. SVG geometry is hidden on the
+   *  3D rendering and off the masterplan view; the selection is preserved. */
   function applyHighlights(): void {
     if (!overlay) return;
     const showOverlay = view === 'masterplan' && mode === 'original' && !selectedPropertyId && !selectedSectorId;
     overlay.setVisible(showOverlay);
-    overlay.setBroad(showOverlay ? broadCat : null);
-    overlay.spotlight(showOverlay ? spotId : null);
+    overlay.setInteractive(showOverlay);
   }
 
-  /** Cycle the broad highlight sets present in this map's authored SVG:
-   *  off → set₁ → … → setₙ → off. */
-  function cycleBroad(): void {
+  /** Cycle the saved highlight sets: off → set₁ → … → setₙ → off. One button. */
+  function cycleSet(): void {
     if (!overlay) return;
-    const sets = overlay.broadSets();
-    if (!sets.length) return;
-    const cur = broadCat ? sets.findIndex((s) => s.category === broadCat) : -1;
-    const next = cur + 1 >= sets.length ? null : sets[cur + 1]!.category;
-    broadCat = next;
-    spotId = null; // broad and spotlight are mutually exclusive selections
-    applyHighlights();
+    if (!savedSets.length) return;
+    activeSetIndex = activeSetIndex + 1 >= savedSets.length ? -1 : activeSetIndex + 1;
+    if (activeSetIndex < 0) overlay.setSelection([]);
+    else {
+      const set = savedSets[activeSetIndex]!;
+      overlay.setAccent(set.accent || '#F59E0B');
+      overlay.setSelection(set.itemIds);
+    }
     renderMapControls();
   }
 
-  /** Spotlight a single authored shape (sector/landmark) and gently focus it. */
-  function spotlightSector(id: string | null): void {
-    spotId = id;
-    if (id) broadCat = null;
-    applyHighlights();
-    if (id) focusOnSpot(id);
+  /** Load the map's saved highlight sets (built in Map Studio). A set is a
+   *  map_overlays row whose payload.marks is a list of authored shape ids. */
+  async function loadSavedSets(mapId: string): Promise<void> {
+    savedSets = [];
+    if (!mapId) { renderMapControls(); return; }
+    const res = await adapter.maps.get(mapId, { signal: controller.signal });
+    if (res.ok) {
+      savedSets = (res.value.sets ?? []).map((s) => {
+        const marks = (s.marks ?? []) as unknown[];
+        const itemIds = marks.filter((m): m is string => typeof m === 'string');
+        const accent = (s as { accent?: string }).accent;
+        return { id: s.id, name: s.name || 'Highlights', itemIds, accent };
+      }).filter((s) => s.itemIds.length > 0);
+    }
+    renderMapControls();
   }
 
   function syncPins(): void {
@@ -380,39 +398,28 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
       </div>`;
   }
 
-  /** The Highlights control: real broad sets + sector/place search, or a
-   *  clean "Alignment pending" state when the overlay isn't calibrated. */
+  /** The Highlights control:
+   *   • "Alignment pending" chip when the overlay isn't calibrated;
+   *   • ONE cycling button through the saved sets (off → set₁ → … → off);
+   *   • a small Clear when anything is highlighted (saved set or manual clicks).
+   *  Clicking roads/blocks on the map itself always highlights instantly. */
   function highlightsControlHtml(): string {
-    // 3D never shows SVG geometry; the control is hidden there.
-    if (mode !== 'original') return '';
+    if (mode !== 'original') return '';                        // 3D never shows SVG
     if (!highlightsAvailable()) {
       return `<span class="pm-ctl pm-ctl--pending" title="This map has no aligned highlight layer yet." aria-disabled="true"><i class="ph-fill ph-highlighter-circle" style="font-size:16px;opacity:.6"></i>Alignment pending</span>`;
     }
-    const sets = overlay?.broadSets() ?? [];
-    const active = broadCat || spotId;
-    const label = spotId
-      ? (overlay?.spotTargets().find((t) => t.id === spotId)?.label ?? 'Sector')
-      : broadCat ? (sets.find((s) => s.category === broadCat)?.label ?? 'Highlights') : 'Highlights';
-    let pop = '';
-    if (highlightsOpen && overlay) {
-      const targets = overlay.spotTargets();
-      const chips = sets.map((s) =>
-        `<button class="pm-hl-chip${broadCat === s.category ? ' active' : ''}" data-act="broad" data-cat="${s.category}" data-tone="${s.category}">${esc(s.label)}</button>`).join('');
-      const list = targets.length
-        ? `<div class="pm-hl-search"><i class="ph-bold ph-magnifying-glass"></i><input id="pm-hl-input" type="search" placeholder="Find a sector or place" autocomplete="off" aria-label="Find a sector or place"></div>
-           <div class="pm-hl-list" id="pm-hl-list" data-scroll>${targets.slice(0, 60).map((t) =>
-             `<button class="pm-hl-item${spotId === t.id ? ' active' : ''}" data-act="spot" data-id="${esc(t.id)}"><i class="ph-fill ph-${t.category === 'places' ? 'map-pin-area' : 'squares-four'}"></i>${esc(t.label)}</button>`).join('')}</div>`
-        : `<div class="pm-hl-empty">This map highlights broad areas only — it has no individually named sectors.</div>`;
-      pop = `<div class="pm-hl-pop" role="menu">
-          <div class="pm-hl-row">${chips}${active ? `<button class="pm-hl-clear" data-act="hl-clear">Clear</button>` : ''}</div>
-          ${list}
-        </div>`;
+    const selCount = overlay?.selection().length ?? 0;
+    let html = '<span class="pm-ctl-sep"></span>';
+    if (savedSets.length) {
+      const label = activeSetIndex >= 0 ? (savedSets[activeSetIndex]?.name ?? 'Highlights') : 'Highlights';
+      html += `<button class="pm-ctl ${activeSetIndex >= 0 ? 'active' : ''}" data-act="cycle-set" title="Tap to show the next saved highlight set"><i class="ph-fill ph-highlighter-circle" style="font-size:16px"></i>${esc(label)}<i class="ph-bold ph-arrows-clockwise" style="font-size:12px;opacity:.7;margin-left:3px"></i></button>`;
+    } else {
+      html += `<span class="pm-ctl" style="opacity:.85;cursor:default" title="Tap roads or blocks on the map to highlight them"><i class="ph-fill ph-cursor-click" style="font-size:15px"></i>Tap map to highlight</span>`;
     }
-    return `<span class="pm-ctl-sep"></span>
-      <div style="position:relative">
-        <button class="pm-ctl ${active ? 'active' : ''}" data-act="highlight" aria-haspopup="true" aria-expanded="${highlightsOpen}"><i class="ph-fill ph-highlighter-circle" style="font-size:16px"></i>${esc(label)}</button>
-        ${pop}
-      </div>`;
+    if (selCount > 0) {
+      html += `<button class="pm-ctl" data-act="hl-clear" title="Clear highlights"><i class="ph-bold ph-x" style="font-size:14px"></i>Clear${selCount > 1 ? ` (${selCount})` : ''}</button>`;
+    }
+    return html;
   }
 
   function renderMapControls(): void {
@@ -642,6 +649,7 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
     if (!maps.length) { mapLoadState = 'unavailable'; mapMsg('No maps are published yet.'); return; }
     mapLoadState = 'ready';
     if (!activeMapId || !maps.some((m) => m.id === activeMapId)) activeMapId = pickDefaultMapId();
+    void loadSavedSets(activeMapId);
     renderTopbar();
     renderMapControls();
     await applyMap();
@@ -659,19 +667,21 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
         // dealer-private routes beyond a normal same-origin history entry.
         if (selectedPropertyId) { selectedPropertyId = null; renderMapControls(); break; }
         if (selectedSectorId) { selectedSectorId = null; view = 'sectors'; renderTopbar(); renderMapControls(); break; }
-        if (highlightsOpen || mapsOpen) { highlightsOpen = false; mapsOpen = false; renderTopbar(); renderMapControls(); break; }
+        if (overlay && overlay.selection().length) { activeSetIndex = -1; overlay.clear(); renderMapControls(); break; }
+        if (mapsOpen) { mapsOpen = false; renderTopbar(); break; }
         if (view !== 'masterplan') { view = 'masterplan'; renderTopbar(); renderMapControls(); void applyMap(); break; }
         if (hasSafeInAppHistory()) window.history.back();
         else window.location.assign('/admin/owner.html');
         break;
       }
-      case 'toggle-maps': mapsOpen = !mapsOpen; highlightsOpen = false; renderTopbar(); break;
+      case 'toggle-maps': mapsOpen = !mapsOpen; renderTopbar(); break;
       case 'pick-map': {
         if (t.dataset.id === activeMapId) { mapsOpen = false; renderTopbar(); break; }
-        activeMapId = t.dataset.id!; mapsOpen = false; highlightsOpen = false; mode = 'original';
-        broadCat = null; spotId = null; pendingSpotQuery = null;
+        activeMapId = t.dataset.id!; mapsOpen = false; mode = 'original';
+        activeSetIndex = -1; pendingSpotQuery = null;
         const m = maps.find((x) => x.id === activeMapId);
         view = m?.kind === 'sector' ? 'sectors' : 'masterplan';
+        void loadSavedSets(activeMapId);
         renderTopbar(); renderMapControls(); void applyMap(); break;
       }
       case 'open-sec': {
@@ -704,13 +714,12 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
         // it, and spotlight its sector (property-linked highlighting).
         const property = props.find((item) => item.id === selectedPropertyId);
         selectedPropertyId = null; selectedSectorId = null; view = 'masterplan'; mode = 'original';
-        highlightsOpen = false;
         if (property) {
           pinned.add(property.id);
           const targetMapId = property.mapPlacement?.mapId;
           const sameMap = !targetMapId || targetMapId === activeMapId;
           if (!sameMap && maps.some((m) => m.id === targetMapId)) {
-            activeMapId = targetMapId!; broadCat = null; spotId = null;
+            activeMapId = targetMapId!; activeSetIndex = -1; void loadSavedSets(activeMapId);
           }
           pendingSpotQuery = property.sector || property.area || null;
           renderTopbar(); renderMapControls();
@@ -721,12 +730,12 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
       }
       case 'prop-sector': selectedPropertyId = null; selectedSectorId = t.dataset.id || null; sectorMode = 'original'; renderMapControls(); break;
       case 'sector-to-plan': {
-        // Return from a sector layout to its parent masterplan, spotlighting it.
+        // Return from a sector layout to its parent masterplan, highlighting it.
         const sector = SECTORS.find((s) => s.id === selectedSectorId);
-        selectedSectorId = null; view = 'masterplan'; mode = 'original'; highlightsOpen = false;
+        selectedSectorId = null; view = 'masterplan'; mode = 'original';
         if (sector) {
           const parent = maps.find((m) => m.kind === 'masterplan' && m.city === sector.city);
-          if (parent && parent.id !== activeMapId) { activeMapId = parent.id; broadCat = null; spotId = null; }
+          if (parent && parent.id !== activeMapId) { activeMapId = parent.id; activeSetIndex = -1; void loadSavedSets(activeMapId); }
           pendingSpotQuery = sector.name;
         }
         renderTopbar(); renderMapControls(); void applyMap();
@@ -743,9 +752,9 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
           : (t.dataset.mode as RenderMode);
         if (next === 'threeD' && !m?.threeD) break;
         if (next === mode) break;
-        mode = next; highlightsOpen = false;
-        // Highlight STATE (broadCat/spotId) is preserved; the SVG is simply
-        // hidden on 3D and restored on Original.
+        mode = next;
+        // The overlay selection is preserved; the SVG is simply hidden on 3D
+        // and restored on Original.
         renderMapControls();
         void mounted!.engine.setMode(mode).then(() => { if (view === 'masterplan') mounted!.engine.cover(); applyHighlights(); });
         break;
@@ -753,16 +762,8 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
       case 'rail-hide': railHidden = true; renderMapControls(); break;
       case 'rail-show': railHidden = false; renderMapControls(); break;
       case 'fit': mounted!.engine.fit(); break;
-      case 'highlight': highlightsOpen = !highlightsOpen; mapsOpen = false; renderMapControls(); break;
-      case 'broad': {
-        const cat = t.dataset.cat as HighlightCategory;
-        broadCat = broadCat === cat ? null : cat; spotId = null;
-        applyHighlights(); renderMapControls(); break;
-      }
-      case 'spot': {
-        spotlightSector(t.dataset.id!); highlightsOpen = false; renderMapControls(); break;
-      }
-      case 'hl-clear': broadCat = null; spotId = null; applyHighlights(); renderMapControls(); break;
+      case 'cycle-set': cycleSet(); break;
+      case 'hl-clear': activeSetIndex = -1; overlay?.clear(); renderMapControls(); break;
       case 'zoom-in': mounted!.engine.zoom(1.3); break;
       case 'zoom-out': mounted!.engine.zoom(1 / 1.3); break;
       case 'clear-pins': pinned.clear(); renderMapControls(); renderRail(); break;
@@ -775,7 +776,7 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
           pinned.add(id);
           // Show the pin where it actually lives: switch to its map if needed.
           if (placedMap && placedMap !== activeMapId && maps.some((m) => m.id === placedMap)) {
-            activeMapId = placedMap; mode = 'original'; broadCat = null; spotId = null; view = 'masterplan';
+            activeMapId = placedMap; mode = 'original'; activeSetIndex = -1; view = 'masterplan'; void loadSavedSets(placedMap);
             renderTopbar(); renderMapControls(); void applyMap(); renderRail(); break;
           }
         }
@@ -788,34 +789,11 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
 
   const onKey = (e: KeyboardEvent) => {
     if (e.key !== 'Escape') return;
-    if (highlightsOpen) { highlightsOpen = false; renderMapControls(); return; }
     if (selectedPropertyId) { selectedPropertyId = null; renderMapControls(); return; }
     if (selectedSectorId) { selectedSectorId = null; view = 'sectors'; renderTopbar(); renderMapControls(); return; }
     if (mapsOpen) { mapsOpen = false; renderTopbar(); }
   };
   document.addEventListener('keydown', onKey);
-
-  // Live-filter the highlight search list; Enter spotlights the first match.
-  const onHlInput = (e: Event) => {
-    const input = (e.target as HTMLElement).closest<HTMLInputElement>('#pm-hl-input');
-    if (!input || !overlay) return;
-    const q = input.value.trim().toLowerCase();
-    const list = container.querySelector<HTMLElement>('#pm-hl-list');
-    if (!list) return;
-    list.querySelectorAll<HTMLElement>('.pm-hl-item').forEach((item) => {
-      const label = (item.textContent || '').toLowerCase();
-      item.style.display = !q || label.includes(q) ? '' : 'none';
-    });
-  };
-  container.addEventListener('input', onHlInput);
-  const onHlEnter = (e: KeyboardEvent) => {
-    const input = (e.target as HTMLElement).closest<HTMLInputElement>('#pm-hl-input');
-    if (!input || e.key !== 'Enter' || !overlay) return;
-    e.preventDefault();
-    const id = overlay.findTarget(input.value);
-    if (id) { spotlightSector(id); highlightsOpen = false; renderMapControls(); }
-  };
-  container.addEventListener('keydown', onHlEnter);
 
   const onTabKey = (e: KeyboardEvent) => {
     const target = (e.target as HTMLElement).closest<HTMLElement>('[role="tab"]');
@@ -833,7 +811,6 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
   const onDocClick = (e: MouseEvent) => {
     const el = e.target as HTMLElement;
     if (mapsOpen && !el.closest('.pm-mapbtn, .pm-pop')) { mapsOpen = false; renderTopbar(); }
-    if (highlightsOpen && !el.closest('[data-act="highlight"], .pm-hl-pop')) { highlightsOpen = false; renderMapControls(); }
   };
   document.addEventListener('click', onDocClick, true);
 
@@ -861,8 +838,6 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
     cancelAnimationFrame(animFrame);
     container.removeEventListener('click', onClick);
     container.removeEventListener('keydown', onTabKey);
-    container.removeEventListener('input', onHlInput);
-    container.removeEventListener('keydown', onHlEnter);
     document.removeEventListener('keydown', onKey);
     document.removeEventListener('click', onDocClick, true);
     controller.abort();

@@ -13,7 +13,7 @@ export { BoundedCache } from './cache';
 export { layoutOverlay, geometryMatches } from './overlay-engine';
 export type { OverlayLayout } from './overlay-engine';
 export { loadSvgOverlay } from './svg-overlay';
-export type { SvgOverlayHandle, BroadSet, SpotTarget, HighlightCategory } from './svg-overlay';
+export type { SvgHighlightHandle, HighlightItem, ItemKind } from './svg-overlay';
 export { MapImageLoader, domImagePort } from './loader';
 export type { LoadedImage, ImagePort } from './loader';
 export { MapEngine } from './map-engine';

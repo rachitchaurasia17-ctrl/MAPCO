@@ -181,6 +181,11 @@
 @keyframes pm-spin { to { transform: rotate(360deg); } }
 .pm-spin { display: inline-block; animation: pm-spin 1s linear infinite; }
 
+/* Premium road "energy flow" (blueprint) */
+@keyframes pmflowdash { to { stroke-dashoffset: -70; } }
+.pm-hlsvg { pointer-events: none; }
+.pm-hlsvg [data-hits] { pointer-events: auto; }
+
 /* ── Smooth zoom: ease transform changes; disabled mid-drag for instant pan ── */
 .pm-map-smooth { transition: transform .13s cubic-bezier(.22,.61,.36,1); will-change: transform; }
 .pm-dragging .pm-map-smooth { transition: none; }
