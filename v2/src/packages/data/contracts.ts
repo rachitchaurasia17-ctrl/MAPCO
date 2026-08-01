@@ -362,6 +362,22 @@ export type ClientLinkState =
   | { readonly kind: 'unavailable' }
   | { readonly kind: 'no-approved-photos'; readonly payload: ClientSafePayload };
 
+/** Dealer-side input for creating a private client link. */
+export interface CreateClientLinkInput {
+  clientId?: string;
+  propertyIds: string[];                 // 1–4 client-visible properties
+  priceVisibility: 'shown' | 'hidden';
+  locationVisibility: 'area' | 'exact' | 'hidden';
+  expiresInDays: number;
+  /** per-property photo refs, e.g. { "<propId>": ["external:0","external:1"] } */
+  photoSelections: Record<string, string[]>;
+  /** optional recorded voice note (uploaded to the private audio bucket). */
+  audioBlob?: Blob | null;
+  audioSeconds?: number;
+}
+
+export interface CreatedClientLink { id: string; url: string; token: string; expiresAt?: string; }
+
 export interface ClientLinkRepository {
   /** dealer-side listing of links (record surface). */
   list(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<ClientLink>>>;
@@ -370,6 +386,10 @@ export interface ClientLinkRepository {
    * is passed as an argument and never stored or echoed back.
    */
   resolve(token: string, opts?: QueryOptions): Promise<Result<ClientLinkState>>;
+  /** Create a private client link (dealer). Returns the raw token ONCE. */
+  create(input: CreateClientLinkInput, opts?: QueryOptions): Promise<Result<CreatedClientLink>>;
+  /** Deactivate (revoke) a link so it can no longer be opened. */
+  revoke(id: string, opts?: QueryOptions): Promise<Result<void>>;
 }
 
 /* ───────────────────────────────────────────────────────────────

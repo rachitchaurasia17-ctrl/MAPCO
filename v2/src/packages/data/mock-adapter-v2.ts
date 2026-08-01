@@ -392,6 +392,26 @@ class MockClientLinkRepository implements ClientLinkRepository {
     if (link.status === 'revoked') return ok({ kind: 'revoked' });
     return ok({ kind: 'valid', payload: buildPayload(link) });
   }
+
+  async create(input: import('./contracts').CreateClientLinkInput, opts?: QueryOptions): Promise<Result<import('./contracts').CreatedClientLink>> {
+    const a = aborted<import('./contracts').CreatedClientLink>(opts); if (a) return a;
+    const id = `link-${Date.now()}`;
+    const token = `tok-${id}`;
+    CLIENT_LINKS.unshift({
+      id, clientId: input.clientId ?? '', clientName: 'New client', props: input.propertyIds, propNames: [],
+      propertyCount: input.propertyIds.length, expiry: `${input.expiresInDays}d`, loc: input.locationVisibility === 'hidden' ? 'hidden' : 'area',
+      price: input.priceVisibility, audio: input.audioBlob ? 'done' : 'none', audioSecs: input.audioSeconds ?? 0,
+      status: 'active', events: { opens: 0, played: 0, called: 0, wa: 0, visit: 0 }, lastOpen: 'not yet',
+    } as ClientLink);
+    return ok({ id, token, url: `/client/?token=${token}`, expiresAt: '' });
+  }
+
+  async revoke(id: string, opts?: QueryOptions): Promise<Result<void>> {
+    const a = aborted<void>(opts); if (a) return a;
+    const link = CLIENT_LINKS.find((l) => l.id === id);
+    if (link) link.status = 'revoked';
+    return ok(undefined);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════

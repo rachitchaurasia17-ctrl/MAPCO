@@ -69,17 +69,24 @@ export async function renderLinks(el: HTMLElement): Promise<void> {
       flow = new GenerateLinkFlow(
         clients,
         properties,
-        (newLink) => {
-          links.unshift(newLink);
-          render();
-        },
         () => {
-          flow.unmount();
-        }
+          // A link was created server-side — refresh the real list.
+          void adapter.clientLinks.list({ limit: 50 }).then((r) => { if (r.ok) { links = [...r.value.items]; render(); } });
+        },
+        () => { flow.unmount(); }
       );
       flow.mount(document.body);
+      return;
     }
-    if (action === 'stop') links = links.map((link) => link.id === id ? { ...link, status: 'revoked' } : link);
+    if (action === 'stop') {
+      // Deactivate (revoke) the link so it can no longer be opened.
+      links = links.map((link) => link.id === id ? { ...link, status: 'revoked' } : link);
+      render();
+      void adapter.clientLinks.revoke(id).then((r) => {
+        if (!r.ok) void adapter.clientLinks.list({ limit: 50 }).then((res) => { if (res.ok) { links = [...res.value.items]; render(); } });
+      });
+      return;
+    }
     if (action === 'delete') links = links.filter((link) => link.id !== id);
     if (action === 'preview') previewId = id;
     if (action === 'close-preview') previewId = null;

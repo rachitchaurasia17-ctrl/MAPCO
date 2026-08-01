@@ -1,6 +1,7 @@
 import { Property, PropertyType, WantType, Facing, ClientLink, Client } from '../data/types';
 import { getMaps, mountMapEngine, addPropertyToMap, type MountedMap } from '../maps';
 import { formatINR } from './utils';
+import { adapter } from '../data/adapter';
 
 const esc = (value: string) =>
   value.replace(
@@ -368,10 +369,24 @@ export class AddClientFlow {
 
 export class GenerateLinkFlow {
   private el: HTMLElement;
-  private buildDone = false;
   private chosenClient = '';
   private chosenProps: string[] = [];
-  
+  private priceVisible = false;
+  private locationVisibility: 'area' | 'exact' | 'hidden' = 'area';
+  private expiresInDays = 7;
+  private showPreview = false;
+  private busy = false;
+  private error = '';
+  private result: { url: string; token: string } | null = null;
+  // audio recording
+  private isRecording = false;
+  private recorder: MediaRecorder | null = null;
+  private chunks: Blob[] = [];
+  private audioBlob: Blob | null = null;
+  private audioUrl = '';
+  private audioSeconds = 0;
+  private recStart = 0;
+
   private onComplete: (l: ClientLink) => void;
   private onClose: () => void;
   private clients: Client[];
@@ -387,14 +402,10 @@ export class GenerateLinkFlow {
     this.attachEvents();
   }
 
-  public mount(container: HTMLElement) {
-    container.appendChild(this.el);
-    this.render();
-  }
+  public mount(container: HTMLElement) { container.appendChild(this.el); this.render(); }
+  public unmount() { this.stopStream(); if (this.audioUrl) URL.revokeObjectURL(this.audioUrl); this.el.remove(); }
 
-  public unmount() {
-    this.el.remove();
-  }
+  private stopStream() { try { this.recorder?.stream.getTracks().forEach((t) => t.stop()); } catch { /* ignore */ } }
 
   private getInitials(name: string) {
     const parts = name.split(' ');
@@ -402,73 +413,137 @@ export class GenerateLinkFlow {
     return name.slice(0, 2).toUpperCase();
   }
 
+  /** All https / storage photos become approved refs for the link. */
+  private photoSelections(): Record<string, string[]> {
+    const sel: Record<string, string[]> = {};
+    for (const id of this.chosenProps) {
+      const p = this.properties.find((x) => x.id === id);
+      const refs: string[] = [];
+      (p?.photos ?? []).slice(0, 8).forEach((url, i) => { if (/^https:\/\//.test(url)) refs.push(`external:${i}`); });
+      sel[id] = refs;
+    }
+    return sel;
+  }
+
   private render() {
-    if (this.buildDone) {
+    const origin = window.location.origin;
+    if (this.result) {
+      const full = origin + this.result.url;
       const client = this.clients.find((item) => item.id === this.chosenClient);
-      this.el.innerHTML = `<div style="position:fixed;inset:0;z-index:86;display:flex;justify-content:center;align-items:flex-start;padding:28px 24px;overflow-y:auto"><div data-act="close-build" style="position:fixed;inset:0;background:rgba(60,44,12,.58)"></div><div role="dialog" aria-modal="true" style="position:relative;width:100%;max-width:660px;border-radius:28px;background:#fffaf0;box-shadow:0 0 0 1px #cfe6d8,0 40px 80px -30px rgba(40,26,2,.8);padding:32px 30px"><div style="width:64px;height:64px;margin:0 auto;border-radius:20px;background:#dcf3e5;color:#12a150;display:grid;place-items:center"><i class="ph-fill ph-check-circle" style="font-size:34px"></i></div><div style="margin-top:16px;text-align:center;font-family:'Newsreader',serif;font-weight:500;font-size:28px;color:#241d0c">Link is ready</div><div style="margin-top:7px;text-align:center;font-size:15.5px;color:#6b6156">Private to ${esc(client?.name || 'this customer')} · ${this.chosenProps.length} plots</div><div style="display:flex;align-items:center;gap:10px;margin-top:22px;padding:15px 17px;border-radius:14px;background:#faf7ff;border:1px solid #e4dbf7"><i class="ph-bold ph-link-simple" style="font-size:18px;color:#a8792a"></i><span style="flex:1;font-size:14.5px;font-weight:600;color:#4c463d">plotmap.in/p/${esc((client?.name || 'client').split(' ')[0]!.toLowerCase())}-ready</span></div><button data-act="close-build-done" style="width:100%;height:54px;margin-top:16px;border-radius:14px;background:#12a150;color:#fff;font-size:16px;font-weight:800">Done</button></div></div>`;
+      const wa = `https://wa.me/?text=${encodeURIComponent('Here is your private property page: ' + full)}`;
+      this.el.innerHTML = `<div style="position:fixed;inset:0;z-index:86;display:flex;justify-content:center;align-items:flex-start;padding:28px 24px;overflow-y:auto"><div data-act="close-done" style="position:fixed;inset:0;background:rgba(60,44,12,.58)"></div><div role="dialog" aria-modal="true" style="position:relative;width:100%;max-width:660px;border-radius:28px;background:#fffaf0;box-shadow:0 0 0 1px #cfe6d8,0 40px 80px -30px rgba(40,26,2,.8);padding:32px 30px"><div style="width:64px;height:64px;margin:0 auto;border-radius:20px;background:#dcf3e5;color:#12a150;display:grid;place-items:center"><i class="ph-fill ph-check-circle" style="font-size:34px"></i></div><div style="margin-top:16px;text-align:center;font-family:'Newsreader',serif;font-weight:500;font-size:28px;color:#241d0c">Link is ready</div><div style="margin-top:7px;text-align:center;font-size:15.5px;color:#6b6156">Private to ${esc(client?.name || 'this customer')} · ${this.chosenProps.length} ${this.chosenProps.length === 1 ? 'plot' : 'plots'}</div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:22px;padding:15px 17px;border-radius:14px;background:#faf7ff;border:1px solid #e4dbf7"><i class="ph-bold ph-link-simple" style="font-size:18px;color:#a8792a"></i><input readonly value="${esc(full)}" style="flex:1;min-width:0;border:none;background:none;font-size:14px;font-weight:600;color:#4c463d;outline:none"><button data-act="copy" data-url="${esc(full)}" style="padding:8px 12px;border-radius:9px;background:#241d0c;color:#ffd75e;font-size:13px;font-weight:800">Copy</button></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px"><a href="${esc(this.result.url)}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;height:52px;border-radius:14px;background:#efe8fb;color:#6b3fd4;font-size:15px;font-weight:800;text-decoration:none"><i class="ph-fill ph-device-mobile" style="font-size:18px"></i>Preview their page</a><a href="${esc(wa)}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;height:52px;border-radius:14px;background:#12a150;color:#fff;font-size:15px;font-weight:800;text-decoration:none"><i class="ph-fill ph-whatsapp-logo" style="font-size:18px"></i>Send on WhatsApp</a></div>
+        <button data-act="close-done" style="width:100%;height:52px;margin-top:12px;border-radius:14px;background:#f0eaff;color:#5b32c4;font-size:16px;font-weight:800">Done</button></div></div>`;
       return;
     }
-    
-    const ready = Boolean(this.chosenClient && this.chosenProps.length);
+
+    const ready = Boolean(this.chosenClient && this.chosenProps.length) && !this.busy;
+    const visBtn = (active: boolean, act: string, val: string, label: string) => `<button data-act="${act}" data-val="${val}" style="flex:1;height:40px;border-radius:10px;font-size:13.5px;font-weight:800;${active ? 'background:#12704a;color:#fff' : 'background:#eef4f0;color:#4c6157'}">${label}</button>`;
+    const previewPanel = this.showPreview ? `<div style="margin-top:18px;border-radius:16px;background:#241904;background-image:linear-gradient(145deg,#3a2605,#171006);color:#fff8e6;padding:16px"><div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800"><i class="ph ph-eye"></i>What the client will see</div><div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">${this.chosenProps.map((id) => { const p = this.properties.find((x) => x.id === id); if (!p) return ''; return `<div style="display:flex;align-items:center;gap:11px;background:rgba(255,255,255,.06);border-radius:12px;padding:9px 11px"><span style="width:46px;height:46px;border-radius:9px;flex:none;background:${p.photos[0] ? `url('${esc(p.photos[0])}') center/cover` : '#5a4a2a'}"></span><span style="flex:1;min-width:0"><span style="display:block;font-weight:800;font-size:14px">${esc(this.locationVisibility === 'hidden' ? p.area.split(',')[0] || 'Property' : p.loc)}</span><span style="display:block;font-size:12px;color:#e2cf9f">${esc(p.size)} · ${esc(p.facing)} facing${this.priceVisible && p.price ? ' · ' + esc(formatINR(p.price)) : ''}</span></span></div>`; }).join('') || '<span style="color:#c9b477;font-size:13px">Pick plots to preview.</span>'}</div><div style="margin-top:10px;font-size:12px;color:#c9b477">Price ${this.priceVisible ? 'shown' : 'hidden'} · Location ${this.locationVisibility} · Expires in ${this.expiresInDays} days${this.audioBlob ? ' · Voice note attached' : ''}</div></div>` : '';
+
     this.el.innerHTML = `<div style="position:fixed;inset:0;z-index:86;display:flex;justify-content:center;align-items:flex-start;padding:28px 24px;overflow-y:auto"><div data-act="close-build" style="position:fixed;inset:0;background:rgba(60,44,12,.58);animation:omVeil .2s ease both"></div><section role="dialog" aria-modal="true" aria-label="Send a private link" style="position:relative;width:100%;max-width:660px;border-radius:28px;background:#fffaf0;box-shadow:0 0 0 1px #cfe6d8,0 40px 80px -30px rgba(40,26,2,.8);overflow:hidden;animation:omSheet .34s cubic-bezier(.2,.8,.2,1) both">
       <div style="display:flex;align-items:center;gap:14px;padding:22px 26px;border-bottom:1px solid #ddeee4;background:#dcf3e5"><span style="width:46px;height:46px;border-radius:14px;background:#12704a;color:#fff;display:grid;place-items:center;flex:none"><i class="ph-fill ph-paper-plane-tilt" style="font-size:23px"></i></span><div style="flex:1;min-width:0"><div style="font-family:'Newsreader',serif;font-weight:500;font-size:26px;letter-spacing:-.02em;color:#241d0c">Send a private link</div><div style="font-size:14px;color:#12704a">One page, only for them. Voice note optional.</div></div><button data-act="close-build" style="width:38px;height:38px;border-radius:12px;background:#fffaf0;color:#6b6156;display:grid;place-items:center;flex:none"><i class="ph-bold ph-x" style="font-size:16px"></i></button></div>
-      <div data-scroll style="padding:22px 26px;max-height:60vh;overflow-y:auto"><div style="font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">Who is it for</div><div style="display:flex;flex-direction:column;gap:9px;margin-top:11px">${this.clients.map((client) => { const on = this.chosenClient === client.id; return `<button data-act="choose-client" data-id="${esc(client.id)}" style="display:flex;align-items:center;gap:12px;width:100%;padding:11px 13px;border-radius:14px;transition:all .16s;${on ? 'background:#dcf3e5;border:1px solid #12a150' : 'background:#faf7ff;border:1px solid #e4dbf7'}"><span style="width:40px;height:40px;border-radius:12px;flex:none;display:grid;place-items:center;font-size:13px;font-weight:800;${on ? 'background:#12704a;color:#fff' : 'background:#e2f2e6;color:#12704a'}">${this.getInitials(client.name)}</span><span style="flex:1;min-width:0;text-align:left"><span style="display:block;font-size:15.5px;font-weight:800;color:#2f2a2d">${esc(client.name)}</span><span style="display:block;font-size:13px;color:#8d8271">${esc(client.want)} · ${esc(client.city)}</span></span><i class="${on ? 'ph-fill ph-check-circle' : 'ph ph-circle'}" style="font-size:20px;color:#12a150;flex:none"></i></button>`; }).join('')}</div>
-        <div style="margin-top:22px;display:flex;align-items:baseline;justify-content:space-between;gap:10px"><div style="font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">Which plots</div><div style="font-size:13.5px;font-weight:700;color:#12704a">${this.chosenProps.length ? `${this.chosenProps.length} ${this.chosenProps.length === 1 ? 'plot' : 'plots'} chosen` : 'Pick up to 4'}</div></div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:11px">${this.properties.slice(0, 8).map((property) => { const on = this.chosenProps.includes(property.id); return `<button data-act="choose-prop" data-id="${esc(property.id)}" style="position:relative;overflow:hidden;border-radius:14px;background:#faf7ff;border:2px solid ${on ? '#12a150' : '#e4dbf7'}"><span style="display:block;width:100%;height:70px;background:${property.photos[0] ? `url('${esc(property.photos[0])}') center/cover` : '#efe8fb'}"></span><span style="display:block;padding:9px 10px;font-size:12.5px;font-weight:700;text-align:left;line-height:1.3;color:#241f1c">${esc(property.loc)}</span>${on ? '<span style="position:absolute;top:7px;right:7px;width:24px;height:24px;border-radius:50%;background:#12a150;color:#fff;display:grid;place-items:center"><i class="ph-bold ph-check" style="font-size:13px"></i></span>' : ''}</button>`; }).join('')}</div>
-        <div style="margin-top:22px;font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">Your voice <span style="font-weight:700;text-transform:none;letter-spacing:0;color:#a5946f">· optional</span></div><button style="display:flex;align-items:center;justify-content:center;gap:11px;width:100%;height:64px;margin-top:11px;border-radius:16px;background:#ffc93c;color:#241d0c;font-size:17.5px;font-weight:800"><i class="ph-fill ph-microphone" style="font-size:22px"></i><span style="flex:1;text-align:left;font-size:15.5px;font-weight:800">Record a voice note for them</span></button></div>
-      <div style="display:flex;align-items:center;gap:11px;padding:16px 26px;border-top:1px solid #ddeee4;background:#f4fbf6"><div style="flex:1;font-size:13.5px;color:#8d8271">${!this.chosenClient ? 'Pick a customer first' : !this.chosenProps.length ? 'Pick at least one plot' : 'Ready to send'}</div><button data-act="close-build" style="padding:15px 22px;border-radius:14px;background:#e8f2eb;color:#6b6156;font-size:15.5px;font-weight:700">Cancel</button><button data-act="send" ${ready ? '' : 'disabled'} style="display:flex;align-items:center;justify-content:center;gap:9px;padding:15px 24px;border-radius:14px;font-size:15.5px;font-weight:800;${ready ? 'background:#12a150;color:#fff;box-shadow:0 14px 26px -16px rgba(18,161,80,.95)' : 'background:#e8f2eb;color:#a5b8ac'}"><i class="ph-fill ph-paper-plane-tilt" style="font-size:18px"></i>Send link</button></div>
+      <div data-scroll style="padding:22px 26px;max-height:60vh;overflow-y:auto">
+        <div style="font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">Who is it for</div><div style="display:flex;flex-direction:column;gap:9px;margin-top:11px">${this.clients.length ? this.clients.map((client) => { const on = this.chosenClient === client.id; return `<button data-act="choose-client" data-id="${esc(client.id)}" style="display:flex;align-items:center;gap:12px;width:100%;padding:11px 13px;border-radius:14px;transition:all .16s;${on ? 'background:#dcf3e5;border:1px solid #12a150' : 'background:#faf7ff;border:1px solid #e4dbf7'}"><span style="width:40px;height:40px;border-radius:12px;flex:none;display:grid;place-items:center;font-size:13px;font-weight:800;${on ? 'background:#12704a;color:#fff' : 'background:#e2f2e6;color:#12704a'}">${this.getInitials(client.name)}</span><span style="flex:1;min-width:0;text-align:left"><span style="display:block;font-size:15.5px;font-weight:800;color:#2f2a2d">${esc(client.name)}</span><span style="display:block;font-size:13px;color:#8d8271">${esc(client.want)} · ${esc(client.city)}</span></span><i class="${on ? 'ph-fill ph-check-circle' : 'ph ph-circle'}" style="font-size:20px;color:#12a150;flex:none"></i></button>`; }).join('') : '<div style="font-size:13.5px;color:#8d8271;padding:8px 2px">Add a customer first, then send them a link.</div>'}</div>
+        <div style="margin-top:22px;display:flex;align-items:baseline;justify-content:space-between;gap:10px"><div style="font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">Which plots</div><div style="font-size:13.5px;font-weight:700;color:#12704a">${this.chosenProps.length ? `${this.chosenProps.length} ${this.chosenProps.length === 1 ? 'plot' : 'plots'} chosen` : 'Pick up to 4'}</div></div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:11px">${this.properties.slice(0, 12).map((property) => { const on = this.chosenProps.includes(property.id); return `<button data-act="choose-prop" data-id="${esc(property.id)}" style="position:relative;overflow:hidden;border-radius:14px;background:#faf7ff;border:2px solid ${on ? '#12a150' : '#e4dbf7'}"><span style="display:block;width:100%;height:70px;background:${property.photos[0] ? `url('${esc(property.photos[0])}') center/cover` : '#efe8fb'}"></span><span style="display:block;padding:9px 10px;font-size:12.5px;font-weight:700;text-align:left;line-height:1.3;color:#241f1c">${esc(property.loc)}</span>${on ? '<span style="position:absolute;top:7px;right:7px;width:24px;height:24px;border-radius:50%;background:#12a150;color:#fff;display:grid;place-items:center"><i class="ph-bold ph-check" style="font-size:13px"></i></span>' : ''}</button>`; }).join('')}</div>
+        <div style="margin-top:22px;font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">What they can see</div>
+        <div style="display:flex;gap:8px;margin-top:11px"><div style="flex:1"><div style="font-size:12px;color:#8d8271;margin-bottom:5px">Price</div><div style="display:flex;gap:6px">${visBtn(!this.priceVisible, 'price', 'hidden', 'Hidden')}${visBtn(this.priceVisible, 'price', 'shown', 'Shown')}</div></div><div style="flex:1"><div style="font-size:12px;color:#8d8271;margin-bottom:5px">Location</div><div style="display:flex;gap:6px">${visBtn(this.locationVisibility === 'area', 'loc', 'area', 'Area')}${visBtn(this.locationVisibility === 'exact', 'loc', 'exact', 'Exact')}${visBtn(this.locationVisibility === 'hidden', 'loc', 'hidden', 'Hidden')}</div></div></div>
+        <div style="margin-top:14px;display:flex;align-items:center;gap:10px"><div style="font-size:13.5px;color:#4c463d;font-weight:700">Link expires in</div><select data-act="expiry" style="height:38px;border:1px solid #ddd0f5;border-radius:10px;padding:0 10px;font:inherit;font-size:14px;background:#fff">${[3, 7, 14, 30].map((d) => `<option value="${d}"${this.expiresInDays === d ? ' selected' : ''}>${d} days</option>`).join('')}</select></div>
+        <div style="margin-top:22px;font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">Your voice <span style="font-weight:700;text-transform:none;letter-spacing:0;color:#a5946f">· optional</span></div>
+        ${this.audioBlob
+          ? `<div style="display:flex;align-items:center;gap:11px;width:100%;margin-top:11px;padding:12px 14px;border-radius:16px;background:#e2f2e6;border:1px solid #b7ddc4"><i class="ph-fill ph-waveform" style="font-size:22px;color:#12704a"></i><audio controls src="${esc(this.audioUrl)}" style="flex:1;height:38px"></audio><span style="font-size:13px;font-weight:800;color:#12704a">${this.audioSeconds}s</span><button data-act="rec-remove" aria-label="Remove voice note" style="width:34px;height:34px;border-radius:10px;background:#ffe1e6;color:#c2185b;display:grid;place-items:center"><i class="ph-bold ph-trash"></i></button></div>`
+          : `<button data-act="rec-toggle" style="display:flex;align-items:center;justify-content:center;gap:11px;width:100%;height:64px;margin-top:11px;border-radius:16px;${this.isRecording ? 'background:#ffe1e6;color:#c2185b' : 'background:#ffc93c;color:#241d0c'};font-size:15.5px;font-weight:800"><i class="ph-fill ${this.isRecording ? 'ph-stop-circle' : 'ph-microphone'}" style="font-size:22px"></i><span style="flex:1;text-align:left">${this.isRecording ? 'Recording… tap to stop' : 'Record a voice note for them'}</span></button>`}
+        ${this.error ? `<div role="alert" style="margin-top:14px;padding:11px 14px;border-radius:12px;background:#ffe1e6;color:#b3123a;font-size:13.5px;font-weight:700">${esc(this.error)}</div>` : ''}
+        ${previewPanel}
+      </div>
+      <div style="display:flex;align-items:center;gap:11px;padding:16px 26px;border-top:1px solid #ddeee4;background:#f4fbf6"><div style="flex:1;font-size:13.5px;color:#8d8271">${this.busy ? 'Creating the link…' : !this.chosenClient ? 'Pick a customer first' : !this.chosenProps.length ? 'Pick at least one plot' : 'Ready to send'}</div><button data-act="toggle-preview" style="padding:15px 18px;border-radius:14px;background:#efe8fb;color:#6b3fd4;font-size:15px;font-weight:800">${this.showPreview ? 'Hide preview' : 'Preview'}</button><button data-act="send" ${ready ? '' : 'disabled'} style="display:flex;align-items:center;justify-content:center;gap:9px;padding:15px 24px;border-radius:14px;font-size:15.5px;font-weight:800;${ready ? 'background:#12a150;color:#fff;box-shadow:0 14px 26px -16px rgba(18,161,80,.95)' : 'background:#e8f2eb;color:#a5b8ac'}"><i class="ph-fill ph-paper-plane-tilt" style="font-size:18px"></i>${this.busy ? 'Sending…' : 'Create link'}</button></div>
     </section></div>`;
   }
 
+  private async toggleRecord() {
+    if (this.isRecording) {
+      this.recorder?.stop();
+      return;
+    }
+    this.error = '';
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this.chunks = [];
+      const rec = new MediaRecorder(stream);
+      this.recorder = rec;
+      this.recStart = Date.now();
+      rec.ondataavailable = (e) => { if (e.data.size) this.chunks.push(e.data); };
+      rec.onstop = () => {
+        this.audioSeconds = Math.max(1, Math.min(120, Math.round((Date.now() - this.recStart) / 1000)));
+        this.audioBlob = new Blob(this.chunks, { type: 'audio/webm' });
+        if (this.audioUrl) URL.revokeObjectURL(this.audioUrl);
+        this.audioUrl = URL.createObjectURL(this.audioBlob);
+        this.isRecording = false;
+        stream.getTracks().forEach((t) => t.stop());
+        this.render();
+      };
+      rec.start();
+      this.isRecording = true;
+      this.render();
+    } catch {
+      this.error = 'Could not access the microphone. Check the browser permission.';
+      this.isRecording = false;
+      this.render();
+    }
+  }
+
+  private async send() {
+    if (!this.chosenClient || !this.chosenProps.length || this.busy) return;
+    this.busy = true; this.error = ''; this.render();
+    const res = await adapter.clientLinks.create({
+      clientId: this.chosenClient,
+      propertyIds: [...this.chosenProps],
+      priceVisibility: this.priceVisible ? 'shown' : 'hidden',
+      locationVisibility: this.locationVisibility,
+      expiresInDays: this.expiresInDays,
+      photoSelections: this.photoSelections(),
+      audioBlob: this.audioBlob,
+      audioSeconds: this.audioSeconds,
+    });
+    this.busy = false;
+    if (res.ok) {
+      this.result = { url: res.value.url, token: res.value.token };
+      this.stopStream();
+      this.render();
+      this.onComplete({} as ClientLink); // signal the list to refresh
+    } else {
+      this.error = res.error.message || 'Could not create the link. Make sure each plot has an approved photo.';
+      this.render();
+    }
+  }
+
   private attachEvents() {
+    this.el.addEventListener('change', (event) => {
+      const t = event.target as HTMLSelectElement;
+      if (t.closest('[data-act="expiry"]') || (t.tagName === 'SELECT' && t.closest('[data-scroll]'))) {
+        this.expiresInDays = Number(t.value) || 7;
+      }
+    });
     this.el.addEventListener('click', (event) => {
       const target = (event.target as HTMLElement).closest<HTMLElement>('[data-act]');
       if (!target) return;
-      
       const action = target.dataset.act;
       const id = target.dataset.id || '';
-      
-      if (action === 'close-build') {
-        this.onClose();
-      }
-      
-      if (action === 'close-build-done') {
-        // We already pushed the link to onComplete during 'send', we just close now.
-        this.onClose();
-      }
-      
-      if (action === 'choose-client') {
-        this.chosenClient = this.chosenClient === id ? '' : id;
-        this.render();
-      }
-      
-      if (action === 'choose-prop') {
-        this.chosenProps = this.chosenProps.includes(id) 
-          ? this.chosenProps.filter((item) => item !== id) 
+      if (action === 'close-build' || action === 'close-done') { this.onClose(); return; }
+      if (action === 'choose-client') { this.chosenClient = this.chosenClient === id ? '' : id; this.render(); }
+      else if (action === 'choose-prop') {
+        this.chosenProps = this.chosenProps.includes(id) ? this.chosenProps.filter((x) => x !== id)
           : this.chosenProps.length < 4 ? [...this.chosenProps, id] : this.chosenProps;
         this.render();
       }
-      
-      if (action === 'send' && this.chosenClient && this.chosenProps.length) {
-        const client = this.clients.find((item) => item.id === this.chosenClient)!;
-        const link: ClientLink = { 
-          id: `local-${Date.now()}`, 
-          clientId: client.id, 
-          clientName: client.name, 
-          props: [...this.chosenProps], 
-          propNames: this.chosenProps.map((propId) => this.properties.find((property) => property.id === propId)?.area || propId), 
-          expiry: '3d', 
-          loc: 'area', 
-          price: 'hidden', 
-          audio: 'none', 
-          audioSecs: 0, 
-          status: 'active', 
-          events: { opens: 0, played: 0, called: 0, wa: 0, visit: 0 }, 
-          lastOpen: 'not opened yet' 
-        };
-        this.buildDone = true;
-        this.render(); // Show the 'Link is ready' state
-        this.onComplete(link);
-      }
+      else if (action === 'price') { this.priceVisible = target.dataset.val === 'shown'; this.render(); }
+      else if (action === 'loc') { this.locationVisibility = (target.dataset.val as 'area' | 'exact' | 'hidden') || 'area'; this.render(); }
+      else if (action === 'toggle-preview') { this.showPreview = !this.showPreview; this.render(); }
+      else if (action === 'rec-toggle') { void this.toggleRecord(); }
+      else if (action === 'rec-remove') { this.audioBlob = null; if (this.audioUrl) URL.revokeObjectURL(this.audioUrl); this.audioUrl = ''; this.audioSeconds = 0; this.render(); }
+      else if (action === 'copy') { const url = target.dataset.url || ''; void navigator.clipboard?.writeText(url); target.textContent = 'Copied'; }
+      else if (action === 'send') { void this.send(); }
     });
   }
 }

@@ -32,6 +32,11 @@ function aborted<T>(opts?: QueryOptions): Result<T> | null {
   return opts?.signal?.aborted ? err('aborted', 'Request cancelled') : null;
 }
 
+function cryptoId(): string {
+  const c = (globalThis as { crypto?: { randomUUID?: () => string } }).crypto;
+  return c?.randomUUID ? c.randomUUID().replace(/-/g, '') : `${Date.now()}${Math.round(Math.random() * 1e9)}`;
+}
+
 /** Translate any thrown/PostgREST error into a typed RepoError. */
 function toErr(e: unknown): Result<never> {
   const msg = (e as { message?: string })?.message ?? String(e);
@@ -308,6 +313,48 @@ class SupaClientLinks implements ClientLinkRepository {
         } as ClientLink;
       });
       return ok({ items, nextCursor: null, total: items.length });
+    } catch (e) { return toErr(e); }
+  }
+
+  async create(input: import('../contracts').CreateClientLinkInput, o?: QueryOptions): Promise<Result<import('../contracts').CreatedClientLink>> {
+    const a = aborted<import('../contracts').CreatedClientLink>(o); if (a) return a;
+    try {
+      const c = await client();
+      let audio: { objectPath: string; seconds: number } | undefined;
+      if (input.audioBlob && input.audioBlob.size > 0) {
+        // The audio path MUST be dealers/<dealerId>/client-links/<file>.webm.
+        const { data: ds } = await c.from('dealer_settings').select('dealer_id').maybeSingle();
+        const dealerId = (ds as { dealer_id?: string } | null)?.dealer_id;
+        if (!dealerId) return err('forbidden', 'Could not resolve your dealer account for the audio note');
+        const path = `dealers/${dealerId}/client-links/${cryptoId()}.webm`;
+        const up = await c.storage.from('client-link-audio').upload(path, input.audioBlob, { contentType: 'audio/webm', upsert: true });
+        if (up.error) return err('unknown', `Audio upload failed: ${up.error.message}`);
+        audio = { objectPath: path, seconds: Math.max(1, Math.min(120, Math.round(input.audioSeconds ?? 1))) };
+      }
+      const payload = {
+        clientId: input.clientId || null,
+        propertyIds: input.propertyIds,
+        priceVisibility: input.priceVisibility,
+        locationVisibility: input.locationVisibility,
+        expiresInDays: input.expiresInDays,
+        photoSelections: input.photoSelections,
+        ...(audio ? { audio } : {}),
+      };
+      const { data, error } = await c.rpc('plotmap_create_client_link', { p_payload: payload });
+      if (error) return toErr(error);
+      const env = (data ?? {}) as { ok?: boolean; id?: string; token?: string; url?: string; expiresAt?: string };
+      if (env.ok !== true || !env.token) return err('unknown', 'Could not create the link');
+      return ok({ id: String(env.id ?? ''), token: env.token, url: env.url ?? `/client/?token=${env.token}`, expiresAt: env.expiresAt });
+    } catch (e) { return toErr(e); }
+  }
+
+  async revoke(id: string, o?: QueryOptions): Promise<Result<void>> {
+    const a = aborted<void>(o); if (a) return a;
+    try {
+      const c = await client();
+      const { error } = await c.rpc('plotmap_revoke_client_link', { p_link_id: id });
+      if (error) return toErr(error);
+      return ok(undefined);
     } catch (e) { return toErr(e); }
   }
 
