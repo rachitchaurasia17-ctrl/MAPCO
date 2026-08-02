@@ -70,6 +70,10 @@ function rgba(hex: string, a: number): string {
   return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`;
 }
 
+// Distinct bright, modern colours so several highlighted blocks read apart.
+const BLOCK_PALETTE = ['#3B82F6', '#F59E0B', '#10B981', '#EC4899', '#8B5CF6', '#F97316', '#06B6D4', '#EF4444'];
+const ROAD_PALETTE = ['#26E0FF', '#FFD97A', '#7BE0A4', '#C4B5FD'];
+
 const CONTAINER_RE = /masterplan|export|frame|full ?map/i;
 const ROAD_RE = /road|approach|route|highway|spine|arterial|expressway/i;
 const SKIP_RE = /pin|label|marker|text/i;
@@ -184,7 +188,6 @@ export async function loadSvgOverlay(
   let labelMap: Record<string, string> = {};
   let changeCb: ((ids: string[]) => void) | null = null;
 
-  const glow = '#FFD97A';
   const fs = Math.max(11, Math.round(viewBox.h / 60));
 
   function renderLabels(): void {
@@ -208,32 +211,39 @@ export async function loadSvgOverlay(
     let under = '';
     let mid = '';
     let top = '';
-    const col = accent;
-    const topFace = lighten(col, 0.34);
-    const topEdge = lighten(col, 0.74);
     const steps = 5;
+    let blockIdx = 0;   // each block gets a distinct bright colour
+    let roadIdx = 0;
 
     for (const id of selected) {
       const it = byId.get(id);
       if (!it) continue;
       const d = it.d;
       if (it.kind === 'road') {
+        // Bright moving road: coloured glow + white core + fast animated flow.
+        const rc = ROAD_PALETTE[roadIdx++ % ROAD_PALETTE.length];
         maskCuts += `<path d="${d}" fill="none" stroke="black" stroke-width="${46 * s}" stroke-linecap="round" stroke-linejoin="round"/>`;
         under += `<path d="${d}" fill="none" stroke="rgba(0,24,48,.55)" stroke-width="${16 * s}" stroke-linecap="round" stroke-linejoin="round" transform="translate(0,${5 * s})" style="filter:blur(${6 * s}px)"/>`;
-        mid += `<path d="${d}" fill="none" stroke="${rgba(glow, .72)}" stroke-width="${11 * s}" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 ${8 * s}px ${rgba(glow, .9)}) drop-shadow(0 0 ${18 * s}px ${rgba(col, .65)})"/>`;
-        mid += `<path d="${d}" fill="none" stroke="rgba(235,255,255,.98)" stroke-width="${3.5 * s}" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 ${4 * s}px rgba(255,255,255,.95)) drop-shadow(0 0 ${14 * s}px ${rgba(glow, .95)})"/>`;
-        mid += `<path d="${d}" fill="none" stroke="#FFFFFF" stroke-width="${4.4 * s}" stroke-linecap="round" stroke-dasharray="${2 * s} ${32 * s}" style="pointer-events:none;filter:drop-shadow(0 0 ${5 * s}px rgba(255,255,255,1)) drop-shadow(0 0 ${12 * s}px ${rgba(glow, 1)});animation:pmflowdash 1.15s linear infinite"/>`;
+        mid += `<path d="${d}" fill="none" stroke="${rgba(rc, .8)}" stroke-width="${12 * s}" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 ${9 * s}px ${rgba(rc, .95)}) drop-shadow(0 0 ${20 * s}px ${rgba(rc, .6)})"/>`;
+        mid += `<path d="${d}" fill="none" stroke="rgba(240,255,255,.98)" stroke-width="${3.4 * s}" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 ${4 * s}px rgba(255,255,255,.95)) drop-shadow(0 0 ${14 * s}px ${rgba(rc, .95)})"/>`;
+        mid += `<path d="${d}" fill="none" stroke="#FFFFFF" stroke-width="${4.6 * s}" stroke-linecap="round" stroke-dasharray="${3 * s} ${26 * s}" style="pointer-events:none;filter:drop-shadow(0 0 ${5 * s}px rgba(255,255,255,1)) drop-shadow(0 0 ${12 * s}px ${rgba(rc, 1)});animation:pmflowdash .85s linear infinite"/>`;
       } else {
+        const col = BLOCK_PALETTE[blockIdx++ % BLOCK_PALETTE.length];
+        const topFace = lighten(col, 0.30);
+        const topEdge = lighten(col, 0.72);
         maskCuts += `<path d="${d}" fill="black"/>`;
         maskCuts += `<path d="${d}" fill="black" transform="translate(0,${-lift})"/>`;
-        under += `<path d="${d}" fill="rgba(22,15,4,.5)" transform="translate(0,${lift + 5 * s})" style="filter:blur(${9 * s}px)"/>`;
+        under += `<path d="${d}" fill="rgba(10,6,20,.5)" transform="translate(0,${lift + 5 * s})" style="filter:blur(${9 * s}px)"/>`;
         for (let k = 0; k <= steps; k++) {
           const t = k / steps;
-          mid += `<path d="${d}" fill="${darken(col, 0.62 - 0.46 * t)}" transform="translate(0,${(-lift * t).toFixed(1)})"/>`;
+          mid += `<path d="${d}" fill="${darken(col, 0.60 - 0.44 * t)}" transform="translate(0,${(-lift * t).toFixed(1)})"/>`;
         }
-        top += `<path d="${d}" fill="${topFace}" stroke="${topEdge}" stroke-width="${2 * s}" stroke-linejoin="round" transform="translate(0,${-lift})" style="filter:drop-shadow(0 ${3 * s}px ${3 * s}px rgba(26,18,6,.34))"/>`;
-        top += `<path d="${d}" fill="url(#pmgrad0)" transform="translate(0,${-lift})" style="mix-blend-mode:screen;opacity:.55"/>`;
-        top += `<path d="${d}" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="${1 * s}" stroke-linejoin="round" transform="translate(0,${-lift - 1})"/>`;
+        // glossy top face in the block's own colour
+        top += `<path d="${d}" fill="${topFace}" transform="translate(0,${-lift})" style="filter:drop-shadow(0 ${3 * s}px ${3 * s}px rgba(10,6,20,.4))"/>`;
+        top += `<path d="${d}" fill="${lighten(col, 0.55)}" transform="translate(0,${-lift})" style="mix-blend-mode:screen;opacity:.45"/>`;
+        // GLOWING, pulsing top boundary in a bright rim of the block colour
+        top += `<path d="${d}" fill="none" stroke="${topEdge}" stroke-width="${2.6 * s}" stroke-linejoin="round" vector-effect="non-scaling-stroke" transform="translate(0,${-lift})" style="filter:drop-shadow(0 0 ${5 * s}px ${rgba(col, .95)}) drop-shadow(0 0 ${13 * s}px ${rgba(col, .65)});animation:pmTopGlow 1.9s ease-in-out infinite"/>`;
+        top += `<path d="${d}" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="${1 * s}" stroke-linejoin="round" transform="translate(0,${-lift - 1})"/>`;
       }
     }
 

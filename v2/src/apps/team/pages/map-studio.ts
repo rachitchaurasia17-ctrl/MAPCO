@@ -17,7 +17,7 @@ import { loadSvgOverlay, type SvgHighlightHandle } from '../../../packages/maps'
 import { hasSafeInAppHistory } from '../../../packages/ui/back-button';
 import type { Property } from '../../../packages/data/types';
 
-type Flow = 'home' | 'masterplan' | 'sector' | 'manage';
+type Flow = 'masterplan' | 'sector' | 'manage';
 
 function esc(s: string): string {
   return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
@@ -25,7 +25,7 @@ function esc(s: string): string {
 
 export async function renderMapStudio(el: HTMLElement): Promise<void> {
   const repo = getMapStudio();
-  let flow: Flow = 'home';
+  let flow: Flow = 'masterplan';
   let maps: StudioMap[] = [];
   let props: Property[] = [];
   let selectedMapId = '';
@@ -114,154 +114,104 @@ export async function renderMapStudio(el: HTMLElement): Promise<void> {
       </div>`;
   }
 
-  function homeHtml(): string {
-    const liveCount = maps.filter((m) => m.status === 'published').length;
-    const card = (n: string, tag: string, title: string, desc: string, act: string, cta: string, bg: string, ic: string, icbg: string) => `
-      <button class="ms-card3" data-act="${act}" style="text-align:left;display:flex;flex-direction:column;border-radius:22px;overflow:hidden;background:#fffdf9;box-shadow:0 0 0 1px rgba(88,52,168,.1),0 20px 40px -28px rgba(60,40,10,.6);cursor:pointer;transition:transform .15s,box-shadow .15s" onmouseenter="this.style.transform='translateY(-6px)'" onmouseleave="this.style.transform='none'">
-        <span style="position:relative;display:block;height:150px;background:${bg}">
-          <span style="position:absolute;top:18px;left:18px;width:56px;height:56px;border-radius:16px;background:${icbg};display:grid;place-items:center"><i class="ph-fill ${ic}" style="font-size:26px;color:#241d0c"></i></span>
-          <span style="position:absolute;top:16px;right:22px;font-family:var(--pm-font-display);font-size:30px;color:rgba(0,0,0,.18)">${n}</span>
-        </span>
-        <span style="display:block;padding:20px 22px 22px">
-          <span style="display:block;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#a8792a">${tag}</span>
-          <span style="display:block;font-family:var(--pm-font-display);font-weight:500;font-size:26px;color:#1c1533;margin-top:4px">${title}</span>
-          <span style="display:block;margin-top:8px;font-size:14px;color:#6b6156;line-height:1.45">${desc}</span>
-          <span style="display:inline-flex;align-items:center;gap:6px;margin-top:14px;font-size:14.5px;font-weight:800;color:#5b32c4">${cta}<i class="ph-bold ph-arrow-right"></i></span>
-        </span>
-      </button>`;
-    return `
-      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap">
-        <div>
-          <div style="font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#a8792a">MAP STUDIO</div>
-          <h1 style="font-family:var(--pm-font-display);font-weight:500;font-size:40px;letter-spacing:-.02em;color:#241f1c;margin:4px 0 0">What are we publishing?</h1>
-          <p style="margin:8px 0 0;font-size:15px;color:#6b6156">Everything here lands on the client screen the moment you save it.</p>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:26px">
-        ${card('01', 'Big city map', 'Publish Masterplan', 'Pick roads, blocks and sectors that light up when your client taps a highlight set.', 'go-masterplan', 'Open', 'linear-gradient(135deg,#ffdc7a,#f4ae14)', 'ph-map-trifold', '#fff6d8')}
-        ${card('02', 'Detailed proof map', 'Publish Sector Map', 'Drop a pin on the map and link it to one of your plots. That is it.', 'go-sector', 'Open', 'linear-gradient(135deg,#b79bf5,#7c4fe0)', 'ph-map-pin-area', '#efe6ff')}
-        ${card('03', 'Everything live', 'Manage Published', `Every map a client can open right now — link a property, unlink one, or hide it.`, 'go-manage', `${liveCount} map${liveCount === 1 ? '' : 's'} live`, 'linear-gradient(135deg,#7fd3a6,#137a56)', 'ph-squares-four', '#d9f5e3')}
-      </div>`;
+  // ── dark full-screen editor (item 7) ──────────────────────────
+  function flowTabsHtml(): string {
+    const tab = (f: Flow, label: string, icon: string) =>
+      `<button data-act="flow" data-flow="${f}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 4px;border-radius:11px;font-size:11.5px;font-weight:800;cursor:pointer;${flow === f ? 'background:#ffc93c;color:#231a04' : 'background:rgba(255,248,230,.07);color:#e7dcc4'}"><i class="ph-fill ${icon}" style="font-size:17px"></i>${label}</button>`;
+    return `<div style="display:flex;gap:7px">${tab('masterplan', 'Masterplan', 'ph-map-trifold')}${tab('sector', 'Sector', 'ph-map-pin-area')}${tab('manage', 'Manage', 'ph-squares-four')}</div>`;
   }
 
-  function pickerHtml(kind: 'masterplan' | 'any', act: string): string {
-    const list = kind === 'masterplan' ? masterplans() : maps.filter((m) => m.status !== 'archived');
-    if (!list.length) return `<div class="ms-empty" style="padding:24px;color:#6b6156">No maps yet. Onboard maps first.</div>`;
-    let html = '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-top:18px">';
-    for (const m of list) {
-      const raster = m.assets?.original?.path || m.assets?.threeD?.path || '';
-      html += `<button data-act="${act}" data-id="${esc(m.id)}" style="text-align:left;border-radius:16px;overflow:hidden;background:#fffdf9;box-shadow:0 0 0 1px rgba(88,52,168,.1);cursor:pointer">
-        <span style="display:block;height:110px;background:#efe6da ${raster ? `url('${esc(raster)}') center/cover` : ''}"></span>
-        <span style="display:block;padding:12px 14px">
-          <span style="display:block;font-size:15px;font-weight:800;color:#1c1533">${esc(m.label)}</span>
-          <span style="display:block;font-size:12.5px;color:#8d8271;margin-top:2px">${esc(m.city)} · ${m.kind}${m.status === 'published' ? ' · live' : ''}</span>
-        </span></button>`;
+  function darkPicker(kind: 'masterplan' | 'sector', act: string): string {
+    const list = kind === 'masterplan' ? masterplans() : maps.filter((m) => m.kind === 'sector' && m.status !== 'archived');
+    if (!list.length) return `<div style="color:#b7ab90;font-size:13px;padding:10px">No ${kind === 'masterplan' ? 'city masterplans' : 'sector maps'} yet.</div>`;
+    return `<div data-scroll style="display:flex;flex-direction:column;gap:8px;overflow-y:auto;flex:1;min-height:0">${list.map((m) => {
+      const r = m.assets?.original?.path || m.assets?.threeD?.path || '';
+      return `<button data-act="${act}" data-id="${esc(m.id)}" style="display:flex;align-items:center;gap:10px;padding:8px;border-radius:12px;background:rgba(255,248,230,.06);text-align:left;cursor:pointer"><span style="width:48px;height:38px;border-radius:8px;flex:none;background:#0b0714 ${r ? `url('${esc(r)}') center/cover` : ''}"></span><span style="flex:1;min-width:0"><span style="display:block;font-size:13.5px;font-weight:800;color:#fff8e6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(m.city || m.label)}${kind === 'sector' ? ` · ${esc(m.sector || m.label)}` : ''}</span><span style="display:block;font-size:11.5px;color:#b7ab90">${m.kind}${m.status === 'published' ? ' · live' : ''}</span></span></button>`;
+    }).join('')}</div>`;
+  }
+
+  /** Sidebar controls for the active flow. */
+  function sidebarBodyHtml(): string {
+    const m = selectedMap();
+    if (flow === 'masterplan') {
+      if (!m) return `<div style="font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#c9b477;margin-bottom:8px">Pick a city map</div>${darkPicker('masterplan', 'pick-master')}`;
+      const setChips = sets.length
+        ? sets.map((sset) => `<div style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,201,60,.16);color:#ffd76b;border-radius:999px;padding:6px 7px 6px 12px;font-size:12.5px;font-weight:800"><button data-act="play-set" data-id="${esc(sset.id)}" title="Preview" style="background:none;color:inherit;font-weight:800;cursor:pointer">${esc(sset.name)} · ${sset.itemIds.length}</button><button data-act="del-set" data-id="${esc(sset.id)}" aria-label="Delete" style="width:20px;height:20px;border-radius:50%;background:rgba(255,201,60,.22);display:grid;place-items:center;cursor:pointer"><i class="ph-bold ph-x" style="font-size:11px"></i></button></div>`).join('')
+        : '<span style="font-size:12.5px;color:#b7ab90">No sets yet.</span>';
+      return `
+        <div style="flex:none;display:flex;flex-direction:column;gap:9px">
+          <div style="display:flex;align-items:center;justify-content:space-between;font-size:13px;color:#e7dcc4;font-weight:700">Selected <b id="ms-selcount" style="color:#ffd76b">0</b></div>
+          <input id="ms-setname" placeholder="Set name" style="height:40px;border:1px solid rgba(255,248,230,.16);border-radius:11px;padding:0 12px;font:inherit;font-size:14px;background:rgba(255,248,230,.06);color:#fff8e6">
+          <div style="display:flex;gap:8px"><button id="ms-saveset" data-act="save-set" disabled style="flex:1;height:40px;border-radius:11px;background:#ffc93c;color:#231a04;font-weight:800;cursor:pointer">Save set</button><button data-act="clear-sel" style="height:40px;padding:0 13px;border-radius:11px;background:rgba(255,248,230,.1);color:#fff8e6;font-weight:800;cursor:pointer">Clear</button></div>
+        </div>
+        <div style="flex:1;min-height:0;display:flex;flex-direction:column;margin-top:12px">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#c9b477;margin-bottom:7px">Name the shapes</div>
+          <div id="ms-namelist" data-scroll style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:7px"></div>
+        </div>
+        <div style="flex:none;margin-top:12px"><div style="font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#c9b477;margin-bottom:7px">Saved sets</div><div style="display:flex;flex-wrap:wrap;gap:7px">${setChips}</div></div>`;
     }
-    return html + '</div>';
-  }
-
-  function masterplanFlowHtml(): string {
-    const m = selectedMap();
-    if (!m) return `<div>${headerHtml('Publish Masterplan')}${pickerHtml('masterplan', 'pick-master')}</div>`;
-    const setChips = sets.length
-      ? sets.map((sset) => `<div class="ms-setchip" style="display:inline-flex;align-items:center;gap:8px;background:#fff2cd;color:#8a5a0c;border-radius:999px;padding:7px 8px 7px 14px;font-size:13.5px;font-weight:800">
-          <button data-act="play-set" data-id="${esc(sset.id)}" title="Preview this set" style="background:none;color:inherit;font-weight:800;cursor:pointer">${esc(sset.name)} · ${sset.itemIds.length}</button>
-          <button data-act="del-set" data-id="${esc(sset.id)}" aria-label="Delete set" title="Delete" style="width:22px;height:22px;border-radius:50%;background:rgba(138,90,12,.15);display:grid;place-items:center;cursor:pointer"><i class="ph-bold ph-x" style="font-size:12px"></i></button>
-        </div>`).join('')
-      : `<span style="font-size:13.5px;color:#8d8271">No sets yet — tap roads/blocks on the map, name them, and save.</span>`;
-    return `
-      <div style="flex:1;min-height:0;display:flex;flex-direction:column">
-        ${headerHtml('Publish Masterplan', m.label)}
-        <div style="flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:14px 0 14px">
-          <div style="font-size:14px;color:#3a332c;font-weight:700"><i class="ph-fill ph-cursor-click" style="color:#a8792a;margin-right:6px"></i>Tap roads &amp; blocks on the map to build a set. <span style="color:#8d8271">Selected: <b id="ms-selcount">0</b></span></div>
-          <span style="flex:1"></span>
-          <input id="ms-setname" placeholder="Set name (e.g. Approach roads)" style="height:40px;border:1px solid #ddd2f5;border-radius:11px;padding:0 12px;font:inherit;font-size:14px;min-width:220px">
-          <button id="ms-saveset" data-act="save-set" disabled style="height:40px;padding:0 16px;border-radius:11px;background:#ffc93c;color:#231a04;font-weight:800;cursor:pointer">Save set</button>
-          <button data-act="clear-sel" style="height:40px;padding:0 14px;border-radius:11px;background:#f0eaff;color:#5b32c4;font-weight:800;cursor:pointer">Clear</button>
-        </div>
-        <div style="flex:1;min-height:0;display:flex;gap:16px">
-          <div style="flex:1;min-width:0;min-height:0">${mapPreviewHtml(false)}</div>
-          <aside style="width:260px;flex:none;display:flex;flex-direction:column;min-height:0;background:#fffdf9;border:1px solid #eadff7;border-radius:16px;padding:12px">
-            <div style="font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8d8271;margin-bottom:8px">Name the shapes</div>
-            <div id="ms-namelist" data-scroll style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:8px"></div>
-          </aside>
-        </div>
-        <div style="flex:none;margin-top:12px">
-          <div style="font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8d8271;margin-bottom:8px">Saved sets (client sees these on one cycling button)</div>
-          <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">${setChips}</div>
-        </div>
-      </div>`;
-  }
-
-  function sectorFlowHtml(): string {
-    const m = selectedMap();
-    if (!m) return `<div>${headerHtml('Publish Sector Map')}${pickerHtml('any', 'pick-sector')}</div>`;
-    return `
-      <div>
-        ${headerHtml('Publish Sector Map', m.label)}
-        <div style="font-size:14px;color:#3a332c;font-weight:700;margin:14px 0 16px"><i class="ph-fill ph-map-pin" style="color:#2f7bff;margin-right:6px"></i>Click the map to drop a pin, then pick the plot it belongs to.</div>
-        ${mapPreviewHtml(true)}
-        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:16px;max-width:980px;margin-left:auto;margin-right:auto">
-          <span style="font-size:14px;color:${pin ? '#137a56' : '#8d8271'};font-weight:800">${pin ? `Pin set at ${(pin.x * 100).toFixed(0)}%, ${(pin.y * 100).toFixed(0)}%` : 'No pin yet'}</span>
-          <span style="flex:1"></span>
-          <select id="ms-linkprop" style="height:42px;border:1px solid #ddd2f5;border-radius:11px;padding:0 12px;font:inherit;font-size:14px;min-width:240px;background:#fff">
+    if (flow === 'sector') {
+      if (!m) return `<div style="font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#c9b477;margin-bottom:8px">Pick a sector map</div>${darkPicker('sector', 'pick-sector')}`;
+      return `
+        <div style="display:flex;flex-direction:column;gap:11px">
+          <div style="font-size:13.5px;color:${pin ? '#7be0a4' : '#b7ab90'};font-weight:800">${pin ? `Pin at ${(pin.x * 100).toFixed(0)}%, ${(pin.y * 100).toFixed(0)}%` : 'Click the map to drop a pin'}</div>
+          <select id="ms-linkprop" style="height:42px;border:1px solid rgba(255,248,230,.16);border-radius:11px;padding:0 12px;font:inherit;font-size:14px;background:rgba(255,248,230,.06);color:#fff8e6">
             <option value="">Choose a plot…</option>
-            ${props.map((p) => `<option value="${esc(p.id)}"${linkPropId === p.id ? ' selected' : ''}>${esc(p.area)}${p.size ? ` · ${esc(p.size)}` : ''}</option>`).join('')}
+            ${props.map((p) => `<option value="${esc(p.id)}"${linkPropId === p.id ? ' selected' : ''} style="color:#111">${esc(p.area)}${p.size ? ` · ${esc(p.size)}` : ''}</option>`).join('')}
           </select>
-          <button data-act="do-link" ${(!pin || !linkPropId) ? 'disabled' : ''} style="height:42px;padding:0 18px;border-radius:11px;background:#ffc93c;color:#231a04;font-weight:800;cursor:pointer;${(!pin || !linkPropId) ? 'opacity:.45' : ''}">Link plot to this pin</button>
-        </div>
-      </div>`;
+          <button data-act="do-link" ${(!pin || !linkPropId) ? 'disabled' : ''} style="height:44px;border-radius:12px;background:#ffc93c;color:#231a04;font-weight:800;cursor:pointer;${(!pin || !linkPropId) ? 'opacity:.4' : ''}">Link plot to this pin</button>
+        </div>`;
+    }
+    return `<div style="font-size:13px;color:#b7ab90;line-height:1.5">Every live map and its linked plots are listed on the right. Unlink a plot, link one, or unpublish a map.</div>`;
   }
 
-  function manageFlowHtml(): string {
+  /** Manage-published list (matches the handoff card layout). */
+  function manageMainHtml(): string {
     const live = maps.filter((m) => m.status === 'published');
     const propById = new Map(props.map((p) => [p.id, p]));
     const linkedFor = (mapId: string) => props.filter((p) => p.mapPlacement?.mapId === mapId);
     const rows = live.length ? live.map((m) => {
       const linked = linkedFor(m.id);
-      return `<div style="background:#fffdf9;border:1px solid #eadff7;border-radius:16px;padding:16px 18px;margin-bottom:12px">
-        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-          <div style="font-size:16px;font-weight:800;color:#1c1533">${esc(m.label)}</div>
-          <span style="font-size:12px;font-weight:800;color:#137a56;background:#d9f5e3;border-radius:999px;padding:3px 10px">live${m.clientVisible ? '' : ' · hidden'}</span>
-          <span style="flex:1"></span>
-          <button data-act="unpublish" data-id="${esc(m.id)}" style="height:34px;padding:0 12px;border-radius:9px;background:#ffe1e6;color:#c2185b;font-weight:800;font-size:13px;cursor:pointer">Unpublish</button>
+      const raster = m.assets?.original?.path || m.assets?.threeD?.path || '';
+      return `<div style="background:rgba(255,248,230,.05);border:1px solid rgba(255,248,230,.12);border-radius:18px;padding:16px 18px;margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:13px;flex-wrap:wrap">
+          <span style="width:58px;height:44px;border-radius:10px;flex:none;background:#0b0714 ${raster ? `url('${esc(raster)}') center/cover` : ''}"></span>
+          <div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:800;color:#fff8e6">${esc(m.label)}</div><div style="font-size:12.5px;color:#b7ab90">${esc(m.city)} · ${m.kind}</div></div>
+          <span style="font-size:12px;font-weight:800;color:#7be0a4;background:rgba(123,224,164,.14);border-radius:999px;padding:4px 11px">live${m.clientVisible ? '' : ' · hidden'}</span>
+          <button data-act="unpublish" data-id="${esc(m.id)}" style="height:34px;padding:0 13px;border-radius:10px;background:rgba(255,120,120,.16);color:#ff9b9b;font-weight:800;font-size:13px;cursor:pointer">Unpublish</button>
         </div>
         <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
-          ${linked.length ? linked.map((p) => `<span style="display:inline-flex;align-items:center;gap:7px;background:#eef4ff;color:#1a56c4;border-radius:999px;padding:6px 8px 6px 12px;font-size:13px;font-weight:700"><i class="ph-fill ph-map-pin"></i>${esc(propById.get(p.id)?.area ?? p.id)}<button data-act="unlink" data-id="${esc(p.id)}" aria-label="Unlink" title="Unlink" style="width:20px;height:20px;border-radius:50%;background:rgba(26,86,196,.15);display:grid;place-items:center;cursor:pointer"><i class="ph-bold ph-x" style="font-size:11px"></i></button></span>`).join('') : '<span style="font-size:13px;color:#8d8271">No plots linked yet.</span>'}
+          ${linked.length ? linked.map((p) => `<span style="display:inline-flex;align-items:center;gap:7px;background:rgba(47,123,255,.16);color:#9dc1ff;border-radius:999px;padding:6px 8px 6px 12px;font-size:13px;font-weight:700"><i class="ph-fill ph-map-pin"></i>${esc(propById.get(p.id)?.area ?? p.id)}<button data-act="unlink" data-id="${esc(p.id)}" aria-label="Unlink" style="width:20px;height:20px;border-radius:50%;background:rgba(157,193,255,.2);display:grid;place-items:center;cursor:pointer"><i class="ph-bold ph-x" style="font-size:11px"></i></button></span>`).join('') : '<span style="font-size:13px;color:#b7ab90">No plots linked yet.</span>'}
         </div>
         <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
-          <select data-linkmap="${esc(m.id)}" style="height:38px;border:1px solid #ddd2f5;border-radius:10px;padding:0 10px;font:inherit;font-size:13.5px;background:#fff">
+          <select data-linkmap="${esc(m.id)}" style="height:38px;border:1px solid rgba(255,248,230,.16);border-radius:10px;padding:0 10px;font:inherit;font-size:13.5px;background:rgba(255,248,230,.06);color:#fff8e6">
             <option value="">Link a plot…</option>
-            ${props.filter((p) => p.mapPlacement?.mapId !== m.id).map((p) => `<option value="${esc(p.id)}">${esc(p.area)}</option>`).join('')}
+            ${props.filter((p) => p.mapPlacement?.mapId !== m.id).map((p) => `<option value="${esc(p.id)}" style="color:#111">${esc(p.area)}</option>`).join('')}
           </select>
-          <button data-act="link-here" data-id="${esc(m.id)}" style="height:38px;padding:0 14px;border-radius:10px;background:#f0eaff;color:#5b32c4;font-weight:800;font-size:13.5px;cursor:pointer">Link</button>
+          <button data-act="link-here" data-id="${esc(m.id)}" style="height:38px;padding:0 15px;border-radius:10px;background:rgba(255,248,230,.1);color:#fff8e6;font-weight:800;font-size:13.5px;cursor:pointer">Link</button>
         </div>
       </div>`;
-    }).join('') : '<div class="ms-empty" style="padding:24px;color:#6b6156">No published maps yet.</div>';
-    return `<div>${headerHtml('Manage Published')}<div style="margin-top:18px">${rows}</div></div>`;
-  }
-
-  function headerHtml(title: string, sub?: string): string {
-    return `<div style="display:flex;align-items:center;gap:14px">
-      <button data-act="${flow === 'home' ? 'exit' : 'home'}" aria-label="Back" style="display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 13px;border-radius:11px;background:#f0eaff;color:#4b2ea6;font-weight:800;font-size:14px;cursor:pointer"><i class="ph-bold ph-arrow-left"></i>Back</button>
-      <div><div style="font-size:11.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#a8792a">Map Studio</div>
-      <div style="font-family:var(--pm-font-display);font-weight:500;font-size:26px;color:#241f1c">${esc(title)}${sub ? ` <span style="color:#8d8271;font-size:18px">· ${esc(sub)}</span>` : ''}</div></div>
-    </div>`;
+    }).join('') : '<div style="padding:30px;color:#b7ab90;text-align:center">No published maps yet.</div>';
+    return `<div data-scroll style="flex:1;min-height:0;overflow-y:auto;padding:2px">${rows}</div>`;
   }
 
   function render(): void {
-    const body = flow === 'home' ? homeHtml()
-      : flow === 'masterplan' ? masterplanFlowHtml()
-      : flow === 'sector' ? sectorFlowHtml()
-      : manageFlowHtml();
-    // No page scroll (item 10): the studio fills the viewport; only the Manage
-    // list scrolls internally when it overflows.
-    const innerScroll = flow === 'manage';
+    const title = flow === 'masterplan' ? 'Publish Masterplan' : flow === 'sector' ? 'Publish Sector Map' : 'Manage Published';
+    const main = flow === 'manage' ? manageMainHtml() : mapPreviewHtml(flow === 'sector');
     el.innerHTML = `
-      <div style="position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;background:#f5efff;background-image:radial-gradient(60% 50% at 0% 0%,rgba(139,96,232,.16),transparent 60%),radial-gradient(60% 50% at 100% 100%,rgba(255,201,60,.14),transparent 60%)">
-        <div style="flex:1;min-height:0;max-width:1180px;width:100%;margin:0 auto;padding:22px 32px 20px;display:flex;flex-direction:column;${innerScroll ? 'overflow-y:auto' : 'overflow:hidden'}">${body}</div>
+      <div style="position:fixed;inset:0;z-index:60;display:flex;background:#0f0a1a;background-image:radial-gradient(60% 50% at 100% 0%,rgba(145,97,0,.22),transparent 60%),radial-gradient(60% 50% at 0% 100%,rgba(91,50,196,.22),transparent 60%);font-family:var(--pm-font-ui,'Hanken Grotesk',sans-serif)">
+        <aside style="width:326px;flex:none;display:flex;flex-direction:column;min-height:0;background:rgba(18,12,26,.72);backdrop-filter:blur(14px);border-right:1px solid rgba(255,248,230,.1);padding:16px 16px 18px">
+          <div style="flex:none;display:flex;align-items:center;gap:10px;margin-bottom:14px">
+            <button data-act="exit" aria-label="Close Map Studio" style="width:40px;height:40px;border-radius:12px;background:rgba(255,248,230,.1);color:#fff8e6;display:grid;place-items:center;cursor:pointer"><i class="ph-bold ph-arrow-left" style="font-size:18px"></i></button>
+            <img src="/assets/mapco-logo.png" alt="MAPCO" style="width:34px;height:34px;object-fit:contain">
+            <div><div style="font-size:15px;font-weight:800;color:#fff8e6;line-height:1">Map Studio</div><div style="font-size:11.5px;color:#c9b477">${esc(title)}</div></div>
+          </div>
+          <div style="flex:none;margin-bottom:14px">${flowTabsHtml()}</div>
+          <div style="flex:1;min-height:0;display:flex;flex-direction:column">${sidebarBodyHtml()}</div>
+        </aside>
+        <main style="flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;padding:16px">${main}</main>
       </div>
-      ${toast ? `<div style="position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#1f4d3a;color:#fff;font-weight:700;padding:11px 20px;border-radius:999px;z-index:50;box-shadow:0 14px 30px -12px rgba(0,0,0,.4)">${esc(toast)}</div>` : ''}`;
+      ${toast ? `<div style="position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#1f4d3a;color:#fff;font-weight:700;padding:11px 20px;border-radius:999px;z-index:70;box-shadow:0 14px 30px -12px rgba(0,0,0,.4)">${esc(toast)}</div>` : ''}`;
   }
 
   // ── interaction ───────────────────────────────────────────────
@@ -280,11 +230,14 @@ export async function renderMapStudio(el: HTMLElement): Promise<void> {
     if (!t) return;
     const act = t.dataset.act; const id = t.dataset.id;
     switch (act) {
-      case 'exit': if (hasSafeInAppHistory()) window.history.back(); else window.location.assign('/admin/owner.html'); break;
-      case 'home': disposeOverlay(); flow = 'home'; selectedMapId = ''; render(); break;
-      case 'go-masterplan': flow = 'masterplan'; selectedMapId = ''; render(); break;
-      case 'go-sector': flow = 'sector'; selectedMapId = ''; render(); break;
-      case 'go-manage': flow = 'manage'; selectedMapId = ''; render(); break;
+      case 'exit': disposeOverlay(); if (hasSafeInAppHistory()) window.history.back(); else window.location.assign('/admin/team.html'); break;
+      case 'flow': {
+        const f = t.dataset.flow as Flow;
+        if (f === flow) break;
+        disposeOverlay(); flow = f; selectedMapId = ''; labels = {}; pin = null; linkPropId = '';
+        render();
+        break;
+      }
       case 'pick-master': await openMasterplan(id!); break;
       case 'pick-sector': await openSector(id!); break;
       case 'clear-sel': overlay?.clear(); break;

@@ -17,7 +17,7 @@ import { cssMapTransform, getMap, registerMaps, mountMapEngine, loadSvgOverlay, 
 /** A saved highlight combination (built in Map Studio). */
 type SavedSet = { id: string; name: string; itemIds: string[]; accent?: string; labels?: Record<string, string> };
 import { streetViewUrl } from '../../packages/ui/utils';
-import { mountFullscreenButton } from '../../packages/ui/fullscreen';
+import { mountFullscreenButton, toggleFullscreen, isFullscreen, fullscreenSupported } from '../../packages/ui/fullscreen';
 import type { Property } from '../../packages/data/types';
 
 type View = 'masterplan' | 'properties' | 'sectors';
@@ -143,6 +143,18 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
   const fsCleanup = mountFullscreenButton(container.querySelector<HTMLElement>('#pm-fs')!, {
     variant: 'floating', onResize: () => mounted?.engine.resize(),
   });
+
+  // Client Presentation is meant to run fullscreen. Browsers block auto-fullscreen
+  // on load, so we enter it on the FIRST user gesture (tap/key) in the room.
+  let autoFsDone = false;
+  const autoFs = () => {
+    if (autoFsDone) return; autoFsDone = true;
+    document.removeEventListener('pointerdown', autoFs, true);
+    document.removeEventListener('keydown', autoFs, true);
+    if (fullscreenSupported() && !isFullscreen()) void toggleFullscreen();
+  };
+  document.addEventListener('pointerdown', autoFs, true);
+  document.addEventListener('keydown', autoFs, true);
 
   type PinPosition = { x: number; y: number; provenance: 'map-authored' };
 
@@ -866,6 +878,8 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
     container.removeEventListener('keydown', onTabKey);
     document.removeEventListener('keydown', onKey);
     document.removeEventListener('click', onDocClick, true);
+    document.removeEventListener('pointerdown', autoFs, true);
+    document.removeEventListener('keydown', autoFs, true);
     controller.abort();
     fsCleanup();
     overlay?.destroy();

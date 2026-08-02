@@ -160,3 +160,7 @@
 @keyframes pmdveil { from { opacity: 0 } to { opacity: 1 } }
 @keyframes pmHotGlow { 0%,100% { box-shadow: 0 0 0 1.5px #f4ae14, 0 0 14px -2px rgba(244,174,20,.7) } 50% { box-shadow: 0 0 0 2px #ffcf4a, 0 0 22px 1px rgba(255,201,60,.9) } }
 .pm-hot-glow { border-color: #f4ae14 !important; animation: pmHotGlow 2.2s ease-in-out infinite; }
+
+/* Premium SVG highlight animations (global: used by presentation + Map Studio) */
+@keyframes pmflowdash { to { stroke-dashoffset: -70; } }
+@keyframes pmTopGlow { 0%,100% { opacity: .82; } 50% { opacity: 1; } }

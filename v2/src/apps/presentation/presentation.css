@@ -197,4 +197,5 @@
 .pm-rail-close { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; flex: none; color: #8d8271; background: transparent; cursor: pointer; transition: background .12s, color .12s; }
 .pm-rail-close:hover { background: #f0eaff; color: #5b32c4; }
 .pm-rail-close:focus-visible { outline: 2px solid #ffd76b; outline-offset: 2px; }
-.pm-rail-reopen { position: absolute; top: 62px; right: 14px; z-index: 35; display: inline-flex; align-items: center; gap: 7px; height: 40px; padding: 0 14px; border-radius: 12px; color: #fff8e6; font-size: 14px; font-weight: 800; cursor: pointer; }
+/* Aligned with the top chrome row, sitting just left of the Full Screen button. */
+.pm-rail-reopen { position: absolute; top: 14px; right: 62px; z-index: 35; display: inline-flex; align-items: center; gap: 7px; height: 42px; padding: 0 15px; border-radius: 12px; color: #fff8e6; font-size: 14px; font-weight: 800; cursor: pointer; }
