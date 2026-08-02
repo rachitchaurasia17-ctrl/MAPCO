@@ -260,29 +260,52 @@ export async function loadSvgOverlay(
 
   function renderHits(): void {
     if (!interactive) { hitsG.innerHTML = ''; return; }
-    // BLOCK hits first, ROAD hits LAST → later SVG elements paint on top, so a
-    // road always wins the tap over the block underneath (fixes "I keep hitting
-    // a block instead of the road"). Road hit-strokes are also generously wide.
+    // Both block and road hit shapes are laid out; the WINNER of a tap is chosen
+    // geometrically in onHitClick (not by paint order), so a click inside a block
+    // selects that block and a click on a road *in the gaps between blocks* selects
+    // the road. Roads are painted last only so their thin strokes stay reachable;
+    // block interiors still win because we prefer a block whenever the pointer is
+    // actually inside one (fixes "roads highlight but the boxes get ignored").
     let blockHits = '';
     let roadHits = '';
     for (const it of items) {
       if (it.kind === 'road') {
-        roadHits += `<path d="${it.d}" fill="none" stroke="rgba(0,0,0,0)" stroke-width="${34 * s}" stroke-linecap="round" stroke-linejoin="round" style="cursor:pointer;pointer-events:stroke" data-hit="${it.id}"/>`;
+        roadHits += `<path d="${it.d}" fill="none" stroke="rgba(0,0,0,0)" stroke-width="${22 * s}" stroke-linecap="round" stroke-linejoin="round" style="cursor:pointer;pointer-events:stroke" data-hit="${it.id}"/>`;
       } else {
         // shift the hit up by the lift so it covers the extruded top face
         blockHits += `<path d="${it.d}" fill="rgba(0,0,0,0)" transform="translate(0,${-lift})" style="cursor:pointer;pointer-events:fill" data-hit="${it.id}"/>`;
         blockHits += `<path d="${it.d}" fill="rgba(0,0,0,0)" style="cursor:pointer;pointer-events:fill" data-hit="${it.id}"/>`;
       }
     }
-    hitsG.innerHTML = blockHits + roadHits;
+    hitsG.innerHTML = roadHits + blockHits;
     hitsG.style.pointerEvents = 'auto';
   }
 
+  /** Resolve which shape a tap should select: prefer a BLOCK the pointer is
+   *  inside, otherwise fall back to a ROAD under the pointer. Purely geometric,
+   *  so it is independent of SVG paint order. */
   const onHitClick = (ev: Event) => {
-    const t = (ev.target as Element).closest('[data-hit]') as SVGElement | null;
-    if (!t) return;
+    const me = ev as MouseEvent;
+    let blockId: string | null = null;
+    let roadId: string | null = null;
+    // elementsFromPoint returns every hit-testable element under the cursor,
+    // topmost first — including the transparent block-fills and road-strokes.
+    const stack = typeof document.elementsFromPoint === 'function'
+      ? document.elementsFromPoint(me.clientX, me.clientY)
+      : [ev.target as Element];
+    for (const node of stack) {
+      const hit = (node as Element).closest?.('[data-hit]') as SVGElement | null;
+      if (!hit || !el.contains(hit)) continue;
+      const hid = hit.getAttribute('data-hit');
+      const it = hid ? byId.get(hid) : null;
+      if (!it || !hid) continue;
+      if (it.kind === 'block') { blockId = hid; break; }  // block wins immediately
+      if (!roadId) roadId = hid;
+    }
+    const pick = blockId ?? roadId;
+    if (!pick) return;
     ev.stopPropagation();
-    handle.toggle(t.getAttribute('data-hit')!);
+    handle.toggle(pick);
   };
   el.addEventListener('click', onHitClick);
 

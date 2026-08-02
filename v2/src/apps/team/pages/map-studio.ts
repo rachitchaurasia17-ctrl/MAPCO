@@ -25,6 +25,10 @@ function esc(s: string): string {
 
 export async function renderMapStudio(el: HTMLElement): Promise<void> {
   const repo = getMapStudio();
+  // Map Studio opens on a chooser landing (the "old" 3-big-button screen).
+  // Picking a flow enters it; the three options are not shown together again
+  // until the user steps back to the landing.
+  let onLanding = true;
   let flow: Flow = 'masterplan';
   let maps: StudioMap[] = [];
   let props: Property[] = [];
@@ -115,12 +119,6 @@ export async function renderMapStudio(el: HTMLElement): Promise<void> {
   }
 
   // ── dark full-screen editor (item 7) ──────────────────────────
-  function flowTabsHtml(): string {
-    const tab = (f: Flow, label: string, icon: string) =>
-      `<button data-act="flow" data-flow="${f}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 4px;border-radius:11px;font-size:11.5px;font-weight:800;cursor:pointer;${flow === f ? 'background:#ffc93c;color:#231a04' : 'background:rgba(255,248,230,.07);color:#e7dcc4'}"><i class="ph-fill ${icon}" style="font-size:17px"></i>${label}</button>`;
-    return `<div style="display:flex;gap:7px">${tab('masterplan', 'Masterplan', 'ph-map-trifold')}${tab('sector', 'Sector', 'ph-map-pin-area')}${tab('manage', 'Manage', 'ph-squares-four')}</div>`;
-  }
-
   function darkPicker(kind: 'masterplan' | 'sector', act: string): string {
     const list = kind === 'masterplan' ? masterplans() : maps.filter((m) => m.kind === 'sector' && m.status !== 'archived');
     if (!list.length) return `<div style="color:#b7ab90;font-size:13px;padding:10px">No ${kind === 'masterplan' ? 'city masterplans' : 'sector maps'} yet.</div>`;
@@ -195,7 +193,39 @@ export async function renderMapStudio(el: HTMLElement): Promise<void> {
     return `<div data-scroll style="flex:1;min-height:0;overflow-y:auto;padding:2px">${rows}</div>`;
   }
 
+  /** The 3-big-button chooser shown when Map Studio first opens. */
+  function landingHtml(): string {
+    const card = (f: Flow, title: string, sub: string, icon: string, tint: string) =>
+      `<button data-act="choose" data-flow="${f}" style="flex:1;min-width:240px;max-width:340px;display:flex;flex-direction:column;align-items:flex-start;gap:14px;padding:30px 28px;border-radius:24px;background:rgba(255,248,230,.05);border:1px solid rgba(255,248,230,.14);color:#fff8e6;text-align:left;cursor:pointer;transition:transform .16s,background .16s">
+        <span style="width:64px;height:64px;border-radius:18px;display:grid;place-items:center;background:${tint};color:#231a04"><i class="ph-fill ${icon}" style="font-size:32px"></i></span>
+        <span style="font-family:var(--pm-font-display,'Newsreader',serif);font-weight:500;font-size:26px;line-height:1.1">${esc(title)}</span>
+        <span style="font-size:14px;color:#b7ab90;line-height:1.5">${esc(sub)}</span>
+        <span style="margin-top:6px;display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:800;color:#ffd76b">Open<i class="ph-bold ph-arrow-right"></i></span>
+      </button>`;
+    return `
+      <div style="position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;background:#0f0a1a;background-image:radial-gradient(60% 50% at 100% 0%,rgba(145,97,0,.22),transparent 60%),radial-gradient(60% 50% at 0% 100%,rgba(91,50,196,.22),transparent 60%);font-family:var(--pm-font-ui,'Hanken Grotesk',sans-serif)">
+        <div style="display:flex;align-items:center;gap:12px;padding:20px 26px">
+          <button data-act="exit" aria-label="Close Map Studio" style="width:42px;height:42px;border-radius:12px;background:rgba(255,248,230,.1);color:#fff8e6;display:grid;place-items:center;cursor:pointer"><i class="ph-bold ph-arrow-left" style="font-size:18px"></i></button>
+          <img src="/assets/mapco-logo.png" alt="MAPCO" style="width:38px;height:38px;object-fit:contain">
+          <div><div style="font-size:16px;font-weight:800;color:#fff8e6;line-height:1">Map Studio</div><div style="font-size:12px;color:#c9b477">What are we publishing?</div></div>
+        </div>
+        <div style="flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px">
+          <div style="width:100%;max-width:1120px">
+            <h1 style="margin:0 0 6px;font-family:var(--pm-font-display,'Newsreader',serif);font-weight:500;font-size:38px;color:#fff8e6;letter-spacing:-.01em">Map Studio</h1>
+            <p style="margin:0 0 30px;font-size:16px;color:#b7ab90">Pick one flow to begin. You can step back here anytime.</p>
+            <div style="display:flex;gap:18px;flex-wrap:wrap">
+              ${card('masterplan', 'Publish Masterplan', 'Highlight roads and blocks on a city map, name them, and save highlight sets clients can cycle through.', 'ph-map-trifold', '#ffc93c')}
+              ${card('sector', 'Publish Sector Map', 'Drop a pin on a sector map and link one of your plots so it shows in Client Presentation.', 'ph-map-pin-area', '#7be0a4')}
+              ${card('manage', 'Manage Published', 'Review every live map and its linked plots — link, unlink, or unpublish a map.', 'ph-squares-four', '#c4b5fd')}
+            </div>
+          </div>
+        </div>
+      </div>
+      ${toast ? `<div style="position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#1f4d3a;color:#fff;font-weight:700;padding:11px 20px;border-radius:999px;z-index:70;box-shadow:0 14px 30px -12px rgba(0,0,0,.4)">${esc(toast)}</div>` : ''}`;
+  }
+
   function render(): void {
+    if (onLanding) { el.innerHTML = landingHtml(); return; }
     const title = flow === 'masterplan' ? 'Publish Masterplan' : flow === 'sector' ? 'Publish Sector Map' : 'Manage Published';
     const main = flow === 'manage' ? manageMainHtml() : mapPreviewHtml(flow === 'sector');
     el.innerHTML = `
@@ -206,7 +236,6 @@ export async function renderMapStudio(el: HTMLElement): Promise<void> {
             <img src="/assets/mapco-logo.png" alt="MAPCO" style="width:34px;height:34px;object-fit:contain">
             <div><div style="font-size:15px;font-weight:800;color:#fff8e6;line-height:1">Map Studio</div><div style="font-size:11.5px;color:#c9b477">${esc(title)}</div></div>
           </div>
-          <div style="flex:none;margin-bottom:14px">${flowTabsHtml()}</div>
           <div style="flex:1;min-height:0;display:flex;flex-direction:column">${sidebarBodyHtml()}</div>
         </aside>
         <main style="flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;padding:16px">${main}</main>
@@ -230,11 +259,21 @@ export async function renderMapStudio(el: HTMLElement): Promise<void> {
     if (!t) return;
     const act = t.dataset.act; const id = t.dataset.id;
     switch (act) {
-      case 'exit': disposeOverlay(); if (hasSafeInAppHistory()) window.history.back(); else window.location.assign('/admin/team.html'); break;
-      case 'flow': {
+      case 'exit':
+        // From inside a flow, step back to the landing chooser; from the landing,
+        // leave Map Studio entirely.
+        if (!onLanding) {
+          disposeOverlay(); onLanding = true; selectedMapId = ''; labels = {}; pin = null; linkPropId = ''; sets = [];
+          render();
+        } else if (hasSafeInAppHistory()) {
+          window.history.back();
+        } else {
+          window.location.assign('/admin/team.html');
+        }
+        break;
+      case 'choose': {
         const f = t.dataset.flow as Flow;
-        if (f === flow) break;
-        disposeOverlay(); flow = f; selectedMapId = ''; labels = {}; pin = null; linkPropId = '';
+        disposeOverlay(); onLanding = false; flow = f; selectedMapId = ''; labels = {}; pin = null; linkPropId = '';
         render();
         break;
       }
