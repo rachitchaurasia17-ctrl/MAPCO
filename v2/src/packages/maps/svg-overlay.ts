@@ -260,17 +260,21 @@ export async function loadSvgOverlay(
 
   function renderHits(): void {
     if (!interactive) { hitsG.innerHTML = ''; return; }
-    let hits = '';
+    // BLOCK hits first, ROAD hits LAST → later SVG elements paint on top, so a
+    // road always wins the tap over the block underneath (fixes "I keep hitting
+    // a block instead of the road"). Road hit-strokes are also generously wide.
+    let blockHits = '';
+    let roadHits = '';
     for (const it of items) {
       if (it.kind === 'road') {
-        hits += `<path d="${it.d}" fill="none" stroke="rgba(0,0,0,0)" stroke-width="${22 * s}" style="cursor:pointer;pointer-events:stroke" data-hit="${it.id}"/>`;
+        roadHits += `<path d="${it.d}" fill="none" stroke="rgba(0,0,0,0)" stroke-width="${34 * s}" stroke-linecap="round" stroke-linejoin="round" style="cursor:pointer;pointer-events:stroke" data-hit="${it.id}"/>`;
       } else {
         // shift the hit up by the lift so it covers the extruded top face
-        hits += `<path d="${it.d}" fill="rgba(0,0,0,0)" transform="translate(0,${-lift})" style="cursor:pointer;pointer-events:fill" data-hit="${it.id}"/>`;
-        hits += `<path d="${it.d}" fill="rgba(0,0,0,0)" style="cursor:pointer;pointer-events:fill" data-hit="${it.id}"/>`;
+        blockHits += `<path d="${it.d}" fill="rgba(0,0,0,0)" transform="translate(0,${-lift})" style="cursor:pointer;pointer-events:fill" data-hit="${it.id}"/>`;
+        blockHits += `<path d="${it.d}" fill="rgba(0,0,0,0)" style="cursor:pointer;pointer-events:fill" data-hit="${it.id}"/>`;
       }
     }
-    hitsG.innerHTML = hits;
+    hitsG.innerHTML = blockHits + roadHits;
     hitsG.style.pointerEvents = 'auto';
   }
 
