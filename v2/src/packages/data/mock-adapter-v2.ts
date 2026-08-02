@@ -431,6 +431,11 @@ class MockClientLinkRepository implements ClientLinkRepository {
     return ok(paginate(CLIENT_LINKS, params, (l, q) => l.clientName.toLowerCase().includes(q)));
   }
 
+  async listForProperty(propertyId: string, opts?: QueryOptions): Promise<Result<ClientLink[]>> {
+    const a = aborted<ClientLink[]>(opts); if (a) return a;
+    return ok(CLIENT_LINKS.filter((l) => l.props.includes(propertyId)));
+  }
+
   async resolve(token: string, opts?: QueryOptions): Promise<Result<ClientLinkState>> {
     const a = aborted<ClientLinkState>(opts); if (a) return a;
 

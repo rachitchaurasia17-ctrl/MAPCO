@@ -29,6 +29,8 @@ export interface Property {
   sold: boolean;
   views: number;
   mapPlacement?: { mapId: string; x: number; y: number };
+  /** Private owner details — dealer-only, never projected into a client link. */
+  owner?: { name: string; phone: string; priceConfirmedAt?: string };
 }
 
 export interface Client {
@@ -98,6 +100,8 @@ export interface ClientLink {
   propNames: string[];
   /** count of plots on the link when the ids aren't returned (Supabase list RPC). */
   propertyCount?: number;
+  /** human-readable creation date (Supabase list RPC); optional in fixtures. */
+  createdAt?: string;
   expiry: string;
   loc: LocationVisibility;
   price: PriceVisibility;

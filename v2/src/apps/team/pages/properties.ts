@@ -1,5 +1,6 @@
 import { adapter } from '../../../packages/data/adapter';
 import { AddPropertyFlow } from '../../../packages/ui/shared-modals';
+import { openPropertyDrawer } from '../../../packages/ui/property-detail';
 import type { Property, PropertyType, WantType, Facing } from '../../../packages/data/types';
 
 const esc = (value: unknown) => String(value ?? '')
@@ -38,6 +39,18 @@ export async function renderTeamProperties(el: HTMLElement, openAddInitially = f
   };
 
   const close = () => { selectedId = null; render(); };
+
+  let drawerDispose: (() => void) | null = null;
+  const openDrawer = (property: Property) => {
+    drawerDispose?.();
+    drawerDispose = openPropertyDrawer(property, {
+      onShowMap: (p) => window.location.assign(`/app/plotmap/index.html?property=${encodeURIComponent(p.id)}`),
+      onSendLink: () => window.location.assign('/admin/owner.html#links'),
+      onEdit: (p) => { selectedId = p.id; render(); },
+      onPublishToggle: (p) => { const found = properties.find((x) => x.id === p.id); if (found) found.published = !found.published; render(); },
+      onDelete: (p) => { properties = properties.filter((x) => x.id !== p.id); render(); },
+    });
+  };
 
   // Same Add Property flow as the dealer dashboard (stepwise + map pin + publish).
   const reloadProps = async () => {
@@ -91,14 +104,20 @@ export async function renderTeamProperties(el: HTMLElement, openAddInitially = f
       return; // legacy add dialog removed — Add Property now uses the shared flow
     }
     const card = target.closest<HTMLElement>('[data-property-card]');
-    if (card?.dataset.id && !target.closest('button')) { selectedId = card.dataset.id; return render(); }
+    if (card?.dataset.id && !target.closest('button')) {
+      const property = properties.find((p) => p.id === card.dataset.id);
+      if (property) openDrawer(property);
+      return;
+    }
   });
 
   el.addEventListener('keydown', (event) => {
     const target = event.target as HTMLElement;
     const card = target.closest<HTMLElement>('[data-property-card]');
     if (card?.dataset.id && (event.key === 'Enter' || event.key === ' ')) {
-      event.preventDefault(); selectedId = card.dataset.id; render();
+      event.preventDefault();
+      const property = properties.find((p) => p.id === card.dataset.id);
+      if (property) openDrawer(property);
     }
     if (event.key === 'Escape' && selectedId) close();
   });

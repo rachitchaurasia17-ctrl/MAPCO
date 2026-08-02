@@ -416,6 +416,8 @@ export interface CreatedClientLink { id: string; url: string; token: string; exp
 export interface ClientLinkRepository {
   /** dealer-side listing of links (record surface). */
   list(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<ClientLink>>>;
+  /** every client link that contains a given property (property analytics). */
+  listForProperty(propertyId: string, opts?: QueryOptions): Promise<Result<ClientLink[]>>;
   /**
    * Buyer-side resolution. Returns ONLY client-safe data. The token
    * is passed as an argument and never stored or echoed back.

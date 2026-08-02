@@ -328,6 +328,28 @@ class SupaPresentationEvents implements PresentationEventsRepository {
 
 /* ── client links (dealer list + buyer resolve via RPC) ───────── */
 
+// The list RPC returns {id,label,status,propertyCount,tokenHint,expiresAt,
+// createdAt,openedAt,lastOpenedAt,hasAudio,events:{opens,audioPlays,calls,
+// whatsapp,visits}} — map it to the ClientLink shape the dealer pages expect
+// so rendering never crashes on missing fields (e.g. clientName).
+function rowToClientLink(r: Record<string, unknown>): ClientLink {
+  const now = Date.now();
+  const ev = (r.events as Record<string, number>) ?? {};
+  const exp = r.expiresAt ? Math.max(0, Math.ceil((Date.parse(String(r.expiresAt)) - now) / 86400000)) : null;
+  const last = r.lastOpenedAt ? new Date(String(r.lastOpenedAt)).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'not yet';
+  return {
+    id: String(r.id), clientId: '', clientName: String(r.label ?? 'Client'),
+    props: [], propNames: [], propertyCount: Number(r.propertyCount ?? 0),
+    expiry: exp === null ? '—' : `${exp}d`,
+    createdAt: r.createdAt ? new Date(String(r.createdAt)).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : undefined,
+    loc: 'area', price: 'hidden',
+    audio: r.hasAudio ? 'done' : 'none', audioSecs: 0,
+    status: (r.status as ClientLink['status']) ?? 'active',
+    events: { opens: ev.opens ?? 0, played: ev.audioPlays ?? 0, called: ev.calls ?? 0, wa: ev.whatsapp ?? 0, visit: ev.visits ?? 0 },
+    lastOpen: last,
+  } as ClientLink;
+}
+
 class SupaClientLinks implements ClientLinkRepository {
   async list(p?: PageParams, o?: QueryOptions): Promise<Result<Page<ClientLink>>> {
     const a = aborted<Page<ClientLink>>(o); if (a) return a;
@@ -335,27 +357,20 @@ class SupaClientLinks implements ClientLinkRepository {
       const c = await client();
       const { data, error } = await c.rpc('plotmap_list_client_links');
       if (error) return toErr(error);
-      // The list RPC returns {id,label,status,propertyCount,tokenHint,expiresAt,
-      // createdAt,openedAt,lastOpenedAt,hasAudio,events:{opens,audioPlays,calls,
-      // whatsapp,visits}} — map it to the ClientLink shape the dealer pages expect
-      // so rendering never crashes on missing fields (e.g. clientName).
-      const now = Date.now();
-      const items: ClientLink[] = ((data ?? []) as Record<string, unknown>[]).map((r) => {
-        const ev = (r.events as Record<string, number>) ?? {};
-        const exp = r.expiresAt ? Math.max(0, Math.ceil((Date.parse(String(r.expiresAt)) - now) / 86400000)) : null;
-        const last = r.lastOpenedAt ? new Date(String(r.lastOpenedAt)).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'not yet';
-        return {
-          id: String(r.id), clientId: '', clientName: String(r.label ?? 'Client'),
-          props: [], propNames: [], propertyCount: Number(r.propertyCount ?? 0),
-          expiry: exp === null ? '—' : `${exp}d`,
-          loc: 'area', price: 'hidden',
-          audio: r.hasAudio ? 'done' : 'none', audioSecs: 0,
-          status: (r.status as ClientLink['status']) ?? 'active',
-          events: { opens: ev.opens ?? 0, played: ev.audioPlays ?? 0, called: ev.calls ?? 0, wa: ev.whatsapp ?? 0, visit: ev.visits ?? 0 },
-          lastOpen: last,
-        } as ClientLink;
-      });
+      const items = ((data ?? []) as Record<string, unknown>[]).map(rowToClientLink);
       return ok({ items, nextCursor: null, total: items.length });
+    } catch (e) { return toErr(e); }
+  }
+
+  async listForProperty(propertyId: string, o?: QueryOptions): Promise<Result<ClientLink[]>> {
+    const a = aborted<ClientLink[]>(o); if (a) return a;
+    try {
+      const c = await client();
+      // The list RPC already accepts a property filter (p_property_id) and returns
+      // only the dealer's own links containing that plot.
+      const { data, error } = await c.rpc('plotmap_list_client_links', { p_property_id: propertyId });
+      if (error) return toErr(error);
+      return ok(((data ?? []) as Record<string, unknown>[]).map(rowToClientLink));
     } catch (e) { return toErr(e); }
   }
 

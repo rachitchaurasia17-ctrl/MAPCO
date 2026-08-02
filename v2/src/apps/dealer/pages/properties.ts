@@ -8,6 +8,7 @@ import type {
   WantType,
 } from "../../../packages/data/types";
 import { AddPropertyFlow } from "../../../packages/ui/shared-modals";
+import { openPropertyDrawer, openPropertyEditModal } from "../../../packages/ui/property-detail";
 
 const esc = (value: string) =>
   value.replace(
@@ -33,9 +34,9 @@ export async function renderProperties(el: HTMLElement): Promise<void> {
   let links: ClientLink[] = [];
   let city = new URLSearchParams(location.search).get("city") || "all";
   let cityOpen = false;
-  let selectedId = new URLSearchParams(location.search).get("property");
+  const deepLinkId = new URLSearchParams(location.search).get("property");
   let menuId: string | null = null;
-  let deleteArmed = false;
+  let drawerDispose: (() => void) | null = null;
 
   const result = await adapter.properties.list({ limit: 100 });
   if (!result.ok) {
@@ -96,9 +97,6 @@ export async function renderProperties(el: HTMLElement): Promise<void> {
     );
     const ready = pool.filter((property) => property.photos.length > 0);
     const needWork = pool.filter((property) => property.photos.length === 0);
-    const selected = selectedId
-      ? properties.find((property) => property.id === selectedId)
-      : undefined;
     const portfolio = pool.reduce((sum, property) => sum + property.price, 0);
     el.innerHTML = `<div style="max-width:1120px;margin:0 auto;padding:34px 40px 70px">
       <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;animation:omRise .5s cubic-bezier(.2,.8,.2,1) both"><div><h1 style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:34px;letter-spacing:-.015em;color:#241f1c">My Plots</h1><p style="margin:8px 0 0;font-size:17px;color:#6b6156">Everything you have to sell — and what's ready to show a customer.</p></div><button data-act="add" style="display:flex;align-items:center;gap:9px;padding:15px 22px;border-radius:14px;background:#ffc93c;color:#1f1a12;font-size:16px;font-weight:800;box-shadow:0 12px 26px -14px rgba(244,174,20,.85)"><i class="ph-bold ph-plus" style="font-size:18px"></i>Add Property</button></div>
@@ -106,30 +104,38 @@ export async function renderProperties(el: HTMLElement): Promise<void> {
       <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:16px;margin-top:20px"><div style="background:#ffc93c;background-image:linear-gradient(135deg,#ffdc7a,#f4ae14);border-radius:20px;padding:24px 26px;color:#1f1a12"><div style="font-size:14px;color:#8a6a14;font-weight:700">Value of stock${city === "all" ? "" : ` in ${esc(city)}`}</div><div style="font-family:'Newsreader',serif;font-weight:500;font-size:44px;line-height:1;color:#1f1a12;margin-top:8px">${formatINR(portfolio)}</div></div><div style="background:#ffe6cf;border:1px solid #f8cba6;border-radius:20px;padding:24px 26px"><div style="font-size:14px;color:#6b6156;font-weight:700">Ready to show</div><div style="font-family:'Newsreader',serif;font-weight:500;font-size:44px;line-height:1;color:#d95d1e;margin-top:8px">${ready.length}</div></div><div style="background:#efe8fb;border:1px solid #ddd0f5;border-radius:20px;padding:24px 26px"><div style="font-size:14px;color:#6b6156;font-weight:700">Need a photo</div><div style="font-family:'Newsreader',serif;font-weight:500;font-size:44px;line-height:1;color:#b5322a;margin-top:8px">${needWork.length}</div></div></div>
       <div style="font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8d8271;margin:30px 0 14px">Ready to show</div>${ready.length ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:18px">${ready.map(renderCard).join("")}</div>` : `<div style="padding:30px;text-align:center;color:#8d8271;font-size:15px;background:#faf7ff;border:1px dashed #e6cf9a;border-radius:18px">No ready-to-show plots in ${city === "all" ? "your portfolio" : esc(city)} yet.</div>`}
       ${needWork.length ? `<div style="font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8d8271;margin:32px 0 12px">Needs a little work</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px">${needWork.map(renderCard).join("")}</div>` : ""}
-    </div>${selected ? detailMarkup(selected) : ""}`;
+    </div>`;
   };
 
-  const detailMarkup = (property: Property) =>
-    `<div data-overlay style="position:fixed;inset:0;background:rgba(28,20,5,.34);backdrop-filter:blur(3px);z-index:90;display:flex;justify-content:flex-end"><section role="dialog" aria-modal="true" aria-labelledby="pm-prop-title" style="width:min(620px,95vw);height:100%;background:#fffaf0;display:flex;flex-direction:column;box-shadow:-28px 0 70px -34px rgba(20,14,2,.8);animation:omSlide .28s cubic-bezier(.2,.8,.2,1) both"><div style="display:flex;align-items:center;gap:14px;padding:20px 24px;border-bottom:1px solid #f0dfb8"><span style="width:46px;height:46px;border-radius:13px;background:#fff3d1;color:#a8792a;display:grid;place-items:center"><i class="${iconFor(property.type)}" style="font-size:23px"></i></span><div style="flex:1"><h2 id="pm-prop-title" style="margin:0;font-family:'Newsreader',serif;font-size:27px;font-weight:500">${esc(property.type)} · ${esc(property.size)}</h2><p style="margin:3px 0 0;color:#8d8271">${esc(property.loc)}</p></div><button data-act="close" aria-label="Close property" style="width:42px;height:42px;border-radius:12px;background:#f3eeff;color:#6b6156"><i class="ph-bold ph-x"></i></button></div><div data-scroll style="flex:1;overflow-y:auto;padding:24px"><div style="height:280px;border-radius:20px;background:${property.photos[0] ? `#efe8fb url('${esc(property.photos[0])}') center/cover` : "#efe8fb"}"></div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px"><div style="padding:15px;border-radius:14px;background:#faf7ff;border:1px solid #e4dbf7"><span style="display:block;font-size:11px;font-weight:800;color:#8d8271;text-transform:uppercase">Price</span><b style="display:block;margin-top:5px;font-size:18px;color:#c85a1a">${formatINR(property.price)}</b></div><div style="padding:15px;border-radius:14px;background:#faf7ff;border:1px solid #e4dbf7"><span style="display:block;font-size:11px;font-weight:800;color:#8d8271;text-transform:uppercase">Facing</span><b style="display:block;margin-top:5px;font-size:18px">${esc(property.facing)}</b></div><div style="padding:15px;border-radius:14px;background:#faf7ff;border:1px solid #e4dbf7"><span style="display:block;font-size:11px;font-weight:800;color:#8d8271;text-transform:uppercase">Opens</span><b style="display:block;margin-top:5px;font-size:18px">${property.views}</b></div></div><div style="margin-top:18px;padding:18px;border-radius:16px;background:${property.published ? "#d9f5e3" : "#f3eeff"};color:${property.published ? "#0b6f39" : "#6b6156"};font-weight:800"><i class="ph-fill ${property.published ? "ph-broadcast" : "ph-eye-slash"}"></i> ${property.published ? "This plot is on your presentation" : "This plot is not published"}</div>
-        <div style="margin-top:20px;font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#a8792a">Property analysis</div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px">
-          ${[['Opens', String(property.views ?? 0)], ['Photos', String((property.photos ?? []).length)], ['Status', property.sold ? 'Sold' : property.published ? 'Live' : 'Draft'], ['Size', property.size || '—'], ['Position', property.position || 'Inside'], ['Sector', property.sector || property.area || '—']].map(([k, v]) => `<div style="padding:13px 14px;border-radius:13px;background:#faf7ff;border:1px solid #e4dbf7"><span style="display:block;font-size:11px;font-weight:800;color:#8d8271;text-transform:uppercase">${esc(k)}</span><b style="display:block;margin-top:4px;font-size:16px;color:#241f1c">${esc(v)}</b></div>`).join('')}
-        </div>
-        ${(property.approvals ?? []).length ? `<div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:12px">${property.approvals.map((a) => `<span style="padding:6px 11px;border-radius:9px;background:#e2f2e6;color:#0b6f39;font-size:12.5px;font-weight:800">${esc(a)}</span>`).join('')}</div>` : ''}
-        ${(property.landmarks ?? []).length ? `<div style="margin-top:14px;font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#a8792a">What's close by</div><div style="display:flex;flex-direction:column;gap:7px;margin-top:9px">${property.landmarks.map((l) => `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:11px;background:#faf7ff;border:1px solid #e4dbf7"><i class="${esc(l.icon)}" style="font-size:17px;color:#d95d1e"></i><span style="flex:1;font-size:14px;font-weight:700;color:#3a332c">${esc(l.name)}</span><b style="font-size:13.5px;color:#12a150">${esc(l.distance)}</b></div>`).join('')}</div>` : ''}
-        </div><div style="padding:18px 24px;border-top:1px solid #f0dfb8;display:flex;gap:10px">${deleteArmed ? `<button data-act="confirm-delete" data-id="${esc(property.id)}" style="flex:1;height:48px;border-radius:13px;background:#c2185b;color:#fff;font-weight:800">Delete this plot</button><button data-act="disarm" style="height:48px;padding:0 18px;border-radius:13px;background:#f3eeff;font-weight:800">Cancel</button>` : `<button data-act="arm-delete" style="height:48px;padding:0 18px;border-radius:13px;background:#ffe1e6;color:#c2185b;font-weight:800"><i class="ph-fill ph-trash"></i> Delete</button><div style="flex:1"></div><button data-act="publish" data-id="${esc(property.id)}" style="height:48px;padding:0 20px;border-radius:13px;background:#12a150;color:#fff;font-weight:800">${property.published ? "Take off" : "Publish"}</button>`}</div></section></div>`;
+  const openDrawer = (property: Property) => {
+    drawerDispose?.();
+    drawerDispose = openPropertyDrawer(property, {
+      onShowMap: (p) => window.location.assign(`/app/plotmap/index.html?property=${encodeURIComponent(p.id)}`),
+      onSendLink: () => window.location.assign("/admin/owner.html#links"),
+      onEdit: (p) => openPropertyEditModal(p, {
+        onSave: (updated) => {
+          properties = properties.map((x) => (x.id === updated.id ? updated : x));
+          void adapter.properties.save(updated);
+          render();
+          openDrawer(properties.find((x) => x.id === updated.id) ?? updated);
+        },
+      }),
+      onPublishToggle: (p) => {
+        properties = properties.map((x) => (x.id === p.id ? { ...x, published: !x.published } : x));
+        render();
+      },
+      onDelete: (p) => {
+        properties = properties.filter((x) => x.id !== p.id);
+        render();
+      },
+    });
+  };
 
   el.addEventListener("click", (event) => {
     const target = (event.target as HTMLElement).closest<HTMLElement>(
       "[data-act]",
     );
-    if (!target) {
-      if ((event.target as HTMLElement).hasAttribute("data-overlay")) {
-        selectedId = null;
-        render();
-      }
-      return;
-    }
+    if (!target) return;
     const action = target.dataset.act;
     const id = target.dataset.id;
     if (action === "plot-photo") {
@@ -141,15 +147,12 @@ export async function renderProperties(el: HTMLElement): Promise<void> {
       cityOpen = false;
     }
     if (action === "detail") {
-      selectedId = id || null;
       menuId = null;
-      deleteArmed = false;
+      const property = properties.find((p) => p.id === id);
+      if (property) openDrawer(property);
+      return;
     }
     if (action === "menu") menuId = menuId === id ? null : id || null;
-    if (action === "close") {
-      selectedId = null;
-      deleteArmed = false;
-    }
     if (action === "add") {
       let flow: AddPropertyFlow;
       flow = new AddPropertyFlow(
@@ -163,8 +166,6 @@ export async function renderProperties(el: HTMLElement): Promise<void> {
       );
       flow.mount(document.body);
     }
-    if (action === "arm-delete") deleteArmed = true;
-    if (action === "disarm") deleteArmed = false;
     if (action === "publish" && id)
       properties = properties.map((property) =>
         property.id === id
@@ -177,11 +178,15 @@ export async function renderProperties(el: HTMLElement): Promise<void> {
           ? { ...property, sold: true, published: false }
           : property,
       );
-    if ((action === "remove" || action === "confirm-delete") && id) {
+    if (action === "remove" && id) {
       properties = properties.filter((property) => property.id !== id);
-      selectedId = null;
     }
     render();
   });
   render();
+  // Deep link (?property=<id>) opens the drawer straight away.
+  if (deepLinkId) {
+    const property = properties.find((p) => p.id === deepLinkId);
+    if (property) openDrawer(property);
+  }
 }

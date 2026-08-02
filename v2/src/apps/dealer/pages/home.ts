@@ -1,7 +1,7 @@
 import { getProfile } from '../../../packages/auth/auth';
 import { formatDateShort, formatINR } from '../../../packages/ui/utils';
 import { adapter } from '../../../packages/data/adapter';
-import { openPropertyDetail } from '../../../packages/ui/property-detail';
+import { openPropertyDrawer } from '../../../packages/ui/property-detail';
 import type { WantType } from '../../../packages/data/types';
 
 const errorState = (msg: string): string =>
@@ -268,7 +268,10 @@ export async function renderHome(container: HTMLElement) {
       const card = (e.target as HTMLElement).closest<HTMLElement>('[data-prop-id]');
       if (!card) return;
       const prop = properties.find((p) => p.id === card.dataset.propId);
-      if (prop) openPropertyDetail(prop, { onEdit: () => window.location.assign('/admin/properties.html') });
+      if (prop) openPropertyDrawer(prop, {
+        onEdit: () => window.location.assign('/admin/properties.html'),
+        onSendLink: () => window.location.assign('/admin/owner.html#links'),
+      });
     });
   } catch {
     container.innerHTML = errorState('Something went wrong showing your dashboard. Please refresh.');
