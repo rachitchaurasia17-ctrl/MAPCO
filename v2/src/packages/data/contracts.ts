@@ -189,11 +189,15 @@ export interface AuthRepository {
 export interface PropertyRepository {
   list(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<Property>>>;
   get(id: string, opts?: QueryOptions): Promise<Result<Property>>;
+  /** Create or update a property (dealer-scoped). */
+  save(property: Property, opts?: QueryOptions): Promise<Result<Property>>;
 }
 
 export interface CustomerRepository {
   list(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<Client>>>;
   get(id: string, opts?: QueryOptions): Promise<Result<Client>>;
+  /** Create or update a customer (dealer-scoped). */
+  save(client: Client, opts?: QueryOptions): Promise<Result<Client>>;
 }
 
 export interface DealRepository {

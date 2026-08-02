@@ -128,6 +128,10 @@ class SupaProperties implements PropertyRepository {
       `${r.payload.area} ${r.payload.loc} ${r.payload.type}`.toLowerCase().includes(q));
   }
   get(id: string, o?: QueryOptions) { return crmGet<Property>('properties', id, o); }
+  save(property: Property, o?: QueryOptions) {
+    const id = property.id || `prop-${Date.now()}`;
+    return crmUpsert<Property>('properties', id, { ...property, id }, o);
+  }
 }
 
 class SupaCustomers implements CustomerRepository {
@@ -136,6 +140,10 @@ class SupaCustomers implements CustomerRepository {
       `${r.payload.name} ${r.payload.city}`.toLowerCase().includes(q));
   }
   get(id: string, o?: QueryOptions) { return crmGet<Client>('clients', id, o); }
+  save(client: Client, o?: QueryOptions) {
+    const id = client.id || `client-${Date.now()}`;
+    return crmUpsert<Client>('clients', id, { ...client, id }, o);
+  }
 }
 
 class SupaDeals implements DealRepository {

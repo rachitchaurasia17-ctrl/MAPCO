@@ -1,7 +1,8 @@
 import { Property, PropertyType, WantType, Facing, ClientLink, Client } from '../data/types';
-import { getMaps, mountMapEngine, addPropertyToMap, type MountedMap } from '../maps';
+import { getMaps, getMap, registerMaps, mountMapEngine, addPropertyToMap, type MountedMap, type MapCatalogInput } from '../maps';
 import { formatINR } from './utils';
 import { adapter } from '../data/adapter';
+import { openPropertyDetail } from './property-detail';
 
 const esc = (value: string) =>
   value.replace(
@@ -15,6 +16,7 @@ const esc = (value: string) =>
 export class AddPropertyFlow {
   private el: HTMLElement;
   private addStep = 1;
+  private propId: string | null = null;
   private mapToggle: 'masterplan' | 'sector' = 'masterplan';
   private activeMap: MountedMap | null = null;
   private selectedMapPin: { mapId: string, x: number, y: number } | null = null;
@@ -23,6 +25,7 @@ export class AddPropertyFlow {
     city: "New Chandigarh",
     area: "Eco City",
     size: "500 sq yd",
+    price: "",
     facing: "North-East",
     position: "Park facing",
     sector: "Eco City",
@@ -48,6 +51,15 @@ export class AddPropertyFlow {
   public mount(container: HTMLElement) {
     container.appendChild(this.el);
     this.render();
+    void this.loadCatalog();
+  }
+
+  /** Merge the real Supabase catalog so step 3 places pins on REAL masterplans/sectors. */
+  private async loadCatalog() {
+    try {
+      const r = await adapter.maps.listRegistry({ limit: 300 });
+      if (r.ok) { registerMaps(r.value.items as unknown as MapCatalogInput[]); if (this.addStep === 3) this.render(); }
+    } catch { /* keep pilot maps */ }
   }
 
   public unmount() {
@@ -81,9 +93,10 @@ export class AddPropertyFlow {
       <div style="display:flex;flex-direction:column;gap:5px;margin-top:7px">${[["ph-graduation-cap", "Chandigarh University", "10 min"], ["ph-storefront", "CP67 Mall", "8 min"], ["ph-first-aid-kit", "PGIMER Hospital", "22 min"]].map(([icon, name, time]) => `<div style="display:flex;align-items:center;gap:9px;border-radius:9px;background:rgba(255,255,255,.07);padding:8px 10px;font-size:11.5px;font-weight:700"><i class="ph-fill ${icon}" style="font-size:15px;color:#ffd75e"></i><span style="flex:1">${name}</span><span style="color:#55dd8a">${time}</span></div>`).join("")}</div>
     </aside>`;
     
-    const basics = `<section style="border:1px solid #eadfc9;border-radius:18px;background:rgba(255,255,255,.68);padding:24px"><div style="display:flex;align-items:center;gap:13px"><span style="width:44px;height:44px;border-radius:11px;background:#f0eaff;color:#6b3fd4;display:grid;place-items:center"><i class="ph ph-map-pin-area" style="font-size:22px"></i></span><h3 style="margin:0;font-family:'Newsreader',serif;font-size:22px;font-weight:600">Property Basics</h3></div><div style="margin-top:21px"><label style="${labelStyle}">Property title <b style="color:#db3d53">*</b><input name="title" value="${esc(this.addForm.title)}" style="${inputStyle}"></label><div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:17px"><label style="${labelStyle}">City <b style="color:#db3d53">*</b><select name="city" style="${inputStyle}">${cityOptions.map((item) => `<option ${item === this.addForm.city ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></label><label style="${labelStyle}">Area / Sector <b style="color:#db3d53">*</b><input name="area" value="${esc(this.addForm.area)}" style="${inputStyle}"></label><label style="${labelStyle}">Plot size <b style="color:#db3d53">*</b><input name="size" value="${esc(this.addForm.size)}" style="${inputStyle}"></label><label style="${labelStyle}">Facing <b style="color:#db3d53">*</b><select name="facing" style="${inputStyle}">${["North-East", "East", "West", "North", "South", "North-West", "South-East", "South-West"].map((item) => `<option ${item === this.addForm.facing ? "selected" : ""}>${item}</option>`).join("")}</select></label><label style="${labelStyle}">Position <b style="color:#db3d53">*</b><select name="position" style="${inputStyle}">${["Park facing", "Corner plot", "Inside plot", "Road facing"].map((item) => `<option ${item === this.addForm.position ? "selected" : ""}>${item}</option>`).join("")}</select></label><label style="${labelStyle}">Sector<input name="sector" value="${esc(this.addForm.sector)}" style="${inputStyle}"></label></div></div></section>`;
+    const basics = `<section style="border:1px solid #eadfc9;border-radius:18px;background:rgba(255,255,255,.68);padding:24px"><div style="display:flex;align-items:center;gap:13px"><span style="width:44px;height:44px;border-radius:11px;background:#f0eaff;color:#6b3fd4;display:grid;place-items:center"><i class="ph ph-map-pin-area" style="font-size:22px"></i></span><h3 style="margin:0;font-family:'Newsreader',serif;font-size:22px;font-weight:600">Property Basics</h3></div><div style="margin-top:21px"><label style="${labelStyle}">Property title <b style="color:#db3d53">*</b><input name="title" value="${esc(this.addForm.title)}" style="${inputStyle}"></label><div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:17px"><label style="${labelStyle}">City <b style="color:#db3d53">*</b><select name="city" style="${inputStyle}">${cityOptions.map((item) => `<option ${item === this.addForm.city ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></label><label style="${labelStyle}">Area / Sector <b style="color:#db3d53">*</b><input name="area" value="${esc(this.addForm.area)}" style="${inputStyle}"></label><label style="${labelStyle}">Plot size <b style="color:#db3d53">*</b><input name="size" value="${esc(this.addForm.size)}" style="${inputStyle}"></label><label style="${labelStyle}">Price (₹)<input name="price" inputmode="numeric" value="${esc(this.addForm.price)}" placeholder="e.g. 8500000" style="${inputStyle}"></label><label style="${labelStyle}">Facing <b style="color:#db3d53">*</b><select name="facing" style="${inputStyle}">${["North-East", "East", "West", "North", "South", "North-West", "South-East", "South-West"].map((item) => `<option ${item === this.addForm.facing ? "selected" : ""}>${item}</option>`).join("")}</select></label><label style="${labelStyle}">Position <b style="color:#db3d53">*</b><select name="position" style="${inputStyle}">${["Park facing", "Corner plot", "Inside plot", "Road facing"].map((item) => `<option ${item === this.addForm.position ? "selected" : ""}>${item}</option>`).join("")}</select></label><label style="${labelStyle}">Sector<input name="sector" value="${esc(this.addForm.sector)}" style="${inputStyle}"></label><label style="${labelStyle}">Type<select name="type" style="${inputStyle}">${["Residential Plot", "Flat", "Floor", "Kothi", "Villa", "Commercial"].map((item) => `<option ${item === this.addForm.type ? "selected" : ""}>${item}</option>`).join("")}</select></label></div></div></section>`;
     
-    const details = `<section style="border:1px solid #eadfc9;border-radius:18px;background:rgba(255,255,255,.68);padding:20px 24px"><div style="display:flex;align-items:center;gap:13px"><span style="width:44px;height:44px;border-radius:11px;background:#f0eaff;color:#6b3fd4;display:grid;place-items:center"><i class="ph ph-image" style="font-size:22px"></i></span><h3 style="margin:0;font-family:'Newsreader',serif;font-size:22px;font-weight:600">Photos &amp; Details</h3></div><div style="margin-top:14px;font-size:13px;font-weight:700;color:#4c463d">Main photo (cover image) <b style="color:#db3d53">*</b></div><button type="button" data-act="plot-photo" style="width:100%;height:78px;margin-top:7px;border:1px dashed #c9b8d8;border-radius:11px;background:#fbf8ff;color:#4c463d;display:flex;align-items:center;justify-content:center;gap:12px"><i class="ph ph-upload-simple" style="font-size:28px;color:#6b3fd4"></i><span style="text-align:left"><b style="display:block;font-size:13px">Upload cover photo <span style="font-weight:500">or drag &amp; drop</span></b><small style="display:block;margin-top:3px;color:#8d8271">Recommended size: 16:9 or 4:3</small></span></button><div style="margin-top:12px;font-size:13px;font-weight:700;color:#4c463d">Gallery photos</div><div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:7px">${Array.from({ length: 6 }, (_, index) => index < 2 ? `<button type="button" data-act="plot-photo" style="height:85px;border-radius:10px;position:relative;background:url('${esc(previewPhotos[index] || "/assets/ph-plot-1.png")}') center/cover"><span style="position:absolute;right:5px;top:5px;width:22px;height:22px;border-radius:50%;background:#fff;color:#241f1c;display:grid;place-items:center"><i class="ph-bold ph-x" style="font-size:11px"></i></span></button>` : index === 5 ? `<button type="button" data-act="plot-photo" style="height:85px;border:1px solid #7b4ee5;border-radius:10px;background:#fbf8ff;color:#6b3fd4;display:grid;place-items:center"><span><i class="ph ph-plus" style="display:block;font-size:25px"></i><small style="font-size:11px">Add more</small></span></button>` : `<button type="button" data-act="plot-photo" style="height:85px;border:1px dashed #d7ccbd;border-radius:10px;background:#faf8f5;color:#b7ada1;display:grid;place-items:center"><i class="ph ph-image" style="font-size:25px"></i></button>`).join("")}</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:14px"><label style="${labelStyle}">Property type <b style="color:#db3d53">*</b><select name="type" style="${inputStyle}">${["Residential Plot", "Flat", "Floor", "Kothi", "Villa", "Commercial"].map((item) => `<option ${item === this.addForm.type ? "selected" : ""}>${item}</option>`).join("")}</select></label><label style="${labelStyle}">Listing status <b style="color:#db3d53">*</b><select name="status" style="${inputStyle}"><option>Available</option><option>Draft</option></select></label><label style="${labelStyle}">Possession <b style="color:#db3d53">*</b><select name="possession" style="${inputStyle}"><option>Ready to build</option><option>Immediate</option><option>Later</option></select></label></div><label style="${labelStyle};margin-top:13px">Property description <b style="color:#db3d53">*</b><textarea name="description" maxlength="500" rows="3" style="display:block;width:100%;margin-top:7px;border:1px solid #e6c980;border-radius:11px;background:#fff;padding:11px 14px;font-size:13px;line-height:1.45;color:#241f1c;outline:none;resize:none">${esc(this.addForm.description)}</textarea><span style="display:block;text-align:right;font-size:11px;font-weight:500;color:#8d8271;margin-top:3px">${this.addForm.description.length} / 500</span></label><div style="font-size:13px;font-weight:700;color:#4c463d;margin-top:8px">Nearby places</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:7px">${[["ph-graduation-cap", "Chandigarh University", "10 min"], ["ph-storefront", "CP67 Mall", "8 min"], ["ph-first-aid-kit", "PGIMER Hospital", "22 min"]].map(([icon, name, time]) => `<span style="display:flex;align-items:center;gap:8px;height:40px;border:1px solid #eadfc9;border-radius:9px;padding:0 10px;font-size:10.5px;font-weight:700"><i class="ph-fill ${icon}" style="font-size:15px;color:#e5a90e"></i><span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</span><b style="color:#12a150">${time}</b></span>`).join("")}</div></section>`;
+    // Step 2 — photos ONLY (no other fields).
+    const details = `<section style="border:1px solid #eadfc9;border-radius:18px;background:rgba(255,255,255,.68);padding:24px"><div style="display:flex;align-items:center;gap:13px"><span style="width:44px;height:44px;border-radius:11px;background:#f0eaff;color:#6b3fd4;display:grid;place-items:center"><i class="ph ph-image" style="font-size:22px"></i></span><h3 style="margin:0;font-family:'Newsreader',serif;font-size:22px;font-weight:600">Photos</h3></div><div style="margin-top:16px;font-size:13px;font-weight:700;color:#4c463d">Cover photo</div><button type="button" data-act="plot-photo" style="width:100%;height:96px;margin-top:8px;border:1px dashed #c9b8d8;border-radius:12px;background:#fbf8ff;color:#4c463d;display:flex;align-items:center;justify-content:center;gap:12px"><i class="ph ph-upload-simple" style="font-size:30px;color:#6b3fd4"></i><span style="text-align:left"><b style="display:block;font-size:14px">Upload cover photo <span style="font-weight:500">or drag &amp; drop</span></b><small style="display:block;margin-top:3px;color:#8d8271">16:9 or 4:3 looks best</small></span></button><div style="margin-top:16px;font-size:13px;font-weight:700;color:#4c463d">Gallery photos</div><div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:8px">${Array.from({ length: 6 }, (_, index) => index < 2 ? `<button type="button" data-act="plot-photo" style="height:92px;border-radius:10px;position:relative;background:url('${esc(previewPhotos[index] || "/assets/ph-plot-1.png")}') center/cover"><span style="position:absolute;right:5px;top:5px;width:22px;height:22px;border-radius:50%;background:#fff;color:#241f1c;display:grid;place-items:center"><i class="ph-bold ph-x" style="font-size:11px"></i></span></button>` : `<button type="button" data-act="plot-photo" style="height:92px;border:1px dashed #d7ccbd;border-radius:10px;background:#faf8f5;color:#b7ada1;display:grid;place-items:center"><i class="ph ph-plus" style="font-size:24px"></i></button>`).join("")}</div><p style="margin-top:14px;font-size:13px;color:#8d8271">Add as many photos as you like. That is all this step needs — next you will place it on the map.</p></section>`;
     
     const mapLocation = `<section style="border:1px solid #eadfc9;border-radius:18px;background:rgba(255,255,255,.68);display:flex;flex-direction:column;overflow:hidden;height:100%">
       <div style="flex:none;display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid #eadfc9">
@@ -108,8 +121,8 @@ export class AddPropertyFlow {
     </section>`;
 
     const body = this.addStep === 1 ? basics : this.addStep === 2 ? details : mapLocation;
-    const primaryLabel = this.addStep === 2 ? "Next" : "Add Property";
-    const primaryAction = this.addStep === 2 ? "add-next" : "add-submit";
+    const primaryLabel = this.addStep === 3 ? "Publish" : "Next";
+    const primaryAction = this.addStep === 3 ? "add-submit" : "add-next";
 
     this.el.innerHTML = `<div style="position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:24px;overflow:hidden">
       <div data-act="close-add" style="position:absolute;inset:0;background:rgba(33,29,25,.45);backdrop-filter:blur(5px);animation:omVeil .2s ease both"></div>
@@ -123,14 +136,16 @@ export class AddPropertyFlow {
           <button type="button" data-act="close-add" aria-label="Close Add Property" style="width:48px;height:48px;border-radius:14px;background:#f0eaff;color:#6b6156;display:grid;place-items:center"><i class="ph ph-x" style="font-size:20px"></i></button>
         </header>
         <div data-scroll style="flex:1;min-height:0;overflow:auto;padding:22px 30px 18px">
-          <div style="display:flex;align-items:center;gap:14px;max-width:650px">${step(1, "Property Basics")}<span style="height:1px;flex:1;background:#ddd4c6"></span>${step(2, "Photos & Details")}<span style="height:1px;flex:1;background:#ddd4c6"></span>${step(3, "Map Location")}</div>
-          <div style="display:grid;${this.addStep === 3 ? 'grid-template-columns:1fr;' : 'grid-template-columns:minmax(0,1.48fr) minmax(330px,.92fr);'}gap:30px;margin-top:20px;align-items:stretch;height:${this.addStep === 3 ? 'calc(100% - 70px)' : 'auto'}">${body}${this.addStep === 3 ? '' : preview}</div>
+          <div style="display:flex;align-items:center;gap:14px;max-width:650px">${step(1, "Details & price")}<span style="height:1px;flex:1;background:#ddd4c6"></span>${step(2, "Photos")}<span style="height:1px;flex:1;background:#ddd4c6"></span>${step(3, "Place on map")}</div>
+          <div style="display:grid;grid-template-columns:1fr;gap:24px;margin-top:20px;align-items:stretch;height:${this.addStep === 3 ? 'calc(100% - 70px)' : 'auto'}">${body}</div>
         </div>
         <footer style="height:104px;flex:none;display:flex;align-items:center;gap:16px;padding:0 30px;border-top:1px solid #eadfc9;background:rgba(255,250,240,.96)">
           <button type="button" data-act="add-back" style="display:flex;align-items:center;gap:8px;height:54px;padding:0 20px;border-radius:12px;background:#f0eaff;color:#4c463d;font-size:15px;font-weight:700"><i class="ph ph-arrow-left"></i>Back</button>
           <div style="flex:1"></div>
-          <button type="button" data-act="save-draft" style="display:flex;align-items:center;justify-content:center;gap:9px;height:54px;min-width:185px;padding:0 22px;border:1px solid #e6c980;border-radius:12px;background:#fffaf0;color:#6b3fd4;font-size:15px;font-weight:800"><i class="ph ph-floppy-disk" style="font-size:20px"></i>Save Draft</button>
-          <button type="${primaryAction === "add-submit" ? "submit" : "button"}" data-act="${primaryAction}" style="display:flex;align-items:center;justify-content:center;gap:9px;height:54px;min-width:220px;padding:0 26px;border-radius:12px;background:#6b3fd4;background-image:linear-gradient(120deg,#7d49e8,#5b32c4);color:#fff;font-size:16px;font-weight:800;box-shadow:0 16px 28px -18px rgba(91,50,196,.9)">${this.addStep === 2 ? "" : '<i class="ph-fill ph-plus-circle" style="font-size:20px"></i>'}${primaryLabel}${this.addStep === 2 ? '<i class="ph ph-arrow-right"></i>' : ""}</button>
+          ${this.addStep === 3
+            ? '<button type="button" data-act="add-preview" style="display:flex;align-items:center;justify-content:center;gap:9px;height:54px;min-width:150px;padding:0 22px;border:1px solid #e6c980;border-radius:12px;background:#fffaf0;color:#6b3fd4;font-size:15px;font-weight:800"><i class="ph ph-eye" style="font-size:20px"></i>Preview</button>'
+            : '<button type="button" data-act="save-draft" style="display:flex;align-items:center;justify-content:center;gap:9px;height:54px;min-width:150px;padding:0 22px;border:1px solid #e6c980;border-radius:12px;background:#fffaf0;color:#6b3fd4;font-size:15px;font-weight:800"><i class="ph ph-floppy-disk" style="font-size:20px"></i>Save Draft</button>'}
+          <button type="${primaryAction === "add-submit" ? "submit" : "button"}" data-act="${primaryAction}" style="display:flex;align-items:center;justify-content:center;gap:9px;height:54px;min-width:200px;padding:0 26px;border-radius:12px;background:#6b3fd4;background-image:linear-gradient(120deg,#7d49e8,#5b32c4);color:#fff;font-size:16px;font-weight:800;box-shadow:0 16px 28px -18px rgba(91,50,196,.9)"><i class="ph-fill ${this.addStep === 3 ? 'ph-broadcast' : 'ph-arrow-right'}" style="font-size:20px"></i>${primaryLabel}</button>
         </footer>
       </form>
     </div>`;
@@ -195,6 +210,39 @@ export class AddPropertyFlow {
     }
   }
 
+  private buildProperty(published: boolean): Property {
+    const type = this.addForm.type;
+    const area = this.addForm.area || 'New property';
+    const city = this.addForm.city || 'New Chandigarh';
+    const price = Number(String(this.addForm.price).replace(/[^0-9.]/g, '')) || 0;
+    if (!this.propId) this.propId = `prop-${Date.now()}`;
+    return {
+      id: this.propId, type,
+      want: (type === 'Residential Plot' ? 'Plot' : type === 'Floor' ? 'Flat' : type) as WantType,
+      city, area, loc: `${area}, ${city}`, sector: this.addForm.sector || area,
+      size: this.addForm.size, facing: this.addForm.facing as Facing, position: this.addForm.position,
+      approvals: ['RERA', 'GMADA'],
+      landmarks: [
+        { name: 'Chandigarh University', distance: '10 min', icon: 'ph-fill ph-graduation-cap' },
+        { name: 'CP67 Mall', distance: '8 min', icon: 'ph-fill ph-storefront' },
+        { name: 'PGIMER Hospital', distance: '22 min', icon: 'ph-fill ph-first-aid-kit' },
+      ],
+      price,
+      photos: ['/assets/ph-plot-1.png', '/assets/ph-plot-2.png', '/assets/ph-plot-3.png'],
+      published, sold: false, views: 0,
+      mapPlacement: this.selectedMapPin || undefined,
+    };
+  }
+
+  /** Publish: persist the property (published) + its map pin, then hand back. */
+  private async publishProperty() {
+    const property = this.buildProperty(true);
+    const res = await adapter.properties.save(property);
+    const saved = res.ok ? res.value : property;
+    if (this.selectedMapPin) addPropertyToMap(this.selectedMapPin.mapId, saved.id);
+    this.onComplete(saved);
+  }
+
   private attachEvents() {
     this.el.addEventListener("input", (event) => {
       const target = event.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
@@ -214,41 +262,7 @@ export class AddPropertyFlow {
       const form = event.target as HTMLFormElement;
       if (form.id !== "pm-add-plot") return;
       event.preventDefault();
-      
-      const type = this.addForm.type;
-      const area = this.addForm.area || "New property";
-      const propertyCity = this.addForm.city || "New Chandigarh";
-      const newId = `local-${Date.now()}`;
-      
-      const property: Property = {
-        id: newId,
-        type,
-        want: (type === "Residential Plot" ? "Plot" : type === "Floor" ? "Flat" : type) as WantType,
-        city: propertyCity,
-        area,
-        loc: `${area}, ${propertyCity}`,
-        sector: area,
-        size: this.addForm.size,
-        facing: this.addForm.facing as Facing,
-        position: this.addForm.position,
-        approvals: ["RERA", "GMADA"],
-        landmarks: [
-          { name: "Chandigarh University", distance: "10 min", icon: "ph-fill ph-graduation-cap" },
-          { name: "CP67 Mall", distance: "8 min", icon: "ph-fill ph-storefront" },
-          { name: "PGIMER Hospital", distance: "22 min", icon: "ph-fill ph-first-aid-kit" },
-        ],
-        price: 0,
-        photos: ["/assets/ph-plot-1.png", "/assets/ph-plot-2.png", "/assets/ph-plot-3.png", "/assets/ph-plot-1.png", "/assets/ph-plot-2.png", "/assets/ph-plot-3.png"],
-        published: false,
-        sold: false,
-        views: 0,
-        mapPlacement: this.selectedMapPin || undefined
-      };
-
-      if (this.selectedMapPin) {
-        addPropertyToMap(this.selectedMapPin.mapId, newId);
-      }
-      this.onComplete(property);
+      void this.publishProperty();
     });
 
     this.el.addEventListener("click", (event) => {
@@ -271,9 +285,11 @@ export class AddPropertyFlow {
         if (this.addStep > 1) this.addStep -= 1;
         else this.onClose();
         this.render();
+      } else if (action === "add-preview") {
+        // Small preview at the last step — the exact detail the client would see.
+        openPropertyDetail(this.buildProperty(false), {});
       } else if (action === "save-draft") {
-        const form = target.closest<HTMLFormElement>("#pm-add-plot");
-        form?.requestSubmit();
+        void (async () => { const p = this.buildProperty(false); const r = await adapter.properties.save(p); this.onComplete(r.ok ? r.value : p); })();
       } else if (action === "close-add") {
         this.onClose();
       }

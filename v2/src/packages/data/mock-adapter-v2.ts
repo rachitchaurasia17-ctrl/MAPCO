@@ -125,6 +125,14 @@ class MockPropertyRepository implements PropertyRepository {
     const found = PROPERTIES.find((p) => p.id === id);
     return found ? ok(found) : err('not_found', 'Property not found');
   }
+  async save(property: Property, opts?: QueryOptions): Promise<Result<Property>> {
+    const a = aborted<Property>(opts); if (a) return a;
+    const id = property.id || `prop-${Date.now()}`;
+    const row = { ...property, id };
+    const i = PROPERTIES.findIndex((p) => p.id === id);
+    if (i >= 0) PROPERTIES[i] = row; else PROPERTIES.unshift(row);
+    return ok(row);
+  }
 }
 
 class MockCustomerRepository implements CustomerRepository {
@@ -138,6 +146,14 @@ class MockCustomerRepository implements CustomerRepository {
     const a = aborted<Client>(opts); if (a) return a;
     const found = CLIENTS.find((c) => c.id === id);
     return found ? ok(found) : err('not_found', 'Customer not found');
+  }
+  async save(client: Client, opts?: QueryOptions): Promise<Result<Client>> {
+    const a = aborted<Client>(opts); if (a) return a;
+    const id = client.id || `client-${Date.now()}`;
+    const row = { ...client, id };
+    const i = CLIENTS.findIndex((c) => c.id === id);
+    if (i >= 0) CLIENTS[i] = row; else CLIENTS.unshift(row);
+    return ok(row);
   }
 }
 
