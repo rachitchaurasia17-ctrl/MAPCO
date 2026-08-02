@@ -46,6 +46,9 @@ export interface Client {
   viewed: string[];
   interest: string[];
   isNew?: boolean;
+  /** optional customer photo (URL) and a linked property id. */
+  photo?: string;
+  linkedPropertyId?: string;
 }
 
 export interface Deal {

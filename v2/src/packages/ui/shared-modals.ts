@@ -299,7 +299,8 @@ export class AddPropertyFlow {
 
 export class AddClientFlow {
   private el: HTMLElement;
-  private form = { name: '', phone: '', want: 'Plot' as WantType, city: 'Mohali', budgetFrom: '', budgetTo: '', note: '' };
+  private form = { name: '', phone: '', want: 'Plot' as WantType, city: 'Mohali', budgetFrom: '', budgetTo: '', note: '', photo: '', linkProp: '' };
+  private properties: Property[] = [];
   private onComplete: (c: Client) => void;
   private onClose: () => void;
 
@@ -314,6 +315,7 @@ export class AddClientFlow {
   public mount(container: HTMLElement) {
     container.appendChild(this.el);
     this.render();
+    void adapter.properties.list({ limit: 100 }).then((r) => { if (r.ok) { this.properties = [...r.value.items]; this.render(); } });
   }
 
   public unmount() {
@@ -325,8 +327,13 @@ export class AddClientFlow {
     const ready = Boolean(this.form.name.trim());
     this.el.innerHTML = `<div style="position:fixed;inset:0;z-index:84;display:flex;justify-content:center;align-items:flex-start;padding:28px 24px;overflow-y:auto"><div data-act="close-add" style="position:fixed;inset:0;background:rgba(60,44,12,.58);animation:omVeil .2s ease both"></div><form id="pm-add-client" style="position:relative;width:100%;max-width:580px;border-radius:28px;background:#fffaf0;box-shadow:0 0 0 1px #e4dbf2,0 40px 80px -30px rgba(40,26,2,.8);overflow:hidden;animation:omSheet .34s cubic-bezier(.2,.8,.2,1) both">
       <div style="display:flex;align-items:center;gap:14px;padding:22px 26px;border-bottom:1px solid #ece5f8;background:#efe8fb"><span style="width:46px;height:46px;border-radius:14px;background:#6b3fd4;color:#fff;display:grid;place-items:center;flex:none"><i class="ph-fill ph-user-plus" style="font-size:24px"></i></span><div style="flex:1;min-width:0"><div style="font-family:'Newsreader',serif;font-weight:500;font-size:26px;letter-spacing:-.02em;color:#241d0c">Add a customer</div><div style="font-size:14px;color:#6b5b8a">Name and phone is enough to start.</div></div><button type="button" data-act="close-add" style="width:38px;height:38px;border-radius:12px;background:#fffaf0;color:#6b6156;display:grid;place-items:center;flex:none"><i class="ph-bold ph-x" style="font-size:16px"></i></button></div>
-      <div data-scroll style="padding:22px 26px;max-height:62vh;overflow-y:auto"><div style="display:flex;flex-direction:column;gap:12px"><input name="name" value="${esc(this.form.name)}" placeholder="Full name" style="padding:16px;border-radius:13px;border:1px solid #ddd0f5;background:#faf7ff;font-size:16.5px;font-weight:600;color:#241f1c;outline:none"><input name="phone" value="${esc(this.form.phone)}" placeholder="Phone number" style="padding:16px;border-radius:13px;border:1px solid #ddd0f5;background:#faf7ff;font-size:16.5px;color:#241f1c;outline:none"></div><div style="margin-top:22px;font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">What do they want</div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:11px">${wants.map((want) => `<button type="button" data-act="want" data-want="${want}" style="padding:11px 15px;border-radius:12px;font-size:14.5px;font-weight:700;${this.form.want === want ? 'background:#6b3fd4;color:#fff;border:1px solid #6b3fd4' : 'background:#faf7ff;color:#6b6156;border:1px solid #ddd0f5'}">${want}</button>`).join('')}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px"><input name="city" value="${esc(this.form.city)}" placeholder="City" style="padding:15px;border-radius:13px;border:1px solid #ddd0f5;background:#faf7ff;font-size:16px;color:#241f1c;outline:none"><div style="display:flex;align-items:center;gap:8px;padding:0 14px;border-radius:13px;border:1px solid #ddd0f5;background:#faf7ff"><input name="budgetFrom" value="${esc(this.form.budgetFrom)}" placeholder="Budget" style="flex:1;min-width:0;border:none;outline:none;background:none;padding:15px 0;font-size:16px;color:#241f1c"><span style="font-size:14px;color:#8d8271">to</span><input name="budgetTo" value="${esc(this.form.budgetTo)}" placeholder="Cr" style="width:56px;border:none;outline:none;background:none;padding:15px 0;font-size:16px;color:#241f1c"></div></div><textarea name="note" rows="3" placeholder="Any note — met at site, needs loan…" style="width:100%;margin-top:12px;padding:16px;border-radius:13px;border:1px solid #ddd0f5;background:#faf7ff;font-size:16px;color:#241f1c;outline:none;resize:vertical">${esc(this.form.note)}</textarea></div>
-      <div style="display:flex;align-items:center;gap:11px;padding:16px 26px;border-top:1px solid #ece5f8;background:#faf7ff"><div style="flex:1;font-size:13.5px;color:#8d8271">You can send them a link right after.</div><button type="button" data-act="close-add" style="padding:15px 22px;border-radius:14px;background:#f4f0fb;color:#6b6156;font-size:15.5px;font-weight:700">Cancel</button><button id="pm-save-client" type="submit" ${ready ? '' : 'disabled'} style="padding:15px 26px;border-radius:14px;font-size:15.5px;font-weight:800;${ready ? 'background:#6b3fd4;color:#fff' : 'background:#ddd2f5;color:#b3a37a'}">Save customer</button></div>
+      <div data-scroll style="padding:22px 26px;max-height:62vh;overflow-y:auto"><div style="display:flex;flex-direction:column;gap:12px"><input name="name" value="${esc(this.form.name)}" placeholder="Full name" style="padding:16px;border-radius:13px;border:1px solid #ddd0f5;background:#faf7ff;font-size:16.5px;font-weight:600;color:#241f1c;outline:none"><input name="phone" value="${esc(this.form.phone)}" placeholder="Phone number" style="padding:16px;border-radius:13px;border:1px solid #ddd0f5;background:#faf7ff;font-size:16.5px;color:#241f1c;outline:none"></div><div style="margin-top:22px;font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">What do they want</div><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:11px">${wants.map((want) => `<button type="button" data-act="want" data-want="${want}" style="padding:11px 15px;border-radius:12px;font-size:14.5px;font-weight:700;${this.form.want === want ? 'background:#6b3fd4;color:#fff;border:1px solid #6b3fd4' : 'background:#faf7ff;color:#6b6156;border:1px solid #ddd0f5'}">${want}</button>`).join('')}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px"><input name="city" value="${esc(this.form.city)}" placeholder="City" style="padding:15px;border-radius:13px;border:1px solid #ddd0f5;background:#faf7ff;font-size:16px;color:#241f1c;outline:none"><div style="display:flex;align-items:center;gap:8px;padding:0 14px;border-radius:13px;border:1px solid #ddd0f5;background:#faf7ff"><input name="budgetFrom" value="${esc(this.form.budgetFrom)}" placeholder="Budget" style="flex:1;min-width:0;border:none;outline:none;background:none;padding:15px 0;font-size:16px;color:#241f1c"><span style="font-size:14px;color:#8d8271">to</span><input name="budgetTo" value="${esc(this.form.budgetTo)}" placeholder="Cr" style="width:56px;border:none;outline:none;background:none;padding:15px 0;font-size:16px;color:#241f1c"></div></div><textarea name="note" rows="3" placeholder="Any note — met at site, needs loan…" style="width:100%;margin-top:12px;padding:16px;border-radius:13px;border:1px solid #ddd0f5;background:#faf7ff;font-size:16px;color:#241f1c;outline:none;resize:vertical">${esc(this.form.note)}</textarea>
+      <div style="margin-top:22px;font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">Photo &amp; property <span style="font-weight:700;text-transform:none;letter-spacing:0;color:#a5946f">· optional</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:11px">
+        <input name="photo" value="${esc(this.form.photo)}" placeholder="Customer photo URL" style="padding:15px;border-radius:13px;border:1px solid #ddd0f5;background:#faf7ff;font-size:15px;color:#241f1c;outline:none">
+        <select name="linkProp" style="padding:15px;border-radius:13px;border:1px solid #ddd0f5;background:#faf7ff;font-size:15px;color:#241f1c;outline:none"><option value="">Link a property…</option>${this.properties.map((p) => `<option value="${esc(p.id)}"${this.form.linkProp === p.id ? ' selected' : ''}>${esc(p.area)}${p.size ? ` · ${esc(p.size)}` : ''}</option>`).join('')}</select>
+      </div></div>
+      <div style="display:flex;align-items:center;gap:11px;padding:16px 26px;border-top:1px solid #ece5f8;background:#faf7ff"><button type="button" data-act="close-add" style="padding:15px 20px;border-radius:14px;background:#f4f0fb;color:#6b6156;font-size:15px;font-weight:700">Cancel</button><div style="flex:1"></div><button type="button" data-act="save-link" ${ready ? '' : 'disabled'} style="display:flex;align-items:center;gap:8px;padding:15px 20px;border-radius:14px;font-size:15px;font-weight:800;${ready ? 'background:#dcf3e5;color:#12704a' : 'background:#eef2ee;color:#a5b8ac'}"><i class="ph-fill ph-paper-plane-tilt"></i>Save &amp; send link</button><button id="pm-save-client" type="submit" ${ready ? '' : 'disabled'} style="padding:15px 24px;border-radius:14px;font-size:15px;font-weight:800;${ready ? 'background:#6b3fd4;color:#fff' : 'background:#ddd2f5;color:#b3a37a'}">Save customer</button></div>
     </form></div>`;
   }
 
@@ -349,25 +356,7 @@ export class AddClientFlow {
       const target = event.target as HTMLFormElement;
       if (target.id !== 'pm-add-client') return;
       event.preventDefault();
-      if (!this.form.name.trim()) return;
-      const budget = this.form.budgetFrom && this.form.budgetTo ? `₹${this.form.budgetFrom}–${this.form.budgetTo} Cr` : this.form.budgetFrom ? `₹${this.form.budgetFrom} Cr+` : this.form.budgetTo ? `Up to ₹${this.form.budgetTo} Cr` : '—';
-      
-      const client: Client = { 
-        id: `local-${Date.now()}`, 
-        name: this.form.name.trim(), 
-        phone: this.form.phone || '—', 
-        city: this.form.city || 'Mohali', 
-        want: this.form.want, 
-        budget, 
-        budgetMax: (Number(this.form.budgetTo || this.form.budgetFrom) || 0) * 10_000_000, 
-        status: 'active', 
-        seen: 'just now', 
-        note: this.form.note, 
-        viewed: [], 
-        interest: [], 
-        isNew: true 
-      };
-      this.onComplete(client);
+      void this.saveClient(false);
     });
 
     this.el.addEventListener('click', (event) => {
@@ -375,11 +364,43 @@ export class AddClientFlow {
       if (!target) return;
       const action = target.dataset.act;
       if (action === 'close-add') this.onClose();
-      if (action === 'want') {
+      else if (action === 'want') {
         this.form = { ...this.form, want: (target.dataset.want || 'Plot') as WantType };
         this.render();
+      } else if (action === 'save-link') {
+        void this.saveClient(true);
       }
     });
+  }
+
+  private buildClient(): Client {
+    const f = this.form;
+    const budget = f.budgetFrom && f.budgetTo ? `₹${f.budgetFrom}–${f.budgetTo} Cr` : f.budgetFrom ? `₹${f.budgetFrom} Cr+` : f.budgetTo ? `Up to ₹${f.budgetTo} Cr` : '—';
+    return {
+      id: `client-${Date.now()}`, name: f.name.trim(), phone: f.phone || '—', city: f.city || 'Mohali',
+      want: f.want, budget, budgetMax: (Number(f.budgetTo || f.budgetFrom) || 0) * 10_000_000,
+      status: 'active', seen: 'just now', note: f.note, viewed: [],
+      interest: f.linkProp ? [f.linkProp] : [], isNew: true,
+      ...(f.photo ? { photo: f.photo } : {}), ...(f.linkProp ? { linkedPropertyId: f.linkProp } : {}),
+    };
+  }
+
+  /** Persist the customer; if `andLink`, open the send-link flow prefilled for them. */
+  private async saveClient(andLink: boolean) {
+    if (!this.form.name.trim()) return;
+    const client = this.buildClient();
+    const res = await adapter.customers.save(client);
+    const saved = res.ok ? res.value : client;
+    this.onComplete(saved);
+    if (andLink) {
+      let props: Property[] = this.properties;
+      const link = new GenerateLinkFlow([saved], props, () => { /* list refresh handled by caller */ }, () => link.unmount());
+      link.mount(document.body);
+      // preselect this customer (+ linked property) in the link flow
+      (link as unknown as { chosenClient: string; chosenProps: string[]; render: () => void }).chosenClient = saved.id;
+      if (this.form.linkProp) (link as unknown as { chosenProps: string[] }).chosenProps = [this.form.linkProp];
+      (link as unknown as { render: () => void }).render();
+    }
   }
 }
 

@@ -1,4 +1,5 @@
 import { adapter } from '../../../packages/data/adapter';
+import { AddPropertyFlow } from '../../../packages/ui/shared-modals';
 import type { Property, PropertyType, WantType, Facing } from '../../../packages/data/types';
 
 const esc = (value: unknown) => String(value ?? '')
@@ -16,7 +17,6 @@ export async function renderTeamProperties(el: HTMLElement, openAddInitially = f
     : [];
   const loadFailed = !res.ok;
   let selectedId: string | null = null;
-  let addOpen = openAddInitially;
 
   const render = () => {
     el.innerHTML = `
@@ -33,11 +33,27 @@ export async function renderTeamProperties(el: HTMLElement, openAddInitially = f
                 ${properties.map((property) => propertyCard(property)).join('')}
               </div>`}
       </div>
-      ${addOpen ? addDialog() : selectedId ? editDialog(properties.find((property) => property.id === selectedId)!) : ''}
+      ${selectedId ? editDialog(properties.find((property) => property.id === selectedId)!) : ''}
     `;
   };
 
-  const close = () => { selectedId = null; addOpen = false; render(); };
+  const close = () => { selectedId = null; render(); };
+
+  // Same Add Property flow as the dealer dashboard (stepwise + map pin + publish).
+  const reloadProps = async () => {
+    const r = await adapter.properties.list({ limit: 100 });
+    if (r.ok) properties = r.value.items.map((p) => ({ ...p, photos: [...(p.photos ?? [])], approvals: [...(p.approvals ?? [])], landmarks: [...(p.landmarks ?? [])] }));
+    render();
+  };
+  const openAddFlow = () => {
+    let flow: AddPropertyFlow;
+    flow = new AddPropertyFlow(
+      [...new Set(properties.map((p) => p.city).filter(Boolean))],
+      () => { flow.unmount(); void reloadProps(); },
+      () => { flow.unmount(); },
+    );
+    flow.mount(document.body);
+  };
 
   el.addEventListener('click', (event) => {
     const target = event.target as HTMLElement;
@@ -46,8 +62,8 @@ export async function renderTeamProperties(el: HTMLElement, openAddInitially = f
 
     if (action === 'close') return close();
     if (action === 'dialog') return;
-    if (action === 'add') { addOpen = true; selectedId = null; return render(); }
-    if (action === 'edit' && id) { selectedId = id; addOpen = false; return render(); }
+    if (action === 'add') { openAddFlow(); return; }
+    if (action === 'edit' && id) { selectedId = id; return render(); }
     if (action === 'toggle' && id) {
       const property = properties.find((item) => item.id === id);
       if (property) property.published = !property.published;
@@ -72,18 +88,7 @@ export async function renderTeamProperties(el: HTMLElement, openAddInitially = f
       return close();
     }
     if (action === 'save-add') {
-      const form = target.closest('form') as HTMLFormElement | null;
-      if (!form) return;
-      const data = new FormData(form);
-      const city = String(data.get('city') || 'Mohali');
-      const loc = String(data.get('loc') || 'New locality');
-      const type = String(data.get('type') || 'Residential Plot') as PropertyType;
-      properties.unshift({
-        id: `team-${Date.now()}`, type, want: (type === 'Residential Plot' ? 'Plot' : type === 'Floor' ? 'Flat' : type) as WantType,
-        city, area: city, loc, sector: loc, size: String(data.get('size') || '—'), facing: String(data.get('facing') || 'East') as Facing,
-        position: '', approvals: [], landmarks: [], price: 0, photos: [], published: false, sold: false, views: 0,
-      });
-      return close();
+      return; // legacy add dialog removed — Add Property now uses the shared flow
     }
     const card = target.closest<HTMLElement>('[data-property-card]');
     if (card?.dataset.id && !target.closest('button')) { selectedId = card.dataset.id; return render(); }
@@ -95,10 +100,11 @@ export async function renderTeamProperties(el: HTMLElement, openAddInitially = f
     if (card?.dataset.id && (event.key === 'Enter' || event.key === ' ')) {
       event.preventDefault(); selectedId = card.dataset.id; render();
     }
-    if (event.key === 'Escape' && (selectedId || addOpen)) close();
+    if (event.key === 'Escape' && selectedId) close();
   });
 
   render();
+  if (openAddInitially) openAddFlow();
 }
 
 function propertyCard(property: Property) {
