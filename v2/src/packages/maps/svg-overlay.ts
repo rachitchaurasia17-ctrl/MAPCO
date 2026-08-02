@@ -75,7 +75,7 @@ const ROAD_RE = /road|approach|route|highway|spine|arterial|expressway/i;
 const SKIP_RE = /pin|label|marker|text/i;
 // Oversized container shapes that would "light up a whole zone" when clicked —
 // excluded from the individually-highlightable items (item 4).
-const EXCLUDE_RE = /full ?map|boundary|outline|frame|export|whole ?map|^zone[\s-]?\d*$|^zone \d/i;
+const EXCLUDE_RE = /full ?map|boundary|outline|frame|export|whole ?map|guide|all?ign|^zone[\s-]?\d*$|^zone \d/i;
 const GENERIC_ID_RE = /^(vector|path|rect|group|shape|ellipse|line|polygon)[\s_-]*\d*$/i;
 
 function cleanLabel(id: string): string {
@@ -129,9 +129,9 @@ export async function loadSvgOverlay(
       if (gid && !CONTAINER_RE.test(gid)) { groupId = gid; break; }
     }
     if (SKIP_RE.test(id) || SKIP_RE.test(groupId)) return;
-    // Skip whole-zone / full-map outline shapes so a click never highlights an
-    // entire zone unnecessarily (item 4). Named blocks inside the zone remain.
-    if (EXCLUDE_RE.test(id)) return;
+    // Skip whole-zone / full-map / alignment-guide shapes so a click never
+    // highlights an entire zone unnecessarily (item 4). Named blocks remain.
+    if (EXCLUDE_RE.test(id) || EXCLUDE_RE.test(groupId)) return;
     const tag = shape.tagName.toLowerCase();
     let d = '';
     if (tag === 'path') d = shape.getAttribute('d') || '';

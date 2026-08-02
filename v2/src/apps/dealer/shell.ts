@@ -56,8 +56,8 @@ export async function initDealerShell(container: HTMLElement, initialSection: st
 
   <aside id="pm-dash-sidebar" style="width:270px;flex:none;height:100%;min-height:0;overflow:hidden;background:rgba(252,250,255,.82);background-image:linear-gradient(180deg,rgba(253,251,255,.95),rgba(243,236,255,.76) 55%,rgba(236,227,255,.66));backdrop-filter:blur(16px);box-shadow:inset -1px 0 0 rgba(88,52,168,.14);display:flex;flex-direction:column;border-right:1px solid #ddd2f5">
     <div style="display:flex;align-items:center;gap:11px;padding:26px 24px 18px">
-      <img src="/assets/mapco-logo.png" alt="MAPCO" style="width:40px;height:40px;flex:none;display:block;object-fit:contain">
-      <div style="font-weight:800;font-size:22px;letter-spacing:-.01em;color:#1f1a12">MAPCO</div>
+      <img src="/assets/mapco-logo.png" alt="MAPCO" style="width:50px;height:50px;flex:none;display:block;object-fit:contain">
+      <div style="font-weight:800;font-size:23px;letter-spacing:-.01em;color:#1f1a12">MAPCO</div>
     </div>
     <nav data-scroll style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:4px;padding:6px 16px 8px">
       ${NAV.map(n => {
@@ -71,10 +71,10 @@ export async function initDealerShell(container: HTMLElement, initialSection: st
       `}).join('')}
     </nav>
     <div style="flex:none;padding:14px 18px 10px">
-      <div style="font-size:11px;font-weight:800;letter-spacing:.14em;color:#9a8f7c;text-transform:uppercase;padding:0 4px 9px">With a customer?</div>
-      <a href="/app/plotmap/index.html" style="width:100%;display:flex;align-items:center;gap:13px;padding:16px 16px;border-radius:16px;background:#f0a83c;color:#3a2410;text-align:left;text-decoration:none;box-shadow:0 10px 26px -12px rgba(0,0,0,.6);animation:omGlow 3.4s ease-in-out infinite" onmouseover="this.style.background='#ffb84a'" onmouseout="this.style.background='#f0a83c'">
-        <i class="ph-fill ph-projector-screen-chart" style="font-size:26px"></i>
-        <span style="display:block"><span style="display:block;font-size:15.5px;font-weight:800;letter-spacing:-.01em">Show Map to Customer</span><span style="display:block;font-size:12.5px;font-weight:700;color:#8a5a12">Opens the full-screen map</span></span>
+      <div style="font-size:11px;font-weight:800;letter-spacing:.14em;color:#9a8f7c;text-transform:uppercase;padding:0 4px 9px">Start a session</div>
+      <a href="/" style="width:100%;display:flex;align-items:center;gap:13px;padding:16px 16px;border-radius:16px;background:#f0a83c;color:#3a2410;text-align:left;text-decoration:none;box-shadow:0 10px 26px -12px rgba(0,0,0,.6);animation:omGlow 3.4s ease-in-out infinite" onmouseover="this.style.background='#ffb84a'" onmouseout="this.style.background='#f0a83c'">
+        <i class="ph-fill ph-house" style="font-size:26px"></i>
+        <span style="display:block"><span style="display:block;font-size:15.5px;font-weight:800;letter-spacing:-.01em">Back to Landing</span><span style="display:block;font-size:12.5px;font-weight:700;color:#8a5a12">MAPCO home &amp; launcher</span></span>
       </a>
     </div>
     <div style="position:relative;flex:none;display:flex;align-items:center;gap:12px;padding:12px 20px 16px;border-top:1px solid #ddd2f5">

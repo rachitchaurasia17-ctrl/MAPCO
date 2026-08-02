@@ -37,7 +37,7 @@ function initDeveloperControl(container: HTMLElement) {
   <header style="display:flex;align-items:center;gap:16px;padding:14px 34px;border-bottom:1px solid #ddd2f5;background:rgba(252,250,255,.86);backdrop-filter:blur(12px);flex:none;z-index:30">
     <button id="pm-dev-back" aria-label="Go back" title="Go back" style="display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 13px;border-radius:11px;background:#f0eaff;color:#4b2ea6;font:inherit;font-size:14px;font-weight:800;cursor:pointer;border:1px solid rgba(120,80,220,.16)"><i class="ph-bold ph-arrow-left" style="font-size:16px"></i>Back</button>
     <a href="/" style="display:flex;align-items:center;gap:10px;text-decoration:none">
-      <img src="/assets/mapco-logo.png" alt="MAPCO" style="width:36px;height:36px;flex:none;object-fit:contain">
+      <img src="/assets/mapco-logo.png" alt="MAPCO" style="width:44px;height:44px;flex:none;object-fit:contain">
       <span style="font-weight:800;font-size:20px;letter-spacing:-.01em;color:#1f1a12">MAPCO</span>
     </a>
     <div style="width:1px;height:22px;background:#ddd2f5"></div>

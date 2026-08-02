@@ -18,7 +18,6 @@ import { cssMapTransform, getMap, registerMaps, mountMapEngine, loadSvgOverlay, 
 type SavedSet = { id: string; name: string; itemIds: string[]; accent?: string; labels?: Record<string, string> };
 import { streetViewUrl } from '../../packages/ui/utils';
 import { mountFullscreenButton } from '../../packages/ui/fullscreen';
-import { hasSafeInAppHistory } from '../../packages/ui/back-button';
 import type { Property } from '../../packages/data/types';
 
 type View = 'masterplan' | 'properties' | 'sectors';
@@ -355,24 +354,18 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
   // ── renderers ─────────────────────────────────────────────
   /** Map picker grouped by city → masterplans then sectors. */
   function mapPickerHtml(): string {
-    const byCity = new Map<string, typeof maps[number][]>();
-    for (const m of maps) {
-      const c = m.city || 'Other';
-      const arr = byCity.get(c); if (arr) arr.push(m); else byCity.set(c, [m]);
-    }
+    // Only the main-city masterplans belong in this bar (item 4) — sector maps
+    // live in the "Sector maps" tab, never here.
+    const masters = maps.filter((m) => m.kind === 'masterplan').sort((a, b) => (a.city || '').localeCompare(b.city || ''));
+    if (!masters.length) return '<div class="pm-pop-city">No cities published<span>0</span></div>';
     let html = '';
-    for (const city of [...byCity.keys()].sort()) {
-      const cityMaps = byCity.get(city)!;
-      const ordered = [...cityMaps.filter((m) => m.kind === 'masterplan'), ...cityMaps.filter((m) => m.kind === 'sector')];
-      html += `<div class="pm-pop-city">${esc(city)}<span>${cityMaps.length}</span></div>`;
-      for (const m of ordered) {
-        const active = m.id === activeMapId;
-        html += `<button class="pm-pop-item${m.kind === 'sector' ? ' is-sector' : ''}" role="menuitem" data-act="pick-map" data-id="${esc(m.id)}">
-          <i class="ph-fill ph-${m.kind === 'masterplan' ? 'map-trifold' : 'squares-four'}" style="font-size:16px;color:#a8792a"></i>
-          <span class="lbl">${esc(m.title)}</span>
-          <span class="tag" style="background:${active ? '#dcf3e5' : '#f0eaff'};color:${active ? '#12704a' : '#5b32c4'}">${active ? 'Open' : m.kind === 'masterplan' ? 'master' : 'sector'}</span>
-        </button>`;
-      }
+    for (const m of masters) {
+      const active = m.id === activeMapId;
+      html += `<button class="pm-pop-item" role="menuitem" data-act="pick-map" data-id="${esc(m.id)}">
+        <i class="ph-fill ph-map-trifold" style="font-size:16px;color:#a8792a"></i>
+        <span class="lbl">${esc(m.city || m.title)}</span>
+        <span class="tag" style="background:${active ? '#dcf3e5' : '#f0eaff'};color:${active ? '#12704a' : '#5b32c4'}">${active ? 'Open' : 'city'}</span>
+      </button>`;
     }
     return html;
   }

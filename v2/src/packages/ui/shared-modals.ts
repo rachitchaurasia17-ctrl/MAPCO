@@ -426,6 +426,9 @@ export class GenerateLinkFlow {
   }
 
   private render() {
+    // Preserve the modal's scroll position so clicks don't jump the view up.
+    const prevScroll = this.el.querySelector<HTMLElement>('[data-scroll]')?.scrollTop ?? 0;
+    const restore = () => { const sc = this.el.querySelector<HTMLElement>('[data-scroll]'); if (sc) sc.scrollTop = prevScroll; };
     const origin = window.location.origin;
     if (this.result) {
       const full = origin + this.result.url;
@@ -462,6 +465,7 @@ export class GenerateLinkFlow {
       </div>
       <div style="display:flex;align-items:center;gap:11px;padding:16px 26px;border-top:1px solid #ddeee4;background:#f4fbf6"><div style="flex:1;font-size:13.5px;color:#8d8271">${this.busy ? 'Creating the link…' : !this.chosenClient ? 'Pick a customer first' : !this.chosenProps.length ? 'Pick at least one plot' : 'Ready to send'}</div><button data-act="toggle-preview" style="padding:15px 18px;border-radius:14px;background:#efe8fb;color:#6b3fd4;font-size:15px;font-weight:800">${this.showPreview ? 'Hide preview' : 'Preview'}</button><button data-act="send" ${ready ? '' : 'disabled'} style="display:flex;align-items:center;justify-content:center;gap:9px;padding:15px 24px;border-radius:14px;font-size:15.5px;font-weight:800;${ready ? 'background:#12a150;color:#fff;box-shadow:0 14px 26px -16px rgba(18,161,80,.95)' : 'background:#e8f2eb;color:#a5b8ac'}"><i class="ph-fill ph-paper-plane-tilt" style="font-size:18px"></i>${this.busy ? 'Sending…' : 'Create link'}</button></div>
     </section></div>`;
+    restore();
   }
 
   private async toggleRecord() {
