@@ -250,8 +250,8 @@ class SupaMaps implements MapRepository {
       if (!m) return err('not_found', 'Map not found');
       const ov = await c.rpc('plotmap_published_overlays', { p_map_id: id });
       const sets = ((ov.data ?? []) as Record<string, unknown>[]).map((s) => {
-        const p = (s.payload as { itemIds?: unknown[]; marks?: unknown[]; accent?: string }) ?? {};
-        return { id: s.id, name: s.name ?? '', marks: p.itemIds ?? p.marks ?? [], accent: p.accent };
+        const p = (s.payload as { itemIds?: unknown[]; marks?: unknown[]; accent?: string; labels?: Record<string, string> }) ?? {};
+        return { id: s.id, name: s.name ?? '', marks: p.itemIds ?? p.marks ?? [], accent: p.accent, labels: p.labels ?? {} };
       });
       return ok({ ...rowToMapMeta(m), sets } as unknown as MapData);
     } catch (e) { return toErr(e); }

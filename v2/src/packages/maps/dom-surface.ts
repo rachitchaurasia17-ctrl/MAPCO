@@ -70,8 +70,13 @@ export function mountMapEngine(root: HTMLElement): MountedMap {
   const surface = new DomRenderSurface(root);
   const engine = new MapEngine(surface);
 
-  let dragging = false;
-  let lastX = 0, lastY = 0;
+  // Tap-vs-drag: we DON'T capture the pointer on down, so a tap's `click`
+  // still reaches the SVG hit paths (that is what highlights a road/block).
+  // Panning only starts — and captures — once the pointer moves past a small
+  // threshold, so drags never steal taps.
+  let pending = false, dragging = false;
+  let startX = 0, startY = 0, lastX = 0, lastY = 0, pid = -1;
+  const DRAG_THRESHOLD = 4;
 
   const onWheel = (e: WheelEvent) => {
     e.preventDefault();
@@ -82,16 +87,24 @@ export function mountMapEngine(root: HTMLElement): MountedMap {
     engine.zoom(factor, { x: e.offsetX, y: e.offsetY });
   };
   const onDown = (e: PointerEvent) => {
-    dragging = true; lastX = e.clientX; lastY = e.clientY;
-    root.classList.add('pm-dragging');   // disable transform easing while panning
-    root.setPointerCapture(e.pointerId);
+    pending = true; dragging = false; pid = e.pointerId;
+    startX = lastX = e.clientX; startY = lastY = e.clientY;
   };
   const onMove = (e: PointerEvent) => {
-    if (!dragging) return;
+    if (!pending && !dragging) return;
+    if (!dragging) {
+      if (Math.abs(e.clientX - startX) < DRAG_THRESHOLD && Math.abs(e.clientY - startY) < DRAG_THRESHOLD) return;
+      dragging = true; pending = false;
+      root.classList.add('pm-dragging');       // disable transform easing while panning
+      try { root.setPointerCapture(pid); } catch { /* ignore */ }
+    }
     engine.pan(e.clientX - lastX, e.clientY - lastY);
     lastX = e.clientX; lastY = e.clientY;
   };
-  const onUp = () => { dragging = false; root.classList.remove('pm-dragging'); };
+  const onUp = () => {
+    if (dragging) { try { root.releasePointerCapture(pid); } catch { /* ignore */ } }
+    pending = false; dragging = false; root.classList.remove('pm-dragging');
+  };
   const onResize = () => engine.resize();
 
   root.addEventListener('wheel', onWheel, { passive: false });
@@ -100,6 +113,10 @@ export function mountMapEngine(root: HTMLElement): MountedMap {
   root.addEventListener('pointerup', onUp);
   root.addEventListener('pointercancel', onUp);
   window.addEventListener('resize', onResize);
+  // Re-fit whenever the stage itself changes size (rail toggle, layout settle,
+  // view switches) — fixes maps fitting against a too-small early stage.
+  const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => engine.resize()) : null;
+  ro?.observe(root);
 
   return {
     engine,
@@ -110,6 +127,7 @@ export function mountMapEngine(root: HTMLElement): MountedMap {
       root.removeEventListener('pointerup', onUp);
       root.removeEventListener('pointercancel', onUp);
       window.removeEventListener('resize', onResize);
+      ro?.disconnect();
       engine.dispose();
     },
   };

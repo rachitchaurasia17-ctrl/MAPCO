@@ -81,13 +81,9 @@ function initLanding(container: HTMLElement) {
   <div style="position:relative;z-index:2;flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:clamp(16px,3.4vh,34px);padding:0 clamp(20px,3vw,40px) clamp(10px,1.6vh,18px)">
 
     <div style="display:flex;flex-direction:column;align-items:center;text-align:center;flex:none">
-      <div style="position:relative;width:clamp(42px,5.6vh,58px);height:clamp(42px,5.6vh,58px);animation:lRise .9s cubic-bezier(.2,.8,.2,1) both">
-        <div style="position:absolute;inset:-10px;border-radius:22px;background:radial-gradient(circle,rgba(255,201,60,.75),transparent 70%);animation:lGlowRing 4.2s ease-in-out infinite"></div>
-        <svg viewBox="0 0 40 40" style="position:relative;width:100%;height:100%;display:block;filter:drop-shadow(0 10px 20px rgba(120,86,10,.36))">
-          <rect width="40" height="40" rx="12" fill="#ffc93c"></rect>
-          <path d="M20 8.5 L33 16 L20 23.5 L7 16 Z" fill="#1a2f24"></path>
-          <path d="M7 22 L20 29.5 L33 22 L33 25.5 L20 33 L7 25.5 Z" fill="#1a2f24" opacity="0.42"></path>
-        </svg>
+      <div style="position:relative;width:clamp(56px,7.4vh,78px);height:clamp(56px,7.4vh,78px);animation:lRise .9s cubic-bezier(.2,.8,.2,1) both">
+        <div style="position:absolute;inset:-10px;border-radius:22px;background:radial-gradient(circle,rgba(255,201,60,.6),transparent 70%);animation:lGlowRing 4.2s ease-in-out infinite"></div>
+        <img src="/assets/mapco-logo.png" alt="MAPCO" style="position:relative;width:100%;height:100%;display:block;object-fit:contain;filter:drop-shadow(0 10px 20px rgba(120,86,10,.3))">
       </div>
 
       <h1 style="margin:clamp(10px,1.8vh,18px) 0 0;font-family:var(--pm-font-display);font-weight:500;font-size:clamp(46px,9.4vh,96px);line-height:.9;letter-spacing:-.035em;color:#16281e;animation:lRise 1s cubic-bezier(.2,.8,.2,1) both;animation-delay:.08s">MAPCO</h1>

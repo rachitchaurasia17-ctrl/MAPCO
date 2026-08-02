@@ -181,6 +181,9 @@
 @keyframes pm-spin { to { transform: rotate(360deg); } }
 .pm-spin { display: inline-block; animation: pm-spin 1s linear infinite; }
 
+/* Compact icon-only map control (small "tap to highlight" + clear) */
+.pm-ctl--icon { min-width: 34px; padding: 0 9px; gap: 5px; justify-content: center; }
+
 /* Premium road "energy flow" (blueprint) */
 @keyframes pmflowdash { to { stroke-dashoffset: -70; } }
 .pm-hlsvg { pointer-events: none; }

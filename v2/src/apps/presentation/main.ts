@@ -15,7 +15,7 @@ import { adapter } from '../../packages/data/adapter';
 import { cssMapTransform, getMap, registerMaps, mountMapEngine, loadSvgOverlay, type RenderMode, type MountedMap, type MapCatalogInput, type MapEntry, type SvgHighlightHandle } from '../../packages/maps';
 
 /** A saved highlight combination (built in Map Studio). */
-type SavedSet = { id: string; name: string; itemIds: string[]; accent?: string };
+type SavedSet = { id: string; name: string; itemIds: string[]; accent?: string; labels?: Record<string, string> };
 import { streetViewUrl } from '../../packages/ui/utils';
 import { mountFullscreenButton } from '../../packages/ui/fullscreen';
 import { hasSafeInAppHistory } from '../../packages/ui/back-button';
@@ -75,7 +75,7 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
   let mode: RenderMode = 'original';
   let activeMapId = '';
   let mapsOpen = false;
-  let railHidden = false;
+  let railHidden = true;   // default: map-only, no properties rail (item 5)
   let props: Property[] = [];
   let selectedPropertyId: string | null = null;
   let selectedSectorId: string | null = null;
@@ -294,11 +294,12 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
     if (!overlay) return;
     if (!savedSets.length) return;
     activeSetIndex = activeSetIndex + 1 >= savedSets.length ? -1 : activeSetIndex + 1;
-    if (activeSetIndex < 0) overlay.setSelection([]);
+    if (activeSetIndex < 0) { overlay.setSelection([]); overlay.setLabels({}); }
     else {
       const set = savedSets[activeSetIndex]!;
       overlay.setAccent(set.accent || '#F59E0B');
       overlay.setSelection(set.itemIds);
+      overlay.setLabels(set.labels || {});
     }
     renderMapControls();
   }
@@ -313,8 +314,8 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
       savedSets = (res.value.sets ?? []).map((s) => {
         const marks = (s.marks ?? []) as unknown[];
         const itemIds = marks.filter((m): m is string => typeof m === 'string');
-        const accent = (s as { accent?: string }).accent;
-        return { id: s.id, name: s.name || 'Highlights', itemIds, accent };
+        const extra = s as { accent?: string; labels?: Record<string, string> };
+        return { id: s.id, name: s.name || 'Highlights', itemIds, accent: extra.accent, labels: extra.labels ?? {} };
       }).filter((s) => s.itemIds.length > 0);
     }
     renderMapControls();
@@ -414,10 +415,11 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
       const label = activeSetIndex >= 0 ? (savedSets[activeSetIndex]?.name ?? 'Highlights') : 'Highlights';
       html += `<button class="pm-ctl ${activeSetIndex >= 0 ? 'active' : ''}" data-act="cycle-set" title="Tap to show the next saved highlight set"><i class="ph-fill ph-highlighter-circle" style="font-size:16px"></i>${esc(label)}<i class="ph-bold ph-arrows-clockwise" style="font-size:12px;opacity:.7;margin-left:3px"></i></button>`;
     } else {
-      html += `<span class="pm-ctl" style="opacity:.85;cursor:default" title="Tap roads or blocks on the map to highlight them"><i class="ph-fill ph-cursor-click" style="font-size:15px"></i>Tap map to highlight</span>`;
+      // Small icon-only hint (item 8): tap roads/blocks on the map to highlight.
+      html += `<button class="pm-ctl pm-ctl--icon" data-act="noop" aria-label="Tap roads or blocks on the map to highlight" title="Tap roads or blocks on the map to highlight"><i class="ph-fill ph-cursor-click" style="font-size:16px"></i></button>`;
     }
     if (selCount > 0) {
-      html += `<button class="pm-ctl" data-act="hl-clear" title="Clear highlights"><i class="ph-bold ph-x" style="font-size:14px"></i>Clear${selCount > 1 ? ` (${selCount})` : ''}</button>`;
+      html += `<button class="pm-ctl pm-ctl--icon" data-act="hl-clear" aria-label="Clear highlights" title="Clear highlights"><i class="ph-bold ph-x" style="font-size:15px"></i>${selCount > 1 ? `<span style="font-size:12px;font-weight:800">${selCount}</span>` : ''}</button>`;
     }
     return html;
   }
@@ -491,9 +493,9 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
         </div>
       `;
     } else if (view === 'sectors') {
-      // ALL maps in the catalog, grouped by city; tap a card to open that map.
+      // ONLY sector maps here — never masterplans (item 11), grouped by city.
       const byCity = new Map<string, MapEntry[]>();
-      for (const m of maps) { const c = m.city || 'Other'; const a = byCity.get(c); if (a) a.push(m); else byCity.set(c, [m]); }
+      for (const m of maps) { if (m.kind !== 'sector') continue; const c = m.city || 'Other'; const a = byCity.get(c); if (a) a.push(m); else byCity.set(c, [m]); }
       const plotCount = (mapId: string) => props.filter((p) => p.mapPlacement?.mapId === mapId).length;
       const cityBlocks = [...byCity.keys()].sort().map((city) => {
         const cityMaps = [...byCity.get(city)!].sort((a, b) => (a.kind === 'masterplan' ? -1 : 1) - (b.kind === 'masterplan' ? -1 : 1));
@@ -519,9 +521,9 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
       grid.innerHTML = `
         <div style="position:absolute;inset:0;overflow-y:auto;background:#f5efff;background-image:radial-gradient(62% 50% at -2% -4%,rgba(139,96,232,.5),transparent 62%),radial-gradient(54% 44% at 101% 4%,rgba(56,138,186,.4),transparent 62%),radial-gradient(66% 48% at 46% 108%,rgba(255,190,48,.44),transparent 64%),radial-gradient(40% 34% at 86% 66%,rgba(236,120,168,.22),transparent 68%)">
           <div style="max-width:1260px;margin:0 auto;padding:80px 34px 56px">
-            <h2 style="font-family:'Newsreader',serif;font-weight:500;font-size:30px;color:#1c1533;margin:0">All maps</h2>
-            <p style="margin:6px 0 0;font-size:14px;color:#6f6489">Every published map — tap one to show it on the main screen.</p>
-            ${cityBlocks || '<div style="margin-top:24px;color:#6f6489">No maps published yet.</div>'}
+            <h2 style="font-family:'Newsreader',serif;font-weight:500;font-size:30px;color:#1c1533;margin:0">Sector maps</h2>
+            <p style="margin:6px 0 0;font-size:14px;color:#6f6489">Detailed sector layouts — tap one to open it (Original / 3D toggle inside).</p>
+            ${cityBlocks || '<div style="margin-top:24px;color:#6f6489">No sector maps published yet — publish them in Map Studio.</div>'}
           </div>
         </div>`;
     }
@@ -631,12 +633,36 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
     mapMsg(null);
     const result = await mounted.engine.setMap(activeMapId, { mode });
     if (result.ok) {
-      if (view === 'masterplan') mounted.engine.cover();
+      // Contain-fit: show the WHOLE map centred (one world transform, applied once
+      // by the engine). Re-fit on the next frame so the final stage size is used
+      // (fixes maps fitting against a too-small early stage → tiny/top-left).
+      mounted.engine.fit();
+      requestAnimationFrame(() => { mounted?.engine.fit(); logMapMetrics(); });
       // Load the authored SVG overlay for the (Original) map; hidden on 3D.
       void ensureOverlay();
     } else if (result.reason !== 'superseded' && result.reason !== 'disposed') {
       mapMsg(result.reason === 'no-rendering' ? 'This view is not available for this map.' : 'This map could not be loaded.');
     }
+  }
+
+  /** Instrumentation for the map coordinate-system (item 3). Logs the full
+   *  transform chain so sizing regressions are diagnosable without guesswork. */
+  function logMapMetrics(): void {
+    if (!mounted) return;
+    const map = activeMap();
+    const t = mounted.engine.transform;
+    const img = stage.querySelector('img');
+    const svg = highlightLayer.querySelector('svg');
+    // eslint-disable-next-line no-console
+    console.debug('[MAPCO map metrics]', {
+      map: activeMapId, mode,
+      stage: { w: stage.clientWidth, h: stage.clientHeight },
+      registryDims: map?.original.dims,
+      rasterNatural: img ? { w: (img as HTMLImageElement).naturalWidth, h: (img as HTMLImageElement).naturalHeight } : null,
+      svgViewBox: svg?.getAttribute('viewBox') ?? null,
+      transform: t,
+      renderedSize: t && map ? { w: Math.round(map.original.dims.w * t.scale), h: Math.round(map.original.dims.h * t.scale) } : null,
+    });
   }
 
   /** Pick the default hero map: the founder's preferred map, else the first
@@ -678,19 +704,10 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
     if (!t) return;
     const act = t.dataset.act;
     switch (act) {
-      case 'back': {
-        // Close an open overlay first (stays in the presentation, keeps
-        // fullscreen); otherwise return to the dealer surface. Never exposes
-        // dealer-private routes beyond a normal same-origin history entry.
-        if (selectedPropertyId) { selectedPropertyId = null; renderMapControls(); break; }
-        if (selectedSectorId) { selectedSectorId = null; view = 'sectors'; renderTopbar(); renderMapControls(); break; }
-        if (overlay && overlay.selection().length) { activeSetIndex = -1; overlay.clear(); renderMapControls(); break; }
-        if (mapsOpen) { mapsOpen = false; renderTopbar(); break; }
-        if (view !== 'masterplan') { view = 'masterplan'; renderTopbar(); renderMapControls(); void applyMap(); break; }
-        if (hasSafeInAppHistory()) window.history.back();
-        else window.location.assign('/admin/owner.html');
+      case 'back':
+        // Not an undo — leaves the presentation and returns to the landing page.
+        window.location.assign('/');
         break;
-      }
       case 'toggle-maps': mapsOpen = !mapsOpen; renderTopbar(); break;
       case 'pick-map': {
         if (t.dataset.id === activeMapId) { mapsOpen = false; renderTopbar(); break; }
@@ -772,7 +789,7 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
         // The overlay selection is preserved; the SVG is simply hidden on 3D
         // and restored on Original.
         renderMapControls();
-        void mounted!.engine.setMode(mode).then(() => { if (view === 'masterplan') mounted!.engine.cover(); applyHighlights(); });
+        void mounted!.engine.setMode(mode).then(() => { mounted!.engine.fit(); applyHighlights(); });
         break;
       }
       case 'rail-hide': railHidden = true; renderMapControls(); break;

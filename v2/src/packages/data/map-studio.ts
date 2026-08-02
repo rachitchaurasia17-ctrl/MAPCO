@@ -36,14 +36,16 @@ export interface HighlightSet {
   name: string;
   itemIds: string[];
   accent: string;
+  labels: Record<string, string>;
 }
 
 function rowToHighlightSet(m: Record<string, unknown>): HighlightSet {
-  const p = (m.payload as { itemIds?: unknown[]; accent?: string }) ?? {};
+  const p = (m.payload as { itemIds?: unknown[]; accent?: string; labels?: Record<string, string> }) ?? {};
   return {
     id: String(m.id), mapId: String(m.map_id ?? ''), name: (m.name as string) ?? 'Highlights',
     itemIds: (p.itemIds ?? []).filter((x): x is string => typeof x === 'string'),
     accent: p.accent ?? '#F59E0B',
+    labels: (p.labels && typeof p.labels === 'object') ? p.labels : {},
   };
 }
 
@@ -71,7 +73,7 @@ export interface MapStudioRepo {
   linkProperty(propertyId: string, mapId: string, x?: number, y?: number): Promise<StudioResult<void>>;
   unlinkProperty(propertyId: string): Promise<StudioResult<void>>;
   listHighlightSets(mapId: string): Promise<StudioResult<HighlightSet[]>>;
-  saveHighlightSet(set: { id?: string; mapId: string; name: string; itemIds: string[]; accent?: string }): Promise<StudioResult<HighlightSet>>;
+  saveHighlightSet(set: { id?: string; mapId: string; name: string; itemIds: string[]; accent?: string; labels?: Record<string, string> }): Promise<StudioResult<HighlightSet>>;
   deleteHighlightSet(id: string): Promise<StudioResult<void>>;
 }
 
@@ -117,10 +119,10 @@ class SupabaseMapStudio implements MapStudioRepo {
       return { ok: true, data: rows.map(rowToHighlightSet) };
     } catch (e) { return { ok: false, error: (e as Error).message }; }
   }
-  async saveHighlightSet(set: { id?: string; mapId: string; name: string; itemIds: string[]; accent?: string }): Promise<StudioResult<HighlightSet>> {
+  async saveHighlightSet(set: { id?: string; mapId: string; name: string; itemIds: string[]; accent?: string; labels?: Record<string, string> }): Promise<StudioResult<HighlightSet>> {
     try {
       const c = await getSupabase(); if (!c) return { ok: false, error: 'not configured' };
-      const { data, error } = await c.rpc('plotmap_save_highlight_set', { p_payload: { id: set.id, mapId: set.mapId, name: set.name, itemIds: set.itemIds, accent: set.accent ?? '#F59E0B' } });
+      const { data, error } = await c.rpc('plotmap_save_highlight_set', { p_payload: { id: set.id, mapId: set.mapId, name: set.name, itemIds: set.itemIds, accent: set.accent ?? '#F59E0B', labels: set.labels ?? {} } });
       if (error) return { ok: false, error: error.message };
       return { ok: true, data: data ? rowToHighlightSet(data as Record<string, unknown>) : undefined };
     } catch (e) { return { ok: false, error: (e as Error).message }; }
@@ -152,9 +154,9 @@ class MockMapStudio implements MapStudioRepo {
   async listHighlightSets(mapId: string): Promise<StudioResult<HighlightSet[]>> {
     return { ok: true, data: this.sets.filter((s) => s.mapId === mapId).map((s) => ({ ...s })) };
   }
-  async saveHighlightSet(set: { id?: string; mapId: string; name: string; itemIds: string[]; accent?: string }): Promise<StudioResult<HighlightSet>> {
+  async saveHighlightSet(set: { id?: string; mapId: string; name: string; itemIds: string[]; accent?: string; labels?: Record<string, string> }): Promise<StudioResult<HighlightSet>> {
     const id = set.id ?? `hlset-mock-${++this.seq}`;
-    const row: HighlightSet = { id, mapId: set.mapId, name: set.name, itemIds: [...set.itemIds], accent: set.accent ?? '#F59E0B' };
+    const row: HighlightSet = { id, mapId: set.mapId, name: set.name, itemIds: [...set.itemIds], accent: set.accent ?? '#F59E0B', labels: set.labels ?? {} };
     const i = this.sets.findIndex((s) => s.id === id);
     if (i >= 0) this.sets[i] = row; else this.sets.push(row);
     return { ok: true, data: { ...row } };

@@ -32,6 +32,7 @@ export async function renderMapStudio(el: HTMLElement): Promise<void> {
   let overlay: SvgHighlightHandle | null = null;
   let overlayToken = 0;
   let sets: HighlightSet[] = [];
+  let labels: Record<string, string> = {};  // per-shape names for the set being built
   let toast = '';
   // sector-link flow state
   let pin: { x: number; y: number } | null = null;
@@ -64,13 +65,30 @@ export async function renderMapStudio(el: HTMLElement): Promise<void> {
     overlay = handle;
     handle.el.style.width = '100%'; handle.el.style.height = '100%';
     handle.setInteractive(interactive);
-    handle.onSelectChange(() => { const c = el.querySelector('#ms-selcount'); if (c) c.textContent = String(handle.selection().length); const b = el.querySelector<HTMLButtonElement>('#ms-saveset'); if (b) b.disabled = handle.selection().length === 0; });
+    handle.setLabels(labels);
+    handle.onSelectChange(() => {
+      const c = el.querySelector('#ms-selcount'); if (c) c.textContent = String(handle.selection().length);
+      const b = el.querySelector<HTMLButtonElement>('#ms-saveset'); if (b) b.disabled = handle.selection().length === 0;
+      renderNameList();
+    });
     host.appendChild(handle.el);
+    renderNameList();
+  }
+
+  /** Rebuild the per-shape name inputs for the current selection (no full re-render). */
+  function renderNameList(): void {
+    const box = el.querySelector<HTMLElement>('#ms-namelist');
+    if (!box || !overlay) return;
+    const sel = overlay.selection();
+    const items = overlay.items();
+    box.innerHTML = sel.length
+      ? sel.map((id) => { const it = items.find((x) => x.id === id); return `<div style="display:flex;align-items:center;gap:8px"><span style="width:96px;flex:none;font-size:12px;font-weight:800;color:#8d8271;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(it?.label ?? id)}</span><input data-namefor="${esc(id)}" value="${esc(labels[id] ?? '')}" placeholder="Add a name (e.g. PR-7 Road)" style="flex:1;height:34px;border:1px solid #ddd2f5;border-radius:9px;padding:0 10px;font:inherit;font-size:13px"></div>`; }).join('')
+      : '<div style="font-size:13px;color:#8d8271">Tap shapes on the map, then name them here.</div>';
   }
 
   // ── flow openers ──────────────────────────────────────────────
   async function openMasterplan(mapId: string): Promise<void> {
-    flow = 'masterplan'; selectedMapId = mapId;
+    flow = 'masterplan'; selectedMapId = mapId; labels = {};
     const r = await repo.listHighlightSets(mapId); sets = r.ok && r.data ? r.data : [];
     render();
     await mountOverlay(true);
@@ -88,7 +106,7 @@ export async function renderMapStudio(el: HTMLElement): Promise<void> {
     const w = m?.dims?.original?.w || 4, h = m?.dims?.original?.h || 3;
     const noOverlay = !m?.assets?.overlay?.path;
     return `
-      <div id="ms-stage" style="position:relative;width:100%;max-width:980px;margin:0 auto;aspect-ratio:${w}/${h};background:#0b0714;border-radius:18px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,248,230,.14),0 30px 60px -30px rgba(0,0,0,.7);${placing ? 'cursor:crosshair' : ''}">
+      <div id="ms-stage" data-wh="${w}x${h}" style="position:relative;width:100%;height:100%;min-height:260px;background:#0b0714;border-radius:18px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,248,230,.14),0 30px 60px -30px rgba(0,0,0,.7);${placing ? 'cursor:crosshair' : ''}">
         ${raster ? `<img src="${esc(raster)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:fill;user-select:none;-webkit-user-drag:none">` : '<div style="position:absolute;inset:0;display:grid;place-items:center;color:#8d8271">No image</div>'}
         <div id="ms-ovhost" style="position:absolute;inset:0;pointer-events:${flow === 'masterplan' ? 'auto' : 'none'}"></div>
         ${flow === 'sector' && pin ? `<div style="position:absolute;left:${pin.x * 100}%;top:${pin.y * 100}%;transform:translate(-50%,-100%);z-index:5"><i class="ph-fill ph-map-pin" style="font-size:34px;color:#2f7bff;filter:drop-shadow(0 3px 4px rgba(0,0,0,.5))"></i></div>` : ''}
@@ -152,18 +170,24 @@ export async function renderMapStudio(el: HTMLElement): Promise<void> {
         </div>`).join('')
       : `<span style="font-size:13.5px;color:#8d8271">No sets yet — tap roads/blocks on the map, name them, and save.</span>`;
     return `
-      <div>
+      <div style="flex:1;min-height:0;display:flex;flex-direction:column">
         ${headerHtml('Publish Masterplan', m.label)}
-        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:14px 0 16px">
+        <div style="flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin:14px 0 14px">
           <div style="font-size:14px;color:#3a332c;font-weight:700"><i class="ph-fill ph-cursor-click" style="color:#a8792a;margin-right:6px"></i>Tap roads &amp; blocks on the map to build a set. <span style="color:#8d8271">Selected: <b id="ms-selcount">0</b></span></div>
           <span style="flex:1"></span>
           <input id="ms-setname" placeholder="Set name (e.g. Approach roads)" style="height:40px;border:1px solid #ddd2f5;border-radius:11px;padding:0 12px;font:inherit;font-size:14px;min-width:220px">
           <button id="ms-saveset" data-act="save-set" disabled style="height:40px;padding:0 16px;border-radius:11px;background:#ffc93c;color:#231a04;font-weight:800;cursor:pointer">Save set</button>
           <button data-act="clear-sel" style="height:40px;padding:0 14px;border-radius:11px;background:#f0eaff;color:#5b32c4;font-weight:800;cursor:pointer">Clear</button>
         </div>
-        ${mapPreviewHtml(false)}
-        <div style="margin-top:16px">
-          <div style="font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8d8271;margin-bottom:8px">Saved highlight sets (client sees these on one cycling button)</div>
+        <div style="flex:1;min-height:0;display:flex;gap:16px">
+          <div style="flex:1;min-width:0;min-height:0">${mapPreviewHtml(false)}</div>
+          <aside style="width:260px;flex:none;display:flex;flex-direction:column;min-height:0;background:#fffdf9;border:1px solid #eadff7;border-radius:16px;padding:12px">
+            <div style="font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8d8271;margin-bottom:8px">Name the shapes</div>
+            <div id="ms-namelist" data-scroll style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:8px"></div>
+          </aside>
+        </div>
+        <div style="flex:none;margin-top:12px">
+          <div style="font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8d8271;margin-bottom:8px">Saved sets (client sees these on one cycling button)</div>
           <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center">${setChips}</div>
         </div>
       </div>`;
@@ -230,9 +254,12 @@ export async function renderMapStudio(el: HTMLElement): Promise<void> {
       : flow === 'masterplan' ? masterplanFlowHtml()
       : flow === 'sector' ? sectorFlowHtml()
       : manageFlowHtml();
+    // No page scroll (item 10): the studio fills the viewport; only the Manage
+    // list scrolls internally when it overflows.
+    const innerScroll = flow === 'manage';
     el.innerHTML = `
-      <div style="min-height:100%;background:#f5efff;background-image:radial-gradient(60% 50% at 0% 0%,rgba(139,96,232,.16),transparent 60%),radial-gradient(60% 50% at 100% 100%,rgba(255,201,60,.14),transparent 60%)">
-        <div style="max-width:1180px;margin:0 auto;padding:28px 32px 60px">${body}</div>
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;background:#f5efff;background-image:radial-gradient(60% 50% at 0% 0%,rgba(139,96,232,.16),transparent 60%),radial-gradient(60% 50% at 100% 100%,rgba(255,201,60,.14),transparent 60%)">
+        <div style="flex:1;min-height:0;max-width:1180px;width:100%;margin:0 auto;padding:22px 32px 20px;display:flex;flex-direction:column;${innerScroll ? 'overflow-y:auto' : 'overflow:hidden'}">${body}</div>
       </div>
       ${toast ? `<div style="position:fixed;left:50%;bottom:26px;transform:translateX(-50%);background:#1f4d3a;color:#fff;font-weight:700;padding:11px 20px;border-radius:999px;z-index:50;box-shadow:0 14px 30px -12px rgba(0,0,0,.4)">${esc(toast)}</div>` : ''}`;
   }
@@ -267,12 +294,14 @@ export async function renderMapStudio(el: HTMLElement): Promise<void> {
         if (!ids.length) { flash('Select some roads or blocks first'); break; }
         const nameEl = el.querySelector<HTMLInputElement>('#ms-setname');
         const name = (nameEl?.value || '').trim() || `Set ${sets.length + 1}`;
-        const res = await repo.saveHighlightSet({ mapId: selectedMapId, name, itemIds: ids });
+        const setLabels: Record<string, string> = {};
+        for (const id of ids) if (labels[id]) setLabels[id] = labels[id]!;
+        const res = await repo.saveHighlightSet({ mapId: selectedMapId, name, itemIds: ids, labels: setLabels });
         if (res.ok) { const r = await repo.listHighlightSets(selectedMapId); sets = r.ok && r.data ? r.data : sets; overlay.clear(); render(); await mountOverlay(true); flash(`Saved “${name}”`); }
         else flash(res.error ?? 'Could not save');
         break;
       }
-      case 'play-set': { const set = sets.find((x) => x.id === id); if (set && overlay) { overlay.setAccent(set.accent); overlay.setSelection(set.itemIds); } break; }
+      case 'play-set': { const set = sets.find((x) => x.id === id); if (set && overlay) { labels = { ...set.labels }; overlay.setAccent(set.accent); overlay.setSelection(set.itemIds); overlay.setLabels(labels); renderNameList(); } break; }
       case 'del-set': { const res = await repo.deleteHighlightSet(id!); if (res.ok) { sets = sets.filter((x) => x.id !== id); render(); await mountOverlay(true); flash('Set deleted'); } else flash(res.error ?? 'Could not delete'); break; }
       case 'do-link': {
         if (!pin || !linkPropId) break;
@@ -295,6 +324,11 @@ export async function renderMapStudio(el: HTMLElement): Promise<void> {
   el.addEventListener('change', (ev) => {
     const t = ev.target as HTMLElement;
     if (t.id === 'ms-linkprop') linkPropId = (t as HTMLSelectElement).value;
+  });
+  el.addEventListener('input', (ev) => {
+    const t = ev.target as HTMLInputElement;
+    const forId = t.getAttribute?.('data-namefor');
+    if (forId) { labels[forId] = t.value; overlay?.setLabels(labels); }
   });
 
   render();

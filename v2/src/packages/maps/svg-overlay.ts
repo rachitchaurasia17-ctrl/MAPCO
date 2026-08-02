@@ -48,6 +48,8 @@ export interface SvgHighlightHandle {
   setVisible(visible: boolean): void;
   /** accent color for the highlight (a saved set can override per-set). */
   setAccent(hex: string): void;
+  /** render text names on shapes: { itemId: name }. Empty clears them. */
+  setLabels(labels: Record<string, string>): void;
   destroy(): void;
 }
 
@@ -71,6 +73,9 @@ function rgba(hex: string, a: number): string {
 const CONTAINER_RE = /masterplan|export|frame|full ?map/i;
 const ROAD_RE = /road|approach|route|highway|spine|arterial|expressway/i;
 const SKIP_RE = /pin|label|marker|text/i;
+// Oversized container shapes that would "light up a whole zone" when clicked —
+// excluded from the individually-highlightable items (item 4).
+const EXCLUDE_RE = /full ?map|boundary|outline|frame|export|whole ?map|^zone[\s-]?\d*$|^zone \d/i;
 const GENERIC_ID_RE = /^(vector|path|rect|group|shape|ellipse|line|polygon)[\s_-]*\d*$/i;
 
 function cleanLabel(id: string): string {
@@ -124,6 +129,9 @@ export async function loadSvgOverlay(
       if (gid && !CONTAINER_RE.test(gid)) { groupId = gid; break; }
     }
     if (SKIP_RE.test(id) || SKIP_RE.test(groupId)) return;
+    // Skip whole-zone / full-map outline shapes so a click never highlights an
+    // entire zone unnecessarily (item 4). Named blocks inside the zone remain.
+    if (EXCLUDE_RE.test(id)) return;
     const tag = shape.tagName.toLowerCase();
     let d = '';
     if (tag === 'path') d = shape.getAttribute('d') || '';
@@ -160,20 +168,40 @@ export async function loadSvgOverlay(
     <g data-under style="pointer-events:none"></g>
     <g data-mid style="pointer-events:none"></g>
     <g data-top style="pointer-events:none"></g>
+    <g data-labels style="pointer-events:none"></g>
     <g data-hits></g>`;
   const dimG = el.querySelector('[data-dim]') as SVGGElement;
   const underG = el.querySelector('[data-under]') as SVGGElement;
   const midG = el.querySelector('[data-mid]') as SVGGElement;
   const topG = el.querySelector('[data-top]') as SVGGElement;
+  const labelsG = el.querySelector('[data-labels]') as SVGGElement;
   const hitsG = el.querySelector('[data-hits]') as SVGGElement;
 
   const byId = new Map(items.map((it) => [it.id, it]));
   const selected = new Set<string>();
   let accent = opts.accent ?? '#F59E0B';
   let interactive = false;
+  let labelMap: Record<string, string> = {};
   let changeCb: ((ids: string[]) => void) | null = null;
 
   const glow = '#FFD97A';
+  const fs = Math.max(11, Math.round(viewBox.h / 60));
+
+  function renderLabels(): void {
+    let txt = '';
+    for (const [id, name] of Object.entries(labelMap)) {
+      if (!name) continue;
+      const shape = el.querySelector(`[data-hit="${id.replace(/["\\]/g, '\\$&')}"]`) as SVGGraphicsElement | null
+        ?? el.querySelector(`[id="${id.replace(/["\\]/g, '\\$&')}"]`) as SVGGraphicsElement | null;
+      if (!shape || typeof shape.getBBox !== 'function') continue;
+      let b; try { b = shape.getBBox(); } catch { continue; }
+      if (!b.width || !b.height) continue;
+      const cx = b.x + b.width / 2, cy = b.y + b.height / 2;
+      const safe = name.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!));
+      txt += `<text x="${cx.toFixed(1)}" y="${cy.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" style="font-family:'Hanken Grotesk',system-ui,sans-serif;font-weight:800;font-size:${fs}px;fill:#fffdf7;paint-order:stroke;stroke:#1a1206;stroke-width:${(fs / 4).toFixed(1)}px;stroke-linejoin:round">${safe}</text>`;
+    }
+    labelsG.innerHTML = txt;
+  }
 
   function renderHighlights(): void {
     let maskCuts = '';
@@ -258,6 +286,7 @@ export async function loadSvgOverlay(
     onSelectChange(cb) { changeCb = cb; },
     setVisible(v) { el.style.display = v ? '' : 'none'; },
     setAccent(hex) { accent = hex; renderHighlights(); },
+    setLabels(m) { labelMap = { ...m }; renderLabels(); },
     destroy() { el.removeEventListener('click', onHitClick); el.remove(); },
   };
   renderHighlights();
