@@ -3,6 +3,48 @@ import { describe, it, expect } from 'vitest';
 import { adapter, DEMAND_RECORDS, toClientSafeProperty } from '../src/packages/data/mock-adapter-v2';
 import { PROPERTIES } from '../src/packages/data/mock-adapter';
 
+describe('Deals — completed-sales register', () => {
+  it('records a completed sale as one atomic transaction', async () => {
+    const target = PROPERTIES.find((p) => !p.sold)!;
+    const before = (await adapter.deals.list({ limit: 100 }));
+    const beforeCount = before.ok ? before.value.items.length : 0;
+
+    const res = await adapter.deals.record({
+      propertyId: target.id,
+      newBuyer: { name: 'Test Buyer', phone: '+919000000000' },
+      seller: 'Test Seller',
+      soldPrice: 8800000, saleDate: '2026-08-01', registrationDate: '2026-08-10',
+      brokerage: 176000, commission: 132000, commissionReceived: false, paymentReceived: 5000000,
+    });
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+
+    // property is now sold + unpublished (removed from inventory/presentation/links)
+    expect(target.sold).toBe(true);
+    expect(target.published).toBe(false);
+
+    // deal exists on the register
+    const after = await adapter.deals.list({ limit: 100 });
+    expect(after.ok).toBe(true);
+    if (after.ok) expect(after.value.items.length).toBe(beforeCount + 1);
+
+    // buyer's purchased history includes the property
+    const buyer = await adapter.customers.get(res.value.buyerId);
+    expect(buyer.ok).toBe(true);
+    if (buyer.ok) expect(buyer.value.purchased).toContain(target.id);
+  });
+
+  it('refuses to sell an already-sold property', async () => {
+    const sold = PROPERTIES.find((p) => p.sold);
+    if (!sold) return;
+    const res = await adapter.deals.record({
+      propertyId: sold.id, buyerId: 'c1', seller: 'X',
+      soldPrice: 1, saleDate: '2026-08-01', brokerage: 0, commission: 0,
+    });
+    expect(res.ok).toBe(false);
+  });
+});
+
 describe('Demand repository', () => {
   it('lists deterministic demand fixtures', async () => {
     const r = await adapter.demand.list();

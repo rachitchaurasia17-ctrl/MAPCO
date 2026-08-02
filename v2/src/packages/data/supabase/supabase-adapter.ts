@@ -15,7 +15,7 @@ import {
   type Result, type Page, type PageParams, type QueryOptions,
   type DataAdapterV2,
   type AuthRepository, type ActivationState, type AccountState,
-  type PropertyRepository, type CustomerRepository, type DealRepository,
+  type PropertyRepository, type CustomerRepository, type DealRepository, type RecordSaleInput,
   type DemandRepository, type DemandRecord, type DemandDraft, type DemandMatch,
   type MapRepository, type PresentationRepository, type PresentationState,
   type PresentationEventsRepository, type PresentationEvent,
@@ -149,9 +149,44 @@ class SupaCustomers implements CustomerRepository {
 class SupaDeals implements DealRepository {
   list(p?: PageParams, o?: QueryOptions) {
     return crmList<Deal>('deals', p, o, (r, q) =>
-      `${r.payload.name} ${r.payload.client}`.toLowerCase().includes(q));
+      `${r.payload.prop} ${r.payload.buyer} ${r.payload.seller} ${r.payload.city} ${r.payload.sector}`.toLowerCase().includes(q));
   }
   get(id: string, o?: QueryOptions) { return crmGet<Deal>('deals', id, o); }
+
+  async record(input: RecordSaleInput, o?: QueryOptions): Promise<Result<Deal>> {
+    const a = aborted<Deal>(o); if (a) return a;
+    try {
+      const c = await client();
+      // Single atomic SECURITY DEFINER RPC: marks the property sold (removing it
+      // from inventory / presentation / future client links), creates the deal,
+      // and appends to the buyer's purchased history — all in one transaction.
+      const { data, error } = await c.rpc('plotmap_record_completed_sale', {
+        p_payload: {
+          propertyId: input.propertyId,
+          buyerId: input.buyerId ?? null,
+          newBuyer: input.newBuyer ?? null,
+          seller: input.seller,
+          sellerPhone: input.sellerPhone ?? null,
+          soldPrice: input.soldPrice,
+          saleDate: input.saleDate,
+          registrationDate: input.registrationDate ?? null,
+          brokerage: input.brokerage,
+          commission: input.commission,
+          commissionReceived: input.commissionReceived ?? false,
+          paymentReceived: input.paymentReceived ?? 0,
+          documents: input.documents ?? [],
+        },
+      });
+      if (error) return toErr(error);
+      const env = (data ?? {}) as { ok?: boolean; reason?: string; deal?: Record<string, unknown> };
+      if (env.ok !== true || !env.deal) {
+        if (env.reason === 'already_sold') return err('conflict', 'That property is already marked sold');
+        if (env.reason === 'not_found') return err('not_found', 'That property is no longer available');
+        return err('validation', env.reason ?? 'Could not record the sale');
+      }
+      return ok({ ...(env.deal as object), id: String(env.deal.id ?? '') } as Deal);
+    } catch (e) { return toErr(e); }
+  }
 }
 
 class SupaDemand implements DemandRepository {

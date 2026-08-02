@@ -17,7 +17,7 @@ import {
   ok, err, activeScenario,
   type Scenario, type Result, type Page, type PageParams, type QueryOptions,
   type AuthRepository, type ActivationState, type AccountState,
-  type PropertyRepository, type CustomerRepository, type DealRepository,
+  type PropertyRepository, type CustomerRepository, type DealRepository, type RecordSaleInput,
   type DemandRepository, type DemandRecord, type DemandDraft, type DemandMatch,
   type MapRepository, type PresentationRepository, type PresentationState,
   type PresentationEventsRepository, type PresentationEvent,
@@ -162,12 +162,66 @@ class MockDealRepository implements DealRepository {
     const a = aborted<Page<Deal>>(opts); if (a) return a;
     const s = scenarioResult<Deal>(); if (s) return s;
     return ok(paginate(DEALS, params, (d, q) =>
-      d.name.toLowerCase().includes(q) || d.client.toLowerCase().includes(q)));
+      `${d.prop} ${d.buyer} ${d.seller} ${d.city} ${d.sector}`.toLowerCase().includes(q)));
   }
   async get(id: string, opts?: QueryOptions): Promise<Result<Deal>> {
     const a = aborted<Deal>(opts); if (a) return a;
     const found = DEALS.find((d) => d.id === id);
     return found ? ok(found) : err('not_found', 'Deal not found');
+  }
+
+  /**
+   * Record a completed sale. In-memory mutations are synchronous, so the three
+   * writes (property→sold, deal created, buyer history) either all apply or the
+   * method returns a validation error before any of them run — no partial state.
+   */
+  async record(input: RecordSaleInput, opts?: QueryOptions): Promise<Result<Deal>> {
+    const a = aborted<Deal>(opts); if (a) return a;
+
+    const prop = PROPERTIES.find((p) => p.id === input.propertyId);
+    if (!prop) return err('not_found', 'That property is no longer available');
+    if (prop.sold) return err('conflict', 'That property is already marked sold');
+    if (!(input.soldPrice > 0)) return err('validation', 'Enter a final sold price');
+    if (!input.saleDate) return err('validation', 'Enter the sale date');
+
+    // Resolve the buyer (existing customer or a freshly created one).
+    let buyer = input.buyerId ? CLIENTS.find((c) => c.id === input.buyerId) : undefined;
+    if (!buyer) {
+      if (!input.newBuyer?.name) return err('validation', 'Choose or add a buyer');
+      buyer = {
+        id: `client-${Date.now()}`, name: input.newBuyer.name, phone: input.newBuyer.phone || '',
+        city: input.newBuyer.city || prop.city, want: prop.want, budget: '', budgetMax: input.soldPrice,
+        status: 'active', seen: 'just now', note: '', viewed: [], interest: [], purchased: [],
+      };
+      CLIENTS.unshift(buyer);
+    }
+
+    const deal: Deal = {
+      id: `deal-${Date.now()}`,
+      propId: prop.id, prop: `${prop.area} ${prop.type.toLowerCase().includes('plot') ? 'plot' : 'site'}`,
+      propSub: `${prop.size} · ${prop.facing}`, city: prop.city, sector: prop.sector || prop.loc,
+      buyerId: buyer.id, buyer: buyer.name,
+      seller: input.seller || 'Owner', sellerPhone: input.sellerPhone,
+      soldPrice: input.soldPrice, brokerage: input.brokerage || 0, commission: input.commission || 0,
+      commissionReceived: input.commissionReceived ?? false,
+      paymentReceived: input.paymentReceived ?? 0,
+      soldDate: input.saleDate, registrationDate: input.registrationDate,
+      dealer: 'Chaurasia Properties',
+      documents: (input.documents ?? []).map((d) => ({ name: d.name, kind: d.kind })),
+      timeline: [
+        { at: input.saleDate, label: 'Sold price recorded' },
+        ...(input.registrationDate ? [{ at: input.registrationDate, label: 'Registration completed' }] : []),
+      ],
+    };
+
+    // Commit — mark sold (removes it from inventory, presentation and links),
+    // create the deal, and append to the buyer's purchased history.
+    prop.sold = true;
+    prop.published = false;
+    DEALS.unshift(deal);
+    buyer.purchased = [...(buyer.purchased ?? []), prop.id];
+
+    return ok(deal);
   }
 }
 

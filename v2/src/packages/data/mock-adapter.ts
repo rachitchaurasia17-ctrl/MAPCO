@@ -24,12 +24,53 @@ export const CLIENTS: Client[] = [
   { id:'c6', name:'Harpreet Kaur', phone:'+919876543215', city:'Mohali', want:'Villa', budget:'1Cr – 1.5Cr', budgetMax:15000000, status:'hot', seen:'just now', note:'Looking for gated community.', viewed:['omx','ecocity'], interest:['omx'], isNew:true },
 ];
 
+/**
+ * Deals are COMPLETED sales only (a register, not a pipeline). These seeds are
+ * historical sales whose plots have already left the live inventory, so they
+ * reference their own snapshot data rather than active PROPERTIES rows. New sales
+ * created at runtime via `record()` flip the referenced property to sold. Buyer,
+ * seller, price, payment, commission and documents are all dealer-private.
+ */
 export const DEALS: Deal[] = [
-  { id:'d1', name:'Eco City Corner Deal', client:'Rajiv Sharma', prop:'Eco City plot', propSub:'500 sq yd · North-East', area:'New Chandigarh', propId:'ecocity', value:9500000, comm:142500, token:500000, stage:'negotiating' },
-  { id:'d2', name:'Aerocity Quick Close', client:'Priya Mehta', prop:'Aerocity plot', propSub:'300 sq yd · West', area:'Mohali', propId:'aero', value:7200000, comm:108000, token:0, stage:'enquiry' },
-  { id:'d3', name:'Omaxe Premium', client:'Amandeep Singh', prop:'Omaxe kothi site', propSub:'1 kanal · North', area:'New Chandigarh', propId:'omx', value:15000000, comm:225000, token:1000000, stage:'token' },
-  { id:'d4', name:'Sector 66 Park View', client:'Suresh Gupta', prop:'Sector 66 plot', propSub:'200 sq yd · South', area:'Mohali', propId:'sec66', value:3600000, comm:54000, token:200000, stage:'registry' },
-  { id:'d5', name:'Block 5 Site Sold', client:'Harpreet Kaur', prop:'Block 5 site', propSub:'300 sq yd · East', area:'New Chandigarh', propId:'block5', value:5400000, comm:81000, token:300000, stage:'closed' },
+  {
+    id:'d1', propId:'blk5sold', prop:'Block 5 site', propSub:'300 sq yd · East',
+    city:'New Chandigarh', sector:'Zone 2', buyerId:'c6', buyer:'Harpreet Kaur',
+    seller:'Gurmeet Singh', sellerPhone:'+919812000011',
+    soldPrice:5400000, brokerage:108000, commission:81000, commissionReceived:true, paymentReceived:5400000,
+    soldDate:'2026-06-18', registrationDate:'2026-06-27', dealer:'Chaurasia Properties',
+    documents:[{name:'Sale agreement.pdf',kind:'agreement'},{name:'Registry receipt.pdf',kind:'registry'}],
+    timeline:[
+      { at:'2026-06-10', label:'Sale agreed' },
+      { at:'2026-06-18', label:'Sold price recorded' },
+      { at:'2026-06-27', label:'Registration completed' },
+      { at:'2026-06-30', label:'Commission received' },
+    ],
+  },
+  {
+    id:'d2', propId:'wardsold', prop:'Sector 88 plot', propSub:'250 sq yd · West',
+    city:'Mohali', sector:'Sector 88', buyerId:'c2', buyer:'Priya Mehta',
+    seller:'Ravinder Kaur', sellerPhone:'+919812000022',
+    soldPrice:6300000, brokerage:126000, commission:94500, commissionReceived:false, paymentReceived:4000000,
+    soldDate:'2026-07-12', registrationDate:'2026-07-21', dealer:'Chaurasia Properties',
+    documents:[{name:'Sale agreement.pdf',kind:'agreement'}],
+    timeline:[
+      { at:'2026-07-05', label:'Sale agreed' },
+      { at:'2026-07-12', label:'Sold price recorded' },
+      { at:'2026-07-21', label:'Registration completed' },
+    ],
+  },
+  {
+    id:'d3', propId:'omxsold', prop:'Omaxe kothi site', propSub:'1 kanal · North',
+    city:'New Chandigarh', sector:'Omaxe', buyerId:'c3', buyer:'Amandeep Singh',
+    seller:'Baldev Raj', sellerPhone:'+919812000033',
+    soldPrice:15200000, brokerage:304000, commission:228000, commissionReceived:false, paymentReceived:9000000,
+    soldDate:'2026-07-28', registrationDate:undefined, dealer:'Chaurasia Properties',
+    documents:[{name:'Token receipt.pdf',kind:'receipt'}],
+    timeline:[
+      { at:'2026-07-20', label:'Sale agreed' },
+      { at:'2026-07-28', label:'Sold price recorded' },
+    ],
+  },
 ];
 
 export const CLIENT_LINKS: ClientLink[] = [

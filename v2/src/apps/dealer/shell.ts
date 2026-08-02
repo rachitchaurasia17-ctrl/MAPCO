@@ -38,9 +38,8 @@ export async function initDealerShell(container: HTMLElement, initialSection: st
   if (!SECMETA[currentSection]) currentSection = 'areas';
 
   const dealsResult = await adapter.deals.list({ limit: 100 });
-  const activeDealCount = dealsResult.ok
-    ? dealsResult.value.items.filter((deal) => deal.stage !== 'closed').length
-    : 0;
+  // Deals are completed sales; the badge shows how many are on the register.
+  const activeDealCount = dealsResult.ok ? dealsResult.value.items.length : 0;
 
   const head = document.head;
   if (!head.querySelector('#pm-styles')) {

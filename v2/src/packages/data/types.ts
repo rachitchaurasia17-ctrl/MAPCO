@@ -6,7 +6,6 @@
 export type PropertyType = 'Residential Plot' | 'Flat' | 'Floor' | 'Kothi' | 'Villa' | 'Commercial';
 export type WantType = 'Plot' | 'Flat' | 'Kothi' | 'Villa' | 'Commercial';
 export type Facing = 'East' | 'West' | 'North' | 'South' | 'North-East' | 'North-West' | 'South-East' | 'South-West';
-export type DealStage = 'enquiry' | 'negotiating' | 'token' | 'registry' | 'closed';
 export type LinkStatus = 'active' | 'revoked' | 'expired';
 export type PriceVisibility = 'hidden' | 'shown';
 export type LocationVisibility = 'area' | 'exact' | 'hidden';
@@ -49,20 +48,46 @@ export interface Client {
   /** optional customer photo (URL) and a linked property id. */
   photo?: string;
   linkedPropertyId?: string;
+  /** property ids this buyer has completed a purchase on (Purchased Properties). */
+  purchased?: string[];
 }
 
+export interface DealDocument { name: string; kind?: string; url?: string; }
+export interface DealTimelineEntry { at: string; label: string; }
+
+/**
+ * A Deal is a COMPLETED property transaction — never an ongoing negotiation.
+ * Ongoing buyer follow-ups live on Client, not here. Every field below is
+ * dealer-private (buyer, seller, price, payment, commission, documents) and
+ * must never appear in a ClientSafePayload / public client link.
+ */
 export interface Deal {
   id: string;
-  name: string;
-  client: string;
-  prop: string;
-  propSub: string;
-  area: string;
+  // sold property / plot (snapshot so the register survives inventory edits)
   propId: string;
-  value: number;
-  comm: number;
-  token: number;
-  stage: DealStage;
+  prop: string;            // plot name, e.g. "Eco City plot"
+  propSub: string;         // "500 sq yd · North-East"
+  city: string;
+  sector: string;
+  // parties
+  buyerId: string;
+  buyer: string;           // buyer / client name
+  seller: string;          // private seller name
+  sellerPhone?: string;
+  // money
+  soldPrice: number;       // final sold price
+  brokerage: number;       // total brokerage on the transaction
+  commission: number;      // dealer commission earned
+  commissionReceived: boolean;
+  paymentReceived: number; // amount received so far
+  // dates (ISO yyyy-mm-dd)
+  soldDate: string;
+  registrationDate?: string;
+  // assignment
+  dealer: string;          // assigned dealer display name
+  // records
+  documents: DealDocument[];
+  timeline: DealTimelineEntry[];
 }
 
 export interface ClientLink {

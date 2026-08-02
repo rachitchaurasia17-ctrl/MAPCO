@@ -200,9 +200,40 @@ export interface CustomerRepository {
   save(client: Client, opts?: QueryOptions): Promise<Result<Client>>;
 }
 
+/**
+ * Input for recording a COMPLETED sale. This is the only way a Deal is
+ * created — there is no free-form "add deal". On success the adapter must,
+ * as one atomic unit: mark the property Sold (removing it from available
+ * inventory, Client Presentation and future Client Links), create the Deal,
+ * and add the property to the buyer's purchased history.
+ */
+export interface RecordSaleInput {
+  propertyId: string;
+  /** existing customer id, or provide newBuyer to create one. */
+  buyerId?: string;
+  newBuyer?: { name: string; phone: string; city?: string };
+  /** seller confirmed from the property's private owner details. */
+  seller: string;
+  sellerPhone?: string;
+  soldPrice: number;
+  saleDate: string;            // ISO yyyy-mm-dd
+  registrationDate?: string;   // ISO yyyy-mm-dd
+  brokerage: number;
+  commission: number;
+  commissionReceived?: boolean;
+  paymentReceived?: number;
+  documents?: { name: string; kind?: string }[];
+}
+
 export interface DealRepository {
   list(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<Deal>>>;
   get(id: string, opts?: QueryOptions): Promise<Result<Deal>>;
+  /**
+   * Record a completed sale as a single safe transaction. Partial completion
+   * must be impossible: either the property, deal and buyer history all update,
+   * or none do.
+   */
+  record(input: RecordSaleInput, opts?: QueryOptions): Promise<Result<Deal>>;
 }
 
 /* ───────────────────────────────────────────────────────────────
