@@ -168,7 +168,7 @@ export async function renderMapStudio(el: HTMLElement): Promise<void> {
     const m = selectedMap();
     const r = raster(m!);
     const noOverlay = !m?.assets?.overlay?.path;
-    return `<div id="ms-stage" style="position:relative;width:100%;height:min(70vh,680px);background:#efe8fb;border-radius:20px;overflow:hidden;box-shadow:inset 0 0 0 1px #ddd0f5,0 30px 60px -40px rgba(60,40,5,.6);${placing ? 'cursor:crosshair' : ''}">
+    return `<div id="ms-stage" style="position:relative;width:100%;height:min(86vh,1000px);min-height:520px;background:#efe8fb;border-radius:20px;overflow:hidden;box-shadow:inset 0 0 0 1px #ddd0f5,0 30px 60px -40px rgba(60,40,5,.6);${placing ? 'cursor:crosshair' : ''}">
       ${r ? `<img src="${esc(r)}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;user-select:none;-webkit-user-drag:none">` : '<div style="position:absolute;inset:0;display:grid;place-items:center;color:#8d8271">No image</div>'}
       <div id="ms-ovhost" style="position:absolute;inset:0;pointer-events:${flow === 'masterplan' ? 'auto' : 'none'}"></div>
       ${flow === 'sector' && pin ? `<div style="position:absolute;left:${pin.x * 100}%;top:${pin.y * 100}%;transform:translate(-50%,-100%);z-index:5"><i class="ph-fill ph-map-pin" style="font-size:34px;color:#5b32c4;filter:drop-shadow(0 3px 4px rgba(0,0,0,.4))"></i></div>` : ''}

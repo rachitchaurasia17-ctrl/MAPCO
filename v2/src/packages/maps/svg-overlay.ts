@@ -79,7 +79,7 @@ const ROAD_RE = /road|approach|route|highway|spine|arterial|expressway/i;
 const SKIP_RE = /pin|label|marker|text/i;
 // Oversized container shapes that would "light up a whole zone" when clicked —
 // excluded from the individually-highlightable items (item 4).
-const EXCLUDE_RE = /full ?map|boundary|outline|frame|export|whole ?map|guide|all?ign|^zone[\s-]?\d*$|^zone \d/i;
+const EXCLUDE_RE = /full ?map|boundary|outline|frame|export|whole ?map|guide|all?ign|unnecessary|unnecesary|^ignore$|^zone[\s-]?\d*$|^zone \d/i;
 const GENERIC_ID_RE = /^(vector|path|rect|group|shape|ellipse|line|polygon)[\s_-]*\d*$/i;
 
 function cleanLabel(id: string): string {
@@ -211,39 +211,32 @@ export async function loadSvgOverlay(
     let under = '';
     let mid = '';
     let top = '';
-    const steps = 5;
     let blockIdx = 0;   // each block gets a distinct bright colour
     let roadIdx = 0;
 
+    // PERFORMANCE: no per-shape blur, no stacked drop-shadows, and no infinite
+    // animations. Those re-rasterise every frame and made 4-5 selections lag /
+    // glitch. Each shape now uses at most ONE cheap static drop-shadow so many
+    // can be highlighted smoothly.
     for (const id of selected) {
       const it = byId.get(id);
       if (!it) continue;
       const d = it.d;
       if (it.kind === 'road') {
-        // Bright moving road: coloured glow + white core + fast animated flow.
         const rc = ROAD_PALETTE[roadIdx++ % ROAD_PALETTE.length];
-        maskCuts += `<path d="${d}" fill="none" stroke="black" stroke-width="${46 * s}" stroke-linecap="round" stroke-linejoin="round"/>`;
-        under += `<path d="${d}" fill="none" stroke="rgba(0,24,48,.55)" stroke-width="${16 * s}" stroke-linecap="round" stroke-linejoin="round" transform="translate(0,${5 * s})" style="filter:blur(${6 * s}px)"/>`;
-        mid += `<path d="${d}" fill="none" stroke="${rgba(rc, .8)}" stroke-width="${12 * s}" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 ${9 * s}px ${rgba(rc, .95)}) drop-shadow(0 0 ${20 * s}px ${rgba(rc, .6)})"/>`;
-        mid += `<path d="${d}" fill="none" stroke="rgba(240,255,255,.98)" stroke-width="${3.4 * s}" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 ${4 * s}px rgba(255,255,255,.95)) drop-shadow(0 0 ${14 * s}px ${rgba(rc, .95)})"/>`;
-        mid += `<path d="${d}" fill="none" stroke="#FFFFFF" stroke-width="${4.6 * s}" stroke-linecap="round" stroke-dasharray="${3 * s} ${26 * s}" style="pointer-events:none;filter:drop-shadow(0 0 ${5 * s}px rgba(255,255,255,1)) drop-shadow(0 0 ${12 * s}px ${rgba(rc, 1)});animation:pmflowdash .85s linear infinite"/>`;
+        mid += `<path d="${d}" fill="none" stroke="${rgba(rc, .85)}" stroke-width="${11 * s}" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 ${7 * s}px ${rgba(rc, .9)})"/>`;
+        mid += `<path d="${d}" fill="none" stroke="rgba(240,255,255,.98)" stroke-width="${3.2 * s}" stroke-linecap="round" stroke-linejoin="round"/>`;
       } else {
         const col = BLOCK_PALETTE[blockIdx++ % BLOCK_PALETTE.length];
         const topFace = lighten(col, 0.30);
         const topEdge = lighten(col, 0.72);
-        maskCuts += `<path d="${d}" fill="black"/>`;
-        maskCuts += `<path d="${d}" fill="black" transform="translate(0,${-lift})"/>`;
-        under += `<path d="${d}" fill="rgba(10,6,20,.5)" transform="translate(0,${lift + 5 * s})" style="filter:blur(${9 * s}px)"/>`;
-        for (let k = 0; k <= steps; k++) {
-          const t = k / steps;
-          mid += `<path d="${d}" fill="${darken(col, 0.60 - 0.44 * t)}" transform="translate(0,${(-lift * t).toFixed(1)})"/>`;
+        // 3 cheap extrusion steps (was 6) — no blurred ground shadow.
+        for (let k = 0; k <= 3; k++) {
+          const t = k / 3;
+          mid += `<path d="${d}" fill="${darken(col, 0.58 - 0.42 * t)}" transform="translate(0,${(-lift * t).toFixed(1)})"/>`;
         }
-        // glossy top face in the block's own colour
-        top += `<path d="${d}" fill="${topFace}" transform="translate(0,${-lift})" style="filter:drop-shadow(0 ${3 * s}px ${3 * s}px rgba(10,6,20,.4))"/>`;
-        top += `<path d="${d}" fill="${lighten(col, 0.55)}" transform="translate(0,${-lift})" style="mix-blend-mode:screen;opacity:.45"/>`;
-        // GLOWING, pulsing top boundary in a bright rim of the block colour
-        top += `<path d="${d}" fill="none" stroke="${topEdge}" stroke-width="${2.6 * s}" stroke-linejoin="round" vector-effect="non-scaling-stroke" transform="translate(0,${-lift})" style="filter:drop-shadow(0 0 ${5 * s}px ${rgba(col, .95)}) drop-shadow(0 0 ${13 * s}px ${rgba(col, .65)});animation:pmTopGlow 1.9s ease-in-out infinite"/>`;
-        top += `<path d="${d}" fill="none" stroke="rgba(255,255,255,.6)" stroke-width="${1 * s}" stroke-linejoin="round" transform="translate(0,${-lift - 1})"/>`;
+        top += `<path d="${d}" fill="${topFace}" transform="translate(0,${-lift})" style="filter:drop-shadow(0 ${3 * s}px ${3 * s}px rgba(10,6,20,.35))"/>`;
+        top += `<path d="${d}" fill="none" stroke="${topEdge}" stroke-width="${2.4 * s}" stroke-linejoin="round" vector-effect="non-scaling-stroke" transform="translate(0,${-lift})" style="filter:drop-shadow(0 0 ${5 * s}px ${rgba(col, .85)})"/>`;
       }
     }
 

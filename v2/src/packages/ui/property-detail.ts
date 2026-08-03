@@ -8,7 +8,9 @@
    ═══════════════════════════════════════════════════════════════ */
 import { formatINR, streetViewUrl } from './utils';
 import { adapter } from '../data/adapter';
-import type { Property, ClientLink } from '../data/types';
+import type { Property, ClientLink, PropertyType } from '../data/types';
+
+const PROPERTY_TYPES: PropertyType[] = ['Residential Plot', 'Flat', 'Floor', 'Kothi', 'Villa', 'Commercial'];
 
 const esc = (s: unknown) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
 
@@ -283,6 +285,7 @@ export function openPropertyEditModal(
   host.innerHTML = `<form style="width:min(640px,96vw);max-height:92vh;overflow:auto;background:#fffaf0;border:1px solid #ddd2f5;border-radius:24px;box-shadow:0 40px 90px -36px rgba(20,14,2,.85)">
     <div style="display:flex;align-items:center;gap:13px;padding:20px 24px;border-bottom:1px solid #e4dbf7"><span style="width:44px;height:44px;border-radius:13px;background:#ffc93c;display:grid;place-items:center"><i class="ph-fill ph-pencil-simple" style="font-size:22px"></i></span><div style="flex:1"><div style="font-family:'Newsreader',serif;font-size:24px">Edit property</div><div style="font-size:13px;color:#8d8271">Private details — never shown to a client.</div></div><button type="button" data-x="close" aria-label="Close" style="width:40px;height:40px;border-radius:12px;background:#f0eaff;cursor:pointer"><i class="ph-bold ph-x"></i></button></div>
     <div style="padding:22px 24px;display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <label style="display:block;font-size:12.5px;font-weight:800;color:#6b6156">Type<select name="type" style="display:block;width:100%;height:48px;margin-top:6px;border:1px solid #dcd0f3;border-radius:12px;background:#faf7ff;padding:0 12px;font-size:15px">${PROPERTY_TYPES.map((t) => `<option ${t === property.type ? 'selected' : ''}>${esc(t)}</option>`).join('')}</select></label>
       ${field('area', 'Plot name', property.area || '')}
       ${field('city', 'City', property.city || '')}
       ${field('loc', 'Sector / locality', property.loc || '')}
@@ -293,6 +296,7 @@ export function openPropertyEditModal(
       ${field('approvals', 'Approvals (comma-separated)', (property.approvals ?? []).join(', '))}
       ${field('ownerName', 'Owner name', property.owner?.name || '')}
       ${field('ownerPhone', 'Owner phone', property.owner?.phone || '')}
+      <label style="grid-column:1/-1;display:flex;align-items:center;gap:11px;background:#faf7ff;border:1px solid #e4dbf7;border-radius:12px;padding:13px 15px;font-size:14px;font-weight:700;color:#241f1c;${property.mapPlacement ? '' : 'opacity:.55'}"><input name="clearPin" type="checkbox" ${property.mapPlacement ? '' : 'disabled'} style="width:18px;height:18px">Remove this plot's map pin ${property.mapPlacement ? '(currently pinned)' : '(not pinned — set it in Map Studio)'}</label>
     </div>
     <div style="display:flex;gap:11px;padding:0 24px 22px"><div style="flex:1"></div><button type="button" data-x="close" style="height:48px;padding:0 20px;border-radius:13px;background:#f0eaff;font-weight:800;cursor:pointer">Cancel</button><button type="submit" style="height:48px;padding:0 24px;border-radius:13px;background:#241d0c;color:#ffd75e;font-weight:800;cursor:pointer">Save changes</button></div>
   </form>`;
@@ -306,8 +310,11 @@ export function openPropertyEditModal(
     const val = (n: string) => (form.querySelector(`[name="${n}"]`) as HTMLInputElement | null)?.value ?? '';
     const approvals = val('approvals').split(',').map((s) => s.trim()).filter(Boolean);
     const ownerName = val('ownerName').trim();
+    const clearPin = (form.querySelector('[name="clearPin"]') as HTMLInputElement | null)?.checked;
+    const typeVal = (form.querySelector('[name="type"]') as HTMLSelectElement | null)?.value as PropertyType | undefined;
     const updated: Property = {
       ...property,
+      type: typeVal || property.type,
       area: val('area').trim() || property.area,
       city: val('city').trim() || property.city,
       loc: val('loc').trim() || property.loc,
@@ -317,6 +324,7 @@ export function openPropertyEditModal(
       position: val('position').trim() || property.position,
       price: Number(val('price')) || property.price,
       approvals,
+      ...(clearPin ? { mapPlacement: undefined } : {}),
       ...(ownerName ? { owner: { name: ownerName, phone: val('ownerPhone').trim(), priceConfirmedAt: property.owner?.priceConfirmedAt } } : {}),
     };
     dispose();
