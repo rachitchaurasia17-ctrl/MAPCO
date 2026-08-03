@@ -89,6 +89,40 @@ export const DEMAND_SIGNALS: DemandSignal[] = [
   { city:'Other areas', opens:6, color:'#c9b48a' },
 ];
 
+/* ── local persistence ────────────────────────────────────────
+   MAPCO V2 runs as a multi-page app, so each route is a fresh page
+   load and the in-memory fixtures would reset on every navigation —
+   making the app feel disconnected. To make mock mode feel real and
+   interlinked on a device, the mutable collections are mirrored to
+   localStorage: anything added/edited/sold on one page shows up on
+   every other page (Client Presentation, Customers, Links…). True
+   cross-device persistence still requires Supabase mode.
+   ─────────────────────────────────────────────────────────────── */
+const MOCK_LS_KEY = 'mapco.mock.v2';
+
+export function persistMock(): void {
+  try {
+    localStorage.setItem(MOCK_LS_KEY, JSON.stringify({
+      properties: PROPERTIES, clients: CLIENTS, deals: DEALS, links: CLIENT_LINKS,
+    }));
+  } catch { /* storage unavailable (private mode / SSR) — stay in-memory */ }
+}
+
+function hydrateMock(): void {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    const raw = localStorage.getItem(MOCK_LS_KEY);
+    if (!raw) return;
+    const d = JSON.parse(raw) as Partial<{ properties: Property[]; clients: Client[]; deals: Deal[]; links: ClientLink[] }>;
+    if (Array.isArray(d.properties)) PROPERTIES.splice(0, PROPERTIES.length, ...d.properties);
+    if (Array.isArray(d.clients)) CLIENTS.splice(0, CLIENTS.length, ...d.clients);
+    if (Array.isArray(d.deals)) DEALS.splice(0, DEALS.length, ...d.deals);
+    if (Array.isArray(d.links)) CLIENT_LINKS.splice(0, CLIENT_LINKS.length, ...d.links);
+  } catch { /* corrupt store — fall back to seeds */ }
+}
+
+hydrateMock();
+
 export class MockDataAdapter implements DataAdapter {
   async getProperties(): Promise<Property[]> { return PROPERTIES; }
   async getClients(): Promise<Client[]> { return CLIENTS; }

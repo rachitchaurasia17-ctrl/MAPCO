@@ -11,7 +11,7 @@ import type {
   Property, Client, Deal, ClientLink, MapData, DemandSignal,
 } from './types';
 import {
-  PROPERTIES, CLIENTS, DEALS, CLIENT_LINKS, DEMAND_SIGNALS,
+  PROPERTIES, CLIENTS, DEALS, CLIENT_LINKS, DEMAND_SIGNALS, persistMock,
 } from './mock-adapter';
 import {
   ok, err, activeScenario,
@@ -131,6 +131,7 @@ class MockPropertyRepository implements PropertyRepository {
     const row = { ...property, id };
     const i = PROPERTIES.findIndex((p) => p.id === id);
     if (i >= 0) PROPERTIES[i] = row; else PROPERTIES.unshift(row);
+    persistMock();
     return ok(row);
   }
 }
@@ -153,6 +154,7 @@ class MockCustomerRepository implements CustomerRepository {
     const row = { ...client, id };
     const i = CLIENTS.findIndex((c) => c.id === id);
     if (i >= 0) CLIENTS[i] = row; else CLIENTS.unshift(row);
+    persistMock();
     return ok(row);
   }
 }
@@ -220,6 +222,7 @@ class MockDealRepository implements DealRepository {
     prop.published = false;
     DEALS.unshift(deal);
     buyer.purchased = [...(buyer.purchased ?? []), prop.id];
+    persistMock();
 
     return ok(deal);
   }
@@ -481,6 +484,7 @@ class MockClientLinkRepository implements ClientLinkRepository {
       price: input.priceVisibility, audio: input.audioBlob ? 'done' : 'none', audioSecs: input.audioSeconds ?? 0,
       status: 'active', events: { opens: 0, played: 0, called: 0, wa: 0, visit: 0 }, lastOpen: 'not yet',
     } as ClientLink);
+    persistMock();
     return ok({ id, token, url: `/client/?token=${token}`, expiresAt: '' });
   }
 
@@ -488,6 +492,7 @@ class MockClientLinkRepository implements ClientLinkRepository {
     const a = aborted<void>(opts); if (a) return a;
     const link = CLIENT_LINKS.find((l) => l.id === id);
     if (link) link.status = 'revoked';
+    persistMock();
     return ok(undefined);
   }
 }

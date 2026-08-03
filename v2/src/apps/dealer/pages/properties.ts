@@ -122,6 +122,7 @@ export async function renderProperties(el: HTMLElement): Promise<void> {
       }),
       onPublishToggle: (p) => {
         properties = properties.map((x) => (x.id === p.id ? { ...x, published: !x.published } : x));
+        const up = properties.find((x) => x.id === p.id); if (up) void adapter.properties.save(up);
         render();
       },
       onDelete: (p) => {
@@ -166,18 +167,16 @@ export async function renderProperties(el: HTMLElement): Promise<void> {
       );
       flow.mount(document.body);
     }
-    if (action === "publish" && id)
+    if (action === "publish" && id) {
       properties = properties.map((property) =>
-        property.id === id
-          ? { ...property, published: !property.published }
-          : property,
-      );
-    if (action === "sold" && id)
+        property.id === id ? { ...property, published: !property.published } : property);
+      const up = properties.find((p) => p.id === id); if (up) void adapter.properties.save(up);
+    }
+    if (action === "sold" && id) {
       properties = properties.map((property) =>
-        property.id === id
-          ? { ...property, sold: true, published: false }
-          : property,
-      );
+        property.id === id ? { ...property, sold: true, published: false } : property);
+      const up = properties.find((p) => p.id === id); if (up) void adapter.properties.save(up);
+    }
     if (action === "remove" && id) {
       properties = properties.filter((property) => property.id !== id);
     }
