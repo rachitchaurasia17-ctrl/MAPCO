@@ -1,7 +1,8 @@
 import { adapter } from '../../../packages/data/adapter';
-import { getInitials } from '../../../packages/auth/auth';
+import { getInitials, getProfile } from '../../../packages/auth/auth';
 import type { Client, ClientLink, Property } from '../../../packages/data/types';
 import { GenerateLinkFlow } from '../../../packages/ui/shared-modals';
+import { renderClientLinkView, previewPayloadFromLink } from '../../../packages/ui/client-link-view';
 
 const esc = (value: string) => value.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!);
 const titleCase = (value: string) => value.charAt(0).toUpperCase() + value.slice(1);
@@ -49,7 +50,30 @@ export async function renderLinks(el: HTMLElement): Promise<void> {
     </article>`;
   };
 
-  const previewMarkup = (link: ClientLink) => `<div style="position:fixed;inset:0;z-index:88;display:grid;place-items:center;padding:24px;background:rgba(26,18,12,.52)"><section role="dialog" aria-modal="true" style="width:min(430px,94vw);border-radius:28px;background:#fffaf0;padding:26px;box-shadow:0 40px 80px -30px rgba(0,0,0,.8)"><button data-act="close-preview" style="float:right;width:38px;height:38px;border-radius:11px;background:#f3eeff"><i class="ph-bold ph-x"></i></button><div style="font-family:'Newsreader',serif;font-size:28px;font-weight:500">${esc(link.clientName)}'s page</div><div style="margin-top:8px;color:#8d8271">${link.props.length} private plots · ${link.events.opens} opens</div><button data-act="close-preview" style="width:100%;height:50px;margin-top:24px;border-radius:13px;background:#6b3fd4;color:#fff;font-weight:800">Close preview</button></section></div>`;
+  // The preview is the REAL client page (same shared renderer) in a phone frame,
+  // so what the dealer sees is exactly what the client gets.
+  const previewMarkup = (link: ClientLink) => {
+    const client = clients.find((c) => c.id === link.clientId);
+    const phone = (client?.phone || '').replace(/[^0-9]/g, '');
+    const waNum = phone.length >= 10 ? (phone.length === 10 ? '91' + phone : phone) : '';
+    const plotCount = link.props.length || link.propertyCount || 0;
+    return `<div id="pm-preview-backdrop" style="position:fixed;inset:0;z-index:88;display:grid;place-items:center;padding:24px;background:rgba(26,18,12,.55)"><section role="dialog" aria-modal="true" style="width:min(420px,95vw);border-radius:28px;background:#fffaf0;box-shadow:0 40px 80px -30px rgba(0,0,0,.8);display:flex;flex-direction:column;max-height:92vh;overflow:hidden">
+      <div style="display:flex;align-items:center;gap:12px;padding:18px 20px;border-bottom:1px solid #f0dfb8"><span style="width:42px;height:42px;border-radius:12px;background:#efe8fb;color:#6b3fd4;display:grid;place-items:center;font-weight:800;flex:none">${getInitials(link.clientName)}</span><div style="flex:1;min-width:0"><div style="font-size:17px;font-weight:800;color:#241f1c">${esc(link.clientName)}'s page</div><div style="font-size:12.5px;color:#8d8271">${plotCount} private ${plotCount === 1 ? 'plot' : 'plots'} · ${link.events.opens} opens</div></div><button data-act="close-preview" aria-label="Close preview" style="width:38px;height:38px;border-radius:11px;background:#f3eeff;color:#6b6156;flex:none"><i class="ph-bold ph-x"></i></button></div>
+      <div style="padding:18px;overflow-y:auto"><div style="height:560px;border-radius:26px;overflow:hidden;border:8px solid #241d0c;background:#0f0a18;box-shadow:0 24px 50px -24px rgba(0,0,0,.6)"><div id="pm-link-preview-screen" style="height:100%;overflow-y:auto"></div></div></div>
+      <div style="display:flex;gap:10px;padding:14px 18px;border-top:1px solid #f0dfb8">
+        <a href="https://wa.me/${waNum}?text=${encodeURIComponent('Hi ' + (client?.name || '') + ', here are the plots I shortlisted for you on MAPCO.')}" target="_blank" rel="noopener" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;height:48px;border-radius:13px;background:#12a150;color:#fff;font-weight:800;text-decoration:none"><i class="ph-fill ph-whatsapp-logo" style="font-size:18px"></i>WhatsApp ${esc((client?.name || 'customer').split(' ')[0] || 'customer')}</a>
+        <button data-act="close-preview" style="height:48px;padding:0 20px;border-radius:13px;background:#f0eaff;color:#5b32c4;font-weight:800">Close</button>
+      </div>
+    </section></div>`;
+  };
+
+  const mountPreview = (link: ClientLink) => {
+    const screen = el.querySelector<HTMLElement>('#pm-link-preview-screen');
+    if (!screen) return;
+    const dealerName = getProfile().dealerName || getProfile().name || 'Your dealer';
+    const payload = previewPayloadFromLink(link, properties, dealerName);
+    renderClientLinkView(screen, payload, { embedded: true });
+  };
 
   const render = () => {
     const live = links.filter((link) => link.status === 'active');
@@ -57,9 +81,11 @@ export async function renderLinks(el: HTMLElement): Promise<void> {
     el.innerHTML = `<div style="max-width:1080px;margin:0 auto;padding:34px 40px 70px"><div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;animation:omRise .5s cubic-bezier(.2,.8,.2,1) both"><div><h1 style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:34px;letter-spacing:-.015em;color:#241f1c">Client Links</h1><p style="margin:8px 0 0;font-size:17px;color:#6b6156">Private pages you sent after a meeting — one link can hold up to 4 plots.</p></div><button data-act="open-build" style="display:flex;align-items:center;gap:9px;padding:16px 24px;border-radius:14px;background:#ffc93c;color:#1f1a12;font-size:16.5px;font-weight:800;box-shadow:0 12px 26px -14px rgba(244,174,20,.85)"><i class="ph-fill ph-paper-plane-tilt" style="font-size:19px"></i>Send a new link</button></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:22px"><div style="background:#ffc93c;background-image:linear-gradient(135deg,#ffdc7a,#f4ae14);border-radius:20px;padding:24px 26px"><div style="font-size:14px;color:#8a6a14;font-weight:800">Live right now</div><div style="font-family:'Newsreader',serif;font-weight:500;font-size:44px;line-height:1;color:#1f1a12;margin-top:8px">${live.length} live ${live.length === 1 ? 'link' : 'links'}</div></div><div style="background:#efe8fb;border:1.5px solid #ddd0f5;border-radius:20px;padding:24px 26px"><div style="font-size:14px;color:#6b6156;font-weight:800">Times your links were opened</div><div style="font-family:'Newsreader',serif;font-weight:500;font-size:44px;line-height:1;color:#5b32c4;margin-top:8px">${links.reduce((sum, link) => sum + link.events.opens, 0)}</div></div></div>
       ${links.length ? `<div style="display:flex;flex-direction:column;gap:14px;margin-top:22px">${links.map(linkCard).join('')}</div>` : '<div style="padding:40px;text-align:center;font-size:16px;color:#8d8271;background:#faf7ff;border:1.5px dashed #e6cf9a;border-radius:20px;margin-top:20px">No links sent yet. Tap “Send a new link” after your next meeting.</div>'}</div>${preview ? previewMarkup(preview) : ''}`;
+    if (preview) mountPreview(preview);
   };
 
   el.addEventListener('click', (event) => {
+    if ((event.target as HTMLElement).id === 'pm-preview-backdrop') { previewId = null; render(); return; }
     const target = (event.target as HTMLElement).closest<HTMLElement>('[data-act]');
     if (!target) return;
     const action = target.dataset.act;
