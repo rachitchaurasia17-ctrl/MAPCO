@@ -417,6 +417,9 @@ function buildPayload(link: ClientLink): ClientSafePayload {
     .map((p) => toClientSafeProperty(p, { price: priceVisible, location: locationVisible }));
   return {
     dealerDisplayName: 'Chaurasia Properties', // display name only — never a seller identity record
+    dealerPhone: '+919876500000',              // the DEALER's own contact (not the seller's)
+    dealerWhatsapp: '+919876500000',
+    buyerName: (link.clientName || '').split(' ')[0] || undefined,
     properties: props,
     priceVisible,
     locationVisible,

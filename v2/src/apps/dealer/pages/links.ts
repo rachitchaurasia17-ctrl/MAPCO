@@ -51,18 +51,16 @@ export async function renderLinks(el: HTMLElement): Promise<void> {
   };
 
   // The preview is the REAL client page (same shared renderer) in a phone frame,
-  // so what the dealer sees is exactly what the client gets.
-  const previewMarkup = (link: ClientLink) => {
-    const client = clients.find((c) => c.id === link.clientId);
-    const phone = (client?.phone || '').replace(/[^0-9]/g, '');
-    const waNum = phone.length >= 10 ? (phone.length === 10 ? '91' + phone : phone) : '';
-    const plotCount = link.props.length || link.propertyCount || 0;
-    return `<div id="pm-preview-backdrop" style="position:fixed;inset:0;z-index:88;display:grid;place-items:center;padding:24px;background:rgba(26,18,12,.55)"><section role="dialog" aria-modal="true" style="width:min(420px,95vw);border-radius:28px;background:#fffaf0;box-shadow:0 40px 80px -30px rgba(0,0,0,.8);display:flex;flex-direction:column;max-height:92vh;overflow:hidden">
-      <div style="display:flex;align-items:center;gap:12px;padding:18px 20px;border-bottom:1px solid #f0dfb8"><span style="width:42px;height:42px;border-radius:12px;background:#efe8fb;color:#6b3fd4;display:grid;place-items:center;font-weight:800;flex:none">${getInitials(link.clientName)}</span><div style="flex:1;min-width:0"><div style="font-size:17px;font-weight:800;color:#241f1c">${esc(link.clientName)}'s page</div><div style="font-size:12.5px;color:#8d8271">${plotCount} private ${plotCount === 1 ? 'plot' : 'plots'} · ${link.events.opens} opens</div></div><button data-act="close-preview" aria-label="Close preview" style="width:38px;height:38px;border-radius:11px;background:#f3eeff;color:#6b6156;flex:none"><i class="ph-bold ph-x"></i></button></div>
-      <div style="padding:18px;overflow-y:auto"><div style="height:560px;border-radius:26px;overflow:hidden;border:8px solid #241d0c;background:#0f0a18;box-shadow:0 24px 50px -24px rgba(0,0,0,.6)"><div id="pm-link-preview-screen" style="height:100%;overflow-y:auto"></div></div></div>
-      <div style="display:flex;gap:10px;padding:14px 18px;border-top:1px solid #f0dfb8">
-        <a href="https://wa.me/${waNum}?text=${encodeURIComponent('Hi ' + (client?.name || '') + ', here are the plots I shortlisted for you on MAPCO.')}" target="_blank" rel="noopener" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;height:48px;border-radius:13px;background:#12a150;color:#fff;font-weight:800;text-decoration:none"><i class="ph-fill ph-whatsapp-logo" style="font-size:18px"></i>WhatsApp ${esc((client?.name || 'customer').split(' ')[0] || 'customer')}</a>
-        <button data-act="close-preview" style="height:48px;padding:0 20px;border-radius:13px;background:#f0eaff;color:#5b32c4;font-weight:800">Close</button>
+  // beside the "what your client sees" explainer — matches the approved design.
+  const previewMarkup = (_link: ClientLink) => {
+    return `<div id="pm-preview-backdrop" style="position:fixed;inset:0;z-index:88;display:grid;place-items:center;padding:24px;background:rgba(15,10,24,.72);backdrop-filter:blur(4px)"><section role="dialog" aria-modal="true" style="width:min(880px,96vw);max-height:94vh;border-radius:28px;background:#140d20;box-shadow:0 40px 90px -30px rgba(0,0,0,.85);display:flex;gap:8px;overflow:hidden;padding:20px">
+      <div style="flex:none;width:360px;max-width:52vw"><div style="height:600px;max-height:82vh;border-radius:30px;overflow:hidden;border:9px solid #241d0c;background:#0f0a18;box-shadow:0 24px 50px -24px rgba(0,0,0,.7)"><div id="pm-link-preview-screen" style="height:100%;overflow-y:auto"></div></div></div>
+      <div style="flex:1;min-width:0;padding:14px 12px 8px;display:flex;flex-direction:column;color:#fff8e6">
+        <div style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#c9b6ef">What your client sees</div>
+        <div style="font-family:'Newsreader',serif;font-weight:500;font-size:30px;margin-top:6px;color:#fffdf7">On their phone</div>
+        <p style="font-size:15px;line-height:1.6;color:#c9b6ef;margin:14px 0 0">Photos first, your voice next, then one big button to call you. Nothing about the seller, your commission or your notes.</p>
+        <div style="flex:1"></div>
+        <button data-act="close-preview" style="align-self:flex-start;display:flex;align-items:center;gap:9px;height:48px;padding:0 20px;border-radius:14px;background:rgba(255,248,230,.1);color:#fff8e6;font-size:15px;font-weight:800;cursor:pointer"><i class="ph-bold ph-x"></i>Close preview</button>
       </div>
     </section></div>`;
   };
@@ -70,8 +68,12 @@ export async function renderLinks(el: HTMLElement): Promise<void> {
   const mountPreview = (link: ClientLink) => {
     const screen = el.querySelector<HTMLElement>('#pm-link-preview-screen');
     if (!screen) return;
-    const dealerName = getProfile().dealerName || getProfile().name || 'Your dealer';
-    const payload = previewPayloadFromLink(link, properties, dealerName);
+    const profile = getProfile();
+    const dealerName = profile.dealerName || profile.name || 'Your dealer';
+    const payload = previewPayloadFromLink(link, properties, dealerName, {
+      phone: '+919876500000', whatsapp: '+919876500000',
+      buyerName: (link.clientName || '').split(' ')[0],
+    });
     renderClientLinkView(screen, payload, { embedded: true });
   };
 

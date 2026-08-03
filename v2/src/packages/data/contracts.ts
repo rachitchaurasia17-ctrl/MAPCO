@@ -369,6 +369,12 @@ export interface ClientSafeProperty {
 
 export interface ClientSafePayload {
   readonly dealerDisplayName: string;      // display name only, never phone/identity record
+  /** The DEALER's own public contact so the buyer can reach them (Call/WhatsApp).
+   *  This is the dealer's contact, never the seller's — the seller stays private. */
+  readonly dealerPhone?: string;
+  readonly dealerWhatsapp?: string;
+  /** The first name the link was personalised for (footer: "for <name>"). */
+  readonly buyerName?: string;
   readonly properties: readonly ClientSafeProperty[];
   readonly voiceNote?: { readonly url: string; readonly seconds: number };
   readonly priceVisible: boolean;

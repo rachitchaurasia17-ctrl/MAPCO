@@ -437,13 +437,17 @@ class SupaClientLinks implements ClientLinkRepository {
       const vis = (snap.visibility as { price?: string; location?: string }) ?? {};
       const priceVisible = vis.price === 'shown';
       const locationVisible = vis.location === 'area' || vis.location === 'exact';
-      const branding = (snap.branding as { brandName?: string }) ?? {};
-      const audio = snap.audio as { available?: boolean; seconds?: number } | null;
+      const branding = (snap.branding as { brandName?: string; phone?: string; whatsapp?: string }) ?? {};
+      const customer = (snap.customer as { name?: string }) ?? {};
+      const audio = snap.audio as { available?: boolean; seconds?: number; url?: string } | null;
       const rawProps = (snap.properties as Record<string, unknown>[]) ?? [];
       const payload: ClientSafePayload = {
         dealerDisplayName: String(branding.brandName ?? 'Your dealer'),
         priceVisible, locationVisible,
-        ...(audio?.available ? { voiceNote: { url: '', seconds: Number(audio.seconds ?? 0) } } : {}),
+        ...(branding.phone ? { dealerPhone: String(branding.phone) } : {}),
+        ...(branding.whatsapp ? { dealerWhatsapp: String(branding.whatsapp) } : {}),
+        ...(customer.name ? { buyerName: String(customer.name) } : {}),
+        ...(audio?.available ? { voiceNote: { url: String(audio.url ?? ''), seconds: Number(audio.seconds ?? 0) } } : {}),
         properties: rawProps.map((p) => ({
           id: String(p.id ?? ''),
           area: String(p.area ?? p.title ?? ''),
