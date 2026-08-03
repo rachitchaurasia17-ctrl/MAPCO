@@ -247,12 +247,10 @@ export async function loadSvgOverlay(
       }
     }
 
-    dimG.innerHTML = selected.size
-      ? `<mask id="pmdim" maskUnits="userSpaceOnUse" x="-40" y="-40" width="${viewBox.w + 80}" height="${viewBox.h + 80}">
-           <rect x="-40" y="-40" width="${viewBox.w + 80}" height="${viewBox.h + 80}" fill="white"/>${maskCuts}
-         </mask>
-         <rect x="-40" y="-40" width="${viewBox.w + 80}" height="${viewBox.h + 80}" fill="#241C10" opacity="0.46" mask="url(#pmdim)"/>`
-      : '';
+    // No dimming: the base map stays at full brightness. Highlighted roads/blocks
+    // simply glow and extrude on top (maskCuts kept only so the code path is clear).
+    void maskCuts;
+    dimG.innerHTML = '';
     underG.innerHTML = under;
     midG.innerHTML = mid;
     topG.innerHTML = top;
@@ -260,36 +258,36 @@ export async function loadSvgOverlay(
 
   function renderHits(): void {
     if (!interactive) { hitsG.innerHTML = ''; return; }
-    // Both block and road hit shapes are laid out; the WINNER of a tap is chosen
-    // geometrically in onHitClick (not by paint order), so a click inside a block
-    // selects that block and a click on a road *in the gaps between blocks* selects
-    // the road. Roads are painted last only so their thin strokes stay reachable;
-    // block interiors still win because we prefer a block whenever the pointer is
-    // actually inside one (fixes "roads highlight but the boxes get ignored").
+    // Roads are thin, blocks are large areas. A generous, transparent road
+    // stroke sits ON TOP so roads are easy to hit; blocks fill everything else.
+    // The winner is still confirmed geometrically in onHitClick (ROAD-priority):
+    // if the pointer is on/near a road stroke the road wins, otherwise the block.
     let blockHits = '';
     let roadHits = '';
     for (const it of items) {
       if (it.kind === 'road') {
-        roadHits += `<path d="${it.d}" fill="none" stroke="rgba(0,0,0,0)" stroke-width="${22 * s}" stroke-linecap="round" stroke-linejoin="round" style="cursor:pointer;pointer-events:stroke" data-hit="${it.id}"/>`;
+        roadHits += `<path d="${it.d}" fill="none" stroke="rgba(0,0,0,0)" stroke-width="${36 * s}" stroke-linecap="round" stroke-linejoin="round" style="cursor:pointer;pointer-events:stroke" data-hit="${it.id}"/>`;
       } else {
         // shift the hit up by the lift so it covers the extruded top face
         blockHits += `<path d="${it.d}" fill="rgba(0,0,0,0)" transform="translate(0,${-lift})" style="cursor:pointer;pointer-events:fill" data-hit="${it.id}"/>`;
         blockHits += `<path d="${it.d}" fill="rgba(0,0,0,0)" style="cursor:pointer;pointer-events:fill" data-hit="${it.id}"/>`;
       }
     }
-    hitsG.innerHTML = roadHits + blockHits;
+    // Blocks first, roads LAST → road strokes paint on top and win the tap.
+    hitsG.innerHTML = blockHits + roadHits;
     hitsG.style.pointerEvents = 'auto';
   }
 
-  /** Resolve which shape a tap should select: prefer a BLOCK the pointer is
-   *  inside, otherwise fall back to a ROAD under the pointer. Purely geometric,
-   *  so it is independent of SVG paint order. */
+  /** Resolve which shape a tap selects. ROADS take priority: if the pointer is
+   *  on/near any road stroke, that road wins (roads are thin and hard to hit);
+   *  only when no road is under the pointer does the block win. Purely geometric,
+   *  independent of paint order. */
   const onHitClick = (ev: Event) => {
     const me = ev as MouseEvent;
     let blockId: string | null = null;
     let roadId: string | null = null;
     // elementsFromPoint returns every hit-testable element under the cursor,
-    // topmost first — including the transparent block-fills and road-strokes.
+    // including the transparent block-fills and (wide) road-strokes.
     const stack = typeof document.elementsFromPoint === 'function'
       ? document.elementsFromPoint(me.clientX, me.clientY)
       : [ev.target as Element];
@@ -299,10 +297,10 @@ export async function loadSvgOverlay(
       const hid = hit.getAttribute('data-hit');
       const it = hid ? byId.get(hid) : null;
       if (!it || !hid) continue;
-      if (it.kind === 'block') { blockId = hid; break; }  // block wins immediately
-      if (!roadId) roadId = hid;
+      if (it.kind === 'road') { roadId = hid; break; }  // road wins immediately
+      if (!blockId) blockId = hid;
     }
-    const pick = blockId ?? roadId;
+    const pick = roadId ?? blockId;
     if (!pick) return;
     ev.stopPropagation();
     handle.toggle(pick);

@@ -656,11 +656,11 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
     mapMsg(null);
     const result = await mounted.engine.setMap(activeMapId, { mode });
     if (result.ok) {
-      // Contain-fit: show the WHOLE map centred (one world transform, applied once
-      // by the engine). Re-fit on the next frame so the final stage size is used
-      // (fixes maps fitting against a too-small early stage → tiny/top-left).
-      mounted.engine.fit();
-      requestAnimationFrame(() => { mounted?.engine.fit(); logMapMetrics(); });
+      // Auto-zoom: cover-fit so the map fills the screen edge-to-edge with no
+      // gutters (overflow stays pannable). Re-cover on the next frame so the final
+      // stage size is used (fixes covering against a too-small early stage).
+      mounted.engine.cover();
+      requestAnimationFrame(() => { mounted?.engine.cover(); logMapMetrics(); });
       // Load the authored SVG overlay for the (Original) map; hidden on 3D.
       void ensureOverlay();
     } else if (result.reason !== 'superseded' && result.reason !== 'disposed') {
@@ -813,7 +813,7 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
         // The overlay selection is preserved; the SVG is simply hidden on 3D
         // and restored on Original.
         renderMapControls();
-        void mounted!.engine.setMode(mode).then(() => { mounted!.engine.fit(); applyHighlights(); });
+        void mounted!.engine.setMode(mode).then(() => { mounted!.engine.cover(); applyHighlights(); });
         break;
       }
       case 'rail-hide': railHidden = true; renderMapControls(); break;
