@@ -408,8 +408,11 @@ export class GenerateLinkFlow {
   private el: HTMLElement;
   private chosenClient = '';
   private chosenProps: string[] = [];
-  private priceVisible = false;
-  private locationVisibility: 'area' | 'exact' | 'hidden' = 'area';
+  // Per-property price the dealer types for THIS link (₹, as string while editing).
+  // Blank = "Price on call". Overrides the property's stored price.
+  private prices: Record<string, string> = {};
+  // ON → client sees the pin on its sector map + masterplan; OFF → area only.
+  private locationPrecise = false;
   private expiresInDays = 7;
   private showPreview = false;
   private busy = false;
@@ -482,16 +485,18 @@ export class GenerateLinkFlow {
     }
 
     const ready = Boolean(this.chosenClient && this.chosenProps.length) && !this.busy;
-    const visBtn = (active: boolean, act: string, val: string, label: string) => `<button data-act="${act}" data-val="${val}" style="flex:1;height:40px;border-radius:10px;font-size:13.5px;font-weight:800;${active ? 'background:#12704a;color:#fff' : 'background:#eef4f0;color:#4c6157'}">${label}</button>`;
-    const previewPanel = this.showPreview ? `<div style="margin-top:18px;border-radius:16px;background:#241904;background-image:linear-gradient(145deg,#3a2605,#171006);color:#fff8e6;padding:16px"><div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800"><i class="ph ph-eye"></i>What the client will see</div><div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">${this.chosenProps.map((id) => { const p = this.properties.find((x) => x.id === id); if (!p) return ''; return `<div style="display:flex;align-items:center;gap:11px;background:rgba(255,255,255,.06);border-radius:12px;padding:9px 11px"><span style="width:46px;height:46px;border-radius:9px;flex:none;background:${p.photos[0] ? `url('${esc(p.photos[0])}') center/cover` : '#5a4a2a'}"></span><span style="flex:1;min-width:0"><span style="display:block;font-weight:800;font-size:14px">${esc(this.locationVisibility === 'hidden' ? p.area.split(',')[0] || 'Property' : p.loc)}</span><span style="display:block;font-size:12px;color:#e2cf9f">${esc(p.size)} · ${esc(p.facing)} facing${this.priceVisible && p.price ? ' · ' + esc(formatINR(p.price)) : ''}</span></span></div>`; }).join('') || '<span style="color:#c9b477;font-size:13px">Pick plots to preview.</span>'}</div><div style="margin-top:10px;font-size:12px;color:#c9b477">Price ${this.priceVisible ? 'shown' : 'hidden'} · Location ${this.locationVisibility} · Expires in ${this.expiresInDays} days${this.audioBlob ? ' · Voice note attached' : ''}</div></div>` : '';
+    const priceLabelFor = (id: string) => { const v = Number(this.prices[id]); return v > 0 ? formatINR(v) : 'Price on call'; };
+    const previewPanel = this.showPreview ? `<div style="margin-top:18px;border-radius:16px;background:#241904;background-image:linear-gradient(145deg,#3a2605,#171006);color:#fff8e6;padding:16px"><div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800"><i class="ph ph-eye"></i>What the client will see</div><div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">${this.chosenProps.map((id) => { const p = this.properties.find((x) => x.id === id); if (!p) return ''; return `<div style="display:flex;align-items:center;gap:11px;background:rgba(255,255,255,.06);border-radius:12px;padding:9px 11px"><span style="width:46px;height:46px;border-radius:9px;flex:none;background:${p.photos[0] ? `url('${esc(p.photos[0])}') center/cover` : '#5a4a2a'}"></span><span style="flex:1;min-width:0"><span style="display:block;font-weight:800;font-size:14px">${esc(this.locationPrecise ? p.loc : (p.area.split(',')[0] || 'Property'))}</span><span style="display:block;font-size:12px;color:#e2cf9f">${esc(p.size)} · ${esc(p.facing)} facing · ${esc(priceLabelFor(id))}</span></span></div>`; }).join('') || '<span style="color:#c9b477;font-size:13px">Pick plots to preview.</span>'}</div><div style="margin-top:10px;font-size:12px;color:#c9b477">${this.locationPrecise ? 'Precise location — pin on sector map + masterplan' : 'Area only'} · Expires in ${this.expiresInDays} days${this.audioBlob ? ' · Voice note attached' : ''}</div></div>` : '';
 
     this.el.innerHTML = `<div style="position:fixed;inset:0;z-index:86;display:flex;justify-content:center;align-items:flex-start;padding:28px 24px;overflow-y:auto"><div data-act="close-build" style="position:fixed;inset:0;background:rgba(60,44,12,.58);animation:omVeil .2s ease both"></div><section role="dialog" aria-modal="true" aria-label="Send a private link" style="position:relative;width:100%;max-width:660px;border-radius:28px;background:#fffaf0;box-shadow:0 0 0 1px #cfe6d8,0 40px 80px -30px rgba(40,26,2,.8);overflow:hidden;animation:omSheet .34s cubic-bezier(.2,.8,.2,1) both">
       <div style="display:flex;align-items:center;gap:14px;padding:22px 26px;border-bottom:1px solid #ddeee4;background:#dcf3e5"><span style="width:46px;height:46px;border-radius:14px;background:#12704a;color:#fff;display:grid;place-items:center;flex:none"><i class="ph-fill ph-paper-plane-tilt" style="font-size:23px"></i></span><div style="flex:1;min-width:0"><div style="font-family:'Newsreader',serif;font-weight:500;font-size:26px;letter-spacing:-.02em;color:#241d0c">Send a private link</div><div style="font-size:14px;color:#12704a">One page, only for them. Voice note optional.</div></div><button data-act="close-build" style="width:38px;height:38px;border-radius:12px;background:#fffaf0;color:#6b6156;display:grid;place-items:center;flex:none"><i class="ph-bold ph-x" style="font-size:16px"></i></button></div>
       <div data-scroll style="padding:22px 26px;max-height:60vh;overflow-y:auto">
         <div style="font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">Who is it for</div><div style="display:flex;flex-direction:column;gap:9px;margin-top:11px">${this.clients.length ? this.clients.map((client) => { const on = this.chosenClient === client.id; return `<button data-act="choose-client" data-id="${esc(client.id)}" style="display:flex;align-items:center;gap:12px;width:100%;padding:11px 13px;border-radius:14px;transition:all .16s;${on ? 'background:#dcf3e5;border:1px solid #12a150' : 'background:#faf7ff;border:1px solid #e4dbf7'}"><span style="width:40px;height:40px;border-radius:12px;flex:none;display:grid;place-items:center;font-size:13px;font-weight:800;${on ? 'background:#12704a;color:#fff' : 'background:#e2f2e6;color:#12704a'}">${this.getInitials(client.name)}</span><span style="flex:1;min-width:0;text-align:left"><span style="display:block;font-size:15.5px;font-weight:800;color:#2f2a2d">${esc(client.name)}</span><span style="display:block;font-size:13px;color:#8d8271">${esc(client.want)} · ${esc(client.city)}</span></span><i class="${on ? 'ph-fill ph-check-circle' : 'ph ph-circle'}" style="font-size:20px;color:#12a150;flex:none"></i></button>`; }).join('') : '<div style="font-size:13.5px;color:#8d8271;padding:8px 2px">Add a customer first, then send them a link.</div>'}</div>
         <div style="margin-top:22px;display:flex;align-items:baseline;justify-content:space-between;gap:10px"><div style="font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">Which plots</div><div style="font-size:13.5px;font-weight:700;color:#12704a">${this.chosenProps.length ? `${this.chosenProps.length} ${this.chosenProps.length === 1 ? 'plot' : 'plots'} chosen` : 'Pick up to 4'}</div></div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:11px">${this.properties.slice(0, 12).map((property) => { const on = this.chosenProps.includes(property.id); return `<button data-act="choose-prop" data-id="${esc(property.id)}" style="position:relative;overflow:hidden;border-radius:14px;background:#faf7ff;border:2px solid ${on ? '#12a150' : '#e4dbf7'}"><span style="display:block;width:100%;height:70px;background:${property.photos[0] ? `url('${esc(property.photos[0])}') center/cover` : '#efe8fb'}"></span><span style="display:block;padding:9px 10px;font-size:12.5px;font-weight:700;text-align:left;line-height:1.3;color:#241f1c">${esc(property.loc)}</span>${on ? '<span style="position:absolute;top:7px;right:7px;width:24px;height:24px;border-radius:50%;background:#12a150;color:#fff;display:grid;place-items:center"><i class="ph-bold ph-check" style="font-size:13px"></i></span>' : ''}</button>`; }).join('')}</div>
-        <div style="margin-top:22px;font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">What they can see</div>
-        <div style="display:flex;gap:8px;margin-top:11px"><div style="flex:1"><div style="font-size:12px;color:#8d8271;margin-bottom:5px">Price</div><div style="display:flex;gap:6px">${visBtn(!this.priceVisible, 'price', 'hidden', 'Hidden')}${visBtn(this.priceVisible, 'price', 'shown', 'Shown')}</div></div><div style="flex:1"><div style="font-size:12px;color:#8d8271;margin-bottom:5px">Location</div><div style="display:flex;gap:6px">${visBtn(this.locationVisibility === 'area', 'loc', 'area', 'Area')}${visBtn(this.locationVisibility === 'exact', 'loc', 'exact', 'Exact')}${visBtn(this.locationVisibility === 'hidden', 'loc', 'hidden', 'Hidden')}</div></div></div>
+        <div style="margin-top:22px;font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">Price for this link <span style="font-weight:700;text-transform:none;letter-spacing:0;color:#a5946f">· blank = Price on call</span></div>
+        <div style="display:flex;flex-direction:column;gap:9px;margin-top:11px">${this.chosenProps.length ? this.chosenProps.map((id) => { const p = this.properties.find((x) => x.id === id); if (!p) return ''; return `<div style="display:flex;align-items:center;gap:11px"><span style="flex:1;min-width:0;font-size:14px;font-weight:700;color:#4c463d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.area)}</span><div style="display:flex;align-items:center;gap:6px;background:#faf7ff;border:1px solid #e4dbf7;border-radius:11px;padding:0 12px"><span style="color:#8d8271;font-weight:800">₹</span><input data-price-for="${esc(id)}" inputmode="numeric" value="${esc(this.prices[id] ?? '')}" placeholder="Price on call" style="width:150px;height:44px;border:none;outline:none;background:none;font-size:15px;font-weight:700;color:#241f1c"></div></div>`; }).join('') : '<div style="font-size:13.5px;color:#8d8271">Pick plots above to set their price.</div>'}</div>
+        <div style="margin-top:22px;font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">Location</div>
+        <button type="button" data-act="toggle-precise" style="display:flex;align-items:center;gap:13px;width:100%;margin-top:11px;padding:14px 16px;border-radius:14px;background:${this.locationPrecise ? '#dcf3e5' : '#faf7ff'};border:1px solid ${this.locationPrecise ? '#12a150' : '#e4dbf7'};text-align:left;cursor:pointer"><span style="width:46px;height:28px;border-radius:999px;flex:none;background:${this.locationPrecise ? '#12a150' : '#d8cff0'};position:relative;transition:background .15s"><span style="position:absolute;top:3px;left:${this.locationPrecise ? '21px' : '3px'};width:22px;height:22px;border-radius:50%;background:#fff;transition:left .15s"></span></span><span style="flex:1;min-width:0"><span style="display:block;font-size:15px;font-weight:800;color:#241f1c">Precise location ${this.locationPrecise ? 'ON' : 'OFF'}</span><span style="display:block;font-size:12.5px;color:#8d8271">${this.locationPrecise ? 'Client sees the exact plot pin on the sector map + masterplan.' : 'Client sees the overall area/sector only — no exact pin.'}</span></span></button>
         <div style="margin-top:14px;display:flex;align-items:center;gap:10px"><div style="font-size:13.5px;color:#4c463d;font-weight:700">Link expires in</div><select data-act="expiry" style="height:38px;border:1px solid #ddd0f5;border-radius:10px;padding:0 10px;font:inherit;font-size:14px;background:#fff">${[3, 7, 14, 30].map((d) => `<option value="${d}"${this.expiresInDays === d ? ' selected' : ''}>${d} days</option>`).join('')}</select></div>
         <div style="margin-top:22px;font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">Your voice <span style="font-weight:700;text-transform:none;letter-spacing:0;color:#a5946f">· optional</span></div>
         ${this.audioBlob
@@ -540,11 +545,15 @@ export class GenerateLinkFlow {
   private async send() {
     if (!this.chosenClient || !this.chosenProps.length || this.busy) return;
     this.busy = true; this.error = ''; this.render();
+    const customPrices: Record<string, number> = {};
+    for (const id of this.chosenProps) { const v = Number(this.prices[id]); if (v > 0) customPrices[id] = v; }
     const res = await adapter.clientLinks.create({
       clientId: this.chosenClient,
       propertyIds: [...this.chosenProps],
-      priceVisibility: this.priceVisible ? 'shown' : 'hidden',
-      locationVisibility: this.locationVisibility,
+      priceVisibility: Object.keys(customPrices).length ? 'shown' : 'hidden',
+      locationVisibility: this.locationPrecise ? 'exact' : 'area',
+      customPrices,
+      locationPrecise: this.locationPrecise,
       expiresInDays: this.expiresInDays,
       photoSelections: this.photoSelections(),
       audioBlob: this.audioBlob,
@@ -569,6 +578,12 @@ export class GenerateLinkFlow {
         this.expiresInDays = Number(t.value) || 7;
       }
     });
+    // Capture typed prices without a re-render so the field keeps focus.
+    this.el.addEventListener('input', (event) => {
+      const t = event.target as HTMLInputElement;
+      const forId = t.getAttribute?.('data-price-for');
+      if (forId) this.prices[forId] = t.value.replace(/[^0-9]/g, '');
+    });
     this.el.addEventListener('click', (event) => {
       const target = (event.target as HTMLElement).closest<HTMLElement>('[data-act]');
       if (!target) return;
@@ -581,8 +596,7 @@ export class GenerateLinkFlow {
           : this.chosenProps.length < 4 ? [...this.chosenProps, id] : this.chosenProps;
         this.render();
       }
-      else if (action === 'price') { this.priceVisible = target.dataset.val === 'shown'; this.render(); }
-      else if (action === 'loc') { this.locationVisibility = (target.dataset.val as 'area' | 'exact' | 'hidden') || 'area'; this.render(); }
+      else if (action === 'toggle-precise') { this.locationPrecise = !this.locationPrecise; this.render(); }
       else if (action === 'toggle-preview') { this.showPreview = !this.showPreview; this.render(); }
       else if (action === 'rec-toggle') { void this.toggleRecord(); }
       else if (action === 'rec-remove') { this.audioBlob = null; if (this.audioUrl) URL.revokeObjectURL(this.audioUrl); this.audioUrl = ''; this.audioSeconds = 0; this.render(); }

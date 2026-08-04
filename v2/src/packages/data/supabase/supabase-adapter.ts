@@ -394,6 +394,7 @@ class SupaClientLinks implements ClientLinkRepository {
         propertyIds: input.propertyIds,
         priceVisibility: input.priceVisibility,
         locationVisibility: input.locationVisibility,
+        customPrices: input.customPrices ?? {},
         expiresInDays: input.expiresInDays,
         photoSelections: input.photoSelections,
         ...(audio ? { audio } : {}),
@@ -421,48 +422,78 @@ class SupaClientLinks implements ClientLinkRepository {
     if (!token) return ok({ kind: 'invalid-token' });
     try {
       const c = await client();
+      // PREFERRED: the resolve-client-link edge function runs with the service
+      // role and returns SIGNED short-lived URLs for stored photos AND the voice
+      // note — so the recording actually plays on the client's phone. It only
+      // accepts allow-listed origins (PLOTMAP_CLIENT_LINK_ALLOWED_ORIGINS); if it
+      // isn't reachable we fall back to the anon RPC (no audio / storage photos).
+      try {
+        const fn = await c.functions.invoke('resolve-client-link', { body: { token } });
+        if (!fn.error && fn.data && typeof fn.data === 'object') {
+          const env = fn.data as { ok?: boolean; reason?: string; link?: Record<string, unknown> };
+          if (env.ok === true && env.link) return ok(snapshotToState(env.link));
+          if (env.ok === false && env.reason) return ok(reasonToState(env.reason));
+        }
+      } catch { /* fall back to the RPC below */ }
+
       const { data, error } = await c.rpc('plotmap_resolve_client_link', { p_token: token });
       if (error) return ok({ kind: 'unavailable' });
       const env = (data ?? {}) as { ok?: boolean; reason?: string; link?: Record<string, unknown> };
-      if (env.ok !== true) {
-        switch (env.reason) {
-          case 'expired': return ok({ kind: 'expired' });
-          case 'revoked': return ok({ kind: 'revoked' });
-          case 'rate_limited':
-          case 'unavailable': return ok({ kind: 'unavailable' });
-          default: return ok({ kind: 'invalid-token' });
-        }
-      }
-      const snap = env.link ?? {};
-      const vis = (snap.visibility as { price?: string; location?: string }) ?? {};
-      const priceVisible = vis.price === 'shown';
-      const locationVisible = vis.location === 'area' || vis.location === 'exact';
-      const branding = (snap.branding as { brandName?: string; phone?: string; whatsapp?: string }) ?? {};
-      const customer = (snap.customer as { name?: string }) ?? {};
-      const audio = snap.audio as { available?: boolean; seconds?: number; url?: string } | null;
-      const rawProps = (snap.properties as Record<string, unknown>[]) ?? [];
-      const payload: ClientSafePayload = {
-        dealerDisplayName: String(branding.brandName ?? 'Your dealer'),
-        priceVisible, locationVisible,
-        ...(branding.phone ? { dealerPhone: String(branding.phone) } : {}),
-        ...(branding.whatsapp ? { dealerWhatsapp: String(branding.whatsapp) } : {}),
-        ...(customer.name ? { buyerName: String(customer.name) } : {}),
-        ...(audio?.available ? { voiceNote: { url: String(audio.url ?? ''), seconds: Number(audio.seconds ?? 0) } } : {}),
-        properties: rawProps.map((p) => ({
-          id: String(p.id ?? ''),
-          area: String(p.area ?? p.title ?? ''),
-          size: String(p.size ?? ''), facing: String(p.facing ?? ''),
-          position: String(p.roadWidth ?? p.plotNumber ?? ''),
-          photos: ((p.photos as { url?: string }[]) ?? []).map((x) => x.url).filter((u): u is string => !!u),
-          approvals: [], landmarks: [],
-          ...(locationVisible && p.area ? { loc: String(p.area) } : {}),
-          ...(priceVisible && p.price != null ? { price: Number(p.price) } : {}),
-        })),
-      };
-      const anyPhotos = payload.properties.some((p) => p.photos.length > 0);
-      return ok(anyPhotos ? { kind: 'valid', payload } : { kind: 'no-approved-photos', payload });
+      if (env.ok !== true) return ok(reasonToState(env.reason));
+      return ok(snapshotToState(env.link ?? {}));
     } catch { return ok({ kind: 'unavailable' }); }
   }
+}
+
+function reasonToState(reason?: string): ClientLinkState {
+  switch (reason) {
+    case 'expired': return { kind: 'expired' };
+    case 'revoked': return { kind: 'revoked' };
+    case 'rate_limited':
+    case 'unavailable': return { kind: 'unavailable' };
+    default: return { kind: 'invalid-token' };
+  }
+}
+
+/** Map a resolved client-link snapshot (from the edge function OR the RPC) to a
+ *  ClientLinkState. Both return the same snapshot shape. */
+function snapshotToState(snap: Record<string, unknown>): ClientLinkState {
+  const vis = (snap.visibility as { price?: string; location?: string }) ?? {};
+  const priceVisible = vis.price === 'shown';
+  const locationVisible = vis.location === 'area' || vis.location === 'exact';
+  const precise = vis.location === 'exact';
+  const branding = (snap.branding as { brandName?: string; phone?: string; whatsapp?: string }) ?? {};
+  const customer = (snap.customer as { name?: string }) ?? {};
+  const audio = snap.audio as { available?: boolean; seconds?: number; url?: string } | null;
+  const rawProps = (snap.properties as Record<string, unknown>[]) ?? [];
+  const payload: ClientSafePayload = {
+    dealerDisplayName: String(branding.brandName ?? 'Your dealer'),
+    priceVisible, locationVisible,
+    ...(branding.phone ? { dealerPhone: String(branding.phone) } : {}),
+    ...(branding.whatsapp ? { dealerWhatsapp: String(branding.whatsapp) } : {}),
+    ...(customer.name ? { buyerName: String(customer.name) } : {}),
+    ...(audio?.available || audio?.url ? { voiceNote: { url: String(audio?.url ?? ''), seconds: Number(audio?.seconds ?? 0) } } : {}),
+    properties: rawProps.map((p) => {
+      const placement = p.placement as { mapId?: string; x?: number; y?: number } | undefined;
+      return {
+        id: String(p.id ?? ''),
+        area: String(p.area ?? p.title ?? ''),
+        size: String(p.size ?? ''), facing: String(p.facing ?? ''),
+        position: String(p.roadWidth ?? p.plotNumber ?? ''),
+        photos: ((p.photos as { url?: string }[]) ?? []).map((x) => x.url).filter((u): u is string => !!u),
+        approvals: [], landmarks: [],
+        ...(locationVisible && p.area ? { loc: String(p.area) } : {}),
+        ...(priceVisible && p.price != null ? { price: Number(p.price) } : {}),
+        // Precise location: carry the maps + pin so the client page can show
+        // the property on its sector map and city masterplan.
+        ...(precise && p.city ? { mapCity: String(p.city) } : {}),
+        ...(precise && p.sector ? { mapSector: String(p.sector) } : {}),
+        ...(precise && placement?.mapId ? { placement: { mapId: String(placement.mapId), x: Number(placement.x ?? 0.5), y: Number(placement.y ?? 0.5) } } : {}),
+      };
+    }),
+  };
+  const anyPhotos = payload.properties.some((p) => p.photos.length > 0);
+  return anyPhotos ? { kind: 'valid', payload } : { kind: 'no-approved-photos', payload };
 }
 
 /* ── media (private storage signed URLs) ──────────────────────── */

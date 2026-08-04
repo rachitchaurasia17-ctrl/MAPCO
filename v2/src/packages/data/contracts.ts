@@ -365,6 +365,11 @@ export interface ClientSafeProperty {
   readonly price?: number;
   readonly approvals: readonly string[];
   readonly landmarks: readonly ClientSafeLandmark[];
+  /** Precise-location only: the property's city + sector so the client page can
+   *  show it on the city masterplan and the sector map, with its pin if placed. */
+  readonly mapCity?: string;
+  readonly mapSector?: string;
+  readonly placement?: { readonly mapId: string; readonly x: number; readonly y: number };
 }
 
 export interface ClientSafePayload {
@@ -409,6 +414,12 @@ export interface CreateClientLinkInput {
   propertyIds: string[];                 // 1–4 client-visible properties
   priceVisibility: 'shown' | 'hidden';
   locationVisibility: 'area' | 'exact' | 'hidden';
+  /** Per-property price the dealer typed for THIS link (₹). Overrides the
+   *  property's stored price (which changes daily). Absent = "Price on call". */
+  customPrices?: Record<string, number>;
+  /** ON → show the property pin on its sector map + city masterplan (exact).
+   *  OFF → area-level location only. */
+  locationPrecise?: boolean;
   expiresInDays: number;
   /** per-property photo refs, e.g. { "<propId>": ["external:0","external:1"] } */
   photoSelections: Record<string, string[]>;

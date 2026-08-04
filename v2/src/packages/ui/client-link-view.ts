@@ -24,9 +24,20 @@ function waNumber(raw?: string): string {
   return d.length === 10 ? '91' + d : d;
 }
 
+export interface ClientLinkViewMap {
+  readonly id: string;
+  readonly kind: 'masterplan' | 'sector';
+  readonly city?: string;
+  readonly sector?: string;
+  readonly label?: string;
+  readonly raster?: string;
+}
+
 export interface ClientLinkViewOptions {
   /** true when rendered inside the dealer preview phone frame (not full page). */
   embedded?: boolean;
+  /** published maps (masterplan + sector) so precise-location plots can be pinned. */
+  maps?: ClientLinkViewMap[];
 }
 
 /**
@@ -51,6 +62,9 @@ export function renderClientLinkView(
   const waHref = (msg: string) => waNum
     ? `https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`
     : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+
+  const norm = (s?: string) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const cmaps = opts.maps ?? [];
 
   function paint(): void {
     const p = properties[activeIndex] || properties[0];
@@ -88,6 +102,29 @@ export function renderClientLinkView(
       <div style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#9d8bc7;margin-top:24px">Why this one</div>
       <div style="display:flex;flex-direction:column;gap:12px;margin-top:13px">${p.landmarks.map((lm) => `<div style="display:flex;align-items:center;gap:11px"><i class="ph-fill ph-check-circle" style="font-size:20px;color:#7be0a4;flex:none"></i><span style="flex:1;min-width:0;font-size:15px;font-weight:600;color:#efe7ff">${esc(lm.name)}${lm.distance ? ` · ${esc(lm.distance)}` : ''}</span></div>`).join('')}</div>` : '';
 
+    // Precise location: show the plot on its sector map + city masterplan, each
+    // with the pin if placed. Tapping a map opens it full-screen (landscape).
+    const master = p.mapCity ? cmaps.find((m) => m.kind === 'masterplan' && norm(m.city) === norm(p.mapCity)) : undefined;
+    const sectorMap = cmaps.find((m) => m.kind === 'sector' && (
+      (!!p.placement && m.id === p.placement.mapId)
+      || (!!p.mapSector && (norm(m.sector || m.label) === norm(p.mapSector) || norm(m.sector || m.label).includes(norm(p.mapSector))))
+    ));
+    const mapItems = [
+      sectorMap ? { t: 'Sector map', m: sectorMap } : null,
+      master ? { t: 'Masterplan', m: master } : null,
+    ].filter((x): x is { t: string; m: typeof cmaps[number] } => !!x);
+    const mapsHtml = mapItems.length ? `
+      <div style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#9d8bc7;margin-top:24px">Where it is</div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:12px">${mapItems.map(({ t, m }) => {
+        const pin = p.placement && p.placement.mapId === m.id ? p.placement : null;
+        const raster = m.raster || '';
+        return `<button class="pm-cl-map" data-raster="${esc(raster)}" data-pinx="${pin ? pin.x : ''}" data-piny="${pin ? pin.y : ''}" data-label="${esc(t)}" style="position:relative;display:block;width:100%;height:180px;border-radius:16px;overflow:hidden;border:none;cursor:pointer;background:#0b0714 ${raster ? `url('${esc(raster)}') center/cover` : ''}">
+          ${pin ? `<span style="position:absolute;left:${pin.x * 100}%;top:${pin.y * 100}%;transform:translate(-50%,-100%)"><i class="ph-fill ph-map-pin" style="font-size:30px;color:#ffc93c;filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))"></i></span>` : ''}
+          <span style="position:absolute;top:10px;left:10px;padding:5px 11px;border-radius:999px;background:rgba(20,13,32,.72);color:#fff6e0;font-size:12px;font-weight:800">${esc(t)}</span>
+          <span style="position:absolute;bottom:10px;right:10px;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:rgba(255,201,60,.95);color:#241d0c;font-size:12px;font-weight:800"><i class="ph-fill ph-arrows-out" style="font-size:13px"></i>Full screen</span>
+        </button>`;
+      }).join('')}</div>` : '';
+
     const moreHtml = multi ? `
       <div style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#9d8bc7;margin-top:24px">More plots for you</div>
       <div style="display:flex;flex-direction:column;gap:10px;margin-top:11px">${properties.map((o, i) => i === activeIndex ? '' : `<button class="pm-cl-go" data-go="${i}" style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:16px;background:rgba(255,255,255,.05);border:none;cursor:pointer;text-align:left"><span style="width:60px;height:60px;border-radius:12px;flex:none;background:${o.photos[0] ? `url('${esc(o.photos[0])}') center/cover` : '#241a33'}"></span><span style="flex:1;min-width:0"><span style="display:block;font-size:15px;font-weight:800;color:#fffdf7">${esc(o.area)}</span><span style="display:block;font-size:12.5px;color:#b9a8dd">${esc(o.size)} · ${esc(o.facing)} facing</span></span><i class="ph-bold ph-caret-right" style="color:#9d8bc7;flex:none"></i></button>`).join('')}</div>` : '';
@@ -119,7 +156,7 @@ export function renderClientLinkView(
       ${p.loc ? `<div style="display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:700;color:#c9b6ef"><i class="ph-fill ph-map-pin" style="font-size:17px;color:#ffc93c"></i>${esc(p.loc)}</div>` : ''}
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px">${factsHtml}</div>
       <div style="display:flex;align-items:center;gap:11px;background:linear-gradient(135deg,#ffc93c,#f4881f);border-radius:16px;padding:15px 18px;margin-top:16px"><i class="ph-fill ph-tag" style="font-size:21px;color:#3a2410"></i><span style="font-size:20px;font-weight:800;color:#241d0c">${priceLabel}</span></div>
-      ${voiceHtml}${whyHtml}${moreHtml}
+      ${voiceHtml}${whyHtml}${mapsHtml}${moreHtml}
       <div style="display:flex;flex-direction:column;gap:10px;margin-top:24px">
         ${callHtml}
         <a href="${esc(waHref('Hi ' + dealer + ', I am interested in ' + p.area))}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:9px;height:52px;border-radius:15px;background:#0e3b28;color:#7be0a4;font-size:15px;font-weight:800;text-decoration:none;border:1px solid #1c6b47"><i class="ph-fill ph-whatsapp-logo" style="font-size:19px"></i>WhatsApp</a>
@@ -159,6 +196,12 @@ export function renderClientLinkView(
       activeIndex = parseInt((e.currentTarget as HTMLElement).dataset.go || '0', 10); activeShot = 0; paint();
     }));
 
+    // Tapping a location map opens it full-screen (landscape), pin preserved.
+    container.querySelectorAll('.pm-cl-map').forEach((b) => b.addEventListener('click', (e) => {
+      const el = e.currentTarget as HTMLElement;
+      openMapFullscreen(el.dataset.raster || '', el.dataset.pinx, el.dataset.piny, el.dataset.label || 'Map');
+    }));
+
     // Voice note: real playback when a source URL is present.
     const audio = container.querySelector<HTMLAudioElement>('#pm-cl-audio');
     const play = container.querySelector<HTMLButtonElement>('#pm-cl-play');
@@ -181,6 +224,39 @@ export function renderClientLinkView(
   }
 
   paint();
+}
+
+/** Open a map raster full-screen (landscape) with the plot pin, for the buyer. */
+function openMapFullscreen(raster: string, pinx?: string, piny?: string, label = 'Map'): void {
+  if (!raster) return;
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:200;background:#0b0714;display:flex;align-items:center;justify-content:center;animation:pmdveil .18s ease both';
+  const px = Number(pinx), py = Number(piny);
+  const hasPin = Number.isFinite(px) && Number.isFinite(py) && pinx !== '' && piny !== '';
+  ov.innerHTML = `
+    <div style="position:relative;width:100%;height:100%">
+      <img src="${raster.replace(/"/g, '&quot;')}" alt="${label}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain">
+      ${hasPin ? `<span style="position:absolute;left:${px * 100}%;top:${py * 100}%;transform:translate(-50%,-100%)"><i class="ph-fill ph-map-pin" style="font-size:38px;color:#ffc93c;filter:drop-shadow(0 3px 5px rgba(0,0,0,.7))"></i></span>` : ''}
+      <button data-x style="position:absolute;top:16px;right:16px;width:46px;height:46px;border-radius:14px;background:rgba(255,248,230,.16);color:#fff8e6;display:grid;place-items:center;border:none;cursor:pointer"><i class="ph-bold ph-x" style="font-size:20px"></i></button>
+      <div style="position:absolute;top:18px;left:18px;padding:7px 14px;border-radius:999px;background:rgba(20,13,32,.7);color:#fff6e0;font-size:13px;font-weight:800">${label}</div>
+      <div style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);padding:8px 16px;border-radius:999px;background:rgba(20,13,32,.7);color:#c9b6ef;font-size:12.5px;font-weight:700">Rotate your phone for a bigger view</div>
+    </div>`;
+  const close = () => {
+    try { const scr = (screen as unknown as { orientation?: { unlock?: () => void } }).orientation; scr?.unlock?.(); } catch { /* ignore */ }
+    try { if (document.fullscreenElement) void document.exitFullscreen(); } catch { /* ignore */ }
+    ov.remove();
+  };
+  ov.addEventListener('click', (e) => { if (e.target === ov || (e.target as HTMLElement).closest('[data-x]')) close(); });
+  document.body.appendChild(ov);
+  // Best-effort: go fullscreen + lock to landscape (mobile).
+  try {
+    const req = ov.requestFullscreen?.();
+    if (req && typeof req.then === 'function') {
+      void req.then(() => {
+        try { void (screen as unknown as { orientation?: { lock?: (o: string) => Promise<void> } }).orientation?.lock?.('landscape'); } catch { /* ignore */ }
+      }).catch(() => { /* ignore */ });
+    }
+  } catch { /* ignore */ }
 }
 
 /**
