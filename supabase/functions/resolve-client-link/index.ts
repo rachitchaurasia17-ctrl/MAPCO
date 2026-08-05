@@ -16,10 +16,12 @@ const SIGNED_URL_SECONDS = 15 * 60;
 
 function headers(origin: string | null): HeadersInit {
   const clean = String(origin || '').replace(/\/$/, '');
+  const allow = ALLOWED_ORIGINS.has(clean) ? clean : '';
   return {
-    'Access-Control-Allow-Origin': ALLOWED_ORIGINS.has(clean) ? clean : '',
-    'Access-Control-Allow-Headers': 'apikey, content-type',
+    'Access-Control-Allow-Origin': allow,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Max-Age': '600',
     'Cache-Control': 'no-store, max-age=0',
     'Content-Security-Policy': "default-src 'none'",
     'Referrer-Policy': 'no-referrer',
@@ -66,6 +68,7 @@ Deno.serve(async (request: Request): Promise<Response> => {
   const cleanOrigin = String(origin || '').replace(/\/$/, '');
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: headers(origin) });
   if (request.method !== 'POST') return json(origin, { ok: false, reason: 'unavailable' }, 405);
+  if (ALLOWED_ORIGINS.size === 0) return json(origin, { ok: false, reason: 'unavailable' }, 503);
   if (!origin || !ALLOWED_ORIGINS.has(cleanOrigin)) return json(origin, { ok: false, reason: 'unavailable' }, 403);
   if (!SUPABASE_URL || !ANON_KEY || !SERVICE_KEY) return json(origin, { ok: false, reason: 'unavailable' }, 503);
 
@@ -86,12 +89,28 @@ Deno.serve(async (request: Request): Promise<Response> => {
   }
 
   const mediaResult = await rpc('plotmap_resolve_client_link_media', { p_token: token }, SERVICE_KEY);
+  const mapsResult = await rpc('plotmap_resolve_client_link_maps', { p_token: token }, SERVICE_KEY);
   const mediaEnvelope = mediaResult.ok && mediaResult.data && typeof mediaResult.data === 'object'
     ? mediaResult.data as JsonRecord : {};
   const media = mediaEnvelope.media && typeof mediaEnvelope.media === 'object'
     ? mediaEnvelope.media as JsonRecord : {};
   const link = structuredClone(safe.link as JsonRecord);
   const properties = Array.isArray(link.properties) ? link.properties as JsonRecord[] : [];
+
+  const scopedMaps = mapsResult.ok && mapsResult.data && typeof mapsResult.data === 'object'
+    ? mapsResult.data as JsonRecord : {};
+  if (scopedMaps.ok === true && Array.isArray(scopedMaps.maps)) {
+    link.maps = scopedMaps.maps;
+    const bindings = Array.isArray(scopedMaps.bindings) ? scopedMaps.bindings as JsonRecord[] : [];
+    for (const binding of bindings) {
+      const index = Number(binding.index);
+      const property = Number.isInteger(index) ? properties[index] : undefined;
+      if (!property) continue;
+      if (binding.masterplanId) property.masterplanId = String(binding.masterplanId);
+      if (binding.sectorMapId) property.sectorMapId = String(binding.sectorMapId);
+      if (binding.placement && typeof binding.placement === 'object') property.placement = binding.placement;
+    }
+  }
 
   for (const property of properties) {
     const photos = Array.isArray(property.photos) ? property.photos as JsonRecord[] : [];

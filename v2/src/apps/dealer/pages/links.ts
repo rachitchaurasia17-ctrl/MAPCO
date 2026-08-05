@@ -2,7 +2,7 @@ import { adapter } from '../../../packages/data/adapter';
 import { getInitials, getProfile } from '../../../packages/auth/auth';
 import type { Client, ClientLink, Property } from '../../../packages/data/types';
 import { GenerateLinkFlow } from '../../../packages/ui/shared-modals';
-import { renderClientLinkView, previewPayloadFromLink } from '../../../packages/ui/client-link-view';
+import { renderClientLinkView, previewPayloadFromLink, type ClientLinkViewMap } from '../../../packages/ui/client-link-view';
 
 const esc = (value: string) => value.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!);
 const titleCase = (value: string) => value.charAt(0).toUpperCase() + value.slice(1);
@@ -11,12 +11,14 @@ export async function renderLinks(el: HTMLElement): Promise<void> {
   let links: ClientLink[] = [];
   let clients: Client[] = [];
   let properties: Property[] = [];
+  let maps: ClientLinkViewMap[] = [];
   let previewId: string | null = null;
 
-  const [linkResult, clientResult, propertyResult] = await Promise.all([
+  const [linkResult, clientResult, propertyResult, mapResult] = await Promise.all([
     adapter.clientLinks.list({ limit: 50 }),
     adapter.customers.list({ limit: 50 }),
     adapter.properties.list({ limit: 50 }),
+    adapter.maps.listRegistry({ limit: 50 }),
   ]);
   if (!linkResult.ok || !clientResult.ok || !propertyResult.ok) {
     el.innerHTML = '<div role="alert" style="max-width:1080px;margin:34px auto;padding:24px 26px;border-radius:18px;background:#ffe1e6;color:#9f2446">Client links could not be loaded.</div>';
@@ -25,6 +27,11 @@ export async function renderLinks(el: HTMLElement): Promise<void> {
   links = [...linkResult.value.items];
   clients = [...clientResult.value.items];
   properties = [...propertyResult.value.items];
+  if (mapResult.ok) maps = mapResult.value.items.map((m) => ({
+    id: m.id, kind: m.kind, city: m.city, sector: m.sector, area: m.area,
+    label: m.label, parentMapId: m.parentMapId, raster: m.raster,
+    assets: m.assets, dims: m.dims,
+  }));
 
   const eventChip = (on: boolean, icon: string, label: string) => `<span style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:11.5px;font-weight:800;${on ? 'background:#d9f5e3;color:#0b6f39' : 'background:#f3eeff;color:#a5946f'}"><i class="ph-fill ${icon}" style="font-size:14px"></i>${label}</span>`;
   const linkCard = (link: ClientLink, index: number) => {
@@ -74,7 +81,7 @@ export async function renderLinks(el: HTMLElement): Promise<void> {
       phone: '+919876500000', whatsapp: '+919876500000',
       buyerName: (link.clientName || '').split(' ')[0],
     });
-    renderClientLinkView(screen, payload, { embedded: true });
+    renderClientLinkView(screen, payload, { embedded: true, maps });
   };
 
   const render = () => {

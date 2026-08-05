@@ -369,7 +369,29 @@ export interface ClientSafeProperty {
    *  show it on the city masterplan and the sector map, with its pin if placed. */
   readonly mapCity?: string;
   readonly mapSector?: string;
+  readonly masterplanId?: string;
+  readonly sectorMapId?: string;
   readonly placement?: { readonly mapId: string; readonly x: number; readonly y: number };
+}
+
+/** Token-scoped, client-visible map metadata. No overlays or dealer catalog rows. */
+export interface ClientSafeMap {
+  readonly id: string;
+  readonly kind: 'masterplan' | 'sector';
+  readonly city?: string;
+  readonly sector?: string;
+  readonly area?: string;
+  readonly label?: string;
+  readonly parentMapId?: string;
+  readonly raster: string;
+  readonly assets?: {
+    readonly original?: { readonly path: string; readonly w?: number; readonly h?: number };
+    readonly threeD?: { readonly path: string; readonly w?: number; readonly h?: number };
+  };
+  readonly dims?: {
+    readonly original?: { readonly w: number; readonly h: number };
+    readonly threeD?: { readonly w: number; readonly h: number };
+  };
 }
 
 export interface ClientSafePayload {
@@ -381,6 +403,8 @@ export interface ClientSafePayload {
   /** The first name the link was personalised for (footer: "for <name>"). */
   readonly buyerName?: string;
   readonly properties: readonly ClientSafeProperty[];
+  /** Only maps reachable through this link's exact-location properties. */
+  readonly maps?: readonly ClientSafeMap[];
   readonly voiceNote?: { readonly url: string; readonly seconds: number };
   readonly priceVisible: boolean;
   readonly locationVisible: boolean;
@@ -444,6 +468,13 @@ export interface ClientLinkRepository {
   create(input: CreateClientLinkInput, opts?: QueryOptions): Promise<Result<CreatedClientLink>>;
   /** Deactivate (revoke) a link so it can no longer be opened. */
   revoke(id: string, opts?: QueryOptions): Promise<Result<void>>;
+  /** Public engagement event. The raw token remains closure-scoped in /client. */
+  recordEvent(
+    token: string,
+    event: 'opened' | 'audio_played' | 'call_clicked' | 'whatsapp_clicked' | 'visit_requested',
+    propertyPublicId?: string,
+    opts?: QueryOptions,
+  ): Promise<Result<void>>;
 }
 
 /* ───────────────────────────────────────────────────────────────

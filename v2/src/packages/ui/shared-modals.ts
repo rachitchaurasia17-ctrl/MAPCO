@@ -418,10 +418,15 @@ export class GenerateLinkFlow {
   private busy = false;
   private error = '';
   private result: { url: string; token: string } | null = null;
-  // audio recording
+  // audio recording — WAV/PCM so the note plays on EVERY device (iOS Safari
+  // cannot play the webm/opus MediaRecorder produces on Chrome/Android).
   private isRecording = false;
-  private recorder: MediaRecorder | null = null;
-  private chunks: Blob[] = [];
+  private audioStream: MediaStream | null = null;
+  private audioCtx: AudioContext | null = null;
+  private audioProc: ScriptProcessorNode | null = null;
+  private audioSource: MediaStreamAudioSourceNode | null = null;
+  private pcm: Float32Array[] = [];
+  private pcmSampleRate = 16000;
   private audioBlob: Blob | null = null;
   private audioUrl = '';
   private audioSeconds = 0;
@@ -445,7 +450,13 @@ export class GenerateLinkFlow {
   public mount(container: HTMLElement) { container.appendChild(this.el); this.render(); }
   public unmount() { this.stopStream(); if (this.audioUrl) URL.revokeObjectURL(this.audioUrl); this.el.remove(); }
 
-  private stopStream() { try { this.recorder?.stream.getTracks().forEach((t) => t.stop()); } catch { /* ignore */ } }
+  private stopStream() {
+    try { this.audioProc?.disconnect(); } catch { /* ignore */ }
+    try { this.audioSource?.disconnect(); } catch { /* ignore */ }
+    try { void this.audioCtx?.close(); } catch { /* ignore */ }
+    try { this.audioStream?.getTracks().forEach((t) => t.stop()); } catch { /* ignore */ }
+    this.audioProc = null; this.audioSource = null; this.audioCtx = null; this.audioStream = null;
+  }
 
   private getInitials(name: string) {
     const parts = name.split(' ');
@@ -511,35 +522,72 @@ export class GenerateLinkFlow {
   }
 
   private async toggleRecord() {
-    if (this.isRecording) {
-      this.recorder?.stop();
-      return;
-    }
+    if (this.isRecording) { this.finishRecording(); return; }
     this.error = '';
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      this.chunks = [];
-      const rec = new MediaRecorder(stream);
-      this.recorder = rec;
-      this.recStart = Date.now();
-      rec.ondataavailable = (e) => { if (e.data.size) this.chunks.push(e.data); };
-      rec.onstop = () => {
-        this.audioSeconds = Math.max(1, Math.min(120, Math.round((Date.now() - this.recStart) / 1000)));
-        this.audioBlob = new Blob(this.chunks, { type: 'audio/webm' });
-        if (this.audioUrl) URL.revokeObjectURL(this.audioUrl);
-        this.audioUrl = URL.createObjectURL(this.audioBlob);
-        this.isRecording = false;
-        stream.getTracks().forEach((t) => t.stop());
-        this.render();
+      if (!navigator.mediaDevices?.getUserMedia) throw new Error('RECORDING_UNSUPPORTED');
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
+      this.audioStream = stream;
+      const Ctx = (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext);
+      if (!Ctx) throw new Error('RECORDING_UNSUPPORTED');
+      // 16 kHz mono is plenty for voice and keeps the WAV small enough to upload.
+      let ctx: AudioContext;
+      try { ctx = new Ctx({ sampleRate: 16000 }); } catch { ctx = new Ctx(); }
+      this.audioCtx = ctx;
+      if (ctx.state === 'suspended') await ctx.resume();
+      this.pcmSampleRate = ctx.sampleRate;
+      this.pcm = [];
+      const source = ctx.createMediaStreamSource(stream);
+      const proc = ctx.createScriptProcessor(4096, 1, 1);
+      this.audioSource = source; this.audioProc = proc;
+      proc.onaudioprocess = (e) => {
+        if (!this.isRecording) return;
+        this.pcm.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+        // Hard stop at 120s.
+        if ((Date.now() - this.recStart) / 1000 >= 120) this.finishRecording();
       };
-      rec.start();
+      // Route through a muted gain so onaudioprocess fires without speaker echo.
+      const mute = ctx.createGain(); mute.gain.value = 0;
+      source.connect(proc); proc.connect(mute); mute.connect(ctx.destination);
+      this.recStart = Date.now();
       this.isRecording = true;
       this.render();
-    } catch {
-      this.error = 'Could not access the microphone. Check the browser permission.';
+    } catch (error) {
+      const name = (error as { name?: string }).name || '';
+      const message = (error as Error).message || '';
+      this.error = message === 'RECORDING_UNSUPPORTED'
+        ? 'Voice recording is not supported in this browser. Update the browser or use another device.'
+        : name === 'NotAllowedError' || name === 'SecurityError'
+          ? 'Microphone permission was denied. Allow microphone access and try again.'
+          : 'Could not access the microphone. Check the browser permission and try again.';
       this.isRecording = false;
+      this.stopStream();
       this.render();
     }
+  }
+
+  /** Stop capturing, encode the PCM as a WAV blob (universally playable). */
+  private finishRecording() {
+    if (!this.isRecording) return;
+    this.isRecording = false;
+    const rate = this.pcmSampleRate || 16000;
+    const sampleCount = this.pcm.reduce((sum, chunk) => sum + chunk.length, 0);
+    this.stopStream();
+    if (sampleCount < rate / 4) {
+      this.pcm = [];
+      this.audioBlob = null;
+      this.audioSeconds = 0;
+      this.error = 'No audio was captured. Record for at least one second and try again.';
+      this.render();
+      return;
+    }
+    const blob = encodeWav(this.pcm, rate, 16000);
+    this.audioSeconds = Math.max(1, Math.min(120, Math.ceil(sampleCount / rate)));
+    this.pcm = [];
+    this.audioBlob = blob;
+    if (this.audioUrl) URL.revokeObjectURL(this.audioUrl);
+    this.audioUrl = URL.createObjectURL(blob);
+    this.render();
   }
 
   private async send() {
@@ -604,4 +652,55 @@ export class GenerateLinkFlow {
       else if (action === 'send') { void this.send(); }
     });
   }
+}
+
+/** Encode recorded mono Float32 PCM chunks into a 16-bit WAV blob. WAV plays on
+ *  every browser including iOS Safari, unlike the webm/opus MediaRecorder gives. */
+export function encodeWav(chunks: Float32Array[], sampleRate: number, targetRate = 16000): Blob {
+  let length = 0;
+  for (const c of chunks) length += c.length;
+  const captured = new Float32Array(length);
+  let off = 0;
+  for (const c of chunks) { captured.set(c, off); off += c.length; }
+  const outputRate = Math.max(8000, Math.min(sampleRate, targetRate));
+  const samples = resamplePcm(captured, sampleRate, outputRate);
+  const buffer = new ArrayBuffer(44 + samples.length * 2);
+  const view = new DataView(buffer);
+  const writeStr = (o: number, s: string) => { for (let i = 0; i < s.length; i++) view.setUint8(o + i, s.charCodeAt(i)); };
+  writeStr(0, 'RIFF');
+  view.setUint32(4, 36 + samples.length * 2, true);
+  writeStr(8, 'WAVE');
+  writeStr(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);            // PCM
+  view.setUint16(22, 1, true);            // mono
+  view.setUint32(24, outputRate, true);
+  view.setUint32(28, outputRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);           // 16-bit
+  writeStr(36, 'data');
+  view.setUint32(40, samples.length * 2, true);
+  let p = 44;
+  for (let i = 0; i < samples.length; i++) {
+    const s = Math.max(-1, Math.min(1, samples[i]!));
+    view.setInt16(p, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+    p += 2;
+  }
+  return new Blob([view], { type: 'audio/wav' });
+}
+
+/** Downsample by averaging source windows. Voice remains clear and a 120-second
+ * note stays below the private bucket's 5 MB limit even on 48 kHz devices. */
+export function resamplePcm(samples: Float32Array, sourceRate: number, targetRate: number): Float32Array {
+  if (!samples.length || sourceRate <= targetRate) return samples.slice();
+  const ratio = sourceRate / targetRate;
+  const output = new Float32Array(Math.max(1, Math.floor(samples.length / ratio)));
+  for (let i = 0; i < output.length; i++) {
+    const start = Math.floor(i * ratio);
+    const end = Math.min(samples.length, Math.max(start + 1, Math.floor((i + 1) * ratio)));
+    let sum = 0;
+    for (let j = start; j < end; j++) sum += samples[j]!;
+    output[i] = sum / (end - start);
+  }
+  return output;
 }

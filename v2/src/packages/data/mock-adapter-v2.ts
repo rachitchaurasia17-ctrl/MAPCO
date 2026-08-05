@@ -495,6 +495,22 @@ class MockClientLinkRepository implements ClientLinkRepository {
     persistMock();
     return ok(undefined);
   }
+
+  async recordEvent(
+    token: string,
+    event: 'opened' | 'audio_played' | 'call_clicked' | 'whatsapp_clicked' | 'visit_requested',
+    _propertyPublicId?: string,
+    opts?: QueryOptions,
+  ): Promise<Result<void>> {
+    const a = aborted<void>(opts); if (a) return a;
+    const link = CLIENT_LINKS.find((l) => l.id === token || token === `tok-${l.id}`);
+    if (!link) return ok(undefined);
+    const key = event === 'opened' ? 'opens' : event === 'audio_played' ? 'played'
+      : event === 'call_clicked' ? 'called' : event === 'whatsapp_clicked' ? 'wa' : 'visit';
+    link.events[key] += 1;
+    persistMock();
+    return ok(undefined);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════

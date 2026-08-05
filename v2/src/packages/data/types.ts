@@ -28,6 +28,8 @@ export interface Property {
   published: boolean;
   sold: boolean;
   views: number;
+  masterplanId?: string;
+  sectorMapId?: string;
   mapPlacement?: { mapId: string; x: number; y: number };
   /** Private owner details — dealer-only, never projected into a client link. */
   owner?: { name: string; phone: string; priceConfirmedAt?: string };

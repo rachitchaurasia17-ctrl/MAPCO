@@ -10,7 +10,7 @@
    contact (phone/whatsapp) IS present so the buyer can reach them.
    ═══════════════════════════════════════════════════════════════ */
 import { formatINR } from './utils';
-import type { ClientSafePayload, ClientSafeProperty } from '../data/contracts';
+import type { ClientSafeMap, ClientSafePayload, ClientSafeProperty } from '../data/contracts';
 import type { ClientLink, Property } from '../data/types';
 
 function esc(s: string): string {
@@ -24,20 +24,36 @@ function waNumber(raw?: string): string {
   return d.length === 10 ? '91' + d : d;
 }
 
-export interface ClientLinkViewMap {
-  readonly id: string;
-  readonly kind: 'masterplan' | 'sector';
-  readonly city?: string;
-  readonly sector?: string;
-  readonly label?: string;
-  readonly raster?: string;
+/** A modern, luxury gold map pin (inline SVG). Same gradient id is reused — that
+ *  is fine because all instances are identical. */
+function luxuryPin(size = 40): string {
+  const h = Math.round(size * 1.32);
+  return `<svg width="${size}" height="${h}" viewBox="0 0 40 52" fill="none" style="display:block;filter:drop-shadow(0 5px 7px rgba(0,0,0,.55))">
+    <defs>
+      <radialGradient id="pmLuxPin" cx="50%" cy="34%" r="72%">
+        <stop offset="0" stop-color="#fff6d6"/><stop offset="42%" stop-color="#ffce4e"/><stop offset="100%" stop-color="#d98a12"/>
+      </radialGradient>
+    </defs>
+    <path d="M20 1.5C10.6 1.5 3 9 3 18.3 3 30 20 50.5 20 50.5S37 30 37 18.3C37 9 29.4 1.5 20 1.5Z" fill="url(#pmLuxPin)" stroke="#fffaf0" stroke-width="1.6"/>
+    <circle cx="20" cy="18.3" r="7" fill="#241d0c"/>
+    <circle cx="20" cy="18.3" r="3.1" fill="#ffe9a8"/>
+  </svg>`;
 }
+
+export type ClientLinkViewMap = ClientSafeMap;
 
 export interface ClientLinkViewOptions {
   /** true when rendered inside the dealer preview phone frame (not full page). */
   embedded?: boolean;
   /** published maps (masterplan + sector) so precise-location plots can be pinned. */
   maps?: ClientLinkViewMap[];
+  /** Public route only. Dealer previews deliberately omit event reporting. */
+  onEvent?: (
+    event: 'audio_played' | 'call_clicked' | 'whatsapp_clicked' | 'visit_requested',
+    propertyPublicId: string,
+  ) => void;
+  /** Re-resolve a short-lived signed audio URL after expiry. */
+  refreshVoiceNote?: () => Promise<string | null>;
 }
 
 /**
@@ -53,6 +69,10 @@ export function renderClientLinkView(
   const properties = payload.properties;
   let activeIndex = 0;
   let activeShot = 0;
+  let audioPlayReported = false;
+  const activeMapByProperty = new Map<string, string>();
+  const activeModeByMap = new Map<string, 'original' | 'threeD'>();
+  let mapResizeObserver: ResizeObserver | null = null;
 
   const dealer = payload.dealerDisplayName || 'Your dealer';
   const dealerFirst = dealer.split(' ')[0] || dealer;
@@ -64,9 +84,11 @@ export function renderClientLinkView(
     : `https://wa.me/?text=${encodeURIComponent(msg)}`;
 
   const norm = (s?: string) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-  const cmaps = opts.maps ?? [];
+  const cmaps = opts.maps ?? payload.maps ?? [];
 
   function paint(): void {
+    mapResizeObserver?.disconnect();
+    mapResizeObserver = null;
     const p = properties[activeIndex] || properties[0];
     if (!p) { container.innerHTML = '<div style="min-height:100vh;display:grid;place-items:center;background:#0f0a18;color:#9a8aad;font-family:system-ui">Nothing shared on this link.</div>'; return; }
     const photos = p.photos && p.photos.length ? p.photos : [];
@@ -102,40 +124,64 @@ export function renderClientLinkView(
       <div style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#9d8bc7;margin-top:24px">Why this one</div>
       <div style="display:flex;flex-direction:column;gap:12px;margin-top:13px">${p.landmarks.map((lm) => `<div style="display:flex;align-items:center;gap:11px"><i class="ph-fill ph-check-circle" style="font-size:20px;color:#7be0a4;flex:none"></i><span style="flex:1;min-width:0;font-size:15px;font-weight:600;color:#efe7ff">${esc(lm.name)}${lm.distance ? ` · ${esc(lm.distance)}` : ''}</span></div>`).join('')}</div>` : '';
 
-    // Precise location: show the plot on its sector map + city masterplan, each
-    // with the pin if placed. Tapping a map opens it full-screen (landscape).
-    const master = p.mapCity ? cmaps.find((m) => m.kind === 'masterplan' && norm(m.city) === norm(p.mapCity)) : undefined;
-    const sectorMap = cmaps.find((m) => m.kind === 'sector' && (
-      (!!p.placement && m.id === p.placement.mapId)
-      || (!!p.mapSector && (norm(m.sector || m.label) === norm(p.mapSector) || norm(m.sector || m.label).includes(norm(p.mapSector))))
-    ));
+    // Prefer saved map IDs. Label matching is only a compatibility path for old
+    // snapshots that contain no IDs at all; it never overrides real placement.
+    const hasSavedMapIds = Boolean(p.masterplanId || p.sectorMapId || p.placement?.mapId);
+    const placedMap = p.placement ? cmaps.find((m) => m.id === p.placement!.mapId) : undefined;
+    const sectorMap = p.sectorMapId
+      ? cmaps.find((m) => m.id === p.sectorMapId && m.kind === 'sector')
+      : placedMap?.kind === 'sector' ? placedMap
+        : !hasSavedMapIds && p.mapSector ? cmaps.find((m) => m.kind === 'sector' && (
+          norm(m.sector || m.label) === norm(p.mapSector)
+          || norm(m.sector || m.label).includes(norm(p.mapSector))
+        )) : undefined;
+    const master = p.masterplanId
+      ? cmaps.find((m) => m.id === p.masterplanId && m.kind === 'masterplan')
+      : placedMap?.kind === 'masterplan' ? placedMap
+        : sectorMap?.parentMapId ? cmaps.find((m) => m.id === sectorMap.parentMapId && m.kind === 'masterplan')
+          : !hasSavedMapIds && p.mapCity ? cmaps.find((m) => m.kind === 'masterplan' && norm(m.city) === norm(p.mapCity)) : undefined;
     const mapItems = [
       sectorMap ? { t: 'Sector map', m: sectorMap } : null,
       master ? { t: 'Masterplan', m: master } : null,
     ].filter((x): x is { t: string; m: typeof cmaps[number] } => !!x);
-    const mapsHtml = mapItems.length ? `
-      <div style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#9d8bc7;margin-top:24px">Where it is</div>
-      <div style="display:flex;flex-direction:column;gap:12px;margin-top:12px">${mapItems.map(({ t, m }) => {
-        const pin = p.placement && p.placement.mapId === m.id ? p.placement : null;
-        const raster = m.raster || '';
-        return `<button class="pm-cl-map" data-raster="${esc(raster)}" data-pinx="${pin ? pin.x : ''}" data-piny="${pin ? pin.y : ''}" data-label="${esc(t)}" style="position:relative;display:block;width:100%;height:180px;border-radius:16px;overflow:hidden;border:none;cursor:pointer;background:#0b0714 ${raster ? `url('${esc(raster)}') center/cover` : ''}">
-          ${pin ? `<span style="position:absolute;left:${pin.x * 100}%;top:${pin.y * 100}%;transform:translate(-50%,-100%)"><i class="ph-fill ph-map-pin" style="font-size:30px;color:#ffc93c;filter:drop-shadow(0 2px 4px rgba(0,0,0,.6))"></i></span>` : ''}
-          <span style="position:absolute;top:10px;left:10px;padding:5px 11px;border-radius:999px;background:rgba(20,13,32,.72);color:#fff6e0;font-size:12px;font-weight:800">${esc(t)}</span>
+    const requestedLocationMap = Boolean(p.placement || p.masterplanId || p.sectorMapId || p.mapCity || p.mapSector);
+    const selectedMapId = activeMapByProperty.get(p.id) || mapItems[0]?.m.id || '';
+    const activeMapItem = mapItems.find((item) => item.m.id === selectedMapId) || mapItems[0];
+    if (activeMapItem) activeMapByProperty.set(p.id, activeMapItem.m.id);
+    const activeMap = activeMapItem?.m;
+    const mapMode = activeMap ? activeModeByMap.get(activeMap.id) || 'original' : 'original';
+    const hasThreeD = Boolean(activeMap?.assets?.threeD?.path);
+    const safeMode = mapMode === 'threeD' && hasThreeD ? 'threeD' : 'original';
+    const raster = safeMode === 'threeD' ? activeMap?.assets?.threeD?.path || '' : activeMap?.assets?.original?.path || activeMap?.raster || '';
+    const activeDims = safeMode === 'threeD' ? activeMap?.dims?.threeD : activeMap?.dims?.original;
+    const pin = safeMode === 'original' && p.placement?.mapId === activeMap?.id ? p.placement : null;
+    const mapsHtml = activeMapItem && raster ? `
+      <div style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#9d8bc7;margin-top:24px">Explore location</div>
+      <div style="display:flex;gap:7px;margin-top:12px">${mapItems.map(({ t, m }) => `<button class="pm-cl-map-tab" data-map-id="${esc(m.id)}" style="flex:1;height:40px;border-radius:11px;border:1px solid ${m.id === activeMap!.id ? '#ffc93c' : 'rgba(255,255,255,.12)'};background:${m.id === activeMap!.id ? '#ffc93c' : 'rgba(255,255,255,.06)'};color:${m.id === activeMap!.id ? '#241d0c' : '#efe7ff'};font-size:13px;font-weight:800;cursor:pointer">${esc(t)}</button>`).join('')}</div>
+      <div style="position:relative;margin-top:9px">
+        <button class="pm-cl-map" data-raster="${esc(raster)}" data-pinx="${pin ? pin.x : ''}" data-piny="${pin ? pin.y : ''}" data-label="${esc(activeMapItem.t)}" data-w="${activeDims?.w || ''}" data-h="${activeDims?.h || ''}" style="position:relative;display:block;width:100%;height:190px;border-radius:16px;overflow:hidden;border:none;cursor:pointer;background:#0b0714">
+          <img class="pm-cl-map-img" src="${esc(raster)}" alt="${esc(activeMapItem.t)}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain">
+          ${pin ? `<span class="pm-cl-map-pin" style="position:absolute;left:0;top:0;transform:translate(-50%,-100%)">${luxuryPin(38)}</span>` : ''}
           <span style="position:absolute;bottom:10px;right:10px;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:rgba(255,201,60,.95);color:#241d0c;font-size:12px;font-weight:800"><i class="ph-fill ph-arrows-out" style="font-size:13px"></i>Full screen</span>
-        </button>`;
-      }).join('')}</div>` : '';
+        </button>
+        ${hasThreeD ? `<div style="position:absolute;top:9px;right:9px;display:flex;gap:4px;padding:4px;border-radius:10px;background:rgba(20,13,32,.8)"><button class="pm-cl-map-mode" data-mode="original" data-map-id="${esc(activeMap.id)}" style="height:28px;padding:0 9px;border-radius:7px;background:${safeMode === 'original' ? '#ffc93c' : 'transparent'};color:${safeMode === 'original' ? '#241d0c' : '#fff6e0'};font-size:11px;font-weight:800">Original</button><button class="pm-cl-map-mode" data-mode="threeD" data-map-id="${esc(activeMap.id)}" style="height:28px;padding:0 9px;border-radius:7px;background:${safeMode === 'threeD' ? '#ffc93c' : 'transparent'};color:${safeMode === 'threeD' ? '#241d0c' : '#fff6e0'};font-size:11px;font-weight:800">3D</button></div>` : ''}
+      </div>` : requestedLocationMap ? `<div style="margin-top:24px;padding:16px;border-radius:16px;background:rgba(255,255,255,.06);color:#b9a8dd;font-size:13.5px;line-height:1.45"><strong style="display:block;color:#efe7ff;margin-bottom:4px">Location map unavailable</strong>The saved placement is incomplete or its map is not published for clients.</div>` : '';
 
     const moreHtml = multi ? `
       <div style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#9d8bc7;margin-top:24px">More plots for you</div>
       <div style="display:flex;flex-direction:column;gap:10px;margin-top:11px">${properties.map((o, i) => i === activeIndex ? '' : `<button class="pm-cl-go" data-go="${i}" style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:16px;background:rgba(255,255,255,.05);border:none;cursor:pointer;text-align:left"><span style="width:60px;height:60px;border-radius:12px;flex:none;background:${o.photos[0] ? `url('${esc(o.photos[0])}') center/cover` : '#241a33'}"></span><span style="flex:1;min-width:0"><span style="display:block;font-size:15px;font-weight:800;color:#fffdf7">${esc(o.area)}</span><span style="display:block;font-size:12.5px;color:#b9a8dd">${esc(o.size)} · ${esc(o.facing)} facing</span></span><i class="ph-bold ph-caret-right" style="color:#9d8bc7;flex:none"></i></button>`).join('')}</div>` : '';
 
     const callHtml = telNum
-      ? `<a href="tel:${esc(telNum)}" style="display:flex;align-items:center;justify-content:center;gap:9px;height:54px;border-radius:15px;background:#12a150;color:#fff;font-size:16px;font-weight:800;text-decoration:none"><i class="ph-fill ph-phone" style="font-size:20px"></i>Call ${esc(dealerFirst)}</a>`
+      ? `<a data-client-event="call_clicked" href="tel:${esc(telNum)}" style="display:flex;align-items:center;justify-content:center;gap:9px;height:54px;border-radius:15px;background:#12a150;color:#fff;font-size:16px;font-weight:800;text-decoration:none"><i class="ph-fill ph-phone" style="font-size:20px"></i>Call ${esc(dealerFirst)}</a>`
       : '';
 
     container.innerHTML = `
 <div class="pm-buyer" style="background:#0f0a18;${outerMin};display:flex;justify-content:center;position:relative;font-family:'Hanken Grotesk',system-ui,sans-serif">
   <div style="width:100%;max-width:480px;background:#140d20;position:relative;display:flex;flex-direction:column">
+    ${multi ? `<div style="position:sticky;top:0;z-index:6;display:flex;align-items:center;gap:8px;padding:11px 12px;background:rgba(20,13,32,.96);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,255,255,.08);overflow-x:auto">
+      <span style="flex:none;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8a7ab0;padding-left:4px">${properties.length} plots</span>
+      ${properties.map((o, i) => `<button class="pm-cl-go" data-go="${i}" style="flex:none;padding:8px 14px;border-radius:999px;font-size:13px;font-weight:800;border:none;cursor:pointer;white-space:nowrap;${i === activeIndex ? 'background:#ffc93c;color:#241d0c' : 'background:rgba(255,255,255,.09);color:#c9b6ef'}">${esc(o.area)}</button>`).join('')}
+    </div>` : ''}
     <div style="position:relative;height:320px;flex:none">
       <div id="pm-cl-hero" style="position:absolute;inset:0;${heroUrl ? `background:url('${esc(heroUrl)}') center/cover` : 'background:#241a33;display:grid;place-items:center;color:#6b5a90'}">${heroUrl ? '' : '<i class="ph-fill ph-image" style="font-size:44px"></i>'}</div>
       <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,10,24,.66) 0%,rgba(15,10,24,.05) 34%,rgba(20,13,32,.96) 100%)"></div>
@@ -159,9 +205,9 @@ export function renderClientLinkView(
       ${voiceHtml}${whyHtml}${mapsHtml}${moreHtml}
       <div style="display:flex;flex-direction:column;gap:10px;margin-top:24px">
         ${callHtml}
-        <a href="${esc(waHref('Hi ' + dealer + ', I am interested in ' + p.area))}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:9px;height:52px;border-radius:15px;background:#0e3b28;color:#7be0a4;font-size:15px;font-weight:800;text-decoration:none;border:1px solid #1c6b47"><i class="ph-fill ph-whatsapp-logo" style="font-size:19px"></i>WhatsApp</a>
+        <a data-client-event="whatsapp_clicked" href="${esc(waHref('Hi ' + dealer + ', I am interested in ' + p.area))}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:9px;height:52px;border-radius:15px;background:#0e3b28;color:#7be0a4;font-size:15px;font-weight:800;text-decoration:none;border:1px solid #1c6b47"><i class="ph-fill ph-whatsapp-logo" style="font-size:19px"></i>WhatsApp</a>
         <div style="display:flex;gap:10px">
-          <a href="${esc(waHref('Hi ' + dealer + ', I would like to visit ' + p.area))}" target="_blank" rel="noopener" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;height:50px;border-radius:14px;background:#ffc93c;color:#241d0c;font-size:15px;font-weight:800;text-decoration:none"><i class="ph-fill ph-calendar-check" style="font-size:18px"></i>Site visit</a>
+          <a data-client-event="visit_requested" href="${esc(waHref('Hi ' + dealer + ', I would like to visit ' + p.area))}" target="_blank" rel="noopener" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;height:50px;border-radius:14px;background:#ffc93c;color:#241d0c;font-size:15px;font-weight:800;text-decoration:none"><i class="ph-fill ph-calendar-check" style="font-size:18px"></i>Site visit</a>
           <a href="${esc(waHref('Hi ' + dealer + ', I have a question about ' + p.area))}" target="_blank" rel="noopener" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;height:50px;border-radius:14px;background:rgba(255,255,255,.08);color:#efe7ff;font-size:15px;font-weight:800;text-decoration:none"><i class="ph-fill ph-chat-circle-dots" style="font-size:18px"></i>Ask</a>
         </div>
       </div>
@@ -196,23 +242,60 @@ export function renderClientLinkView(
       activeIndex = parseInt((e.currentTarget as HTMLElement).dataset.go || '0', 10); activeShot = 0; paint();
     }));
 
+    container.querySelectorAll('.pm-cl-map-tab').forEach((b) => b.addEventListener('click', (e) => {
+      const id = (e.currentTarget as HTMLElement).dataset.mapId || '';
+      if (p && id) activeMapByProperty.set(p.id, id);
+      paint();
+    }));
+    container.querySelectorAll('.pm-cl-map-mode').forEach((b) => b.addEventListener('click', (e) => {
+      const el = e.currentTarget as HTMLElement;
+      const mode = el.dataset.mode === 'threeD' ? 'threeD' : 'original';
+      if (el.dataset.mapId) activeModeByMap.set(el.dataset.mapId, mode);
+      paint();
+    }));
+
     // Tapping a location map opens it full-screen (landscape), pin preserved.
     container.querySelectorAll('.pm-cl-map').forEach((b) => b.addEventListener('click', (e) => {
       const el = e.currentTarget as HTMLElement;
-      openMapFullscreen(el.dataset.raster || '', el.dataset.pinx, el.dataset.piny, el.dataset.label || 'Map');
+      openMapFullscreen(el.dataset.raster || '', el.dataset.pinx, el.dataset.piny, el.dataset.label || 'Map', Number(el.dataset.w), Number(el.dataset.h));
     }));
+    const mapHost = container.querySelector<HTMLElement>('.pm-cl-map');
+    const mapImage = mapHost?.querySelector<HTMLImageElement>('.pm-cl-map-img');
+    const mapPin = mapHost?.querySelector<HTMLElement>('.pm-cl-map-pin');
+    if (mapHost && mapImage && mapPin) {
+      const position = () => positionContainedPin(mapHost, mapImage, mapPin, Number(mapHost.dataset.pinx), Number(mapHost.dataset.piny), Number(mapHost.dataset.w), Number(mapHost.dataset.h));
+      if (mapImage.complete) position(); else mapImage.addEventListener('load', position, { once: true });
+      if (typeof ResizeObserver !== 'undefined') {
+        mapResizeObserver = new ResizeObserver(position);
+        mapResizeObserver.observe(mapHost);
+      }
+    }
 
     // Voice note: real playback when a source URL is present.
     const audio = container.querySelector<HTMLAudioElement>('#pm-cl-audio');
     const play = container.querySelector<HTMLButtonElement>('#pm-cl-play');
     if (audio && play) {
       const setIcon = (playing: boolean) => { play.innerHTML = `<i class="ph-fill ph-${playing ? 'pause' : 'play'}" style="font-size:22px"></i>`; };
+      let refreshing = false;
+      const refreshAndPlay = async () => {
+        if (!opts.refreshVoiceNote || refreshing) { play.title = 'Could not play the voice note.'; return; }
+        refreshing = true;
+        const next = await opts.refreshVoiceNote().catch(() => null);
+        refreshing = false;
+        if (!next) { play.title = 'Voice note is temporarily unavailable.'; return; }
+        audio.src = next;
+        audio.load();
+        await audio.play().catch(() => { play.title = 'Voice note refreshed. Tap Play again.'; });
+      };
       play.addEventListener('click', () => {
-        if (!audio.getAttribute('src')) { play.title = 'Voice note will play on the live link.'; return; }
-        if (audio.paused) void audio.play().catch(() => { play.title = 'Could not play the voice note.'; });
+        if (!audio.getAttribute('src')) { void refreshAndPlay(); return; }
+        if (audio.paused) void audio.play().catch(() => refreshAndPlay());
         else audio.pause();
       });
-      audio.addEventListener('play', () => setIcon(true));
+      audio.addEventListener('play', () => {
+        setIcon(true);
+        if (!audioPlayReported && p) { audioPlayReported = true; opts.onEvent?.('audio_played', p.id); }
+      });
       audio.addEventListener('pause', () => setIcon(false));
       audio.addEventListener('ended', () => setIcon(false));
       audio.addEventListener('timeupdate', () => {
@@ -221,13 +304,37 @@ export function renderClientLinkView(
         time.textContent = `0:${String(left).padStart(2, '0')}`;
       });
     }
+    container.querySelectorAll<HTMLElement>('[data-client-event]').forEach((el) => el.addEventListener('click', () => {
+      const event = el.dataset.clientEvent as 'call_clicked' | 'whatsapp_clicked' | 'visit_requested';
+      if (p && event) opts.onEvent?.(event, p.id);
+    }));
   }
 
   paint();
 }
 
+export function positionContainedPin(
+  host: HTMLElement,
+  image: HTMLImageElement,
+  pin: HTMLElement,
+  x: number,
+  y: number,
+  suppliedWidth = 0,
+  suppliedHeight = 0,
+): void {
+  if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || x > 1 || y < 0 || y > 1) return;
+  const naturalWidth = suppliedWidth > 0 ? suppliedWidth : image.naturalWidth;
+  const naturalHeight = suppliedHeight > 0 ? suppliedHeight : image.naturalHeight;
+  if (!naturalWidth || !naturalHeight || !host.clientWidth || !host.clientHeight) return;
+  const scale = Math.min(host.clientWidth / naturalWidth, host.clientHeight / naturalHeight);
+  const width = naturalWidth * scale;
+  const height = naturalHeight * scale;
+  pin.style.left = `${(host.clientWidth - width) / 2 + x * width}px`;
+  pin.style.top = `${(host.clientHeight - height) / 2 + y * height}px`;
+}
+
 /** Open a map raster full-screen (landscape) with the plot pin, for the buyer. */
-function openMapFullscreen(raster: string, pinx?: string, piny?: string, label = 'Map'): void {
+function openMapFullscreen(raster: string, pinx?: string, piny?: string, label = 'Map', width = 0, height = 0): void {
   if (!raster) return;
   const ov = document.createElement('div');
   ov.style.cssText = 'position:fixed;inset:0;z-index:200;background:#0b0714;display:flex;align-items:center;justify-content:center;animation:pmdveil .18s ease both';
@@ -235,19 +342,32 @@ function openMapFullscreen(raster: string, pinx?: string, piny?: string, label =
   const hasPin = Number.isFinite(px) && Number.isFinite(py) && pinx !== '' && piny !== '';
   ov.innerHTML = `
     <div style="position:relative;width:100%;height:100%">
-      <img src="${raster.replace(/"/g, '&quot;')}" alt="${label}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain">
-      ${hasPin ? `<span style="position:absolute;left:${px * 100}%;top:${py * 100}%;transform:translate(-50%,-100%)"><i class="ph-fill ph-map-pin" style="font-size:38px;color:#ffc93c;filter:drop-shadow(0 3px 5px rgba(0,0,0,.7))"></i></span>` : ''}
+      <img data-map-image src="${raster.replace(/"/g, '&quot;')}" alt="${label}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain">
+      ${hasPin ? `<span data-map-pin style="position:absolute;left:0;top:0;transform:translate(-50%,-100%)">${luxuryPin(46)}</span>` : ''}
       <button data-x style="position:absolute;top:16px;right:16px;width:46px;height:46px;border-radius:14px;background:rgba(255,248,230,.16);color:#fff8e6;display:grid;place-items:center;border:none;cursor:pointer"><i class="ph-bold ph-x" style="font-size:20px"></i></button>
       <div style="position:absolute;top:18px;left:18px;padding:7px 14px;border-radius:999px;background:rgba(20,13,32,.7);color:#fff6e0;font-size:13px;font-weight:800">${label}</div>
       <div style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);padding:8px 16px;border-radius:999px;background:rgba(20,13,32,.7);color:#c9b6ef;font-size:12.5px;font-weight:700">Rotate your phone for a bigger view</div>
     </div>`;
+  let resize: ResizeObserver | null = null;
+  const onKey = (event: KeyboardEvent) => { if (event.key === 'Escape') close(); };
   const close = () => {
+    resize?.disconnect();
+    document.removeEventListener('keydown', onKey);
     try { const scr = (screen as unknown as { orientation?: { unlock?: () => void } }).orientation; scr?.unlock?.(); } catch { /* ignore */ }
     try { if (document.fullscreenElement) void document.exitFullscreen(); } catch { /* ignore */ }
     ov.remove();
   };
   ov.addEventListener('click', (e) => { if (e.target === ov || (e.target as HTMLElement).closest('[data-x]')) close(); });
   document.body.appendChild(ov);
+  document.addEventListener('keydown', onKey);
+  const image = ov.querySelector<HTMLImageElement>('[data-map-image]');
+  const pin = ov.querySelector<HTMLElement>('[data-map-pin]');
+  const stage = image?.parentElement;
+  if (image && pin && stage) {
+    const position = () => positionContainedPin(stage, image, pin, px, py, width, height);
+    if (image.complete) position(); else image.addEventListener('load', position, { once: true });
+    if (typeof ResizeObserver !== 'undefined') { resize = new ResizeObserver(position); resize.observe(stage); }
+  }
   // Best-effort: go fullscreen + lock to landscape (mobile).
   try {
     const req = ov.requestFullscreen?.();
@@ -273,6 +393,7 @@ export function previewPayloadFromLink(
 ): ClientSafePayload {
   const priceVisible = link.price === 'shown';
   const locationVisible = link.loc !== 'hidden';
+  const precise = link.loc === 'exact';
   const safe: ClientSafeProperty[] = (link.props.length ? link.props : [])
     .map((id) => properties.find((p) => p.id === id))
     .filter((p): p is Property => !!p)
@@ -287,6 +408,10 @@ export function previewPayloadFromLink(
       landmarks: p.landmarks.map((l) => ({ name: l.name, distance: l.distance, icon: l.icon })),
       ...(locationVisible ? { loc: p.loc } : {}),
       ...(priceVisible ? { price: p.price } : {}),
+      ...(precise ? { mapCity: p.city, mapSector: p.sector } : {}),
+      ...(precise && p.masterplanId ? { masterplanId: p.masterplanId } : {}),
+      ...(precise && p.sectorMapId ? { sectorMapId: p.sectorMapId } : {}),
+      ...(precise && p.mapPlacement ? { placement: { ...p.mapPlacement } } : {}),
     }));
   return {
     dealerDisplayName,

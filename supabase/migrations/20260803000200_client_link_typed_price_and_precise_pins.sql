@@ -163,9 +163,7 @@ begin
       v_photo_count := v_photo_count + 1;
     end loop;
 
-    if v_photo_count < 1 then
-      raise exception 'choose at least one approved photo for each property';
-    end if;
+    -- Photos are optional; the public page renders a clean no-photo state.
 
     v_properties := v_properties || jsonb_build_array(jsonb_strip_nulls(jsonb_build_object(
       'id', v_property_public_id,
@@ -180,6 +178,8 @@ begin
       'plotNumber', case when v_location_visibility = 'exact' then left(nullif(trim(v_property.payload ->> 'plotNumber'), ''), 80) else null end,
       'price', nullif(p_payload -> 'customPrices' ->> v_property.id, ''),
       'city', case when v_location_visibility = 'exact' then left(nullif(trim(v_property.payload ->> 'city'), ''), 80) else null end,
+      'masterplanId', case when v_location_visibility = 'exact' then nullif(trim(v_property.payload ->> 'masterplanId'), '') else null end,
+      'sectorMapId', case when v_location_visibility = 'exact' then nullif(trim(v_property.payload ->> 'sectorMapId'), '') else null end,
       'placement', case when v_location_visibility = 'exact' then v_property.payload -> 'mapPlacement' else null end,
       'photos', v_photos_safe
     )));

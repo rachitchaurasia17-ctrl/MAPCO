@@ -12,7 +12,7 @@
    renderer (packages/ui/client-link-view) so they are pixel-identical.
    ═══════════════════════════════════════════════════════════════ */
 import { adapter } from '../../packages/data/adapter';
-import { renderClientLinkView, type ClientLinkViewMap } from '../../packages/ui/client-link-view';
+import { renderClientLinkView, type ClientLinkViewOptions } from '../../packages/ui/client-link-view';
 import type { ClientLinkState } from '../../packages/data/contracts';
 
 /* ── token handling ──────────────────────────────────────────── */
@@ -42,14 +42,14 @@ function stateScreen(icon: string, title: string, body: string): string {
 </div>`;
 }
 
-function render(container: HTMLElement, state: ClientLinkState, maps?: ClientLinkViewMap[]): void {
+function render(container: HTMLElement, state: ClientLinkState, options?: ClientLinkViewOptions): void {
   switch (state.kind) {
     case 'resolving':
       container.innerHTML = stateScreen('ph-fill ph-spinner-gap', 'Opening your link…', 'One moment while we load the plots your dealer selected.');
       break;
     case 'valid':
     case 'no-approved-photos':
-      renderClientLinkView(container, state.payload, { maps });
+      renderClientLinkView(container, state.payload, options);
       break;
     case 'invalid-token':
       container.innerHTML = stateScreen('ph-fill ph-link-break', 'Link not recognised', 'This link is invalid. Please ask your dealer to send a fresh one.');
@@ -76,22 +76,21 @@ async function initClient(container: HTMLElement): Promise<void> {
     render(container, { kind: result.error.code === 'gone' ? 'expired' : 'unavailable' });
     return;
   }
-  render(container, result.value);
-
-  // If any plot has precise-location map data, fetch the published maps and
-  // re-render so the sector map + masterplan (with pins) can show. Best-effort:
-  // if maps aren't reachable, the page simply keeps the location text.
-  const payload = result.value.kind === 'valid' || result.value.kind === 'no-approved-photos' ? result.value.payload : null;
-  const needsMaps = payload?.properties.some((p) => p.mapCity || p.mapSector || p.placement);
-  if (needsMaps) {
-    const reg = await adapter.maps.listRegistry({ limit: 300 }, { signal: controller.signal });
-    if (reg.ok) {
-      const maps: ClientLinkViewMap[] = reg.value.items.map((m) => ({
-        id: m.id, kind: m.kind, city: m.city, sector: m.sector, label: m.label, raster: m.raster,
-      }));
-      render(container, result.value, maps);
-    }
+  const refreshVoiceNote = async (): Promise<string | null> => {
+    const refreshed = await adapter.clientLinks.resolve(token, { signal: controller.signal });
+    if (!refreshed.ok || (refreshed.value.kind !== 'valid' && refreshed.value.kind !== 'no-approved-photos')) return null;
+    return refreshed.value.payload.voiceNote?.url || null;
+  };
+  const options: ClientLinkViewOptions = {
+    onEvent: (event, propertyPublicId) => {
+      void adapter.clientLinks.recordEvent(token, event, propertyPublicId, { signal: controller.signal });
+    },
+    refreshVoiceNote,
+  };
+  if (result.value.kind === 'valid' || result.value.kind === 'no-approved-photos') {
+    void adapter.clientLinks.recordEvent(token, 'opened', undefined, { signal: controller.signal });
   }
+  render(container, result.value, options);
 }
 
 const app = document.getElementById('app');

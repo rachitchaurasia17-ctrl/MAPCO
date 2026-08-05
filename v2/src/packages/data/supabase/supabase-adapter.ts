@@ -19,7 +19,7 @@ import {
   type DemandRepository, type DemandRecord, type DemandDraft, type DemandMatch,
   type MapRepository, type PresentationRepository, type PresentationState,
   type PresentationEventsRepository, type PresentationEvent,
-  type ClientLinkRepository, type ClientLinkState, type ClientSafePayload,
+  type ClientLinkRepository, type ClientLinkState, type ClientSafePayload, type ClientSafeMap,
   type MediaRepository, type MediaState,
   type DemandSignalsRepository,
 } from '../contracts';
@@ -338,12 +338,15 @@ function rowToClientLink(r: Record<string, unknown>): ClientLink {
   const exp = r.expiresAt ? Math.max(0, Math.ceil((Date.parse(String(r.expiresAt)) - now) / 86400000)) : null;
   const last = r.lastOpenedAt ? new Date(String(r.lastOpenedAt)).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : 'not yet';
   return {
-    id: String(r.id), clientId: '', clientName: String(r.label ?? 'Client'),
-    props: [], propNames: [], propertyCount: Number(r.propertyCount ?? 0),
+    id: String(r.id), clientId: String(r.clientId ?? ''), clientName: String(r.clientName ?? r.label ?? 'Client'),
+    props: Array.isArray(r.propertyIds) ? r.propertyIds.map(String) : [],
+    propNames: Array.isArray(r.propertyNames) ? r.propertyNames.map(String) : [],
+    propertyCount: Number(r.propertyCount ?? 0),
     expiry: exp === null ? '—' : `${exp}d`,
     createdAt: r.createdAt ? new Date(String(r.createdAt)).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : undefined,
-    loc: 'area', price: 'hidden',
-    audio: r.hasAudio ? 'done' : 'none', audioSecs: 0,
+    loc: (r.locationVisibility as ClientLink['loc']) ?? 'area',
+    price: (r.priceVisibility as ClientLink['price']) ?? 'hidden',
+    audio: r.hasAudio ? 'done' : 'none', audioSecs: Number(r.audioSeconds ?? 0),
     status: (r.status as ClientLink['status']) ?? 'active',
     events: { opens: ev.opens ?? 0, played: ev.audioPlays ?? 0, called: ev.calls ?? 0, wa: ev.whatsapp ?? 0, visit: ev.visits ?? 0 },
     lastOpen: last,
@@ -351,6 +354,8 @@ function rowToClientLink(r: Record<string, unknown>): ClientLink {
 }
 
 class SupaClientLinks implements ClientLinkRepository {
+  private readonly publicSessionId = `${cryptoId()}${cryptoId()}`;
+
   async list(p?: PageParams, o?: QueryOptions): Promise<Result<Page<ClientLink>>> {
     const a = aborted<Page<ClientLink>>(o); if (a) return a;
     try {
@@ -380,12 +385,19 @@ class SupaClientLinks implements ClientLinkRepository {
       const c = await client();
       let audio: { objectPath: string; seconds: number } | undefined;
       if (input.audioBlob && input.audioBlob.size > 0) {
-        // The audio path MUST be dealers/<dealerId>/client-links/<file>.webm.
+        if (input.audioBlob.size <= 44) return err('validation', 'The voice note did not contain any audio');
+        if (input.audioBlob.size > 5 * 1024 * 1024) return err('validation', 'The voice note is too large; record a shorter message');
         const { data: ds } = await c.from('dealer_settings').select('dealer_id').maybeSingle();
         const dealerId = (ds as { dealer_id?: string } | null)?.dealer_id;
         if (!dealerId) return err('forbidden', 'Could not resolve your dealer account for the audio note');
-        const path = `dealers/${dealerId}/client-links/${cryptoId()}.webm`;
-        const up = await c.storage.from('client-link-audio').upload(path, input.audioBlob, { contentType: 'audio/webm', upsert: true });
+        const rawMime = input.audioBlob.type || 'audio/wav';
+        const mime = /audio\/(x-)?wav/i.test(rawMime) ? 'audio/wav' : rawMime.toLowerCase();
+        if (!['audio/wav', 'audio/mp4', 'audio/mpeg', 'audio/ogg', 'audio/webm'].includes(mime)) {
+          return err('validation', 'This audio format is not supported');
+        }
+        const ext = mime.includes('wav') ? 'wav' : mime.includes('mp4') || mime.includes('mpeg') ? 'mp4' : mime.includes('ogg') ? 'ogg' : 'webm';
+        const path = `dealers/${dealerId}/client-links/${cryptoId()}.${ext}`;
+        const up = await c.storage.from('client-link-audio').upload(path, input.audioBlob, { contentType: mime, upsert: false });
         if (up.error) return err('unknown', `Audio upload failed: ${up.error.message}`);
         audio = { objectPath: path, seconds: Math.max(1, Math.min(120, Math.round(input.audioSeconds ?? 1))) };
       }
@@ -400,9 +412,15 @@ class SupaClientLinks implements ClientLinkRepository {
         ...(audio ? { audio } : {}),
       };
       const { data, error } = await c.rpc('plotmap_create_client_link', { p_payload: payload });
-      if (error) return toErr(error);
+      if (error) {
+        if (audio) await c.storage.from('client-link-audio').remove([audio.objectPath]);
+        return toErr(error);
+      }
       const env = (data ?? {}) as { ok?: boolean; id?: string; token?: string; url?: string; expiresAt?: string };
-      if (env.ok !== true || !env.token) return err('unknown', 'Could not create the link');
+      if (env.ok !== true || !env.token) {
+        if (audio) await c.storage.from('client-link-audio').remove([audio.objectPath]);
+        return err('unknown', 'Could not create the link');
+      }
       return ok({ id: String(env.id ?? ''), token: env.token, url: env.url ?? `/client/?token=${env.token}`, expiresAt: env.expiresAt });
     } catch (e) { return toErr(e); }
   }
@@ -414,6 +432,29 @@ class SupaClientLinks implements ClientLinkRepository {
       const { error } = await c.rpc('plotmap_revoke_client_link', { p_link_id: id });
       if (error) return toErr(error);
       return ok(undefined);
+    } catch (e) { return toErr(e); }
+  }
+
+  async recordEvent(
+    token: string,
+    event: 'opened' | 'audio_played' | 'call_clicked' | 'whatsapp_clicked' | 'visit_requested',
+    propertyPublicId?: string,
+    o?: QueryOptions,
+  ): Promise<Result<void>> {
+    const a = aborted<void>(o); if (a) return a;
+    if (!/^[0-9a-f]{64}$/.test(token)) return err('validation', 'Invalid client link token');
+    try {
+      const c = await client();
+      const { data, error } = await c.rpc('plotmap_record_client_link_event', {
+        p_token: token,
+        p_event_type: event,
+        p_session_id: this.publicSessionId,
+        p_idempotency_key: `${cryptoId()}${cryptoId()}`,
+        p_metadata: propertyPublicId ? { propertyId: propertyPublicId } : {},
+      });
+      if (error) return toErr(error);
+      const envelope = (data ?? {}) as { ok?: boolean };
+      return envelope.ok === true ? ok(undefined) : err('unknown', 'Could not record client-link activity');
     } catch (e) { return toErr(e); }
   }
 
@@ -457,7 +498,7 @@ function reasonToState(reason?: string): ClientLinkState {
 
 /** Map a resolved client-link snapshot (from the edge function OR the RPC) to a
  *  ClientLinkState. Both return the same snapshot shape. */
-function snapshotToState(snap: Record<string, unknown>): ClientLinkState {
+export function snapshotToState(snap: Record<string, unknown>): ClientLinkState {
   const vis = (snap.visibility as { price?: string; location?: string }) ?? {};
   const priceVisible = vis.price === 'shown';
   const locationVisible = vis.location === 'area' || vis.location === 'exact';
@@ -466,13 +507,23 @@ function snapshotToState(snap: Record<string, unknown>): ClientLinkState {
   const customer = (snap.customer as { name?: string }) ?? {};
   const audio = snap.audio as { available?: boolean; seconds?: number; url?: string } | null;
   const rawProps = (snap.properties as Record<string, unknown>[]) ?? [];
+  const rawMaps = Array.isArray(snap.maps) ? snap.maps as Record<string, unknown>[] : [];
   const payload: ClientSafePayload = {
     dealerDisplayName: String(branding.brandName ?? 'Your dealer'),
     priceVisible, locationVisible,
     ...(branding.phone ? { dealerPhone: String(branding.phone) } : {}),
     ...(branding.whatsapp ? { dealerWhatsapp: String(branding.whatsapp) } : {}),
     ...(customer.name ? { buyerName: String(customer.name) } : {}),
-    ...(audio?.available || audio?.url ? { voiceNote: { url: String(audio?.url ?? ''), seconds: Number(audio?.seconds ?? 0) } } : {}),
+    ...(audio?.url && /^https:\/\//i.test(audio.url) ? { voiceNote: { url: audio.url, seconds: Number(audio.seconds ?? 0) } } : {}),
+    ...(precise && rawMaps.length ? { maps: rawMaps.map((m) => ({
+      id: String(m.id ?? ''),
+      kind: m.kind === 'sector' ? 'sector' as const : 'masterplan' as const,
+      city: String(m.city ?? ''), sector: String(m.sector ?? ''), area: String(m.area ?? ''),
+      label: String(m.label ?? ''), parentMapId: m.parentMapId ? String(m.parentMapId) : undefined,
+      raster: String(m.raster ?? ''),
+      assets: (m.assets && typeof m.assets === 'object') ? m.assets as ClientSafeMap['assets'] : undefined,
+      dims: (m.dims && typeof m.dims === 'object') ? m.dims as ClientSafeMap['dims'] : undefined,
+    })).filter((m) => m.id && m.raster) } : {}),
     properties: rawProps.map((p) => {
       const placement = p.placement as { mapId?: string; x?: number; y?: number } | undefined;
       return {
@@ -488,6 +539,8 @@ function snapshotToState(snap: Record<string, unknown>): ClientLinkState {
         // the property on its sector map and city masterplan.
         ...(precise && p.city ? { mapCity: String(p.city) } : {}),
         ...(precise && p.sector ? { mapSector: String(p.sector) } : {}),
+        ...(precise && p.masterplanId ? { masterplanId: String(p.masterplanId) } : {}),
+        ...(precise && p.sectorMapId ? { sectorMapId: String(p.sectorMapId) } : {}),
         ...(precise && placement?.mapId ? { placement: { mapId: String(placement.mapId), x: Number(placement.x ?? 0.5), y: Number(placement.y ?? 0.5) } } : {}),
       };
     }),
