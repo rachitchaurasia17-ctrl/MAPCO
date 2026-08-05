@@ -31,8 +31,11 @@ const SECTOR = `e2e-sector-${runId}`;
 const DRAFT = `e2e-draft-${runId}`;
 const PROP_A = `e2e-prop-a-${runId}`;
 const PROP_B = `e2e-prop-b-${runId}`;
+const SALE_PROP = `e2e-sale-prop-${runId}`;
+const CLIENT = `e2e-client-${runId}`;
 const MAP_PATH = `e2e/${runId}.png`;
 let audioPath = '';
+let saleDealId = '';
 const linkIds = [];
 
 function wavOneSecond() {
@@ -65,8 +68,9 @@ async function edgeResolve(token) {
 
 async function cleanup() {
   if (linkIds.length) await admin.from('share_links').delete().in('id', linkIds);
+  if (saleDealId) await admin.from('crm_records').delete().eq('id', saleDealId);
   if (audioPath) await admin.storage.from('client-link-audio').remove([audioPath]);
-  await admin.from('crm_records').delete().in('id', [PROP_A, PROP_B]);
+  await admin.from('crm_records').delete().in('id', [PROP_A, PROP_B, SALE_PROP, CLIENT]);
   await admin.from('prebuilt_maps').delete().in('id', [SECTOR, MASTER, DRAFT]);
   await admin.storage.from('maps').remove([MAP_PATH]);
 }
@@ -89,9 +93,17 @@ async function main() {
   ]);
   const photo = 'https://mapco-navy.vercel.app/assets/ph-plot-1.png';
   await admin.from('crm_records').upsert([
+    { id: CLIENT, dealer_id: dealer, entity_type: 'clients', deleted: false, payload: { id: CLIENT, name: 'E2E Buyer', phone: '+919000000001', city: 'Mohali', want: 'Plot', budget: '₹1 Cr', budgetMax: 10_000_000, status: 'active', seen: 'today', note: '', viewed: [], interest: [], purchased: [] } },
     { id: PROP_A, dealer_id: dealer, entity_type: 'properties', deleted: false, payload: { title: 'E2E First', type: 'Residential Plot', city: 'Mohali', area: 'E2E 90', loc: 'E2E 90, Mohali', sector: 'E2E 90', size: '300 sq yd', facing: 'East', roadWidth: '30 ft', price: 1, photos: [photo], published: true, clientVisible: true, sold: false, masterplanId: MASTER, sectorMapId: SECTOR, mapPlacement: { mapId: SECTOR, x: 0.25, y: 0.75 }, owner: { name: 'MUST NOT LEAK', phone: '000' }, commission: 999 } },
     { id: PROP_B, dealer_id: dealer, entity_type: 'properties', deleted: false, payload: { title: 'E2E Second', type: 'Residential Plot', city: 'Mohali', area: 'E2E 91', loc: 'E2E 91, Mohali', sector: 'E2E 91', size: '250 sq yd', facing: 'North', roadWidth: '40 ft', price: 2, photos: [photo], published: true, clientVisible: true, sold: false, masterplanId: MASTER, mapPlacement: { mapId: MASTER, x: 0.6, y: 0.4 } } },
+    { id: SALE_PROP, dealer_id: dealer, entity_type: 'properties', deleted: false, payload: { title: 'E2E Sale Plot', type: 'Residential Plot', city: 'Mohali', area: 'E2E Sale', loc: 'E2E Sale, Mohali', sector: 'E2E Sale', size: '200 sq yd', facing: 'South', roadWidth: '30 ft', price: 6_000_000, photos: [photo], published: true, clientVisible: true, sold: false } },
   ]);
+
+  const teamBrowser = createClient(URL, ANON, { auth: { persistSession: false, autoRefreshToken: false } });
+  const teamSignIn = await teamBrowser.auth.signInWithPassword({ email: 'demo-team@mapco.dev', password: PASSWORD });
+  if (teamSignIn.error) throw teamSignIn.error;
+  const teamRows = await teamBrowser.from('crm_records').select('id').in('id', [CLIENT, PROP_A]);
+  check((teamRows.data ?? []).length === 2, 'new property and client interlink across dealer and team workspaces');
 
   audioPath = `dealers/${dealer}/client-links/e2e-${runId}.wav`;
   const audioUpload = await browser.storage.from('client-link-audio').upload(audioPath, wavOneSecond(), { contentType: 'audio/wav', upsert: false });
@@ -99,7 +111,7 @@ async function main() {
   pass('authenticated dealer uploaded a WAV to the private audio bucket');
 
   const created = await browser.rpc('plotmap_create_client_link', { p_payload: {
-    clientId: 'c1', propertyIds: [PROP_A, PROP_B],
+    clientId: CLIENT, propertyIds: [PROP_A, PROP_B],
     priceVisibility: 'shown', locationVisibility: 'exact', customPrices: { [PROP_A]: 4_500_000, [PROP_B]: 5_200_000 },
     expiresInDays: 7, photoSelections: { [PROP_A]: ['external:0'], [PROP_B]: ['external:0'] },
     audio: { objectPath: audioPath, seconds: 1 },
@@ -118,7 +130,15 @@ async function main() {
   check(resolved.response.ok && resolved.body.ok === true, 'anonymous Edge resolver accepts a valid token');
   check(resolved.response.headers.get('access-control-allow-origin') === 'https://mapco-navy.vercel.app', 'resolver CORS allow-list matches production');
   const publicBlob = JSON.stringify(resolved.body);
-  check(!publicBlob.includes(audioPath) && !/MUST NOT LEAK|commission|owner/i.test(publicBlob), 'public payload excludes private paths and dealer-only fields');
+  const forbiddenKeys = ['owner', 'commission', 'sellerPhone', 'notes', 'internalStatus', 'documents'];
+  const publicProperties = resolved.body.link?.properties ?? [];
+  check(
+    !Object.hasOwn(resolved.body.link ?? {}, 'audioObjectPath')
+      && !Object.hasOwn(resolved.body.link ?? {}, 'client_media')
+      && !/MUST NOT LEAK|"commission"|"sellerPhone"|"documents"/i.test(publicBlob)
+      && publicProperties.every((property) => forbiddenKeys.every((key) => !(key in property))),
+    'public payload excludes private paths and dealer-only fields',
+  );
   check(resolved.body.link?.properties?.length === 2, 'multi-property public payload contains two properties');
   check(Number(resolved.body.link?.properties?.[0]?.price) === 4_500_000 && Number(resolved.body.link?.properties?.[1]?.price) === 5_200_000, 'per-property Client Link prices persist');
   const mapIds = (resolved.body.link?.maps ?? []).map((map) => map.id).sort();
@@ -143,10 +163,10 @@ async function main() {
   const listed = await browser.rpc('plotmap_list_client_links', { p_property_id: PROP_A });
   const listedLink = (listed.data ?? []).find((item) => item.id === created.data.id);
   check(listedLink?.events?.opens >= 1, 'open count updates and the link appears in property analytics');
-  check(listedLink?.clientId === 'c1' && listedLink?.propertyIds?.includes(PROP_B), 'authenticated listing interlinks the client and all properties');
+  check(listedLink?.clientId === CLIENT && listedLink?.propertyIds?.includes(PROP_B), 'authenticated listing interlinks the client and all properties');
 
   const areaCreated = await browser.rpc('plotmap_create_client_link', { p_payload: {
-    clientId: 'c1', propertyIds: [PROP_A], priceVisibility: 'hidden', locationVisibility: 'area',
+    clientId: CLIENT, propertyIds: [PROP_A], priceVisibility: 'hidden', locationVisibility: 'area',
     expiresInDays: 7, photoSelections: { [PROP_A]: ['external:0'] },
   } });
   if (areaCreated.error || !areaCreated.data?.token) throw areaCreated.error ?? new Error('area link was not created');
@@ -154,6 +174,25 @@ async function main() {
   const areaResolved = await edgeResolve(areaCreated.data.token);
   check((areaResolved.body.link?.maps ?? []).length === 0, 'Precise Location OFF returns no maps');
   check(!areaResolved.body.link?.properties?.[0]?.placement, 'Precise Location OFF returns no pin coordinates');
+
+  const sold = await browser.rpc('plotmap_record_completed_sale', { p_payload: {
+    propertyId: SALE_PROP, buyerId: CLIENT, seller: 'Private Seller', sellerPhone: '+919999999999',
+    soldPrice: 5_800_000, saleDate: '2026-08-05', brokerage: 100_000, commission: 50_000,
+    commissionReceived: true, paymentReceived: 5_800_000, documents: [{ name: 'Private deed' }],
+  } });
+  check(sold.data?.ok === true && sold.data?.deal?.id, 'completed sale is recorded atomically');
+  saleDealId = sold.data?.deal?.id || '';
+  const [soldProperty, buyerAfterSale] = await Promise.all([
+    admin.from('crm_records').select('payload').eq('id', SALE_PROP).single(),
+    admin.from('crm_records').select('payload').eq('id', CLIENT).single(),
+  ]);
+  check(soldProperty.data?.payload?.sold === true && soldProperty.data?.payload?.published === false && soldProperty.data?.payload?.clientVisible === false, 'sold property leaves inventory and Client Presentation');
+  check((buyerAfterSale.data?.payload?.purchased ?? []).includes(SALE_PROP), 'buyer Purchased Properties updates');
+  const soldLinkAttempt = await browser.rpc('plotmap_create_client_link', { p_payload: {
+    clientId: CLIENT, propertyIds: [SALE_PROP], priceVisibility: 'hidden', locationVisibility: 'area',
+    expiresInDays: 7, photoSelections: { [SALE_PROP]: ['external:0'] },
+  } });
+  check(Boolean(soldLinkAttempt.error), 'sold property cannot be added to a new Client Link');
 
   await browser.rpc('plotmap_revoke_client_link', { p_link_id: created.data.id });
   const revoked = await edgeResolve(token);

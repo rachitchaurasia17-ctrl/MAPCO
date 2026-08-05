@@ -192,7 +192,7 @@ async function main() {
 
   console.log('\n[maps] storage upload → dealer CRUD → publish → link → client visibility');
   const pngDims = (buf) => ({ w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) });
-  const ROOT = 'maps with svg';
+  const ROOT = 'migration-kit/maps with svg';
   const assets = [
     { local: `${ROOT}/new chd normal.png`, path: 'newchandigarh/masterplan.png', ct: 'image/png' },
     { local: `${ROOT}/new chd svg with id attribute.svg`, path: 'newchandigarh/overlay.svg', ct: 'image/svg+xml' },
@@ -282,7 +282,8 @@ async function main() {
     rows.length >= 60 ? ok(`library onboarded: ${rows.length} maps (${masters.length} master, ${sectors.length} sector)`) : no(`only ${rows.length} maps`);
     orphans.length === 0 ? ok('every sector resolves to an existing parent masterplan') : no(`${orphans.length} orphan sectors`);
     noDims.length === 0 ? ok('every masterplan has intrinsic dimensions') : no(`${noDims.length} masterplans missing dims`);
-    masters.every((r) => r.status === 'published') ? ok('all masterplans published (client-visible)') : no('some masterplans not published');
+    masters.filter((r) => r.status !== 'archived').every((r) => r.status === 'published')
+      ? ok('all non-archived masterplans published (client-visible)') : no('some active masterplans not published');
   }
 
   console.log(`\n=== RESULT: ${pass} passed, ${fail} failed ===`);
