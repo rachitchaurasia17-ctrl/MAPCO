@@ -60,10 +60,22 @@ async function edgeResolve(token) {
       Authorization: `Bearer ${ANON}`,
       'Content-Type': 'application/json',
       'x-client-info': 'mapco-e2e',
+      'x-mapco-client': 'v2-web',
     },
     body: JSON.stringify({ token }),
   });
   return { response, body: await response.json().catch(() => ({})) };
+}
+
+async function edgePreflight() {
+  return fetch(`${URL}/functions/v1/resolve-client-link`, {
+    method: 'OPTIONS',
+    headers: {
+      Origin: 'https://mapco-navy.vercel.app',
+      'Access-Control-Request-Method': 'POST',
+      'Access-Control-Request-Headers': 'authorization,apikey,content-type,x-client-info,x-mapco-client',
+    },
+  });
 }
 
 async function cleanup() {
@@ -80,6 +92,15 @@ async function main() {
   const signIn = await browser.auth.signInWithPassword({ email: 'demo-owner@mapco.dev', password: PASSWORD });
   if (signIn.error) throw signIn.error;
   pass('authenticated dealer session issued');
+
+  const preflight = await edgePreflight();
+  const allowedHeaders = (preflight.headers.get('access-control-allow-headers') ?? '').toLowerCase();
+  check(
+    preflight.status === 204
+      && preflight.headers.get('access-control-allow-origin') === 'https://mapco-navy.vercel.app'
+      && allowedHeaders.includes('x-mapco-client'),
+    'browser preflight permits the shared Supabase client header',
+  );
 
   const dealer = 'dealer-demo';
   const png = Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='), (c) => c.charCodeAt(0));

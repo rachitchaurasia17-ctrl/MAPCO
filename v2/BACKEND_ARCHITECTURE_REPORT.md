@@ -63,7 +63,7 @@ The public resolver uses saved IDs before any compatibility label matching. Prec
 
 - `src/packages/data/adapter.ts` rejects mock mode in production and reports missing/invalid production configuration clearly.
 - Vercel Production now has persistent entries for `VITE_DATA_MODE`, `VITE_SUPABASE_URL`, and `VITE_SUPABASE_ANON_KEY`.
-- The deployed bundle must be rebuilt after these entries are set; do not use one-off CLI-only build variables as the long-term configuration.
+- Production was rebuilt after these entries were set, and future clean deployments use the same persistent configuration rather than one-off CLI-only build variables.
 
 ### Voice-note reliability
 
@@ -72,6 +72,7 @@ The public resolver uses saved IDs before any compatibility label matching. Prec
 - Samples are resampled to 16 kHz so a 120-second recording remains below 5 MB.
 - `src/packages/data/supabase/supabase-adapter.ts` validates the audio MIME/type, uploads with the correct extension, stores a dealer-scoped private object path, and removes the object if link creation fails.
 - The public resolver returns only a short-lived signed URL. It does not return `audioObjectPath`, media metadata, or a service credential.
+- Edge CORS explicitly permits the shared browser client's `x-mapco-client` header, preventing a browser-only fallback to the unsigned RPC.
 - The public player remains user-gesture driven and supports Play, Pause, Resume, Replay, and signed-URL refresh after expiry.
 
 ### Token-scoped maps and public safety
@@ -501,7 +502,7 @@ npm audit
 
 Expected verified baseline on 2026-08-06:
 
-- Client Link/interlink E2E: **28 passed, 0 failed**
+- Client Link/interlink E2E: **29 passed, 0 failed**
 - Backend/RLS/storage/map verification: **36 passed, 0 failed**
 - Vitest: **93 passed** across 6 files
 - TypeScript + production Vite build: **passed**

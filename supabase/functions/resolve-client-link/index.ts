@@ -19,7 +19,10 @@ function headers(origin: string | null): HeadersInit {
   const allow = ALLOWED_ORIGINS.has(clean) ? clean : '';
   return {
     'Access-Control-Allow-Origin': allow,
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    // SupabaseDataAdapter's singleton adds x-mapco-client to every request.
+    // It must be allowed here or the browser blocks functions.invoke during
+    // preflight and the client falls back to the unsigned RPC (no voice URL).
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, x-mapco-client, apikey, content-type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Max-Age': '600',
     'Cache-Control': 'no-store, max-age=0',
