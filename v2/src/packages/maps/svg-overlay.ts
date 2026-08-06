@@ -16,6 +16,7 @@
    ═══════════════════════════════════════════════════════════════ */
 
 import type { Dimensions } from './registry';
+import { CostAwareLruCache } from '../performance';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
 
@@ -101,29 +102,89 @@ function sanitize(root: Element): void {
   root.querySelectorAll('script,foreignObject,style,image').forEach((n) => n.remove());
 }
 
-export async function loadSvgOverlay(
-  src: string,
-  viewBox: Dimensions,
-  opts: { signal?: AbortSignal; accent?: string } = {},
-): Promise<SvgHighlightHandle | null> {
-  let text: string;
-  try {
-    const res = await fetch(src, { signal: opts.signal });
-    if (!res.ok) return null;
-    text = await res.text();
-  } catch { return null; }
+interface ParsedSvgResource { readonly items: readonly HighlightItem[]; }
+const parsedSvgCache = new CostAwareLruCache<ParsedSvgResource>(6, 6 * 1024 * 1024);
+const parsedSvgInflight = new Map<string, Promise<ParsedSvgResource | null>>();
 
+function parseSvgResource(text: string): ParsedSvgResource | null {
   const doc = new DOMParser().parseFromString(text, 'image/svg+xml');
   const authored = doc.querySelector('svg');
   if (!authored || doc.querySelector('parsererror')) return null;
   sanitize(authored);
+  const items: HighlightItem[] = [];
+  const seen = new Set<string>();
+  authored.querySelectorAll<SVGElement>('path[d], polygon[points], polyline[points]').forEach((shape) => {
+    const id = shape.getAttribute('id') || '';
+    let groupId = '';
+    for (let p = shape.parentElement; p; p = p.parentElement) {
+      const gid = p.getAttribute?.('id');
+      if (gid && !CONTAINER_RE.test(gid)) { groupId = gid; break; }
+    }
+    if (SKIP_RE.test(id) || SKIP_RE.test(groupId) || EXCLUDE_RE.test(id) || EXCLUDE_RE.test(groupId)) return;
+    const tag = shape.tagName.toLowerCase();
+    const d = tag === 'path' ? (shape.getAttribute('d') || '') : pointsToPath(shape.getAttribute('points') || '', tag === 'polygon');
+    if (!d) return;
+    const isRoad = ROAD_RE.test(groupId) || ROAD_RE.test(id) || tag === 'polyline'
+      || (tag === 'path' && !/z\s*$/i.test(d.trim()));
+    const key = id || `${groupId || tag}-${items.length}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    const labelBase = id && !GENERIC_ID_RE.test(id.trim()) ? id
+      : (groupId ? `${cleanLabel(groupId)} ${items.length + 1}` : `Shape ${items.length + 1}`);
+    items.push({ id: key, kind: isRoad ? 'road' : 'block', label: cleanLabel(labelBase), d });
+  });
+  return { items };
+}
+
+async function parsedSvg(
+  src: string,
+  opts: { signal?: AbortSignal; cacheKey?: string; expiresAt?: number; fetchText?: (src: string, signal?: AbortSignal) => Promise<string> },
+): Promise<ParsedSvgResource | null> {
+  const key = opts.cacheKey ?? src;
+  const cached = parsedSvgCache.get(key);
+  if (cached) return cached;
+  const existing = parsedSvgInflight.get(key);
+  if (existing) return existing;
+  const pending = (async () => {
+    try {
+      const text = opts.fetchText
+        ? await opts.fetchText(src, opts.signal)
+        : await fetch(src, { signal: opts.signal }).then((response) => {
+          if (!response.ok) throw new Error(`SVG ${response.status}`);
+          return response.text();
+        });
+      const parsed = parseSvgResource(text);
+      if (parsed) parsedSvgCache.set(key, parsed, { costBytes: text.length * 2, expiresAt: opts.expiresAt });
+      return parsed;
+    } catch { return null; }
+    finally { parsedSvgInflight.delete(key); }
+  })();
+  parsedSvgInflight.set(key, pending);
+  return pending;
+}
+
+export async function loadSvgOverlay(
+  src: string,
+  viewBox: Dimensions,
+  opts: {
+    signal?: AbortSignal;
+    accent?: string;
+    cacheKey?: string;
+    expiresAt?: number;
+    fetchText?: (src: string, signal?: AbortSignal) => Promise<string>;
+  } = {},
+): Promise<SvgHighlightHandle | null> {
+  const parsed = await parsedSvg(src, opts);
+  if (!parsed) return null;
+  // A detached empty source keeps the legacy extraction loop inert; the
+  // immutable parsed item blueprint below is reused without another parse.
 
   // ── extract items from the authored geometry ──────────────────
   // A shape's kind: 'road' if it (or an ancestor group) is a road group OR the
   // shape is an unclosed path; otherwise 'block' (extrudable sector/zone/block).
-  const items: HighlightItem[] = [];
+  const items: HighlightItem[] = [...parsed.items];
   const seen = new Set<string>();
-  const shapeEls = authored.querySelectorAll<SVGElement>('path[d], polygon[points], polyline[points]');
+  const shapeEls: SVGElement[] = [];
   shapeEls.forEach((shape) => {
     const id = shape.getAttribute('id') || '';
     // an ancestor <g id> gives context (roads vs sectors)

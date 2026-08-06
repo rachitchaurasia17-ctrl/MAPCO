@@ -14,6 +14,7 @@ import { getMap, renderingFor, type MapEntry, type RenderMode } from './registry
 import { CoordinateSystem, type Transform, type Viewport, type Point } from './coordinates';
 import { layoutOverlay, type OverlayLayout } from './overlay-engine';
 import { MapImageLoader, type ImagePort, type LoadedImage } from './loader';
+import type { PriorityLoader, ResourceScope } from '../performance';
 
 export interface OverlayRender {
   readonly id: string;
@@ -53,9 +54,12 @@ export class MapEngine {
 
   constructor(
     private readonly surface: RenderSurface,
-    opts: { imagePort?: ImagePort; maxCached?: number } = {},
+    opts: { imagePort?: ImagePort; maxCached?: number; priorityLoader?: PriorityLoader; scope?: ResourceScope; loaderGroup?: string } = {},
   ) {
-    this.loader = new MapImageLoader(opts.imagePort, opts.maxCached ?? 3);
+    this.loader = new MapImageLoader(opts.imagePort, opts.maxCached ?? 3,
+      opts.priorityLoader && opts.scope
+        ? { loader: opts.priorityLoader, scope: opts.scope, group: opts.loaderGroup ?? 'map-engine' }
+        : undefined);
   }
 
   get activeMapId(): string | null { return this.active?.entry.id ?? null; }
@@ -82,7 +86,12 @@ export class MapEngine {
 
     let img: LoadedImage;
     try {
-      img = await this.loader.load(rendering.src);
+      img = await this.loader.load(rendering.src, undefined, {
+        resourceId: `${entry.id}:${mode}`,
+        version: rendering.src,
+        estimatedBytes: Math.min(rendering.dims.w * rendering.dims.h, 6 * 1024 * 1024),
+        reason: mode === 'threeD' ? 'dealer explicitly selected real 3D' : 'current visible Original map',
+      });
     } catch {
       // aborted (superseded) or genuine failure
       if (myToken !== this.token) return { ok: false, reason: 'superseded' };
@@ -95,6 +104,7 @@ export class MapEngine {
       ? coords.cover(this.surface.viewport())
       : coords.fit(this.surface.viewport());
     this.active = { entry, mode, coords, transform, img };
+    this.loader.protect({ resourceId: `${entry.id}:${mode}`, version: rendering.src }, true);
     this.paint();
     return { ok: true, mapId: id, mode };
   }

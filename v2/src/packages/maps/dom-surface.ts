@@ -8,6 +8,7 @@
 import { MapEngine, type RenderSurface, type OverlayRender } from './map-engine';
 import { cssMapTransform, type Transform, type Viewport } from './coordinates';
 import type { LoadedImage } from './loader';
+import type { PriorityLoader, ResourceScope } from '../performance';
 
 export class DomRenderSurface implements RenderSurface {
   private readonly imgEl: HTMLImageElement;
@@ -66,9 +67,12 @@ export interface MountedMap {
 }
 
 /** Mount an interactive map engine onto a container, returning a disposer. */
-export function mountMapEngine(root: HTMLElement): MountedMap {
+export function mountMapEngine(
+  root: HTMLElement,
+  opts: { priorityLoader?: PriorityLoader; scope?: ResourceScope; loaderGroup?: string } = {},
+): MountedMap {
   const surface = new DomRenderSurface(root);
-  const engine = new MapEngine(surface);
+  const engine = new MapEngine(surface, opts);
 
   // Tap-vs-drag: we DON'T capture the pointer on down, so a tap's `click`
   // still reaches the SVG hit paths (that is what highlights a road/block).
