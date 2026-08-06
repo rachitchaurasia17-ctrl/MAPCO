@@ -9,6 +9,7 @@
    ═══════════════════════════════════════════════════════════════ */
 import { getSupabase } from './supabase/client';
 import { activeDataMode } from './adapter';
+import { publishResourceInvalidation } from '../performance';
 
 export interface DealerSession { email: string; userId: string; }
 
@@ -24,11 +25,13 @@ export async function signIn(email: string, password: string): Promise<{ ok: boo
   const c = await getSupabase();
   if (!c) return { ok: false, error: 'Backend not configured' };
   const { error } = await c.auth.signInWithPassword({ email: email.trim(), password });
+  if (!error) publishResourceInvalidation({ entity: 'dealer-session', id: 'signed-in' });
   return error ? { ok: false, error: error.message } : { ok: true };
 }
 
 export async function signOut(): Promise<void> {
   const c = await getSupabase();
+  publishResourceInvalidation({ entity: 'dealer-session', id: 'signed-out' });
   if (c) await c.auth.signOut();
   location.reload();
 }

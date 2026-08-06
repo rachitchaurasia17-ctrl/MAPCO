@@ -19,10 +19,13 @@ import {
   type DemandRepository, type DemandRecord, type DemandDraft, type DemandMatch,
   type MapRepository, type PresentationRepository, type PresentationState,
   type PresentationEventsRepository, type PresentationEvent,
+  type PredictiveRepository,
   type ClientLinkRepository, type ClientLinkState, type ClientSafePayload, type ClientSafeMap,
   type MediaRepository, type MediaState,
   type DemandSignalsRepository,
 } from '../contracts';
+import type { DealerPredictionSummary, PredictiveActionEvent } from '../../performance';
+import { publishResourceInvalidation } from '../../performance';
 import type { Property, Client, Deal, ClientLink, MapData, DemandSignal } from '../types';
 
 const DEFAULT_LIMIT = 12;
@@ -116,6 +119,8 @@ async function crmUpsert<T extends { id?: string }>(
       .upsert({ id, entity_type: entity, payload, deleted: false, updated_at: new Date().toISOString() })
       .select('id,payload,updated_at').single();
     if (error) return toErr(error);
+    if (entity === 'properties') publishResourceInvalidation({ entity: 'property', id });
+    if (entity === 'clients') publishResourceInvalidation({ entity: 'client', id });
     return ok(mapEntity<T>(data as CrmRow));
   } catch (e) { return toErr(e); }
 }
@@ -184,6 +189,7 @@ class SupaDeals implements DealRepository {
         if (env.reason === 'not_found') return err('not_found', 'That property is no longer available');
         return err('validation', env.reason ?? 'Could not record the sale');
       }
+      publishResourceInvalidation({ entity: 'inventory', id: input.propertyId });
       return ok({ ...(env.deal as object), id: String(env.deal.id ?? '') } as Deal);
     } catch (e) { return toErr(e); }
   }
@@ -326,6 +332,43 @@ class SupaPresentationEvents implements PresentationEventsRepository {
   }
 }
 
+class SupaPredictive implements PredictiveRepository {
+  async record(ev: PredictiveActionEvent, o?: QueryOptions): Promise<Result<void>> {
+    const a = aborted<void>(o); if (a) return a;
+    try {
+      const c = await client();
+      const { error } = await c.rpc('plotmap_record_predictive_event', {
+        p_event_type: ev.eventType,
+        p_session_id: ev.sessionId,
+        p_from_type: ev.fromType ?? null,
+        p_from_id: ev.fromId ?? null,
+        p_to_type: ev.toType ?? null,
+        p_to_id: ev.toId ?? null,
+        p_resource_type: ev.resourceType ?? null,
+        p_resource_id: ev.resourceId ?? null,
+        p_created_at: ev.at,
+      });
+      if (error) return toErr(error);
+      return ok(undefined);
+    } catch (e) { return toErr(e); }
+  }
+
+  async summaries(o?: QueryOptions): Promise<Result<readonly DealerPredictionSummary[]>> {
+    const a = aborted<readonly DealerPredictionSummary[]>(o); if (a) return a;
+    try {
+      const c = await client();
+      const { data, error } = await c.rpc('plotmap_predictive_summaries', { p_limit: 100 });
+      if (error) return toErr(error);
+      return ok(((data ?? []) as Record<string, unknown>[]).map((row) => ({
+        fromType: String(row.from_type ?? ''), fromId: String(row.from_id ?? ''),
+        toType: String(row.to_type ?? ''), toId: String(row.to_id ?? ''),
+        count: Number(row.transition_count ?? 0), recentScore: Number(row.recent_score ?? 0),
+        lastUsedAt: String(row.last_used_at ?? new Date(0).toISOString()),
+      })));
+    } catch (e) { return toErr(e); }
+  }
+}
+
 /* ── client links (dealer list + buyer resolve via RPC) ───────── */
 
 // The list RPC returns {id,label,status,propertyCount,tokenHint,expiresAt,
@@ -421,7 +464,9 @@ class SupaClientLinks implements ClientLinkRepository {
         if (audio) await c.storage.from('client-link-audio').remove([audio.objectPath]);
         return err('unknown', 'Could not create the link');
       }
-      return ok({ id: String(env.id ?? ''), token: env.token, url: env.url ?? `/client/?token=${env.token}`, expiresAt: env.expiresAt });
+      const created = { id: String(env.id ?? ''), token: env.token, url: env.url ?? `/client/?token=${env.token}`, expiresAt: env.expiresAt };
+      publishResourceInvalidation({ entity: 'client-link', id: created.id });
+      return ok(created);
     } catch (e) { return toErr(e); }
   }
 
@@ -431,6 +476,7 @@ class SupaClientLinks implements ClientLinkRepository {
       const c = await client();
       const { error } = await c.rpc('plotmap_revoke_client_link', { p_link_id: id });
       if (error) return toErr(error);
+      publishResourceInvalidation({ entity: 'client-link', id });
       return ok(undefined);
     } catch (e) { return toErr(e); }
   }
@@ -617,6 +663,7 @@ export class SupabaseDataAdapter implements DataAdapterV2 {
   readonly maps = new SupaMaps();
   readonly presentation = new SupaPresentation();
   readonly presentationEvents = new SupaPresentationEvents();
+  readonly predictive = new SupaPredictive();
   readonly clientLinks = new SupaClientLinks();
   readonly media = new SupaMedia();
 }

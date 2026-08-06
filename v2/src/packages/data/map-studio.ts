@@ -8,6 +8,7 @@
    ═══════════════════════════════════════════════════════════════ */
 import { getSupabase } from './supabase/client';
 import { activeDataMode } from './adapter';
+import { publishResourceInvalidation } from '../performance';
 
 export type MapStatus = 'draft' | 'published' | 'hidden' | 'archived';
 
@@ -91,6 +92,7 @@ class SupabaseMapStudio implements MapStudioRepo {
       const c = await getSupabase(); if (!c) return { ok: false, error: 'not configured' };
       const { data, error } = await c.rpc('plotmap_set_map_status', { p_map_id: id, p_status: status, p_client_visible: clientVisible ?? null });
       if (error) return { ok: false, error: error.message };
+      publishResourceInvalidation({ entity: 'map', id });
       return { ok: true, data: data ? rowToStudioMap(data as Record<string, unknown>) : undefined };
     } catch (e) { return { ok: false, error: (e as Error).message }; }
   }
@@ -99,6 +101,8 @@ class SupabaseMapStudio implements MapStudioRepo {
       const c = await getSupabase(); if (!c) return { ok: false, error: 'not configured' };
       const { error } = await c.rpc('plotmap_link_property_to_map', { p_property_id: propertyId, p_map_id: mapId, p_x: x ?? null, p_y: y ?? null });
       if (error) return { ok: false, error: error.message };
+      publishResourceInvalidation({ entity: 'property', id: propertyId });
+      publishResourceInvalidation({ entity: 'map', id: mapId });
       return { ok: true };
     } catch (e) { return { ok: false, error: (e as Error).message }; }
   }
@@ -107,6 +111,7 @@ class SupabaseMapStudio implements MapStudioRepo {
       const c = await getSupabase(); if (!c) return { ok: false, error: 'not configured' };
       const { error } = await c.rpc('plotmap_unlink_property_from_map', { p_property_id: propertyId });
       if (error) return { ok: false, error: error.message };
+      publishResourceInvalidation({ entity: 'property', id: propertyId });
       return { ok: true };
     } catch (e) { return { ok: false, error: (e as Error).message }; }
   }
@@ -124,6 +129,7 @@ class SupabaseMapStudio implements MapStudioRepo {
       const c = await getSupabase(); if (!c) return { ok: false, error: 'not configured' };
       const { data, error } = await c.rpc('plotmap_save_highlight_set', { p_payload: { id: set.id, mapId: set.mapId, name: set.name, itemIds: set.itemIds, accent: set.accent ?? '#F59E0B', labels: set.labels ?? {} } });
       if (error) return { ok: false, error: error.message };
+      publishResourceInvalidation({ entity: 'map', id: set.mapId });
       return { ok: true, data: data ? rowToHighlightSet(data as Record<string, unknown>) : undefined };
     } catch (e) { return { ok: false, error: (e as Error).message }; }
   }
@@ -132,6 +138,7 @@ class SupabaseMapStudio implements MapStudioRepo {
       const c = await getSupabase(); if (!c) return { ok: false, error: 'not configured' };
       const { error } = await c.rpc('plotmap_delete_highlight_set', { p_id: id });
       if (error) return { ok: false, error: error.message };
+      publishResourceInvalidation({ entity: 'map', id: '*' });
       return { ok: true };
     } catch (e) { return { ok: false, error: (e as Error).message }; }
   }
@@ -147,10 +154,18 @@ class MockMapStudio implements MapStudioRepo {
     if (!m) return { ok: false, error: 'not found' };
     m.status = status;
     m.clientVisible = clientVisible ?? (status === 'published');
+    publishResourceInvalidation({ entity: 'map', id });
     return { ok: true, data: { ...m } };
   }
-  async linkProperty(): Promise<StudioResult<void>> { return { ok: true }; }
-  async unlinkProperty(): Promise<StudioResult<void>> { return { ok: true }; }
+  async linkProperty(propertyId: string, mapId: string): Promise<StudioResult<void>> {
+    publishResourceInvalidation({ entity: 'property', id: propertyId });
+    publishResourceInvalidation({ entity: 'map', id: mapId });
+    return { ok: true };
+  }
+  async unlinkProperty(propertyId: string): Promise<StudioResult<void>> {
+    publishResourceInvalidation({ entity: 'property', id: propertyId });
+    return { ok: true };
+  }
   async listHighlightSets(mapId: string): Promise<StudioResult<HighlightSet[]>> {
     return { ok: true, data: this.sets.filter((s) => s.mapId === mapId).map((s) => ({ ...s })) };
   }
@@ -159,10 +174,12 @@ class MockMapStudio implements MapStudioRepo {
     const row: HighlightSet = { id, mapId: set.mapId, name: set.name, itemIds: [...set.itemIds], accent: set.accent ?? '#F59E0B', labels: set.labels ?? {} };
     const i = this.sets.findIndex((s) => s.id === id);
     if (i >= 0) this.sets[i] = row; else this.sets.push(row);
+    publishResourceInvalidation({ entity: 'map', id: set.mapId });
     return { ok: true, data: { ...row } };
   }
   async deleteHighlightSet(id: string): Promise<StudioResult<void>> {
     this.sets = this.sets.filter((s) => s.id !== id);
+    publishResourceInvalidation({ entity: 'map', id: '*' });
     return { ok: true };
   }
 }

@@ -329,6 +329,13 @@ export interface PresentationEventsRepository {
   record(event: PresentationEvent, opts?: QueryOptions): Promise<Result<void>>;
 }
 
+/** Dealer-only operational telemetry used by the transparent priority loader.
+ * It is intentionally separate from customer-facing presentation analytics. */
+export interface PredictiveRepository {
+  record(event: import('../performance').PredictiveActionEvent, opts?: QueryOptions): Promise<Result<void>>;
+  summaries(opts?: QueryOptions): Promise<Result<readonly import('../performance').DealerPredictionSummary[]>>;
+}
+
 /* ───────────────────────────────────────────────────────────────
    9. CLIENT LINKS + CLIENT-SAFE (BUYER) TYPES
    SECURITY INVARIANT (20_SECURITY_INVARIANTS):
@@ -518,6 +525,7 @@ export interface DataAdapterV2 {
   readonly maps: MapRepository;
   readonly presentation: PresentationRepository;
   readonly presentationEvents: PresentationEventsRepository;
+  readonly predictive: PredictiveRepository;
   readonly clientLinks: ClientLinkRepository;
   readonly media: MediaRepository;
 }

@@ -21,10 +21,13 @@ import {
   type DemandRepository, type DemandRecord, type DemandDraft, type DemandMatch,
   type MapRepository, type PresentationRepository, type PresentationState,
   type PresentationEventsRepository, type PresentationEvent,
+  type PredictiveRepository,
   type ClientLinkRepository, type ClientLinkState, type ClientSafePayload, type ClientSafeProperty,
   type MediaRepository, type MediaState,
   type DemandSignalsRepository, type DataAdapterV2,
 } from './contracts';
+import type { DealerPredictionSummary, PredictiveActionEvent } from '../performance';
+import { publishResourceInvalidation } from '../performance';
 
 /* ── helpers ─────────────────────────────────────────────────── */
 
@@ -132,6 +135,7 @@ class MockPropertyRepository implements PropertyRepository {
     const i = PROPERTIES.findIndex((p) => p.id === id);
     if (i >= 0) PROPERTIES[i] = row; else PROPERTIES.unshift(row);
     persistMock();
+    publishResourceInvalidation({ entity: 'property', id });
     return ok(row);
   }
 }
@@ -155,6 +159,7 @@ class MockCustomerRepository implements CustomerRepository {
     const i = CLIENTS.findIndex((c) => c.id === id);
     if (i >= 0) CLIENTS[i] = row; else CLIENTS.unshift(row);
     persistMock();
+    publishResourceInvalidation({ entity: 'client', id });
     return ok(row);
   }
 }
@@ -223,6 +228,7 @@ class MockDealRepository implements DealRepository {
     DEALS.unshift(deal);
     buyer.purchased = [...(buyer.purchased ?? []), prop.id];
     persistMock();
+    publishResourceInvalidation({ entity: 'inventory', id: prop.id });
 
     return ok(deal);
   }
@@ -382,6 +388,17 @@ class MockPresentationEventsRepository implements PresentationEventsRepository {
   }
 }
 
+class MockPredictiveRepository implements PredictiveRepository {
+  async record(_event: PredictiveActionEvent, opts?: QueryOptions): Promise<Result<void>> {
+    const a = aborted<void>(opts); if (a) return a;
+    return ok(undefined);
+  }
+  async summaries(opts?: QueryOptions): Promise<Result<readonly DealerPredictionSummary[]>> {
+    const a = aborted<readonly DealerPredictionSummary[]>(opts); if (a) return a;
+    return ok([]);
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════════
    CLIENT LINKS + CLIENT-SAFE MAPPER  (security boundary)
    ═══════════════════════════════════════════════════════════════ */
@@ -485,6 +502,7 @@ class MockClientLinkRepository implements ClientLinkRepository {
       status: 'active', events: { opens: 0, played: 0, called: 0, wa: 0, visit: 0 }, lastOpen: 'not yet',
     } as ClientLink);
     persistMock();
+    publishResourceInvalidation({ entity: 'client-link', id });
     return ok({ id, token, url: `/client/?token=${token}`, expiresAt: '' });
   }
 
@@ -493,6 +511,7 @@ class MockClientLinkRepository implements ClientLinkRepository {
     const link = CLIENT_LINKS.find((l) => l.id === id);
     if (link) link.status = 'revoked';
     persistMock();
+    publishResourceInvalidation({ entity: 'client-link', id });
     return ok(undefined);
   }
 
@@ -552,6 +571,7 @@ export class MockDataAdapterV2 implements DataAdapterV2 {
   readonly maps = new MockMapRepository();
   readonly presentation = new MockPresentationRepository();
   readonly presentationEvents = new MockPresentationEventsRepository();
+  readonly predictive = new MockPredictiveRepository();
   readonly clientLinks = new MockClientLinkRepository();
   readonly media = new MockMediaRepository();
 }

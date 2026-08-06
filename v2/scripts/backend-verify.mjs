@@ -190,6 +190,43 @@ async function main() {
   const isAdmin = await team.c.rpc('plotmap_is_platform_admin');
   isAdmin.data === false || isAdmin.data == null ? ok('team member is not a platform admin') : no('team elevated to platform admin');
 
+  console.log('\n[predictive] dealer-scoped operational telemetry');
+  const predictiveSession = `verify-${Date.now()}`;
+  const predictiveTarget = `target-${Date.now()}`;
+  const predictiveArgs = {
+    p_event_type: 'property-opened', p_session_id: predictiveSession,
+    p_from_type: 'route', p_from_id: 'verification',
+    p_to_type: 'property', p_to_id: predictiveTarget,
+    p_resource_type: 'property-summary', p_resource_id: predictiveTarget,
+    p_created_at: new Date().toISOString(),
+  };
+  const recorded = await demo.c.rpc('plotmap_record_predictive_event', predictiveArgs);
+  !recorded.error ? ok('authenticated dealer records a minimal predictive event through RPC') : no('predictive record: ' + recorded.error.message);
+  const ownEvent = await demo.c.from('predictive_usage_events').select('dealer_id,event_type,to_id').eq('session_id', predictiveSession);
+  (ownEvent.data ?? []).length === 1 && ownEvent.data?.[0]?.dealer_id === 'dealer-demo'
+    ? ok('dealer reads its own predictive event') : no('predictive own read: ' + JSON.stringify(ownEvent.error ?? ownEvent.data));
+  const otherEvent = await b.c.from('predictive_usage_events').select('dealer_id').eq('session_id', predictiveSession);
+  (otherEvent.data ?? []).length === 0 ? ok('dealer-b cannot read dealer-demo predictive events') : no('LEAK: dealer-b read predictive event');
+  const ownSummary = await demo.c.rpc('plotmap_predictive_summaries', { p_limit: 200 });
+  (ownSummary.data ?? []).some((row) => row.from_id === 'verification' && row.to_id === predictiveTarget)
+    ? ok('dealer transition summary is updated with time-decayed score') : no('predictive summary: ' + JSON.stringify(ownSummary.error ?? ownSummary.data));
+  const otherSummary = await b.c.rpc('plotmap_predictive_summaries', { p_limit: 200 });
+  !(otherSummary.data ?? []).some((row) => row.to_id === predictiveTarget)
+    ? ok('dealer-b summaries exclude dealer-demo transitions') : no('LEAK: dealer-b summary included demo transition');
+  const directWrite = await demo.c.from('predictive_usage_events').insert({
+    dealer_id: 'dealer-b', actor_id: ids.demoOwner, session_id: predictiveSession,
+    event_type: 'route-opened', to_type: 'route', to_id: 'forbidden-direct-write',
+  });
+  directWrite.error ? ok('direct predictive table writes are blocked') : no('SECURITY: direct predictive insert succeeded');
+  const anonPredictive = await anon().rpc('plotmap_predictive_summaries', { p_limit: 10 });
+  anonPredictive.error ? ok('anonymous callers cannot execute predictive telemetry RPCs') : no('SECURITY: anon predictive RPC succeeded');
+  await admin.from('predictive_usage_events').delete().eq('session_id', predictiveSession);
+  await admin.from('predictive_transition_summaries').delete()
+    .eq('dealer_id', 'dealer-demo').eq('from_type', 'route').eq('from_id', 'verification')
+    .eq('to_type', 'property').eq('to_id', predictiveTarget);
+  const predictiveCleanup = await admin.from('predictive_usage_events').select('id').eq('session_id', predictiveSession);
+  (predictiveCleanup.data ?? []).length === 0 ? ok('temporary predictive verification rows removed') : no('predictive verification cleanup failed');
+
   console.log('\n[maps] storage upload → dealer CRUD → publish → link → client visibility');
   const pngDims = (buf) => ({ w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) });
   const ROOT = 'migration-kit/maps with svg';
