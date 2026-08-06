@@ -35,6 +35,7 @@ import {
   propertyPhotoObjectPath,
   validatePropertyPhoto,
 } from '../property-photos';
+import { resolveMapAssetUrl } from '../map-assets';
 
 const DEFAULT_LIMIT = 12;
 const MAX_LIMIT = 50;
@@ -295,15 +296,23 @@ class SupaDemandSignals implements DemandSignalsRepository {
 
 /* ── maps / presentation / events ─────────────────────────────── */
 
-function rowToMapMeta(m: Record<string, unknown>): Omit<MapData, 'sets'> {
-  const assets = (m.assets as MapData['assets']) ?? {};
+function rowToMapMeta(
+  m: Record<string, unknown>,
+  resolveAsset: (value: string | undefined) => string | undefined = (value) => value,
+): Omit<MapData, 'sets'> {
+  const rawAssets = (m.assets as MapData['assets']) ?? {};
+  const assets: MapData['assets'] = {
+    ...(rawAssets.original ? { original: { ...rawAssets.original, path: resolveAsset(rawAssets.original.path) ?? rawAssets.original.path } } : {}),
+    ...(rawAssets.threeD ? { threeD: { ...rawAssets.threeD, path: resolveAsset(rawAssets.threeD.path) ?? rawAssets.threeD.path } } : {}),
+    ...(rawAssets.overlay ? { overlay: { ...rawAssets.overlay, path: resolveAsset(rawAssets.overlay.path) ?? rawAssets.overlay.path } } : {}),
+  };
   const dims = (m.dims as { original?: { w: number; h: number }; threeD?: { w: number; h: number } }) ?? {};
   const payload = (m.payload as { calibration?: MapData['calibration'] }) ?? {};
   return {
     id: m.id, kind: m.kind, city: m.city ?? '', sector: m.sector ?? '',
     area: (m.area as string) ?? undefined,
     parentMapId: (m.parent_map_id as string) ?? undefined,
-    label: m.label ?? m.area ?? '', raster: assets.original?.path ?? m.raster ?? '',
+    label: m.label ?? m.area ?? '', raster: assets.original?.path ?? resolveAsset(m.raster as string | undefined) ?? '',
     assets,
     calibration: payload.calibration,
     dims: {
@@ -316,6 +325,13 @@ function rowToMapMeta(m: Record<string, unknown>): Omit<MapData, 'sets'> {
 }
 
 class SupaMaps implements MapRepository {
+  private assetResolver(c: SupabaseClient) {
+    return (value: string | undefined) => resolveMapAssetUrl(
+      value,
+      (path) => c.storage.from('maps').getPublicUrl(path).data.publicUrl,
+    );
+  }
+
   async listRegistry(p?: PageParams, o?: QueryOptions): Promise<Result<Page<Omit<MapData, 'sets'>>>> {
     const a = aborted<Page<Omit<MapData, 'sets'>>>(o); if (a) return a;
     try {
@@ -323,10 +339,26 @@ class SupaMaps implements MapRepository {
       // Authenticated presentation path: dealer's published + client-visible maps only.
       const { data, error } = await c.rpc('plotmap_published_maps');
       if (error) return toErr(error);
-      const items = ((data ?? []) as Record<string, unknown>[]).map(rowToMapMeta);
+      const resolveAsset = this.assetResolver(c);
+      const items = ((data ?? []) as Record<string, unknown>[]).map((row) => rowToMapMeta(row, resolveAsset));
       return ok({ items, nextCursor: null, total: items.length });
     } catch (e) { return toErr(e); }
   }
+
+  async listPlacementCatalog(_p?: PageParams, o?: QueryOptions): Promise<Result<Page<Omit<MapData, 'sets'>>>> {
+    const a = aborted<Page<Omit<MapData, 'sets'>>>(o); if (a) return a;
+    try {
+      const c = await client();
+      const { data, error } = await c.rpc('plotmap_dealer_maps');
+      if (error) return toErr(error);
+      const resolveAsset = this.assetResolver(c);
+      const items = ((data ?? []) as Record<string, unknown>[])
+        .filter((row) => row.deleted !== true && row.status !== 'archived')
+        .map((row) => rowToMapMeta(row, resolveAsset));
+      return ok({ items, nextCursor: null, total: items.length });
+    } catch (e) { return toErr(e); }
+  }
+
   async get(id: string, o?: QueryOptions): Promise<Result<MapData>> {
     const a = aborted<MapData>(o); if (a) return a;
     try {
@@ -341,7 +373,7 @@ class SupaMaps implements MapRepository {
         const p = (s.payload as { itemIds?: unknown[]; marks?: unknown[]; accent?: string; labels?: Record<string, string> }) ?? {};
         return { id: s.id, name: s.name ?? '', marks: p.itemIds ?? p.marks ?? [], accent: p.accent, labels: p.labels ?? {} };
       });
-      return ok({ ...rowToMapMeta(m), sets } as unknown as MapData);
+      return ok({ ...rowToMapMeta(m, this.assetResolver(c)), sets } as unknown as MapData);
     } catch (e) { return toErr(e); }
   }
 }

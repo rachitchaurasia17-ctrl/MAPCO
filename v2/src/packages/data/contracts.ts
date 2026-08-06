@@ -295,6 +295,8 @@ export interface DemandRepository {
 export interface MapRepository {
   /** metadata only — never the raster bytes, so lists stay light. */
   listRegistry(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<Omit<MapData, 'sets'>>>>;
+  /** Dealer-scoped editor catalog, including drafts needed for exact placement relationships. */
+  listPlacementCatalog(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<Omit<MapData, 'sets'>>>>;
   /** full map with mark sets, loaded only when a map is opened. */
   get(id: string, opts?: QueryOptions): Promise<Result<MapData>>;
 }

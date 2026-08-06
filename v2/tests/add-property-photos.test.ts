@@ -49,6 +49,29 @@ describe('Add Property photo workflow', () => {
     flow.unmount();
   });
 
+  it('persists the exact sector and parent masterplan ids in the shared flow', async () => {
+    const completed = vi.fn();
+    const flow = new AddPropertyFlow([], completed, () => flow.unmount());
+    flow.mount(document.body);
+
+    await vi.waitFor(() => {
+      expect([...document.querySelectorAll('select[name="city"] option')].some((option) => option.textContent === 'Mohali')).toBe(true);
+    });
+    const city = document.querySelector<HTMLSelectElement>('select[name="city"]')!;
+    city.value = 'Mohali';
+    city.dispatchEvent(new Event('input', { bubbles: true }));
+
+    const sector = document.querySelector<HTMLSelectElement>('select[name="sectorMapId"]')!;
+    expect(sector.value).toBe('mohali-sector-90-91');
+    document.querySelector<HTMLButtonElement>('[data-act="save-draft"]')!.click();
+
+    await vi.waitFor(() => expect(completed).toHaveBeenCalledTimes(1));
+    const saved = completed.mock.calls[0]![0] as Property;
+    expect(saved.sectorMapId).toBe('mohali-sector-90-91');
+    expect(saved.masterplanId).toBe('mohali-master');
+    flow.unmount();
+  });
+
   it('removes successful uploads when a later gallery upload fails', async () => {
     let prepared: Property | undefined;
     vi.spyOn(adapter.properties, 'save').mockImplementation(async (property) => {

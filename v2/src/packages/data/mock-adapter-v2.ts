@@ -364,11 +364,29 @@ const MAP_REGISTRY: MapData[] = [
   },
 ];
 
+const MAP_PLACEMENT_REGISTRY: MapData[] = [
+  ...MAP_REGISTRY,
+  {
+    id: 'mohali-sector-90-91', kind: 'sector', city: 'Mohali', sector: 'Sector 90-91',
+    area: 'Janta Township', parentMapId: 'mohali-master', label: 'Mohali — Sector 90-91',
+    raster: '/maps-pilot/mohali-sector-90-91.jpg',
+    dims: { original: { w: 1024, h: 724 } },
+    assets: { original: { path: '/maps-pilot/mohali-sector-90-91.jpg', w: 1024, h: 724 } },
+    calibration: { status: 'unavailable', overlayViewBox: null, raster: { w: 1024, h: 724 } },
+    published: true, hidden: false, linkedProperties: [], sets: [],
+  },
+];
+
 class MockMapRepository implements MapRepository {
   async listRegistry(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<MapData>>> {
     const a = aborted<Page<MapData>>(opts); if (a) return a;
     if (sc() === 'no-map') return ok({ items: [], nextCursor: null, total: 0 });
     return ok(paginate(MAP_REGISTRY, params, (m, q) => m.label.toLowerCase().includes(q)));
+  }
+  async listPlacementCatalog(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<MapData>>> {
+    const a = aborted<Page<MapData>>(opts); if (a) return a;
+    if (sc() === 'no-map') return ok({ items: [], nextCursor: null, total: 0 });
+    return ok(paginate(MAP_PLACEMENT_REGISTRY, params, (m, q) => m.label.toLowerCase().includes(q)));
   }
   async get(id: string, opts?: QueryOptions): Promise<Result<MapData>> {
     const a = aborted<MapData>(opts); if (a) return a;

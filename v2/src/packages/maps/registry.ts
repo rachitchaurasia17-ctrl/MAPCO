@@ -60,6 +60,8 @@ export interface MapEntry {
   readonly kind: MapKind;
   readonly city: string;
   readonly sectorOrBlock: string;
+  /** Exact parent relationship supplied by the backend for sector maps. */
+  readonly parentMapId?: string;
   /** the official proof rendering (always present). */
   readonly original: Rendering;
   /** cleaned/easy rendering, if available. */
@@ -109,6 +111,7 @@ const REGISTRY: MapRegistry = {
       kind: 'sector',
       city: 'Mohali',
       sectorOrBlock: 'Sector 90-91',
+      parentMapId: 'masterplan-mohali',
       original: { src: `${BASE}/mohali-sector-90-91.jpg`, dims: { w: 1024, h: 724 } },
       overlays: [],
       linkedMapIds: ['masterplan-mohali'],
@@ -194,6 +197,7 @@ export function mapEntryFromData(d: MapCatalogInput): MapEntry | null {
     kind: d.kind,
     city: d.city || 'Other',
     sectorOrBlock: d.sector || d.area || '',
+    ...(d.parentMapId ? { parentMapId: d.parentMapId } : {}),
     original: { src: originalSrc, dims: { w: ow, h: oh } },
     ...(threeDPath ? { threeD: { src: threeDPath, dims: { w: d.assets!.threeD!.w || ow, h: d.assets!.threeD!.h || oh } } } : {}),
     // The engine never flat-renders the authored SVG (raw strokes would show).

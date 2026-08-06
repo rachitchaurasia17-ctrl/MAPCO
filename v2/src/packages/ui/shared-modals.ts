@@ -1,5 +1,9 @@
 import { Property, PropertyType, WantType, Facing, ClientLink, Client, type PropertyPhotoStorageRef } from '../data/types';
-import { getMaps, getMap, registerMaps, mountMapEngine, addPropertyToMap, type MountedMap, type MapCatalogInput } from '../maps';
+import {
+  getMap, registerMaps, mountMapEngine, addPropertyToMap, relatedMapPair,
+  sectorMapsForCity, placementVisibleOn, renderingFor,
+  type MountedMap, type MapCatalogInput, type MapEntry, type RenderMode,
+} from '../maps';
 import { formatINR } from './utils';
 import { adapter } from '../data/adapter';
 import { openPropertyDetail } from './property-detail';
@@ -36,8 +40,13 @@ export class AddPropertyFlow {
   private addStep = 1;
   private propId: string | null = null;
   private mapToggle: 'masterplan' | 'sector' = 'masterplan';
+  private mapMode: RenderMode = 'original';
   private activeMap: MountedMap | null = null;
+  private pinFrame = 0;
   private selectedMapPin: { mapId: string, x: number, y: number } | null = null;
+  private selectedSectorMapId = '';
+  private placementCatalog: MapEntry[] = [];
+  private mapLoadError = '';
   private coverPhoto: PendingPropertyPhoto | null = null;
   private galleryPhotos: PendingPropertyPhoto[] = [];
   private saving = false;
@@ -76,15 +85,39 @@ export class AddPropertyFlow {
     void this.loadCatalog();
   }
 
-  /** Merge the real Supabase catalog so step 3 places pins on REAL masterplans/sectors. */
+  /** Load the dealer-scoped editor catalog; never mix it with static pilot fallbacks. */
   private async loadCatalog() {
     try {
-      const r = await adapter.maps.listRegistry({ limit: 300 });
-      if (r.ok) { registerMaps(r.value.items as unknown as MapCatalogInput[]); if (this.addStep === 3) this.render(); }
-    } catch { /* keep pilot maps */ }
+      const r = await adapter.maps.listPlacementCatalog({ limit: 300 });
+      if (!r.ok) {
+        this.mapLoadError = r.error.message;
+      } else {
+        const inputs = r.value.items as unknown as MapCatalogInput[];
+        registerMaps(inputs);
+        this.placementCatalog = inputs
+          .map((item) => getMap(item.id))
+          .filter((item): item is MapEntry => !!item);
+        this.mapLoadError = '';
+        this.syncSectorSelection();
+      }
+      this.render();
+    } catch {
+      this.mapLoadError = 'Map catalog could not be loaded.';
+      this.render();
+    }
+  }
+
+  private syncSectorSelection() {
+    const candidates = sectorMapsForCity(this.placementCatalog, this.addForm.city);
+    const current = candidates.find((map) => map.id === this.selectedSectorMapId);
+    if (!current) this.selectedSectorMapId = candidates.length === 1 ? candidates[0]!.id : '';
+    const selected = candidates.find((map) => map.id === this.selectedSectorMapId);
+    if (selected) this.addForm.sector = selected.sectorOrBlock || selected.title;
   }
 
   public unmount() {
+    if (this.pinFrame) cancelAnimationFrame(this.pinFrame);
+    this.pinFrame = 0;
     if (this.activeMap) {
       this.activeMap.dispose();
       this.activeMap = null;
@@ -133,7 +166,14 @@ export class AddPropertyFlow {
     const labelStyle = "display:block;font-size:13px;font-weight:700;color:#6b6156";
     const previewPhotos = [this.coverPhoto, ...this.galleryPhotos]
       .filter((photo): photo is PendingPropertyPhoto => !!photo).map((photo) => photo.previewUrl);
-    const cityOptions = [...new Set([this.addForm.city, ...this.allCities])];
+    const cityOptions = [...new Set([
+      this.addForm.city,
+      ...this.allCities,
+      ...this.placementCatalog.map((map) => map.city),
+    ])];
+    const sectorOptions = sectorMapsForCity(this.placementCatalog, this.addForm.city);
+    const mapPair = relatedMapPair(this.placementCatalog, this.selectedSectorMapId);
+    const targetMap = this.mapToggle === 'sector' ? mapPair?.sector : mapPair?.masterplan;
     
     const step = (number: number, label: string) => {
       const complete = number < this.addStep;
@@ -151,7 +191,7 @@ export class AddPropertyFlow {
       <div style="display:flex;flex-direction:column;gap:5px;margin-top:7px">${[["ph-graduation-cap", "Chandigarh University", "10 min"], ["ph-storefront", "CP67 Mall", "8 min"], ["ph-first-aid-kit", "PGIMER Hospital", "22 min"]].map(([icon, name, time]) => `<div style="display:flex;align-items:center;gap:9px;border-radius:9px;background:rgba(255,255,255,.07);padding:8px 10px;font-size:11.5px;font-weight:700"><i class="ph-fill ${icon}" style="font-size:15px;color:#ffd75e"></i><span style="flex:1">${name}</span><span style="color:#55dd8a">${time}</span></div>`).join("")}</div>
     </aside>`;
     
-    const basics = `<section style="border:1px solid #eadfc9;border-radius:18px;background:rgba(255,255,255,.68);padding:24px"><div style="display:flex;align-items:center;gap:13px"><span style="width:44px;height:44px;border-radius:11px;background:#f0eaff;color:#6b3fd4;display:grid;place-items:center"><i class="ph ph-map-pin-area" style="font-size:22px"></i></span><h3 style="margin:0;font-family:'Newsreader',serif;font-size:22px;font-weight:600">Property Basics</h3></div><div style="margin-top:21px"><label style="${labelStyle}">Property title <b style="color:#db3d53">*</b><input name="title" value="${esc(this.addForm.title)}" style="${inputStyle}"></label><div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:17px"><label style="${labelStyle}">City <b style="color:#db3d53">*</b><select name="city" style="${inputStyle}">${cityOptions.map((item) => `<option ${item === this.addForm.city ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></label><label style="${labelStyle}">Area / Sector <b style="color:#db3d53">*</b><input name="area" value="${esc(this.addForm.area)}" style="${inputStyle}"></label><label style="${labelStyle}">Plot size <b style="color:#db3d53">*</b><input name="size" value="${esc(this.addForm.size)}" style="${inputStyle}"></label><label style="${labelStyle}">Price (₹)<input name="price" inputmode="numeric" value="${esc(this.addForm.price)}" placeholder="e.g. 8500000" style="${inputStyle}"></label><label style="${labelStyle}">Facing <b style="color:#db3d53">*</b><select name="facing" style="${inputStyle}">${["North-East", "East", "West", "North", "South", "North-West", "South-East", "South-West"].map((item) => `<option ${item === this.addForm.facing ? "selected" : ""}>${item}</option>`).join("")}</select></label><label style="${labelStyle}">Position <b style="color:#db3d53">*</b><select name="position" style="${inputStyle}">${["Park facing", "Corner plot", "Inside plot", "Road facing"].map((item) => `<option ${item === this.addForm.position ? "selected" : ""}>${item}</option>`).join("")}</select></label><label style="${labelStyle}">Sector<input name="sector" value="${esc(this.addForm.sector)}" style="${inputStyle}"></label><label style="${labelStyle}">Type<select name="type" style="${inputStyle}">${["Residential Plot", "Flat", "Floor", "Kothi", "Villa", "Commercial"].map((item) => `<option ${item === this.addForm.type ? "selected" : ""}>${item}</option>`).join("")}</select></label></div></div></section>`;
+    const basics = `<section style="border:1px solid #eadfc9;border-radius:18px;background:rgba(255,255,255,.68);padding:24px"><div style="display:flex;align-items:center;gap:13px"><span style="width:44px;height:44px;border-radius:11px;background:#f0eaff;color:#6b3fd4;display:grid;place-items:center"><i class="ph ph-map-pin-area" style="font-size:22px"></i></span><h3 style="margin:0;font-family:'Newsreader',serif;font-size:22px;font-weight:600">Property Basics</h3></div><div style="margin-top:21px"><label style="${labelStyle}">Property title <b style="color:#db3d53">*</b><input name="title" value="${esc(this.addForm.title)}" style="${inputStyle}"></label><div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:17px"><label style="${labelStyle}">City <b style="color:#db3d53">*</b><select name="city" style="${inputStyle}">${cityOptions.map((item) => `<option ${item === this.addForm.city ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></label><label style="${labelStyle}">Area / Sector <b style="color:#db3d53">*</b><input name="area" value="${esc(this.addForm.area)}" style="${inputStyle}"></label><label style="${labelStyle}">Plot size <b style="color:#db3d53">*</b><input name="size" value="${esc(this.addForm.size)}" style="${inputStyle}"></label><label style="${labelStyle}">Price (₹)<input name="price" inputmode="numeric" value="${esc(this.addForm.price)}" placeholder="e.g. 8500000" style="${inputStyle}"></label><label style="${labelStyle}">Facing <b style="color:#db3d53">*</b><select name="facing" style="${inputStyle}">${["North-East", "East", "West", "North", "South", "North-West", "South-East", "South-West"].map((item) => `<option ${item === this.addForm.facing ? "selected" : ""}>${item}</option>`).join("")}</select></label><label style="${labelStyle}">Position <b style="color:#db3d53">*</b><select name="position" style="${inputStyle}">${["Park facing", "Corner plot", "Inside plot", "Road facing"].map((item) => `<option ${item === this.addForm.position ? "selected" : ""}>${item}</option>`).join("")}</select></label><label style="${labelStyle}">Sector map<select name="sectorMapId" style="${inputStyle}" ${sectorOptions.length ? '' : 'disabled'}><option value="">${sectorOptions.length ? 'Choose sector map' : 'No sector map available'}</option>${sectorOptions.map((map) => `<option value="${esc(map.id)}" ${map.id === this.selectedSectorMapId ? 'selected' : ''}>${esc(map.title)}</option>`).join('')}</select></label><label style="${labelStyle}">Type<select name="type" style="${inputStyle}">${["Residential Plot", "Flat", "Floor", "Kothi", "Villa", "Commercial"].map((item) => `<option ${item === this.addForm.type ? "selected" : ""}>${item}</option>`).join("")}</select></label></div></div></section>`;
     
     // Step 2 — photos ONLY (no other fields).
     const gallerySlots = [
@@ -161,6 +201,11 @@ export class AddPropertyFlow {
     const coverStyle = this.coverPhoto ? `background:#d8d2c5 url('${esc(this.coverPhoto.previewUrl)}') center/cover` : 'background:#fbf8ff';
     const details = `<section style="border:1px solid #eadfc9;border-radius:18px;background:rgba(255,255,255,.68);padding:24px"><div style="display:flex;align-items:center;gap:13px"><span style="width:44px;height:44px;border-radius:11px;background:#f0eaff;color:#6b3fd4;display:grid;place-items:center"><i class="ph ph-image" style="font-size:22px"></i></span><h3 style="margin:0;font-family:'Newsreader',serif;font-size:22px;font-weight:600">Photos</h3></div><div style="margin-top:16px;font-size:13px;font-weight:700;color:#4c463d">Cover photo</div><button type="button" data-act="choose-cover" data-drop-kind="cover" style="width:100%;height:96px;margin-top:8px;border:1px dashed #c9b8d8;border-radius:12px;${coverStyle};color:#4c463d;display:flex;align-items:center;justify-content:center;gap:12px;position:relative">${this.coverPhoto ? `<span style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.2),transparent 45%)"></span><span style="position:relative;color:#fff;font-weight:800;text-shadow:0 1px 3px #000">Change cover photo</span><span data-act="remove-photo" data-kind="cover" role="button" aria-label="Remove cover photo" style="position:absolute;right:8px;top:8px;width:26px;height:26px;border-radius:50%;background:#fff;color:#241f1c;display:grid;place-items:center"><i class="ph-bold ph-x" style="font-size:12px"></i></span>` : `<i class="ph ph-upload-simple" style="font-size:30px;color:#6b3fd4"></i><span style="text-align:left"><b style="display:block;font-size:14px">Upload cover photo <span style="font-weight:500">or drag &amp; drop</span></b><small style="display:block;margin-top:3px;color:#8d8271">16:9 or 4:3 looks best</small></span>`}</button><input id="pm-cover-photo-input" type="file" accept="image/jpeg,image/png,image/webp" hidden><div style="margin-top:16px;font-size:13px;font-weight:700;color:#4c463d">Gallery photos</div><div data-drop-kind="gallery" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:8px">${gallerySlots}</div><input id="pm-gallery-photo-input" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden><p style="margin-top:14px;font-size:13px;color:${this.photoError ? '#b3123a' : '#8d8271'}">${esc(this.photoError || 'Add multiple photos here. Next you will place the property on the map.')}</p></section>`;
     
+    const mapStatus = this.mapLoadError
+      || (!mapPair ? 'Choose an exact sector map in Property Basics.' : '')
+      || (!targetMap ? 'This sector has no linked parent masterplan.' : '')
+      || (this.mapMode === 'threeD' ? '3D view — switch to Original to place or view the pin.' : '')
+      || (placementVisibleOn(this.selectedMapPin, targetMap, this.mapMode) ? `Pin placed on ${targetMap?.title ?? 'map'}` : 'Click map to place pin');
     const mapLocation = `<section style="border:1px solid #eadfc9;border-radius:18px;background:rgba(255,255,255,.68);display:flex;flex-direction:column;overflow:hidden;height:100%">
       <div style="flex:none;display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid #eadfc9">
         <div style="display:flex;align-items:center;gap:13px">
@@ -170,15 +215,18 @@ export class AddPropertyFlow {
             <p style="margin:3px 0 0;color:#8d8271;font-size:13px">Click on the map below to drop a pin for this property.</p>
           </div>
         </div>
-        <div style="display:flex;background:#f0eaff;border-radius:11px;padding:4px">
-           <button type="button" data-act="toggle-map" data-kind="sector" style="padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;${this.mapToggle === 'sector' ? 'background:#fff;color:#6b3fd4;box-shadow:0 2px 4px rgba(0,0,0,.05)' : 'color:#6b6156'}">Sector Map</button>
-           <button type="button" data-act="toggle-map" data-kind="masterplan" style="padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;${this.mapToggle === 'masterplan' ? 'background:#fff;color:#6b3fd4;box-shadow:0 2px 4px rgba(0,0,0,.05)' : 'color:#6b6156'}">Masterplan</button>
+        <div style="display:flex;gap:8px">
+          <div style="display:flex;background:#f0eaff;border-radius:11px;padding:4px">
+             <button type="button" data-act="toggle-map" data-kind="sector" ${mapPair ? '' : 'disabled'} style="padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;${this.mapToggle === 'sector' ? 'background:#fff;color:#6b3fd4;box-shadow:0 2px 4px rgba(0,0,0,.05)' : 'color:#6b6156'}">Sector Map</button>
+             <button type="button" data-act="toggle-map" data-kind="masterplan" ${mapPair?.masterplan ? '' : 'disabled'} style="padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;${this.mapToggle === 'masterplan' ? 'background:#fff;color:#6b3fd4;box-shadow:0 2px 4px rgba(0,0,0,.05)' : 'color:#6b6156'}">Masterplan</button>
+          </div>
+          ${targetMap ? `<div style="display:flex;background:#f0eaff;border-radius:11px;padding:4px"><button type="button" data-act="map-mode" data-mode="original" style="padding:8px 13px;border-radius:8px;font-size:13px;font-weight:700;${this.mapMode === 'original' ? 'background:#fff;color:#6b3fd4;box-shadow:0 2px 4px rgba(0,0,0,.05)' : 'color:#6b6156'}">Original</button>${targetMap.threeD ? `<button type="button" data-act="map-mode" data-mode="threeD" style="padding:8px 13px;border-radius:8px;font-size:13px;font-weight:700;${this.mapMode === 'threeD' ? 'background:#fff;color:#6b3fd4;box-shadow:0 2px 4px rgba(0,0,0,.05)' : 'color:#6b6156'}">3D</button>` : ''}</div>` : ''}
         </div>
       </div>
       <div style="flex:1;min-height:400px;position:relative;background:#e7e0d2">
         <div id="pm-add-map" style="position:absolute;inset:0"></div>
         <div style="position:absolute;bottom:15px;left:50%;transform:translateX(-50%);background:rgba(28,21,51,.8);color:#fff;padding:8px 16px;border-radius:99px;font-size:13px;font-weight:600;pointer-events:none;z-index:20">
-          ${this.selectedMapPin ? `Pin placed on ${this.selectedMapPin.mapId}` : 'Click map to place pin'}
+          ${esc(mapStatus)}
         </div>
       </div>
     </section>`;
@@ -213,60 +261,62 @@ export class AddPropertyFlow {
       </form>
     </div>`;
 
+    if (this.pinFrame) cancelAnimationFrame(this.pinFrame);
+    this.pinFrame = 0;
     if (this.activeMap) {
       this.activeMap.dispose();
       this.activeMap = null;
     }
 
-    if (this.addStep === 3) {
+    if (this.addStep === 3 && targetMap) {
       const mapEl = this.el.querySelector<HTMLElement>('#pm-add-map');
-      const maps = getMaps();
-      const masterplanMap = maps.find((m) => m.kind === 'masterplan' && m.city === this.addForm.city) || maps.find(m => m.kind === 'masterplan');
-      const sectorMap = maps.find((m) => m.kind === 'sector' && m.sectorOrBlock === this.addForm.sector) || maps.find(m => m.kind === 'sector');
-      
-      const targetMap = (this.mapToggle === 'masterplan' ? masterplanMap : sectorMap) || masterplanMap;
-      if (mapEl && targetMap) {
+      if (mapEl && renderingFor(targetMap, this.mapMode)) {
         this.activeMap = mountMapEngine(mapEl);
-        this.activeMap.engine.setMap(targetMap.id, { mode: 'original' });
+        const mounted = this.activeMap;
+        void mounted.engine.setMap(targetMap.id, { mode: this.mapMode });
         
         const pinLayer = document.createElement('div');
         pinLayer.style.cssText = 'position:absolute;inset:0;pointer-events:none;transform-origin:0 0';
         mapEl.appendChild(pinLayer);
 
-        if (this.selectedMapPin && this.selectedMapPin.mapId === targetMap.id) {
+        if (placementVisibleOn(this.selectedMapPin, targetMap, this.mapMode) && this.selectedMapPin) {
           const px = this.selectedMapPin.x * targetMap.original.dims.w;
           const py = this.selectedMapPin.y * targetMap.original.dims.h;
           pinLayer.innerHTML = `<div style="position:absolute;left:${px}px;top:${py}px;width:16px;height:16px;border-radius:50%;background:#6b3fd4;border:3px solid #fff;transform:translate(-50%,-50%);box-shadow:0 2px 5px rgba(0,0,0,0.3)"></div>`;
         }
 
         mapEl.addEventListener('click', (e) => {
-          const t = this.activeMap?.engine.transform;
-          if (!t || !targetMap) return;
+          if (this.mapMode !== 'original' || this.activeMap !== mounted) return;
+          const t = mounted.engine.transform;
+          if (!t) return;
           const rect = mapEl.getBoundingClientRect();
           const xScreen = e.clientX - rect.left;
           const yScreen = e.clientY - rect.top;
           
           const xIntrinsic = (xScreen - t.tx) / t.scale;
           const yIntrinsic = (yScreen - t.ty) / t.scale;
+          const x = xIntrinsic / targetMap.original.dims.w;
+          const y = yIntrinsic / targetMap.original.dims.h;
+          if (x < 0 || x > 1 || y < 0 || y > 1) return;
           
           this.selectedMapPin = {
             mapId: targetMap.id,
-            x: xIntrinsic / targetMap.original.dims.w,
-            y: yIntrinsic / targetMap.original.dims.h
+            x,
+            y,
           };
           this.render();
         });
 
         const updatePin = () => {
-          if (!this.activeMap) return;
-          const t = this.activeMap.engine.transform;
+          if (this.activeMap !== mounted) return;
+          const t = mounted.engine.transform;
           if (t) {
             pinLayer.style.transform = `translate(${t.tx}px, ${t.ty}px) scale(${t.scale})`;
             if (pinLayer.firstElementChild) {
                (pinLayer.firstElementChild as HTMLElement).style.transform = `translate(-50%,-50%) scale(${1 / t.scale})`;
             }
           }
-          requestAnimationFrame(updatePin);
+          this.pinFrame = requestAnimationFrame(updatePin);
         };
         updatePin();
       }
@@ -278,6 +328,11 @@ export class AddPropertyFlow {
     const area = this.addForm.area || 'New property';
     const city = this.addForm.city || 'New Chandigarh';
     const price = Number(String(this.addForm.price).replace(/[^0-9.]/g, '')) || 0;
+    const pair = relatedMapPair(this.placementCatalog, this.selectedSectorMapId);
+    const relatedIds = new Set([pair?.sector.id, pair?.masterplan?.id].filter((id): id is string => !!id));
+    const mapPlacement = this.selectedMapPin && relatedIds.has(this.selectedMapPin.mapId)
+      ? this.selectedMapPin
+      : undefined;
     if (!this.propId) this.propId = `prop-${Date.now()}`;
     return {
       id: this.propId, type,
@@ -294,7 +349,9 @@ export class AddPropertyFlow {
       photos: [this.coverPhoto, ...this.galleryPhotos]
         .filter((photo): photo is PendingPropertyPhoto => !!photo).map((photo) => photo.previewUrl),
       published, sold: false, views: 0,
-      mapPlacement: this.selectedMapPin || undefined,
+      ...(pair ? { sectorMapId: pair.sector.id } : {}),
+      ...(pair?.masterplan ? { masterplanId: pair.masterplan.id } : {}),
+      ...(mapPlacement ? { mapPlacement } : {}),
     };
   }
 
@@ -346,7 +403,9 @@ export class AddPropertyFlow {
       photos: [],
       photoStorage: uploaded,
       published,
-      mapPlacement: this.selectedMapPin || undefined,
+      mapPlacement: draft.mapPlacement,
+      sectorMapId: draft.sectorMapId,
+      masterplanId: draft.masterplanId,
     });
     if (!committed.ok) {
       const cleaned = await this.cleanupUploaded(uploaded);
@@ -356,7 +415,7 @@ export class AddPropertyFlow {
       this.render();
       return;
     }
-    if (published && this.selectedMapPin) addPropertyToMap(this.selectedMapPin.mapId, committed.value.id);
+    if (published && draft.mapPlacement) addPropertyToMap(draft.mapPlacement.mapId, committed.value.id);
     this.onComplete(committed.value);
   }
 
@@ -373,7 +432,15 @@ export class AddPropertyFlow {
   private attachEvents() {
     this.el.addEventListener("input", (event) => {
       const target = event.target as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
-      if (!target.closest("#pm-add-plot") || !(target.name in this.addForm)) return;
+      if (!target.closest("#pm-add-plot")) return;
+      if (target.name === 'sectorMapId') {
+        this.selectedSectorMapId = target.value;
+        this.syncSectorSelection();
+        this.mapMode = 'original';
+        this.render();
+        return;
+      }
+      if (!(target.name in this.addForm)) return;
       this.addForm = { ...this.addForm, [target.name as keyof typeof this.addForm]: target.value } as any;
       if (target.name === "title") {
         const title = this.el.querySelector<HTMLElement>("#pm-add-preview-title");
@@ -382,6 +449,11 @@ export class AddPropertyFlow {
       if (target.name === "city" || target.name === "area") {
         const locationLabel = this.el.querySelector<HTMLElement>("#pm-add-preview-location");
         if (locationLabel) locationLabel.textContent = `${this.addForm.area}, ${this.addForm.city}`;
+      }
+      if (target.name === 'city') {
+        this.syncSectorSelection();
+        this.mapMode = 'original';
+        this.render();
       }
     });
 
@@ -417,7 +489,20 @@ export class AddPropertyFlow {
       const action = target.dataset.act;
       if (this.saving) return;
       if (action === "toggle-map") {
-        this.mapToggle = target.dataset.kind as 'masterplan' | 'sector';
+        const kind = target.dataset.kind as 'masterplan' | 'sector';
+        const pair = relatedMapPair(this.placementCatalog, this.selectedSectorMapId);
+        if ((kind === 'masterplan' && !pair?.masterplan) || (kind === 'sector' && !pair)) return;
+        this.mapToggle = kind;
+        this.mapMode = 'original';
+        this.render();
+        return;
+      }
+      if (action === 'map-mode') {
+        const mode = target.dataset.mode as RenderMode;
+        const pair = relatedMapPair(this.placementCatalog, this.selectedSectorMapId);
+        const map = this.mapToggle === 'sector' ? pair?.sector : pair?.masterplan;
+        if (mode === 'threeD' && !map?.threeD) return;
+        this.mapMode = mode === 'threeD' ? 'threeD' : 'original';
         this.render();
         return;
       }

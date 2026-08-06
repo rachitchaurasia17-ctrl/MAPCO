@@ -20,3 +20,5 @@ export { MapEngine } from './map-engine';
 export type { RenderSurface, OverlayRender, SetMapResult } from './map-engine';
 export { DomRenderSurface, mountMapEngine } from './dom-surface';
 export type { MountedMap } from './dom-surface';
+export { relatedMapPair, sectorMapsForCity, placementVisibleOn } from './relationships';
+export type { RelatedMapPair } from './relationships';

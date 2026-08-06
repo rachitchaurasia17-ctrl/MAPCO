@@ -47,6 +47,7 @@ describe('mapEntryFromData', () => {
     const e = mapEntryFromData({ id: 's2', kind: 'sector', city: 'Mohali', label: 'S2', parentMapId: 'cat-mohali-master',
       assets: { original: { path: 'https://x/s2.png', w: 800, h: 600 } } })!;
     expect(e.linkedMapIds).toEqual(['cat-mohali-master']);
+    expect(e.parentMapId).toBe('cat-mohali-master');
   });
 
   it('returns null for a missing raster (missing-asset)', () => {
