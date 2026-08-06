@@ -52,6 +52,7 @@ export class PredictiveRuntime {
   private readonly telemetryControllers = new Set<AbortController>();
   private readonly telemetryTimers = new Set<ReturnType<typeof setTimeout>>();
   private readonly debugApi?: PredictiveDebugApi;
+  private readonly cleanupEnvironment: () => void;
 
   constructor(
     readonly scope: ResourceScope,
@@ -77,6 +78,7 @@ export class PredictiveRuntime {
       (globalThis as typeof globalThis & { __MAPCO_LOADER_DEBUG__?: PredictiveDebugApi }).__MAPCO_LOADER_DEBUG__ = this.debugApi;
     }
     this.unsubscribeInvalidation = subscribeResourceInvalidation((event) => this.handleInvalidation(event));
+    this.cleanupEnvironment = this.watchEnvironment();
   }
 
   async loadHistory(signal?: AbortSignal): Promise<void> {
@@ -111,7 +113,15 @@ export class PredictiveRuntime {
     options: { cache?: LoadTask<T>['cache']; group?: string; contextVersion?: number } = {},
   ): { decision: ScoreResult; promise?: Promise<T> } {
     const full = { ...candidate, key: { ...candidate.key, scope: this.scope } };
-    const decision = scoreCandidate(full, this.profile(), this.weights);
+    let decision = scoreCandidate(full, this.profile(), this.weights);
+    if (candidate.isThreeD && (candidate.signals.directAction ?? 0) < 0.95
+      && decision.stage === 'download' && this.loader.pendingImmediate) {
+      decision = {
+        ...decision,
+        stage: 'prepare',
+        explanation: [...decision.explanation, '3D download held while P0/P1 work is pending'],
+      };
+    }
     if (decision.priority === 'skip') return { decision };
     return {
       decision,
@@ -159,6 +169,7 @@ export class PredictiveRuntime {
 
   dispose(): void {
     this.unsubscribeInvalidation();
+    this.cleanupEnvironment();
     for (const timer of this.telemetryTimers) clearTimeout(timer);
     this.telemetryTimers.clear();
     for (const controller of this.telemetryControllers) controller.abort();
@@ -188,6 +199,27 @@ export class PredictiveRuntime {
       attempt();
     }, 750);
     this.telemetryTimers.add(timer);
+  }
+
+  private watchEnvironment(): () => void {
+    const cancelConstrainedPredictions = () => {
+      const current = this.profile();
+      if (current.visible && current.online && !current.saveData
+        && current.effectiveType !== 'slow-2g' && current.effectiveType !== '2g') return;
+      this.loader.cancelWhere((task) => task.priority === 'P2' || task.priority === 'P3', 'environment constrained');
+    };
+    if (typeof document !== 'undefined') document.addEventListener('visibilitychange', cancelConstrainedPredictions);
+    const connection = typeof navigator === 'undefined' ? undefined
+      : (navigator as Navigator & { connection?: { addEventListener?: (type: string, listener: () => void) => void; removeEventListener?: (type: string, listener: () => void) => void } }).connection;
+    connection?.addEventListener?.('change', cancelConstrainedPredictions);
+    if (typeof window !== 'undefined') window.addEventListener('online', cancelConstrainedPredictions);
+    if (typeof window !== 'undefined') window.addEventListener('offline', cancelConstrainedPredictions);
+    return () => {
+      if (typeof document !== 'undefined') document.removeEventListener('visibilitychange', cancelConstrainedPredictions);
+      connection?.removeEventListener?.('change', cancelConstrainedPredictions);
+      if (typeof window !== 'undefined') window.removeEventListener('online', cancelConstrainedPredictions);
+      if (typeof window !== 'undefined') window.removeEventListener('offline', cancelConstrainedPredictions);
+    };
   }
 
   private handleInvalidation(event: ResourceInvalidation): void {

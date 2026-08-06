@@ -65,6 +65,17 @@ describe('transparent candidate scoring', () => {
     const old = SessionLearning.dealerScores([{ fromType: 'masterplan', fromId: 'mohali', toType: 'sector', toId: '82', count: 100, recentScore: 1, lastUsedAt: new Date(Date.now() - 180 * 86_400_000).toISOString() }], 'masterplan', 'mohali', 'sector', '82');
     expect(recent.recent).toBeGreaterThan(old.history);
   });
+
+  it('allows only high-end P3 downloads on fast idle connections', () => {
+    const result = scoreCandidate({
+      key: key('small-idle-thumbnail', 'property-thumbnail'),
+      signals: { context: 0.8, relationship: 0.3, probability: 0.6 },
+      cost: { bytes: 0, parse: 0 }, preferredStage: 'download', reason: 'idle thumbnail',
+    }, fast);
+    expect(result.priority).toBe('P3');
+    expect(result.score).toBeGreaterThanOrEqual(36);
+    expect(result.stage).toBe('download');
+  });
 });
 
 describe('shared priority loader', () => {
@@ -149,6 +160,33 @@ describe('shared priority loader', () => {
     const heavy = loader.schedule({ key: key('heavy', 'map-raster'), priority: 'P2', stage: 'download', cost: { bytes: 2_000_000, parse: 0.8, heavy: true }, reason: 'prediction', run: async () => 'no' });
     await expect(heavy).rejects.toMatchObject({ name: 'AbortError' });
     await expect(loader.schedule({ key: key('current'), priority: 'P0', stage: 'download', cost: { bytes: 2_000_000, parse: 0.8, heavy: true }, reason: 'direct', run: async () => 'yes' })).resolves.toBe('yes');
+  });
+
+  it('pauses even lightweight prediction preparation in a hidden tab', async () => {
+    const loader = new PriorityLoader(() => ({ ...fast, visible: false }));
+    await expect(loader.schedule({
+      key: key('hidden'), priority: 'P2', stage: 'prepare', cost: { bytes: 0, parse: 0 }, reason: 'background tab', run: async () => 'no',
+    })).rejects.toMatchObject({ name: 'AbortError' });
+  });
+
+  it('holds exceptional predictive 3D at prepare while immediate work is pending', async () => {
+    const runtime = new PredictiveRuntime(scope, undefined, () => fast);
+    let release!: () => void;
+    const current = runtime.request({
+      key: { type: 'map-raster', id: 'current' }, priority: 'P0', stage: 'download',
+      cost: { bytes: 1, parse: 0 }, reason: 'visible map',
+      run: () => new Promise<string>((resolve) => { release = () => resolve('current'); }),
+    });
+    const scheduled = runtime.scheduleCandidate({
+      key: { type: 'map-raster', id: 'predicted-3d' },
+      signals: { context: 1, relationship: 1, sessionTransition: 1, dealerRecent: 1, dealerHistory: 1, recentInteraction: 1, probability: 1 },
+      cost: { bytes: 200_000, parse: 0.1 }, preferredStage: 'download', isThreeD: true, reason: 'exceptional 3D',
+    }, async () => 'prepared');
+    expect(scheduled.decision.stage).toBe('prepare');
+    release();
+    await current;
+    await scheduled.promise;
+    runtime.dispose();
   });
 
   it('deduplicates by dealer/public-token scope and never crosses scopes', () => {

@@ -48,7 +48,7 @@ export function scoreCandidate(
     : score >= 42 ? 'P2' : score >= 24 ? 'P3' : 'skip';
   let stage = candidate.preferredStage;
   if (priority === 'P2' && score < 66) stage = 'prepare';
-  if (priority === 'P3' && score < 78) stage = 'prepare';
+  if (priority === 'P3' && score < 36) stage = 'prepare';
   // Exact predictive-3D gate: explicit requests are P0; otherwise score >= 94,
   // 4G, >=8 GB reported memory, visible/idle, and Data Saver off.
   if (candidate.isThreeD && direct < 0.95) {
