@@ -3,11 +3,28 @@ import { getInitials, getProfile } from '../../../packages/auth/auth';
 import type { Client, ClientLink, Property } from '../../../packages/data/types';
 import { GenerateLinkFlow } from '../../../packages/ui/shared-modals';
 import { renderClientLinkView, previewPayloadFromLink, type ClientLinkViewMap } from '../../../packages/ui/client-link-view';
+import { getSession } from '../../../packages/data/session';
+import { PredictiveRuntime, dealerScope, sessionScope } from '../../../packages/performance';
 
 const esc = (value: string) => value.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!);
 const titleCase = (value: string) => value.charAt(0).toUpperCase() + value.slice(1);
+let activeLinkPredictive: PredictiveRuntime | null = null;
 
 export async function renderLinks(el: HTMLElement): Promise<void> {
+  activeLinkPredictive?.dispose();
+  const dealerSession = await getSession().catch(() => null);
+  const predictive = new PredictiveRuntime(dealerSession ? dealerScope(dealerSession.userId) : sessionScope(), {
+    async record(event, signal) {
+      const result = await adapter.predictive.record(event, { signal });
+      if (!result.ok) throw new Error(result.error.message);
+    },
+    async summaries(signal) {
+      const result = await adapter.predictive.summaries({ signal });
+      if (!result.ok) throw new Error(result.error.message);
+      return result.value;
+    },
+  });
+  activeLinkPredictive = predictive;
   let links: ClientLink[] = [];
   let clients: Client[] = [];
   let properties: Property[] = [];
@@ -27,6 +44,8 @@ export async function renderLinks(el: HTMLElement): Promise<void> {
   links = [...linkResult.value.items];
   clients = [...clientResult.value.items];
   properties = [...propertyResult.value.items];
+  predictive.recordAction('route-opened', { type: 'route', id: 'client-links' });
+  void predictive.loadHistory();
   if (mapResult.ok) maps = mapResult.value.items.map((m) => ({
     id: m.id, kind: m.kind, city: m.city, sector: m.sector, area: m.area,
     label: m.label, parentMapId: m.parentMapId, raster: m.raster,
@@ -108,7 +127,8 @@ export async function renderLinks(el: HTMLElement): Promise<void> {
           // A link was created server-side — refresh the real list.
           void adapter.clientLinks.list({ limit: 50 }).then((r) => { if (r.ok) { links = [...r.value.items]; render(); } });
         },
-        () => { flow.unmount(); }
+        () => { flow.unmount(); },
+        predictive,
       );
       flow.mount(document.body);
       return;

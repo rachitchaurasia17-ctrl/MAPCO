@@ -3,6 +3,7 @@ import { getMaps, getMap, registerMaps, mountMapEngine, addPropertyToMap, type M
 import { formatINR } from './utils';
 import { adapter } from '../data/adapter';
 import { openPropertyDetail } from './property-detail';
+import type { PredictiveRuntime } from '../performance';
 
 const esc = (value: string) =>
   value.replace(
@@ -12,6 +13,20 @@ const esc = (value: string) =>
         char
       ]!,
   );
+
+function mediaCacheMeta(src: string): { version: string; expiresAt?: number } {
+  try {
+    const url = new URL(src, location.href);
+    const expires = Number(url.searchParams.get('expires') ?? url.searchParams.get('Expires'));
+    const signed = url.pathname.includes('/sign/') || url.searchParams.has('token');
+    return {
+      version: `${url.pathname}:${Number.isFinite(expires) && expires > 0 ? expires : 'current'}`,
+      ...(Number.isFinite(expires) && expires > 0
+        ? { expiresAt: expires > 10_000_000_000 ? expires : expires * 1000 }
+        : signed ? { expiresAt: Date.now() + 45 * 60_000 } : {}),
+    };
+  } catch { return { version: 'current' }; }
+}
 
 export class AddPropertyFlow {
   private el: HTMLElement;
@@ -436,15 +451,18 @@ export class GenerateLinkFlow {
   private onClose: () => void;
   private clients: Client[];
   private properties: Property[];
+  private predictive?: PredictiveRuntime;
 
-  constructor(clients: Client[], properties: Property[], onComplete: (l: ClientLink) => void, onClose: () => void) {
+  constructor(clients: Client[], properties: Property[], onComplete: (l: ClientLink) => void, onClose: () => void, predictive?: PredictiveRuntime) {
     this.clients = clients;
     this.properties = properties;
     this.onComplete = onComplete;
     this.onClose = onClose;
+    this.predictive = predictive;
     this.el = document.createElement('div');
     this.el.id = 'pm-generate-link-flow';
     this.attachEvents();
+    this.predictive?.recordAction('client-link-started', { type: 'workflow', id: 'client-link-create' }, { type: 'client-link-preview', id: 'new' });
   }
 
   public mount(container: HTMLElement) { container.appendChild(this.el); this.render(); }
@@ -503,7 +521,7 @@ export class GenerateLinkFlow {
       <div style="display:flex;align-items:center;gap:14px;padding:22px 26px;border-bottom:1px solid #ddeee4;background:#dcf3e5"><span style="width:46px;height:46px;border-radius:14px;background:#12704a;color:#fff;display:grid;place-items:center;flex:none"><i class="ph-fill ph-paper-plane-tilt" style="font-size:23px"></i></span><div style="flex:1;min-width:0"><div style="font-family:'Newsreader',serif;font-weight:500;font-size:26px;letter-spacing:-.02em;color:#241d0c">Send a private link</div><div style="font-size:14px;color:#12704a">One page, only for them. Voice note optional.</div></div><button data-act="close-build" style="width:38px;height:38px;border-radius:12px;background:#fffaf0;color:#6b6156;display:grid;place-items:center;flex:none"><i class="ph-bold ph-x" style="font-size:16px"></i></button></div>
       <div data-scroll style="padding:22px 26px;max-height:60vh;overflow-y:auto">
         <div style="font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">Who is it for</div><div style="display:flex;flex-direction:column;gap:9px;margin-top:11px">${this.clients.length ? this.clients.map((client) => { const on = this.chosenClient === client.id; return `<button data-act="choose-client" data-id="${esc(client.id)}" style="display:flex;align-items:center;gap:12px;width:100%;padding:11px 13px;border-radius:14px;transition:all .16s;${on ? 'background:#dcf3e5;border:1px solid #12a150' : 'background:#faf7ff;border:1px solid #e4dbf7'}"><span style="width:40px;height:40px;border-radius:12px;flex:none;display:grid;place-items:center;font-size:13px;font-weight:800;${on ? 'background:#12704a;color:#fff' : 'background:#e2f2e6;color:#12704a'}">${this.getInitials(client.name)}</span><span style="flex:1;min-width:0;text-align:left"><span style="display:block;font-size:15.5px;font-weight:800;color:#2f2a2d">${esc(client.name)}</span><span style="display:block;font-size:13px;color:#8d8271">${esc(client.want)} · ${esc(client.city)}</span></span><i class="${on ? 'ph-fill ph-check-circle' : 'ph ph-circle'}" style="font-size:20px;color:#12a150;flex:none"></i></button>`; }).join('') : '<div style="font-size:13.5px;color:#8d8271;padding:8px 2px">Add a customer first, then send them a link.</div>'}</div>
-        <div style="margin-top:22px;display:flex;align-items:baseline;justify-content:space-between;gap:10px"><div style="font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">Which plots</div><div style="font-size:13.5px;font-weight:700;color:#12704a">${this.chosenProps.length ? `${this.chosenProps.length} ${this.chosenProps.length === 1 ? 'plot' : 'plots'} chosen` : 'Pick up to 4'}</div></div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:11px">${this.properties.slice(0, 12).map((property) => { const on = this.chosenProps.includes(property.id); return `<button data-act="choose-prop" data-id="${esc(property.id)}" style="position:relative;overflow:hidden;border-radius:14px;background:#faf7ff;border:2px solid ${on ? '#12a150' : '#e4dbf7'}"><span style="display:block;width:100%;height:70px;background:${property.photos[0] ? `url('${esc(property.photos[0])}') center/cover` : '#efe8fb'}"></span><span style="display:block;padding:9px 10px;font-size:12.5px;font-weight:700;text-align:left;line-height:1.3;color:#241f1c">${esc(property.loc)}</span>${on ? '<span style="position:absolute;top:7px;right:7px;width:24px;height:24px;border-radius:50%;background:#12a150;color:#fff;display:grid;place-items:center"><i class="ph-bold ph-check" style="font-size:13px"></i></span>' : ''}</button>`; }).join('')}</div>
+        <div style="margin-top:22px;display:flex;align-items:baseline;justify-content:space-between;gap:10px"><div style="font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">Which plots</div><div style="font-size:13.5px;font-weight:700;color:#12704a">${this.chosenProps.length ? `${this.chosenProps.length} ${this.chosenProps.length === 1 ? 'plot' : 'plots'} chosen` : 'Pick up to 4'}</div></div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:11px">${this.properties.slice(0, 12).map((property) => { const on = this.chosenProps.includes(property.id); const photo = property.photos[0]; return `<button data-act="choose-prop" data-id="${esc(property.id)}" style="position:relative;overflow:hidden;border-radius:14px;background:#faf7ff;border:2px solid ${on ? '#12a150' : '#e4dbf7'}"><span style="display:block;width:100%;height:70px;background:#efe8fb;overflow:hidden">${photo ? `<img src="${esc(photo)}" alt="" loading="lazy" decoding="async" style="display:block;width:100%;height:100%;object-fit:cover">` : ''}</span><span style="display:block;padding:9px 10px;font-size:12.5px;font-weight:700;text-align:left;line-height:1.3;color:#241f1c">${esc(property.loc)}</span>${on ? '<span style="position:absolute;top:7px;right:7px;width:24px;height:24px;border-radius:50%;background:#12a150;color:#fff;display:grid;place-items:center"><i class="ph-bold ph-check" style="font-size:13px"></i></span>' : ''}</button>`; }).join('')}</div>
         <div style="margin-top:22px;font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">Price for this link <span style="font-weight:700;text-transform:none;letter-spacing:0;color:#a5946f">· blank = Price on call</span></div>
         <div style="display:flex;flex-direction:column;gap:9px;margin-top:11px">${this.chosenProps.length ? this.chosenProps.map((id) => { const p = this.properties.find((x) => x.id === id); if (!p) return ''; return `<div style="display:flex;align-items:center;gap:11px"><span style="flex:1;min-width:0;font-size:14px;font-weight:700;color:#4c463d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.area)}</span><div style="display:flex;align-items:center;gap:6px;background:#faf7ff;border:1px solid #e4dbf7;border-radius:11px;padding:0 12px"><span style="color:#8d8271;font-weight:800">₹</span><input data-price-for="${esc(id)}" inputmode="numeric" value="${esc(this.prices[id] ?? '')}" placeholder="Price on call" style="width:150px;height:44px;border:none;outline:none;background:none;font-size:15px;font-weight:700;color:#241f1c"></div></div>`; }).join('') : '<div style="font-size:13.5px;color:#8d8271">Pick plots above to set their price.</div>'}</div>
         <div style="margin-top:22px;font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">Location</div>
@@ -640,8 +658,10 @@ export class GenerateLinkFlow {
       if (action === 'close-build' || action === 'close-done') { this.onClose(); return; }
       if (action === 'choose-client') { this.chosenClient = this.chosenClient === id ? '' : id; this.render(); }
       else if (action === 'choose-prop') {
+        const adding = !this.chosenProps.includes(id) && this.chosenProps.length < 4;
         this.chosenProps = this.chosenProps.includes(id) ? this.chosenProps.filter((x) => x !== id)
           : this.chosenProps.length < 4 ? [...this.chosenProps, id] : this.chosenProps;
+        if (adding) this.prepareSelectedProperty(id);
         this.render();
       }
       else if (action === 'toggle-precise') { this.locationPrecise = !this.locationPrecise; this.render(); }
@@ -651,6 +671,34 @@ export class GenerateLinkFlow {
       else if (action === 'copy') { const url = target.dataset.url || ''; void navigator.clipboard?.writeText(url); target.textContent = 'Copied'; }
       else if (action === 'send') { void this.send(); }
     });
+  }
+
+  private prepareSelectedProperty(id: string): void {
+    const property = this.properties.find((item) => item.id === id);
+    if (!property || !this.predictive) return;
+    this.predictive.recordAction('client-link-property-added', { type: 'property', id }, { type: 'client-link-preview', id });
+    void this.predictive.prepareValue(
+      { type: 'client-link-preview', id: `selection:${[...this.chosenProps].sort().join(',')}`, version: 'current' },
+      this.chosenProps.map((propertyId) => this.properties.find((item) => item.id === propertyId)).filter(Boolean),
+      { priority: 'P1', reason: 'selected properties prepare link preview summaries', costBytes: 12_000 },
+    ).catch(() => undefined);
+    const src = property.photos[0];
+    if (!src || typeof Image === 'undefined') return;
+    const meta = mediaCacheMeta(src);
+    const scheduled = this.predictive.scheduleCandidate({
+      key: { type: 'property-thumbnail', id: `${id}:0`, version: meta.version },
+      signals: { directAction: 0.75, context: 1, relationship: 1, probability: 1 },
+      cost: { bytes: 96_000, parse: 0.15 }, preferredStage: 'download',
+      reason: 'property selected for Client Link',
+    }, (signal) => new Promise<HTMLImageElement>((resolve, reject) => {
+      const image = new Image(); image.decoding = 'async';
+      const abort = () => { image.src = ''; reject(new DOMException('aborted', 'AbortError')); };
+      signal.addEventListener('abort', abort, { once: true });
+      image.onload = () => { signal.removeEventListener('abort', abort); resolve(image); };
+      image.onerror = () => { signal.removeEventListener('abort', abort); reject(new Error('Client Link thumbnail unavailable')); };
+      image.src = src;
+    }), { cache: { costBytes: 96_000, expiresAt: meta.expiresAt, dispose: (image) => { (image as HTMLImageElement).src = ''; } } });
+    void scheduled.promise?.catch(() => undefined);
   }
 }
 

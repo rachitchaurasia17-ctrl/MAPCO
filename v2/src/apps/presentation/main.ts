@@ -12,7 +12,9 @@ import '../../packages/ui/tokens.css';
 import '../../packages/ui/reset.css';
 import './presentation.css';
 import { adapter } from '../../packages/data/adapter';
+import { getSession } from '../../packages/data/session';
 import { cssMapTransform, getMap, registerMaps, mountMapEngine, loadSvgOverlay, type RenderMode, type MountedMap, type MapCatalogInput, type MapEntry, type SvgHighlightHandle } from '../../packages/maps';
+import { PredictiveRuntime, dealerScope, sessionScope, type PredictiveCandidate } from '../../packages/performance';
 
 /** A saved highlight combination (built in Map Studio). */
 type SavedSet = { id: string; name: string; itemIds: string[]; accent?: string; labels?: Record<string, string> };
@@ -99,6 +101,7 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
 
   let mounted: MountedMap | null = null;
   const controller = new AbortController();
+  const sessionPromise = getSession().catch(() => null);
 
   // ── static shell ──────────────────────────────────────────
   container.innerHTML = `
@@ -130,7 +133,30 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
   const railReopen = container.querySelector<HTMLElement>('#pm-rail-reopen')!;
   const detail = container.querySelector<HTMLElement>('#pm-detail')!;
 
-  mounted = mountMapEngine(stage);
+  const dealerSession = await sessionPromise;
+  const predictive = new PredictiveRuntime(
+    dealerSession ? dealerScope(dealerSession.userId) : sessionScope(),
+    {
+      async record(event, signal) {
+        const result = await adapter.predictive.record(event, { signal });
+        if (!result.ok) throw new Error(result.error.message);
+      },
+      async summaries(signal) {
+        const result = await adapter.predictive.summaries({ signal });
+        if (!result.ok) throw new Error(result.error.message);
+        return result.value;
+      },
+    },
+  );
+  let mapContextVersion = predictive.loader.beginContext('presentation-map');
+  let detailContextVersion = predictive.loader.beginContext('presentation-detail');
+  let hoverContextVersion = predictive.loader.beginContext('presentation-hover');
+
+  mounted = mountMapEngine(stage, {
+    priorityLoader: predictive.loader,
+    scope: predictive.scope,
+    loaderGroup: 'presentation-map-raster',
+  });
   const highlightLayer = document.createElement('div');
   highlightLayer.className = 'pm-map-smooth';
   highlightLayer.style.cssText = 'position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:1;transform-origin:0 0;';
@@ -181,6 +207,114 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
   function plotPhoto(property: Property, index: number): string {
     return property.photos[index % Math.max(property.photos.length, 1)]
       || `/assets/ph-plot-${((property.id.length + index) % 3) + 1}.png`;
+  }
+
+  type LocalCandidate = Omit<PredictiveCandidate, 'key'> & { key: Omit<PredictiveCandidate['key'], 'scope'> };
+
+  function assetCacheMeta(src: string): { version: string; expiresAt?: number } {
+    try {
+      const url = new URL(src, location.href);
+      const expires = Number(url.searchParams.get('expires') ?? url.searchParams.get('Expires'));
+      const signed = url.pathname.includes('/sign/') || url.searchParams.has('token');
+      return {
+        version: `${url.pathname}:${Number.isFinite(expires) && expires > 0 ? expires : 'current'}`,
+        ...(Number.isFinite(expires) && expires > 0 ? { expiresAt: expires > 10_000_000_000 ? expires : expires * 1000 }
+          : signed ? { expiresAt: Date.now() + 45 * 60_000 } : {}),
+      };
+    } catch { return { version: 'current' }; }
+  }
+
+  function queueCandidate<T>(candidate: LocalCandidate, value: T, group = 'presentation-detail', contextVersion = detailContextVersion): void {
+    const scheduled = predictive.scheduleCandidate(candidate, async () => value, {
+      group, contextVersion,
+      cache: { costBytes: candidate.cost.bytes },
+    });
+    void scheduled.promise?.catch(() => undefined);
+  }
+
+  function preloadPropertyPhoto(property: Property, direct: boolean): void {
+    const src = property.photos[0];
+    if (!src || typeof Image === 'undefined') return;
+    const meta = assetCacheMeta(src);
+    const candidate: LocalCandidate = {
+      key: { type: direct ? 'property-media' : 'property-thumbnail', id: `${property.id}:0`, version: meta.version },
+      signals: direct
+        ? { directAction: 0.75, context: 1, relationship: 1, probability: 1 }
+        : { context: 0.65, relationship: 0.25, recentInteraction: 1, probability: 0.7 },
+      cost: { bytes: direct ? 420_000 : 96_000, parse: direct ? 0.45 : 0.15 },
+      preferredStage: direct ? 'download' : 'prepare',
+      reason: direct ? 'selected property first visible photo' : 'hover/focus thumbnail boost',
+    };
+    const scheduled = predictive.scheduleCandidate(candidate, (signal) => new Promise<HTMLImageElement>((resolve, reject) => {
+      const image = new Image(); image.decoding = 'async';
+      const abort = () => { image.src = ''; reject(new DOMException('aborted', 'AbortError')); };
+      signal.addEventListener('abort', abort, { once: true });
+      image.onload = () => { signal.removeEventListener('abort', abort); resolve(image); };
+      image.onerror = () => { signal.removeEventListener('abort', abort); reject(new Error('Predictive image load failed')); };
+      image.src = src;
+    }), {
+      group: direct ? 'presentation-detail' : 'presentation-hover',
+      contextVersion: direct ? detailContextVersion : hoverContextVersion,
+      cache: {
+        costBytes: candidate.cost.bytes, expiresAt: meta.expiresAt,
+        dispose: (image) => { (image as HTMLImageElement).src = ''; },
+      },
+    });
+    void scheduled.promise?.catch(() => undefined);
+  }
+
+  function predictForMap(mapId: string): void {
+    const current = maps.find((item) => item.id === mapId);
+    if (!current) return;
+    const relatedMaps = current.kind === 'masterplan'
+      ? maps.filter((item) => item.kind === 'sector' && item.city === current.city)
+      : maps.filter((item) => item.kind === 'masterplan' && (current.linkedMapIds.includes(item.id) || item.city === current.city));
+    for (const related of relatedMaps.slice(0, 8)) {
+      const history = predictive.historySignals(current.kind, current.id, related.kind, related.id);
+      queueCandidate({
+        key: { type: 'map-metadata', id: related.id, version: related.original.src },
+        signals: { context: 0.9, relationship: 0.95, probability: 0.75, ...history },
+        cost: { bytes: 0, parse: 0 }, preferredStage: 'prepare',
+        reason: current.kind === 'masterplan' ? 'masterplan deterministically links to sector' : 'sector deterministically links to parent masterplan',
+      }, related, 'presentation-map', mapContextVersion);
+    }
+    const relatedProperties = props.filter((property) => current.linkedPropertyIds.includes(property.id) || property.mapPlacement?.mapId === current.id);
+    for (const property of relatedProperties.slice(0, 12)) {
+      const history = predictive.historySignals(current.kind, current.id, 'property', property.id);
+      queueCandidate({
+        key: { type: 'property-summary', id: property.id, version: String(property.published) },
+        signals: { context: 0.8, relationship: 0.9, probability: 0.7, ...history },
+        cost: { bytes: 0, parse: 0 }, preferredStage: 'prepare',
+        reason: 'map deterministically links to visible property summary',
+      }, property, 'presentation-map', mapContextVersion);
+    }
+    const likely = relatedProperties.sort((a, b) =>
+      predictive.historySignals(current.kind, current.id, 'property', b.id).dealerRecent
+      - predictive.historySignals(current.kind, current.id, 'property', a.id).dealerRecent)[0];
+    if (likely) preloadPropertyPhoto(likely, false);
+  }
+
+  function predictForProperty(property: Property): void {
+    const mapIds = [property.sectorMapId, property.masterplanId, property.mapPlacement?.mapId].filter((id): id is string => Boolean(id));
+    for (const id of [...new Set(mapIds)]) {
+      const map = maps.find((item) => item.id === id);
+      if (!map) continue;
+      const history = predictive.historySignals('property', property.id, map.kind, map.id);
+      queueCandidate({
+        key: { type: 'map-metadata', id: map.id, version: map.original.src },
+        signals: { context: 1, relationship: 1, probability: 0.9, ...history },
+        cost: { bytes: 0, parse: 0 }, preferredStage: 'prepare',
+        reason: 'property saved sector/masterplan/placement relationship',
+      }, map);
+    }
+    if (property.mapPlacement) {
+      queueCandidate({
+        key: { type: 'map-placement', id: property.id, version: `${property.mapPlacement.mapId}:${property.mapPlacement.x}:${property.mapPlacement.y}` },
+        signals: { context: 1, relationship: 1, probability: 1 },
+        cost: { bytes: 0, parse: 0 }, preferredStage: 'prepare', reason: 'property drawer prepares precise saved placement',
+      }, property.mapPlacement);
+    }
+    preloadPropertyPhoto(property, true);
   }
 
   function motifStyle(index: number, gridSize = 16): string {
@@ -253,8 +387,24 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
     activeSetIndex = -1;
     if (!map || !highlightsAvailable()) { pendingSpotQuery = null; renderMapControls(); return; }
     const spec = map.overlay!;
+    const overlayMeta = assetCacheMeta(spec.src);
     const myToken = ++overlayToken;
-    const handle = await loadSvgOverlay(spec.src, spec.viewBox, { signal: controller.signal });
+    const handle = await loadSvgOverlay(spec.src, spec.viewBox, {
+      signal: controller.signal,
+      cacheKey: `${predictive.scope.id}:${map.id}:${overlayMeta.version}`,
+      expiresAt: overlayMeta.expiresAt,
+      fetchText: (_src) => predictive.request({
+        key: { type: 'map-svg', id: map.id, version: overlayMeta.version },
+        priority: 'P1', stage: 'download', group: 'presentation-map', contextVersion: mapContextVersion,
+        cost: { bytes: 480_000, parse: 0.7, heavy: true }, reason: 'current map calibrated SVG highlight layer',
+        cache: { costBytes: 960_000, expiresAt: overlayMeta.expiresAt },
+        run: async (signal) => {
+          const response = await fetch(spec.src, { signal });
+          if (!response.ok) throw new Error(`SVG ${response.status}`);
+          return response.text();
+        },
+      }),
+    });
     if (myToken !== overlayToken || activeMapId !== map.id) { handle?.destroy(); return; } // superseded
     if (!handle) { pendingSpotQuery = null; return; }          // fetch failed → raster-only
     overlay = handle;
@@ -321,7 +471,16 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
   async function loadSavedSets(mapId: string): Promise<void> {
     savedSets = [];
     if (!mapId) { renderMapControls(); return; }
-    const res = await adapter.maps.get(mapId, { signal: controller.signal });
+    let res;
+    try {
+      res = await predictive.request({
+        key: { type: 'map-overlay', id: mapId, version: 'published-sets' },
+        priority: 'P1', stage: 'prepare', group: 'presentation-map', contextVersion: mapContextVersion,
+        cost: { bytes: 24_000, parse: 0.12 }, reason: 'current map highlight metadata',
+        cache: { costBytes: 24_000 },
+        run: (signal) => adapter.maps.get(mapId, { signal }),
+      });
+    } catch { return; }
     if (res.ok) {
       savedSets = (res.value.sets ?? []).map((s) => {
         const marks = (s.marks ?? []) as unknown[];
@@ -473,12 +632,12 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(298px,1fr));gap:20px;margin-top:22px">
               ${props.map(p => {
                 const photo = p.photos[0];
-                const bg = photo ? `background:#efdcb2 url('${esc(photo)}') center/cover` : `background:#efe6da;display:grid;place-items:center;color:#b3a894`;
+                const bg = photo ? 'background:#efdcb2' : `background:#efe6da;display:grid;place-items:center;color:#b3a894`;
                 const pName = p.id === 'ecocity' ? 'Eco City plot' : p.id === 'block5' ? 'Block 5 site' : p.id === 'aero' ? 'Aerocity plot' : p.id === 'sec79' ? 'Sector 79 plot' : p.id === 'sec66' ? 'Sector 66 plot' : p.area;
                 return `
                 <button data-act="open-prop" data-id="${esc(p.id)}" style="text-align:left;background:#fffdfb;border-radius:20px;overflow:hidden;box-shadow:0 0 0 1px rgba(88,52,168,.1),0 14px 30px -22px rgba(42,31,77,.6);cursor:pointer;transition:transform .15s,box-shadow .15s" onmouseenter="this.style.transform='translateY(-8px)';this.style.boxShadow='0 0 0 1px rgba(139,96,232,.35),0 3px 4px rgba(40,26,2,.06),0 44px 66px -36px rgba(139,96,232,.6)'" onmouseleave="this.style.transform='none';this.style.boxShadow='0 0 0 1px rgba(88,52,168,.1),0 14px 30px -22px rgba(42,31,77,.6)'">
                   <span style="position:relative;display:block;overflow:hidden">
-                    <span style="display:block;aspect-ratio:16/9;${bg}">${photo ? '' : '<i class="ph-fill ph-image" style="font-size:34px"></i>'}</span>
+                    <span style="display:block;aspect-ratio:16/9;position:relative;overflow:hidden;${bg}">${photo ? `<img src="${esc(photo)}" alt="" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">` : '<i class="ph-fill ph-image" style="font-size:34px"></i>'}</span>
                     <span style="position:absolute;top:13px;left:13px;display:inline-block;white-space:nowrap;padding:6px 11px;border-radius:8px;background:rgba(28,21,51,.72);backdrop-filter:blur(10px);font-size:12px;font-weight:800;letter-spacing:.02em;font-variant-numeric:tabular-nums;color:#fff8e6">${esc(p.size)}</span>
                     <span style="position:absolute;right:13px;bottom:13px;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:rgba(255,253,249,.95);box-shadow:0 2px 8px -3px rgba(28,21,51,.4);font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;color:#1c1533"><i class="ph-fill ph-images" style="font-size:13px"></i>${p.photos.length} photos</span>
                   </span>
@@ -525,11 +684,10 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
       const shown = sectorCity === 'all' ? allCards : allCards.filter((c) => c.city === sectorCity);
       const cardsHtml = shown.map((c) => {
         const isActive = c.real && c.id === activeMapId;
-        const thumb = c.raster
-          ? `background:#0b0714 url('${esc(c.raster)}') center/cover`
-          : motifStyle(c.motif, 22);
+        const thumb = c.raster ? 'background:#0b0714' : motifStyle(c.motif, 22);
         return `<button data-act="open-sec" data-id="${esc(c.id)}" style="display:flex;flex-direction:column;overflow:hidden;border-radius:20px;background:#fffdf9;box-shadow:0 0 0 ${isActive ? '2px #ffc21e' : '1px rgba(88,52,168,.1)'},0 24px 46px -36px rgba(60,40,5,.8);cursor:pointer;text-align:left;transition:transform .18s,box-shadow .18s" onmouseenter="this.style.transform='translateY(-6px)'" onmouseleave="this.style.transform='none'">
-          <span style="position:relative;display:block;height:170px;${thumb}">
+          <span style="position:relative;display:block;height:170px;overflow:hidden;${thumb}">
+            ${c.raster ? `<img src="${esc(c.raster)}" alt="" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">` : ''}
             <span style="position:absolute;top:12px;left:12px;padding:6px 12px;border-radius:9px;background:rgba(28,21,51,.78);backdrop-filter:blur(8px);font-size:12px;font-weight:800;color:#fff8e6">${esc(c.city)}</span>
             ${c.plots ? `<span style="position:absolute;right:12px;bottom:12px;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:#ffc21e;font-size:12.5px;font-weight:800;color:#231a04;box-shadow:0 6px 14px -6px rgba(120,80,0,.7)"><i class="ph-fill ph-map-pin" style="font-size:13px"></i>${c.plots} plot${c.plots === 1 ? '' : 's'} of ours</span>` : ''}
           </span>
@@ -570,7 +728,7 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
         <div style="flex:1;min-height:0;width:100%;max-width:1340px;margin:0 auto;padding:18px 26px 22px;display:flex;flex-direction:column">
           <div style="display:flex;align-items:center;gap:14px;flex:none"><button data-act="close-prop" style="display:flex;align-items:center;gap:9px;height:44px;padding:0 17px;border-radius:13px;background:rgba(255,248,230,.14);color:#fff8e6;font-size:15px;font-weight:800"><i class="ph-bold ph-arrow-left" style="font-size:17px"></i>Back</button><div style="flex:1"></div><div style="display:flex;align-items:center;gap:9px;height:44px;padding:0 15px;border-radius:13px;background:rgba(255,248,230,.1)"><i class="ph-fill ph-seal-check" style="font-size:19px;color:#7be0a4"></i><span style="font-size:14.5px;font-weight:800;color:#e9f7ee">${esc(approval)}</span></div></div>
           <div style="flex:1;min-height:0;margin-top:16px;display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:22px;animation:lbIn .3s cubic-bezier(.2,.8,.2,1) both">
-            <div style="min-height:0;display:flex;flex-direction:column"><div style="position:relative;flex:1;min-height:0;border-radius:24px;overflow:hidden;box-shadow:0 40px 80px -34px rgba(0,0,0,.8)"><div style="position:absolute;inset:0;background-image:url('${esc(photo)}');background-size:cover;background-position:center"></div><div style="position:absolute;left:0;right:0;bottom:0;padding:44px 26px 20px;background:linear-gradient(180deg,rgba(18,12,2,0),rgba(18,12,2,.85));display:flex;align-items:flex-end;justify-content:space-between;gap:16px"><div style="font-size:18px;font-weight:800;color:#fffdf7">${CAPTIONS[propertyShot]}</div><div style="font-size:14.5px;font-weight:800;color:#e2cf9f;flex:none">${propertyShot + 1} of 6</div></div><button data-act="prop-prev" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;background:rgba(255,250,238,.92);color:#241d0c;display:grid;place-items:center"><i class="ph-bold ph-caret-left" style="font-size:23px"></i></button><button data-act="prop-next" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;background:rgba(255,250,238,.92);color:#241d0c;display:grid;place-items:center"><i class="ph-bold ph-caret-right" style="font-size:23px"></i></button></div><div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:11px;flex:none">${[0, 1, 2, 3, 4, 5].map((index) => `<button data-act="prop-shot" data-index="${index}" style="display:block;overflow:hidden;border-radius:13px;box-shadow:0 0 0 ${index === propertyShot ? '3px #ffc21e' : '1.5px rgba(255,248,230,.2)'}"><span style="display:block;width:100%;height:64px;background-image:url('${esc(plotPhoto(property, index))}');background-size:cover;background-position:center"></span></button>`).join('')}</div></div>
+            <div style="min-height:0;display:flex;flex-direction:column"><div style="position:relative;flex:1;min-height:0;border-radius:24px;overflow:hidden;box-shadow:0 40px 80px -34px rgba(0,0,0,.8)"><div style="position:absolute;inset:0;background-image:url('${esc(photo)}');background-size:cover;background-position:center"></div><div style="position:absolute;left:0;right:0;bottom:0;padding:44px 26px 20px;background:linear-gradient(180deg,rgba(18,12,2,0),rgba(18,12,2,.85));display:flex;align-items:flex-end;justify-content:space-between;gap:16px"><div style="font-size:18px;font-weight:800;color:#fffdf7">${CAPTIONS[propertyShot]}</div><div style="font-size:14.5px;font-weight:800;color:#e2cf9f;flex:none">${propertyShot + 1} of 6</div></div><button data-act="prop-prev" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;background:rgba(255,250,238,.92);color:#241d0c;display:grid;place-items:center"><i class="ph-bold ph-caret-left" style="font-size:23px"></i></button><button data-act="prop-next" style="position:absolute;right:14px;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;background:rgba(255,250,238,.92);color:#241d0c;display:grid;place-items:center"><i class="ph-bold ph-caret-right" style="font-size:23px"></i></button></div><div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:11px;flex:none">${[0, 1, 2, 3, 4, 5].map((index) => `<button data-act="prop-shot" data-index="${index}" style="display:block;overflow:hidden;border-radius:13px;box-shadow:0 0 0 ${index === propertyShot ? '3px #ffc21e' : '1.5px rgba(255,248,230,.2)'}"><img src="${esc(plotPhoto(property, index))}" alt="" loading="${index === propertyShot ? 'eager' : 'lazy'}" decoding="async" style="display:block;width:100%;height:64px;object-fit:cover"></button>`).join('')}</div></div>
             <div style="min-height:0;display:flex;flex-direction:column"><div data-scroll style="flex:1;min-height:0;overflow-y:auto;padding-right:4px"><div style="font-size:11.5px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#ffd76b">${esc(property.city)}</div><h1 style="margin:8px 0 0;font-family:'Newsreader',serif;font-weight:500;font-size:clamp(30px,4.4vh,44px);line-height:1;letter-spacing:-.035em;color:#fffdf7">${esc(propertyName(property))}</h1><div style="margin-top:8px;font-size:16px;color:#e2cf9f">${esc(property.loc)}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px">${facts.map(([key, value]) => `<div style="padding:13px 16px;border-radius:15px;background:rgba(255,248,230,.09);box-shadow:inset 0 0 0 1px rgba(255,248,230,.14)"><div style="font-size:11.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#c8b58a">${esc(key!)}</div><div style="margin-top:4px;font-family:'Newsreader',serif;font-weight:500;font-size:22px;color:#fffdf7;line-height:1.1">${esc(value!)}</div></div>`).join('')}</div><div style="margin-top:16px;font-size:11.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#e2cf9f">What is close by</div><div style="display:flex;flex-direction:column;gap:7px;margin-top:10px">${property.landmarks.map((landmark) => `<div style="display:flex;align-items:center;gap:11px;padding:10px 14px;border-radius:13px;background:rgba(255,248,230,.07)"><i class="${esc(landmark.icon)}" style="font-size:19px;color:#ffd76b;flex:none"></i><span style="flex:1;min-width:0;font-size:14.5px;font-weight:700;color:#fff8e6">${esc(landmark.name)}</span><span style="font-size:14.5px;font-weight:800;color:#7be0a4;flex:none">${esc(landmark.distance)}</span></div>`).join('')}</div></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:14px;flex:none"><button data-act="prop-plan" style="display:flex;align-items:center;justify-content:center;gap:9px;height:52px;border-radius:15px;background:#ffc21e;color:#231a04;font-size:15px;font-weight:800;box-shadow:0 18px 34px -18px rgba(255,194,30,.95)"><i class="ph-fill ph-map-trifold" style="font-size:19px"></i>Masterplan</button><button data-act="prop-sector" data-id="${sector?.id || ''}" style="display:flex;align-items:center;justify-content:center;gap:9px;height:52px;border-radius:15px;background:rgba(255,248,230,.14);color:#fff8e6;font-size:15px;font-weight:800"><i class="ph-fill ph-map-pin-area" style="font-size:19px"></i>Sector map</button><a href="${esc(streetViewUrl(property.loc))}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;height:52px;border-radius:15px;background:#e8f0fe;color:#1a56c4;font-size:15px;font-weight:800;text-decoration:none"><i class="ph-fill ph-person-simple-walk" style="font-size:19px"></i>Street view</a><a href="${esc(waUrl)}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;height:52px;border-radius:15px;background:#12a150;color:#fff;font-size:15px;font-weight:800;text-decoration:none"><i class="ph-fill ph-whatsapp-logo" style="font-size:19px"></i>WhatsApp</a></div></div>
           </div>
         </div>
@@ -590,11 +748,10 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
         ? props.filter((p) => p.mapPlacement?.mapId === realMap.id)
         : sector!.propertyIds.map((id) => props.find((property) => property.id === id)).filter((property): property is Property => Boolean(property));
       const pinPositions = [[48, 44], [66, 36], [43, 58], [30, 40], [72, 60]];
-      // Original vs 3D. If a real 3D raster exists we swap the image; otherwise
-      // (examples, or real maps with no 3D asset) 3D is a light CSS tilt so every
-      // map still has a working 3D toggle.
+      // Original vs real 3D asset. Missing 3D stays Original; geometry is never
+      // faked with a CSS tilt or transformed copy of the official map.
       const threeDSrc = realMap && sectorMode === 'threeD' ? (realMap.threeD?.src || '') : '';
-      const tilt = sectorMode === 'threeD' && !threeDSrc ? 'perspective(1500px) rotateX(42deg) rotateZ(-4deg) scale(.86)' : 'none';
+      const tilt = 'none';
       const mapBg = realMap
         ? `background:#0b0714 url('${esc(threeDSrc || realMap.original?.src || '')}') center/contain no-repeat`
         : motifStyle(SECTORS.indexOf(sector!), 34);
@@ -603,7 +760,7 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
         const pos = pinPositions[index % pinPositions.length]!; return { x: pos[0]!, y: pos[1]! };
       };
       detail.innerHTML = `<div style="position:absolute;inset:0;z-index:30;display:flex;background:#1d1405;background-image:radial-gradient(75% 55% at 88% -4%,rgba(255,201,60,.34),transparent 60%),radial-gradient(65% 50% at 4% 10%,rgba(151,110,235,.28),transparent 60%),radial-gradient(80% 60% at 50% 106%,rgba(31,161,110,.22),transparent 60%);animation:veil .2s ease both">
-        <div style="flex:1;min-width:0;display:flex;flex-direction:column;padding:22px 24px 22px 26px;gap:16px;min-height:0"><div style="flex:none;display:flex;align-items:center;gap:10px"><button data-act="close-sec" style="flex:none;white-space:nowrap;display:flex;align-items:center;gap:8px;height:44px;padding:0 17px;border-radius:14px;background:rgba(255,248,230,.12);color:#fff8e6;font-size:15px;font-weight:800"><i class="ph-bold ph-arrow-left" style="font-size:16px"></i>All sectors</button><div style="flex:0 1 auto;min-width:0;display:flex;align-items:center;gap:9px;height:44px;padding:0 17px;border-radius:14px;background:rgba(255,248,230,.09);box-shadow:inset 0 0 0 1px rgba(255,248,230,.14)"><i class="ph-fill ph-map-pin-area" style="font-size:18px;color:#ffc21e;flex:none"></i><span style="font-size:15.5px;font-weight:800;color:#fff8e6">${esc(title)}</span></div><button data-act="sector-to-plan" style="flex:none;white-space:nowrap;display:flex;align-items:center;gap:8px;height:44px;padding:0 15px;border-radius:14px;background:rgba(255,248,230,.12);color:#fff8e6;font-size:14.5px;font-weight:800"><i class="ph-fill ph-map-trifold" style="font-size:17px;color:#ffd76b"></i>On masterplan</button><div style="flex:1"></div><div style="display:flex;align-items:center;gap:5px;padding:5px;border-radius:15px;background:rgba(255,248,230,.09);box-shadow:inset 0 0 0 1px rgba(255,248,230,.14)"><button data-act="sector-mode" data-mode="original" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:10px;font-size:13.5px;font-weight:800;${sectorMode === 'original' ? 'background:#ffc21e;color:#231a04' : 'background:rgba(255,248,230,.14);color:#fff8e6'}"><i class="ph-fill ph-map-trifold" style="font-size:16px"></i>Original</button><button data-act="sector-mode" data-mode="threeD" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:10px;font-size:13.5px;font-weight:800;${sectorMode === 'threeD' ? 'background:#ffc21e;color:#231a04' : 'background:rgba(255,248,230,.14);color:#fff8e6'}"><i class="ph-fill ph-cube" style="font-size:16px"></i>3D map</button></div></div><div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center"><div style="position:relative;flex:1 1 auto;min-width:0;width:100%;height:100%;max-width:1040px;border-radius:20px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,248,230,.14),0 40px 80px -34px rgba(0,0,0,.85);transition:transform .5s cubic-bezier(.2,.8,.2,1);transform:${tilt}"><div style="position:absolute;inset:0;pointer-events:none;${mapBg}"></div>${sectorProps.map((property, index) => { const pos = pinFor(property, index); return `<div style="position:absolute;left:${pos.x}%;top:${pos.y}%;z-index:6"><button data-act="open-prop" data-id="${esc(property.id)}" style="position:relative;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center"><span style="display:flex;align-items:center;gap:7px;background:#ffc21e;color:#231a04;border-radius:12px;padding:9px 14px;white-space:nowrap;font-size:15px;font-weight:800;border:2.5px solid #fffdf7;box-shadow:0 10px 22px -8px rgba(40,26,2,.7)"><i class="ph-fill ph-map-pin-area" style="font-size:15px"></i>${esc(propertyName(property))}</span><span style="display:block;width:3px;height:14px;background:#ffc21e"></span><span style="display:block;width:14px;height:14px;border-radius:50%;background:#ffc21e;border:3px solid #fffdfb;margin-top:-2px"></span></button></div>`; }).join('')}</div></div></div>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;padding:22px 24px 22px 26px;gap:16px;min-height:0"><div style="flex:none;display:flex;align-items:center;gap:10px"><button data-act="close-sec" style="flex:none;white-space:nowrap;display:flex;align-items:center;gap:8px;height:44px;padding:0 17px;border-radius:14px;background:rgba(255,248,230,.12);color:#fff8e6;font-size:15px;font-weight:800"><i class="ph-bold ph-arrow-left" style="font-size:16px"></i>All sectors</button><div style="flex:0 1 auto;min-width:0;display:flex;align-items:center;gap:9px;height:44px;padding:0 17px;border-radius:14px;background:rgba(255,248,230,.09);box-shadow:inset 0 0 0 1px rgba(255,248,230,.14)"><i class="ph-fill ph-map-pin-area" style="font-size:18px;color:#ffc21e;flex:none"></i><span style="font-size:15.5px;font-weight:800;color:#fff8e6">${esc(title)}</span></div><button data-act="sector-to-plan" style="flex:none;white-space:nowrap;display:flex;align-items:center;gap:8px;height:44px;padding:0 15px;border-radius:14px;background:rgba(255,248,230,.12);color:#fff8e6;font-size:14.5px;font-weight:800"><i class="ph-fill ph-map-trifold" style="font-size:17px;color:#ffd76b"></i>On masterplan</button><div style="flex:1"></div><div style="display:flex;align-items:center;gap:5px;padding:5px;border-radius:15px;background:rgba(255,248,230,.09);box-shadow:inset 0 0 0 1px rgba(255,248,230,.14)"><button data-act="sector-mode" data-mode="original" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:10px;font-size:13.5px;font-weight:800;${sectorMode === 'original' ? 'background:#ffc21e;color:#231a04' : 'background:rgba(255,248,230,.14);color:#fff8e6'}"><i class="ph-fill ph-map-trifold" style="font-size:16px"></i>Original</button>${realMap?.threeD ? `<button data-act="sector-mode" data-mode="threeD" style="display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:10px;font-size:13.5px;font-weight:800;${sectorMode === 'threeD' ? 'background:#ffc21e;color:#231a04' : 'background:rgba(255,248,230,.14);color:#fff8e6'}"><i class="ph-fill ph-cube" style="font-size:16px"></i>3D map</button>` : ''}</div></div><div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center"><div style="position:relative;flex:1 1 auto;min-width:0;width:100%;height:100%;max-width:1040px;border-radius:20px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,248,230,.14),0 40px 80px -34px rgba(0,0,0,.85);transition:transform .5s cubic-bezier(.2,.8,.2,1);transform:${tilt}"><div style="position:absolute;inset:0;pointer-events:none;${mapBg}"></div>${sectorProps.map((property, index) => { const pos = pinFor(property, index); return `<div style="position:absolute;left:${pos.x}%;top:${pos.y}%;z-index:6"><button data-act="open-prop" data-id="${esc(property.id)}" style="position:relative;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center"><span style="display:flex;align-items:center;gap:7px;background:#ffc21e;color:#231a04;border-radius:12px;padding:9px 14px;white-space:nowrap;font-size:15px;font-weight:800;border:2.5px solid #fffdf7;box-shadow:0 10px 22px -8px rgba(40,26,2,.7)"><i class="ph-fill ph-map-pin-area" style="font-size:15px"></i>${esc(propertyName(property))}</span><span style="display:block;width:3px;height:14px;background:#ffc21e"></span><span style="display:block;width:14px;height:14px;border-radius:50%;background:#ffc21e;border:3px solid #fffdfb;margin-top:-2px"></span></button></div>`; }).join('')}</div></div></div>
         <aside data-scroll style="width:344px;flex:none;overflow-y:auto;background:rgba(255,248,230,.06);box-shadow:inset 1px 0 0 rgba(255,248,230,.14);padding:26px 22px 24px"><div style="font-size:11.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#ffc93c">In this sector</div><div style="margin-top:4px;font-family:'Newsreader',serif;font-weight:500;font-size:29px;letter-spacing:-.028em;color:#fffdf7">${sectorProps.length ? `${sectorProps.length} ${sectorProps.length === 1 ? 'plot' : 'plots'} of ours` : 'No plots here'}</div><div style="display:flex;flex-direction:column;gap:13px;margin-top:16px">${sectorProps.map((property) => `<button data-act="open-prop" data-id="${esc(property.id)}" style="display:block;width:100%;overflow:hidden;border-radius:16px;background:rgba(255,248,230,.09);box-shadow:inset 0 0 0 1px rgba(255,248,230,.16)"><span style="display:block;width:100%;height:150px;background-image:url('${esc(plotPhoto(property, 1))}');background-size:cover;background-position:center"></span><span style="display:block;padding:13px 15px 15px;text-align:left"><span style="display:block;font-size:17.5px;font-weight:800;color:#fffdf7">${esc(propertyName(property))}</span><span style="display:block;margin-top:5px;font-size:13.5px;font-weight:600;color:#e2cf9f">${esc(property.size)} · ${esc(property.facing)} facing</span></span></button>`).join('') || '<div style="padding:22px 14px;text-align:center;font-size:15px;background:rgba(255,248,230,.07);border-radius:16px;color:#e2cf9f">No plots of ours in this sector yet.</div>'}</div></aside>
       </div>`;
       return;
@@ -694,16 +851,18 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
     const t = mounted.engine.transform;
     const img = stage.querySelector('img');
     const svg = highlightLayer.querySelector('svg');
-    // eslint-disable-next-line no-console
-    console.debug('[MAPCO map metrics]', {
-      map: activeMapId, mode,
-      stage: { w: stage.clientWidth, h: stage.clientHeight },
-      registryDims: map?.original.dims,
-      rasterNatural: img ? { w: (img as HTMLImageElement).naturalWidth, h: (img as HTMLImageElement).naturalHeight } : null,
-      svgViewBox: svg?.getAttribute('viewBox') ?? null,
-      transform: t,
-      renderedSize: t && map ? { w: Math.round(map.original.dims.w * t.scale), h: Math.round(map.original.dims.h * t.scale) } : null,
-    });
+    if (new URLSearchParams(location.search).has('loader-debug')) {
+      // eslint-disable-next-line no-console
+      console.debug('[MAPCO map metrics]', {
+        map: activeMapId, mode,
+        stage: { w: stage.clientWidth, h: stage.clientHeight },
+        registryDims: map?.original.dims,
+        rasterNatural: img ? { w: (img as HTMLImageElement).naturalWidth, h: (img as HTMLImageElement).naturalHeight } : null,
+        svgViewBox: svg?.getAttribute('viewBox') ?? null,
+        transform: t,
+        renderedSize: t && map ? { w: Math.round(map.original.dims.w * t.scale), h: Math.round(map.original.dims.h * t.scale) } : null,
+      });
+    }
   }
 
   /** Pick the default hero map: the founder's preferred map, else the first
@@ -717,7 +876,16 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
    *  The presentation is fully catalog-driven — no pilot placeholder. */
   async function loadCatalog(): Promise<void> {
     mapLoadState = 'loading';
-    const reg = await adapter.maps.listRegistry({ limit: 300 }, { signal: controller.signal });
+    let reg;
+    try {
+      reg = await predictive.request({
+        key: { type: 'bootstrap', id: 'published-map-registry', version: 'current' },
+        priority: 'P0', stage: 'prepare', group: 'presentation-route',
+        cost: { bytes: 18_000, parse: 0.12 }, reason: 'visible presentation map registry',
+        cache: { costBytes: 18_000 },
+        run: (signal) => adapter.maps.listRegistry({ limit: 300 }, { signal }),
+      });
+    } catch { return; }
     if (!reg.ok) {
       if (reg.error.code === 'aborted') return;
       mapLoadState = 'unavailable';
@@ -733,10 +901,14 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
     if (!maps.length) { mapLoadState = 'unavailable'; mapMsg('No maps are published yet.'); return; }
     mapLoadState = 'ready';
     if (!activeMapId || !maps.some((m) => m.id === activeMapId)) activeMapId = pickDefaultMapId();
+    predictive.recordAction('masterplan-opened', { type: 'masterplan', id: activeMapId }, { type: 'map-raster', id: activeMapId });
     void loadSavedSets(activeMapId);
     renderTopbar();
     renderMapControls();
     await applyMap();
+    predictive.recordAction('route-opened', { type: 'route', id: 'client-presentation' });
+    void predictive.loadHistory(controller.signal);
+    predictForMap(activeMapId);
   }
 
   // ── interaction (single delegated listener) ───────────────
@@ -752,29 +924,58 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
       case 'toggle-maps': mapsOpen = !mapsOpen; renderTopbar(); break;
       case 'pick-map': {
         if (t.dataset.id === activeMapId) { mapsOpen = false; renderTopbar(); break; }
+        mapContextVersion = predictive.loader.beginContext('presentation-map');
+        predictive.loader.beginContext('presentation-map-raster');
         activeMapId = t.dataset.id!; mapsOpen = false; mode = 'original';
         activeSetIndex = -1; pendingSpotQuery = null;
         view = 'masterplan'; // show the chosen map on the main stage
+        const selectedMap = maps.find((item) => item.id === activeMapId);
+        if (selectedMap) {
+          predictive.loader.markUsed({
+            scope: predictive.scope, type: 'map-metadata', id: selectedMap.id, version: selectedMap.original.src,
+          }, 'prepare');
+        }
+        predictive.recordAction(selectedMap?.kind === 'sector' ? 'sector-opened' : 'masterplan-opened',
+          { type: selectedMap?.kind ?? 'map', id: activeMapId }, { type: 'map-raster', id: activeMapId });
         void loadSavedSets(activeMapId);
-        renderTopbar(); renderMapControls(); void applyMap(); break;
+        renderTopbar(); renderMapControls(); void applyMap().then(() => predictForMap(activeMapId)); break;
       }
       case 'open-sec': {
+        detailContextVersion = predictive.loader.beginContext('presentation-detail');
         selectedSectorId = t.dataset.id!;
         selectedPropertyId = null;
         sectorMode = 'original';
+        predictive.recordAction('sector-opened', { type: 'sector', id: selectedSectorId });
+        const selectedMap = maps.find((item) => item.id === selectedSectorId);
+        if (selectedMap) predictForMap(selectedMap.id);
         renderMapControls();
         break;
       }
       case 'sector-city': { sectorCity = t.dataset.city || 'all'; renderGrid(); break; }
       case 'open-prop': {
+        detailContextVersion = predictive.loader.beginContext('presentation-detail');
         selectedPropertyId = t.dataset.id!;
         selectedSectorId = null;
         propertyShot = 0;
+        const selected = props.find((item) => item.id === selectedPropertyId);
+        if (selected) {
+          const src = selected.photos[0];
+          if (src) {
+            const meta = assetCacheMeta(src);
+            predictive.loader.markUsed({
+              scope: predictive.scope, type: 'property-thumbnail', id: `${selected.id}:0`, version: meta.version,
+            }, 'prepare');
+          }
+          predictive.recordAction('property-opened', { type: 'property', id: selected.id }, { type: 'property-media', id: selected.id });
+          predictForProperty(selected);
+        }
         renderMapControls();
         break;
       }
       case 'view': {
+        detailContextVersion = predictive.loader.beginContext('presentation-detail');
         selectedPropertyId = null; selectedSectorId = null; view = t.dataset.view as View; mapsOpen = false;
+        predictive.recordAction('route-opened', { type: 'presentation-view', id: view });
         renderTopbar(); renderMapControls();
         if (view === 'masterplan') void applyMap();
         break;
@@ -790,10 +991,13 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
         const property = props.find((item) => item.id === selectedPropertyId);
         selectedPropertyId = null; selectedSectorId = null; view = 'masterplan'; mode = 'original';
         if (property) {
+          predictive.recordAction('view-on-map', { type: 'property', id: property.id }, { type: 'map-placement', id: property.id });
           pinned.add(property.id);
           const targetMapId = property.mapPlacement?.mapId;
           const sameMap = !targetMapId || targetMapId === activeMapId;
           if (!sameMap && maps.some((m) => m.id === targetMapId)) {
+            mapContextVersion = predictive.loader.beginContext('presentation-map');
+            predictive.loader.beginContext('presentation-map-raster');
             activeMapId = targetMapId!; activeSetIndex = -1; void loadSavedSets(activeMapId);
           }
           pendingSpotQuery = property.sector || property.area || null;
@@ -813,13 +1017,26 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
         selectedSectorId = null; view = 'masterplan'; mode = 'original';
         if (city) {
           const parent = maps.find((m) => m.kind === 'masterplan' && m.city === city);
-          if (parent && parent.id !== activeMapId) { activeMapId = parent.id; activeSetIndex = -1; void loadSavedSets(activeMapId); }
+          if (parent && parent.id !== activeMapId) {
+            mapContextVersion = predictive.loader.beginContext('presentation-map');
+            predictive.loader.beginContext('presentation-map-raster');
+            activeMapId = parent.id; activeSetIndex = -1; void loadSavedSets(activeMapId);
+          }
           if (spot) pendingSpotQuery = spot;
         }
         renderTopbar(); renderMapControls(); void applyMap();
         break;
       }
-      case 'sector-mode': sectorMode = t.dataset.mode === 'threeD' ? 'threeD' : 'original'; renderDetail(); break;
+      case 'sector-mode': {
+        const next = t.dataset.mode === 'threeD' ? 'threeD' : 'original';
+        const sectorMap = maps.find((item) => item.id === selectedSectorId && item.kind === 'sector');
+        if (next === 'threeD' && !sectorMap?.threeD) break;
+        predictive.loader.beginContext('presentation-map-raster');
+        sectorMode = next;
+        predictive.recordAction('mode-selected', { type: 'map-mode', id: `${selectedSectorId}:${next}` }, { type: 'map-raster', id: selectedSectorId ?? '' });
+        renderDetail();
+        break;
+      }
       case 'mode':
       case 'mode-toggle': {
         if ((t as HTMLButtonElement).disabled) break;
@@ -830,7 +1047,9 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
           : (t.dataset.mode as RenderMode);
         if (next === 'threeD' && !m?.threeD) break;
         if (next === mode) break;
+        predictive.loader.beginContext('presentation-map-raster');
         mode = next;
+        predictive.recordAction('mode-selected', { type: 'map-mode', id: `${activeMapId}:${mode}` }, { type: 'map-raster', id: activeMapId });
         // The overlay selection is preserved; the SVG is simply hidden on 3D
         // and restored on Original.
         renderMapControls();
@@ -854,6 +1073,8 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
           pinned.add(id);
           // Show the pin where it actually lives: switch to its map if needed.
           if (placedMap && placedMap !== activeMapId && maps.some((m) => m.id === placedMap)) {
+            mapContextVersion = predictive.loader.beginContext('presentation-map');
+            predictive.loader.beginContext('presentation-map-raster');
             activeMapId = placedMap; mode = 'original'; activeSetIndex = -1; view = 'masterplan'; void loadSavedSets(placedMap);
             renderTopbar(); renderMapControls(); void applyMap(); renderRail(); break;
           }
@@ -864,6 +1085,33 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
     }
   };
   container.addEventListener('click', onClick);
+
+  let lastIntent = '';
+  const onIntent = (event: Event) => {
+    const target = (event.target as HTMLElement).closest<HTMLElement>('[data-act][data-id]');
+    if (!target) return;
+    const intent = `${target.dataset.act}:${target.dataset.id}`;
+    if (intent === lastIntent) return;
+    lastIntent = intent;
+    hoverContextVersion = predictive.loader.beginContext('presentation-hover');
+    if (target.dataset.act === 'open-prop') {
+      const property = props.find((item) => item.id === target.dataset.id);
+      if (property) preloadPropertyPhoto(property, false);
+      return;
+    }
+    if (target.dataset.act === 'open-sec' || target.dataset.act === 'pick-map') {
+      const map = maps.find((item) => item.id === target.dataset.id);
+      if (!map) return;
+      const candidate: LocalCandidate = {
+        key: { type: 'map-metadata', id: map.id, version: map.original.src },
+        signals: { context: 0.55, relationship: 0.3, recentInteraction: 1, probability: 0.7 },
+        cost: { bytes: 0, parse: 0 }, preferredStage: 'prepare', reason: 'hover/focus map intent',
+      };
+      queueCandidate(candidate, map, 'presentation-hover', hoverContextVersion);
+    }
+  };
+  container.addEventListener('pointerover', onIntent);
+  container.addEventListener('focusin', onIntent);
 
   const onKey = (e: KeyboardEvent) => {
     if (e.key !== 'Escape') return;
@@ -901,26 +1149,39 @@ export async function initPresentation(container: HTMLElement): Promise<() => vo
   void loadCatalog();
 
   // load published plots (client-safe: price never read)
-  const res = await adapter.properties.list({ limit: 24 }, { signal: controller.signal });
-  if (res.ok) {
+  let res;
+  try {
+    res = await predictive.request({
+      key: { type: 'bootstrap', id: 'visible-property-summaries', version: 'current' },
+      priority: 'P0', stage: 'prepare', group: 'presentation-route',
+      cost: { bytes: 22_000, parse: 0.18 }, reason: 'visible property summaries',
+      cache: { costBytes: 22_000 },
+      run: (signal) => adapter.properties.list({ limit: 24 }, { signal }),
+    });
+  } catch { res = null; }
+  if (res?.ok) {
     props = res.value.items.filter((p) => p.published && !p.sold);
     loadState = props.length ? 'ready' : 'empty';
-  } else if (res.error.code !== 'aborted') {
+  } else if (res && res.error.code !== 'aborted') {
     loadState = 'error';
   }
   renderRail();
   syncPins();
+  if (activeMapId) predictForMap(activeMapId);
 
   // ── cleanup ───────────────────────────────────────────────
   const cleanup = () => {
     cancelAnimationFrame(animFrame);
     container.removeEventListener('click', onClick);
+    container.removeEventListener('pointerover', onIntent);
+    container.removeEventListener('focusin', onIntent);
     container.removeEventListener('keydown', onTabKey);
     document.removeEventListener('keydown', onKey);
     document.removeEventListener('click', onDocClick, true);
     document.removeEventListener('pointerdown', autoFs, true);
     document.removeEventListener('keydown', autoFs, true);
     controller.abort();
+    predictive.dispose();
     fsCleanup();
     overlay?.destroy();
     overlay = null;
