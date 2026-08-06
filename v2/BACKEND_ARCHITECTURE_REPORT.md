@@ -8,6 +8,8 @@ Supabase target: **MAPCO-DEV (`lswzrkvdwirhvggtvuch`) only**
 
 Production web app: **https://mapco-navy.vercel.app**
 
+Predictive loading status: **implemented and production-verified on 2026-08-06.** The complete priority model, measurements, cache/network rules, telemetry privacy boundary, invalidation matrix, rollback plan, and remaining gaps are documented in [`PREDICTIVE_LOADING_REPORT.md`](./PREDICTIVE_LOADING_REPORT.md).
+
 This is the implementation handoff for the current MAPCO V2 backend. It supersedes old “next step” notes where they conflict with the verified state below. Never run these instructions against the legacy PROPERTY Supabase project (`czmkfmkmgqlienmdihul`), never put a service-role key in Vite/Vercel, and do not merge this branch to `main` without a separate approval.
 
 ## 1. Current architecture
@@ -56,6 +58,15 @@ property
 ```
 
 The public resolver uses saved IDs before any compatibility label matching. Precise Location OFF returns no map rows and no pin. Precise Location ON returns only the linked sector and its parent masterplan, plus a real 3D asset only when that asset exists.
+
+### Predictive priority-loading boundary
+
+- One typed `PriorityLoader` handles P0 current work, P1 deterministic dependencies, P2 probable next actions, and P3 idle preparation.
+- Keys are scoped by authenticated user/session or hashed public-token scope, resource type/ID, asset/visibility version, and prepare/download stage.
+- Current-session transitions work immediately; dealer history comes from RLS-protected operational telemetry in MAPCO-DEV and remains separate from public Client Presentation analytics.
+- P0/P1 cancels P2/P3. Route/map/property/mode changes abort or reject stale work before it can update current state.
+- Normal cache limits are 48 entries/64 MiB (20/24 MiB on reported low-memory devices), with a separate 6-entry/6 MiB parsed-SVG cache.
+- The current map is eviction-protected, real 3D remains lazy, and no full catalog of raster/SVG/3D assets is prefetched.
 
 ## 2. Immediate implementation completed
 
