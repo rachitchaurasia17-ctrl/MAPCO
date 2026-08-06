@@ -210,10 +210,17 @@ export async function renderDeals(el: HTMLElement): Promise<void> {
     switch (step) {
       case 1: return !!draft.propertyId;
       case 2: return draft.addingBuyer ? !!draft.newBuyer.name.trim() : !!draft.buyerId;
-      case 3: return !!draft.seller.trim();
+      case 3: return true; // seller identity is private and optional; the RPC safely records "Owner"
       case 4: return draft.soldPrice > 0 && !!draft.saleDate;
       default: return true;
     }
+  };
+
+  const advanceError = (): string => {
+    if (step === 1) return 'Choose the property that was sold.';
+    if (step === 2) return draft.addingBuyer ? 'Enter the buyer name.' : 'Choose or add the buyer.';
+    if (step === 4) return 'Enter the final sold price and sale date.';
+    return '';
   };
 
   const fieldInput = (name: string, label: string, value: string, type = 'text', extra = '') =>
@@ -243,9 +250,9 @@ export async function renderDeals(el: HTMLElement): Promise<void> {
       }
       case 3:
         return `<div style="display:flex;flex-direction:column;gap:14px">
-          <div style="font-size:14px;color:#6b6156;background:#f6efe0;border:1px solid #ece0c9;border-radius:12px;padding:13px 15px">Confirm the seller for <b>${esc(p?.area ?? 'this property')}</b>. Seller details stay private and never appear in a client link.</div>
-          ${fieldInput('seller', 'Seller name', draft.seller, 'text', 'required')}
-          ${fieldInput('sellerPhone', 'Seller phone', draft.sellerPhone, 'tel')}
+          <div style="font-size:14px;color:#6b6156;background:#f6efe0;border:1px solid #ece0c9;border-radius:12px;padding:13px 15px">Confirm the seller for <b>${esc(p?.area ?? 'this property')}</b>. Seller details stay private and never appear in a client link. Leave them blank to skip.</div>
+          ${fieldInput('seller', 'Seller name (optional)', draft.seller)}
+          ${fieldInput('sellerPhone', 'Seller phone (optional)', draft.sellerPhone, 'tel')}
         </div>`;
       case 4:
         return `<div style="display:flex;flex-direction:column;gap:14px">
@@ -295,9 +302,9 @@ export async function renderDeals(el: HTMLElement): Promise<void> {
   const flowMarkup = () => `<div data-overlay style="position:fixed;inset:0;background:rgba(24,16,4,.5);backdrop-filter:blur(5px);z-index:100;display:grid;place-items:center;padding:20px"><form id="pm-record-sale" role="dialog" aria-modal="true" aria-labelledby="pm-rs-title" style="width:min(760px,97vw);max-height:94vh;display:flex;flex-direction:column;background:#fffaf0;border-radius:26px;box-shadow:0 44px 100px -36px rgba(20,14,2,.9);overflow:hidden">
     <div style="display:flex;align-items:center;gap:14px;padding:22px 26px;border-bottom:1px solid #f0dfb8;flex:none"><span style="width:48px;height:48px;border-radius:14px;background:#12a150;color:#fff;display:grid;place-items:center;flex:none"><i class="ph-fill ph-seal-check" style="font-size:24px"></i></span><div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#8d8271">Record completed sale · Step ${step} of 7</div><h2 id="pm-rs-title" style="margin:3px 0 0;font-family:'Newsreader',serif;font-size:26px;font-weight:500;color:#241f1c">${esc(STEP_TITLES[step - 1] ?? '')}</h2></div><button type="button" data-act="close-flow" aria-label="Close" style="width:42px;height:42px;border-radius:12px;background:#f3eeff;color:#6b6156;flex:none"><i class="ph-bold ph-x"></i></button></div>
     <div style="padding:18px 26px 0;flex:none"><div style="display:flex;gap:6px">${[1, 2, 3, 4, 5, 6, 7].map((s) => `<span style="height:6px;flex:1;border-radius:999px;background:${s <= step ? '#12a150' : '#e4dbcf'}"></span>`).join('')}</div></div>
-    <div data-scroll style="padding:24px 26px;overflow-y:auto;flex:1">${stepBody()}</div>
+    <div data-scroll style="padding:24px 26px;overflow-y:auto;flex:1">${stepBody()}${flowError && step < 7 ? `<div role="alert" style="margin-top:14px;background:#ffe1e6;border:1px solid #f3b6c2;color:#9f2446;border-radius:12px;padding:12px 15px;font-size:14px;font-weight:700">${esc(flowError)}</div>` : ''}</div>
     <div style="display:flex;align-items:center;gap:10px;padding:18px 26px;border-top:1px solid #f0dfb8;flex:none">${step > 1 ? '<button type="button" data-act="back-step" style="height:50px;padding:0 20px;border-radius:13px;background:#f3eeff;color:#4c463d;font-weight:800;cursor:pointer"><i class="ph-bold ph-arrow-left"></i> Back</button>' : ''}<div style="flex:1"></div>${step < 7
-      ? `<button type="button" data-act="next-step" ${canAdvance() ? '' : 'disabled'} style="height:50px;padding:0 26px;border-radius:13px;background:#12a150;color:#fff;font-weight:800;cursor:pointer;${canAdvance() ? '' : 'opacity:.45;cursor:not-allowed'}">Next <i class="ph-bold ph-arrow-right"></i></button>`
+      ? '<button type="button" data-act="next-step" style="height:50px;padding:0 26px;border-radius:13px;background:#12a150;color:#fff;font-weight:800;cursor:pointer">Next <i class="ph-bold ph-arrow-right"></i></button>'
       : `<button type="submit" ${recording ? 'disabled' : ''} style="height:50px;padding:0 26px;border-radius:13px;background:#12a150;color:#fff;font-weight:800;cursor:pointer;${recording ? 'opacity:.6' : ''}">${recording ? 'Recording…' : '<i class="ph-fill ph-check-circle"></i> Confirm & record sale'}</button>`}</div>
   </form></div>`;
 
@@ -418,8 +425,8 @@ export async function renderDeals(el: HTMLElement): Promise<void> {
       case 'comm': comm = (target.dataset.comm as CommFilter) ?? 'all'; break;
       case 'record': flowOpen = true; step = 1; flowError = ''; break;
       case 'close-flow': closeFlow(); break;
-      case 'pick-prop': draft.propertyId = target.dataset.id ?? ''; break;
-      case 'pick-buyer': draft.buyerId = target.dataset.id ?? ''; draft.addingBuyer = false; break;
+      case 'pick-prop': draft.propertyId = target.dataset.id ?? ''; flowError = ''; break;
+      case 'pick-buyer': draft.buyerId = target.dataset.id ?? ''; draft.addingBuyer = false; flowError = ''; break;
       case 'add-newbuyer': captureStepFields(); draft.addingBuyer = true; draft.buyerId = ''; break;
       case 'cancel-newbuyer': captureStepFields(); draft.addingBuyer = false; break;
       case 'add-doc': {
@@ -429,7 +436,11 @@ export async function renderDeals(el: HTMLElement): Promise<void> {
         break;
       }
       case 'rm-doc': { const i = Number(target.dataset.i); if (!Number.isNaN(i)) draft.documents.splice(i, 1); break; }
-      case 'next-step': captureStepFields(); if (canAdvance()) step = Math.min(7, step + 1); break;
+      case 'next-step':
+        captureStepFields();
+        if (canAdvance()) { flowError = ''; step = Math.min(7, step + 1); }
+        else flowError = advanceError();
+        break;
       case 'back-step': captureStepFields(); step = Math.max(1, step - 1); break;
       default: return;
     }

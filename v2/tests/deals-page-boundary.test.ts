@@ -31,4 +31,22 @@ describe('Deals page async boundary', () => {
     expect(host.querySelector('[role="alert"]')?.textContent).toContain('Deals could not be loaded');
     expect(host.innerHTML).not.toBe('');
   });
+
+  it('captures current fields and lets the dealer skip optional seller details', async () => {
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    await renderDeals(host);
+
+    host.querySelector<HTMLButtonElement>('[data-act="record"]')!.click();
+    host.querySelector<HTMLButtonElement>('[data-act="pick-prop"]')!.click();
+    host.querySelector<HTMLButtonElement>('[data-act="next-step"]')!.click();
+    host.querySelector<HTMLButtonElement>('[data-act="pick-buyer"]')!.click();
+    host.querySelector<HTMLButtonElement>('[data-act="next-step"]')!.click();
+
+    expect(host.textContent).toContain('Confirm the seller');
+    const next = host.querySelector<HTMLButtonElement>('[data-act="next-step"]')!;
+    expect(next.disabled).toBe(false);
+    next.click();
+    expect(host.textContent).toContain('Sale price & dates');
+  });
 });
