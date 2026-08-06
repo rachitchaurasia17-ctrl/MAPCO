@@ -36,6 +36,7 @@ import {
   validatePropertyPhoto,
 } from '../property-photos';
 import { resolveMapAssetUrl } from '../map-assets';
+import { normalizeCompletedDeal } from '../deal-normalization';
 
 const DEFAULT_LIMIT = 12;
 const MAX_LIMIT = 50;
@@ -191,12 +192,25 @@ class SupaCustomers implements CustomerRepository {
   }
 }
 
+type UnknownDeal = Record<string, unknown> & { id?: unknown };
+
 class SupaDeals implements DealRepository {
-  list(p?: PageParams, o?: QueryOptions) {
-    return crmList<Deal>('deals', p, o, (r, q) =>
-      `${r.payload.prop} ${r.payload.buyer} ${r.payload.seller} ${r.payload.city} ${r.payload.sector}`.toLowerCase().includes(q));
+  async list(p?: PageParams, o?: QueryOptions): Promise<Result<Page<Deal>>> {
+    const result = await crmList<UnknownDeal>('deals', p, o, (r, q) =>
+      `${r.payload.prop ?? ''} ${r.payload.buyer ?? r.payload.client ?? ''} ${r.payload.seller ?? ''} ${r.payload.city ?? r.payload.area ?? ''} ${r.payload.sector ?? ''}`.toLowerCase().includes(q));
+    if (!result.ok) return result;
+    const items = result.value.items.flatMap((payload) => {
+      const deal = normalizeCompletedDeal(String(payload.id ?? ''), payload);
+      return deal ? [deal] : [];
+    });
+    return ok({ ...result.value, items });
   }
-  get(id: string, o?: QueryOptions) { return crmGet<Deal>('deals', id, o); }
+  async get(id: string, o?: QueryOptions): Promise<Result<Deal>> {
+    const result = await crmGet<UnknownDeal>('deals', id, o);
+    if (!result.ok) return result;
+    const deal = normalizeCompletedDeal(id, result.value);
+    return deal ? ok(deal) : err('not_found', 'Completed sale not found');
+  }
 
   async record(input: RecordSaleInput, o?: QueryOptions): Promise<Result<Deal>> {
     const a = aborted<Deal>(o); if (a) return a;
@@ -229,8 +243,10 @@ class SupaDeals implements DealRepository {
         if (env.reason === 'not_found') return err('not_found', 'That property is no longer available');
         return err('validation', env.reason ?? 'Could not record the sale');
       }
+      const deal = normalizeCompletedDeal(String(env.deal.id ?? ''), env.deal);
+      if (!deal) return err('unknown', 'Completed sale response was invalid');
       publishResourceInvalidation({ entity: 'inventory', id: input.propertyId });
-      return ok({ ...(env.deal as object), id: String(env.deal.id ?? '') } as Deal);
+      return ok(deal);
     } catch (e) { return toErr(e); }
   }
 }

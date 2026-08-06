@@ -15,6 +15,9 @@ import type { RecordSaleInput } from '../../../packages/data/contracts';
 
 const esc = (value: string) => String(value).replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!);
 
+const dealsLoadingMarkup = () => '<div role="status" aria-live="polite" style="max-width:1080px;margin:34px auto;padding:24px 26px;border-radius:18px;background:#faf7ff;border:1px solid #e4dbf7;color:#6b6156;font-weight:700">Loading completed sales…</div>';
+const dealsErrorMarkup = () => '<div role="alert" style="max-width:1080px;margin:34px auto;padding:24px 26px;border-radius:18px;background:#ffe1e6;color:#9f2446">Deals could not be loaded. Please try again.</div>';
+
 /** ISO yyyy-mm-dd → "18 Jun 2026" (never fabricates a date). */
 const fmtDate = (iso?: string): string => {
   if (!iso) return '—';
@@ -54,6 +57,7 @@ const STEP_TITLES = [
 ];
 
 export async function renderDeals(el: HTMLElement): Promise<void> {
+  el.innerHTML = dealsLoadingMarkup();
   let deals: Deal[] = [];
   let properties: Property[] = [];
   let customers: Client[] = [];
@@ -78,13 +82,24 @@ export async function renderDeals(el: HTMLElement): Promise<void> {
     brokerage: 0, commission: 0, commissionReceived: false, paymentReceived: 0, documents: [],
   };
 
-  const [dealsRes, propsRes, custRes] = await Promise.all([
-    adapter.deals.list({ limit: 100 }),
-    adapter.properties.list({ limit: 50 }),
-    adapter.customers.list({ limit: 50 }),
-  ]);
+  let loaded: Awaited<ReturnType<typeof Promise.all<[
+    ReturnType<typeof adapter.deals.list>,
+    ReturnType<typeof adapter.properties.list>,
+    ReturnType<typeof adapter.customers.list>,
+  ]>>>;
+  try {
+    loaded = await Promise.all([
+      adapter.deals.list({ limit: 100 }),
+      adapter.properties.list({ limit: 50 }),
+      adapter.customers.list({ limit: 50 }),
+    ]);
+  } catch {
+    el.innerHTML = dealsErrorMarkup();
+    return;
+  }
+  const [dealsRes, propsRes, custRes] = loaded;
   if (!dealsRes.ok) {
-    el.innerHTML = '<div role="alert" style="max-width:1080px;margin:34px auto;padding:24px 26px;border-radius:18px;background:#ffe1e6;color:#9f2446">Deals could not be loaded.</div>';
+    el.innerHTML = dealsErrorMarkup();
     return;
   }
   deals = [...dealsRes.value.items];
@@ -288,13 +303,14 @@ export async function renderDeals(el: HTMLElement): Promise<void> {
 
   /* ── main render ───────────────────────────────────────────── */
   const render = () => {
-    const list = filteredDeals();
+    try {
+      const list = filteredDeals();
     const soldTotal = list.reduce((s, d) => s + d.soldPrice, 0);
     const commEarned = list.filter((d) => d.commissionReceived).reduce((s, d) => s + d.commission, 0);
     const commPending = list.filter((d) => !d.commissionReceived).reduce((s, d) => s + d.commission, 0);
     const selected = selectedId ? deals.find((d) => d.id === selectedId) : undefined;
 
-    el.innerHTML = `<div style="max-width:1080px;margin:0 auto;padding:34px 40px 70px">
+      el.innerHTML = `<div style="max-width:1080px;margin:0 auto;padding:34px 40px 70px">
       <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;animation:omRise .5s cubic-bezier(.2,.8,.2,1) both">
         <div><h1 style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:34px;letter-spacing:-.015em;color:#241f1c">My Deals</h1><p style="margin:8px 0 0;font-size:17px;color:#6b6156">Your completed-sales register — every closed transaction, buyer, seller and commission in one place.</p></div>
         <button data-act="record" style="display:flex;align-items:center;gap:9px;padding:15px 22px;border-radius:14px;background:#12a150;color:#fff;font-size:16px;font-weight:800;box-shadow:0 12px 26px -14px rgba(11,143,69,.85);cursor:pointer"><i class="ph-fill ph-seal-check" style="font-size:18px"></i>Record Completed Sale</button>
@@ -310,7 +326,10 @@ export async function renderDeals(el: HTMLElement): Promise<void> {
       ${list.length
         ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px">${list.map(dealCard).join('')}</div>`
         : `<div style="padding:40px 26px;text-align:center;color:#8d8271;background:#faf7ff;border:1px dashed #e6cf9a;border-radius:18px"><i class="ph-fill ph-seal-check" style="font-size:34px;color:#c9b48a"></i><div style="margin-top:10px;font-size:16px;font-weight:700;color:#6b6156">No completed sales${search || range !== 'all' || comm !== 'all' || cityFilter || dealerFilter ? ' match your filters' : ' yet'}.</div><div style="font-size:14px;margin-top:4px">Record a sale when a plot is sold and registered.</div></div>`}
-    </div>${selected ? detailMarkup(selected) : ''}${flowOpen ? flowMarkup() : ''}`;
+      </div>${selected ? detailMarkup(selected) : ''}${flowOpen ? flowMarkup() : ''}`;
+    } catch {
+      el.innerHTML = dealsErrorMarkup();
+    }
   };
 
   /* ── capture step field values into the draft (no re-render) ── */
@@ -344,7 +363,15 @@ export async function renderDeals(el: HTMLElement): Promise<void> {
       commissionReceived: draft.commissionReceived, paymentReceived: draft.paymentReceived,
       documents: draft.documents,
     };
-    const res = await adapter.deals.record(input);
+    let res;
+    try {
+      res = await adapter.deals.record(input);
+    } catch {
+      recording = false;
+      flowError = 'The completed sale could not be recorded. Please try again.';
+      render();
+      return;
+    }
     if (!res.ok) { recording = false; flowError = res.error.message; render(); return; }
     // Success: reflect the new sale locally and drop the sold plot from inventory.
     deals.unshift(res.value);

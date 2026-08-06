@@ -37,9 +37,12 @@ export async function initDealerShell(container: HTMLElement, initialSection: st
   const initials = getInitials(profile.name || profile.dealerName);
   if (!SECMETA[currentSection]) currentSection = 'areas';
 
-  const dealsResult = await adapter.deals.list({ limit: 100 });
-  // Deals are completed sales; the badge shows how many are on the register.
-  const activeDealCount = dealsResult.ok ? dealsResult.value.items.length : 0;
+  let activeDealCount = 0;
+  try {
+    const dealsResult = await adapter.deals.list({ limit: 100 });
+    // Deals are completed sales; the badge shows how many are on the register.
+    activeDealCount = dealsResult.ok ? dealsResult.value.items.length : 0;
+  } catch { /* shell stays usable; the Deals page owns its visible error state */ }
 
   const head = document.head;
   if (!head.querySelector('#pm-styles')) {
@@ -124,7 +127,11 @@ export async function initDealerShell(container: HTMLElement, initialSection: st
     content.innerHTML = '';
     switch (currentSection) {
       case 'areas': renderHome(content); break;
-      case 'deals': renderDeals(content); break;
+      case 'deals':
+        void renderDeals(content).catch(() => {
+          content.innerHTML = '<div role="alert" style="max-width:1080px;margin:34px auto;padding:24px 26px;border-radius:18px;background:#ffe1e6;color:#9f2446">Deals could not be loaded. Please try again.</div>';
+        });
+        break;
       case 'properties': renderProperties(content); break;
       case 'clients': renderCustomers(content); break;
       case 'links': renderLinks(content); break;
