@@ -499,6 +499,10 @@ export interface MediaRepository {
   thumb(assetId: string): string;
   /** full-resolution URL, resolved only when opened. */
   full(assetId: string, opts?: QueryOptions): Promise<Result<MediaState>>;
+  /** Upload one image to the authenticated dealer/property private folder. */
+  uploadPropertyPhoto(propertyId: string, file: File, opts?: QueryOptions): Promise<Result<import('./types').PropertyPhotoStorageRef>>;
+  /** Best-effort cleanup for failed/cancelled property-photo writes. */
+  removePropertyPhotos(paths: readonly string[], opts?: QueryOptions): Promise<Result<void>>;
 }
 
 /* ───────────────────────────────────────────────────────────────

@@ -10,6 +10,13 @@ export type LinkStatus = 'active' | 'revoked' | 'expired';
 export type PriceVisibility = 'hidden' | 'shown';
 export type LocationVisibility = 'area' | 'exact' | 'hidden';
 
+export interface PropertyPhotoStorageRef {
+  kind: 'storage';
+  id: string;
+  /** Canonical private object path. Signed/blob URLs are never stored here. */
+  path: string;
+}
+
 export interface Property {
   id: string;
   type: PropertyType;
@@ -25,6 +32,8 @@ export interface Property {
   landmarks: { name: string; distance: string; icon: string }[];
   price: number;
   photos: string[];
+  /** Canonical refs for private property-photos objects; `photos` holds display URLs at runtime. */
+  photoStorage?: PropertyPhotoStorageRef[];
   published: boolean;
   sold: boolean;
   views: number;

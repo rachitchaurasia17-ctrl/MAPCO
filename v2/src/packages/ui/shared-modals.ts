@@ -1,9 +1,12 @@
-import { Property, PropertyType, WantType, Facing, ClientLink, Client } from '../data/types';
+import { Property, PropertyType, WantType, Facing, ClientLink, Client, type PropertyPhotoStorageRef } from '../data/types';
 import { getMaps, getMap, registerMaps, mountMapEngine, addPropertyToMap, type MountedMap, type MapCatalogInput } from '../maps';
 import { formatINR } from './utils';
 import { adapter } from '../data/adapter';
 import { openPropertyDetail } from './property-detail';
 import type { PredictiveRuntime } from '../performance';
+import { propertyPhotoSelections, validatePropertyPhoto } from '../data/property-photos';
+
+interface PendingPropertyPhoto { id: string; file: File; previewUrl: string; }
 
 const esc = (value: string) =>
   value.replace(
@@ -35,6 +38,10 @@ export class AddPropertyFlow {
   private mapToggle: 'masterplan' | 'sector' = 'masterplan';
   private activeMap: MountedMap | null = null;
   private selectedMapPin: { mapId: string, x: number, y: number } | null = null;
+  private coverPhoto: PendingPropertyPhoto | null = null;
+  private galleryPhotos: PendingPropertyPhoto[] = [];
+  private saving = false;
+  private photoError = '';
   private addForm = {
     title: "Eco City plot",
     city: "New Chandigarh",
@@ -82,14 +89,50 @@ export class AddPropertyFlow {
       this.activeMap.dispose();
       this.activeMap = null;
     }
+    this.releaseLocalPreviews();
     this.el.remove();
+  }
+
+  private releaseLocalPreviews() {
+    if (this.coverPhoto) URL.revokeObjectURL(this.coverPhoto.previewUrl);
+    this.galleryPhotos.forEach((photo) => URL.revokeObjectURL(photo.previewUrl));
+    this.coverPhoto = null;
+    this.galleryPhotos = [];
+  }
+
+  private pendingPhoto(file: File): PendingPropertyPhoto {
+    return { id: globalThis.crypto?.randomUUID?.() ?? `photo-${Date.now()}-${Math.random()}`, file, previewUrl: URL.createObjectURL(file) };
+  }
+
+  private selectCover(files: FileList | File[]) {
+    const file = Array.from(files)[0];
+    if (!file) return;
+    const error = validatePropertyPhoto(file);
+    if (error) { this.photoError = error; this.render(); return; }
+    if (this.coverPhoto) URL.revokeObjectURL(this.coverPhoto.previewUrl);
+    this.coverPhoto = this.pendingPhoto(file);
+    this.photoError = '';
+    this.render();
+  }
+
+  private selectGallery(files: FileList | File[]) {
+    let added = 0;
+    for (const file of Array.from(files)) {
+      const error = validatePropertyPhoto(file);
+      if (error) { this.photoError = error; continue; }
+      if (this.galleryPhotos.length >= 7) { this.photoError = 'A property can include up to 8 photos.'; break; }
+      this.galleryPhotos.push(this.pendingPhoto(file));
+      added += 1;
+    }
+    if (added && this.galleryPhotos.length <= 7) this.photoError = '';
+    this.render();
   }
 
   private render() {
     const inputStyle = "display:block;width:100%;height:46px;margin-top:7px;border:1px solid #e6c980;border-radius:11px;background:#fff;padding:0 14px;font-size:15px;color:#241f1c;outline:none";
     const labelStyle = "display:block;font-size:13px;font-weight:700;color:#6b6156";
-    // Standard mock photos
-    const previewPhotos = ["/assets/ph-plot-1.png", "/assets/ph-plot-2.png", "/assets/ph-plot-3.png", "/assets/ph-plot-1.png", "/assets/ph-plot-2.png", "/assets/ph-plot-3.png"];
+    const previewPhotos = [this.coverPhoto, ...this.galleryPhotos]
+      .filter((photo): photo is PendingPropertyPhoto => !!photo).map((photo) => photo.previewUrl);
     const cityOptions = [...new Set([this.addForm.city, ...this.allCities])];
     
     const step = (number: number, label: string) => {
@@ -111,7 +154,12 @@ export class AddPropertyFlow {
     const basics = `<section style="border:1px solid #eadfc9;border-radius:18px;background:rgba(255,255,255,.68);padding:24px"><div style="display:flex;align-items:center;gap:13px"><span style="width:44px;height:44px;border-radius:11px;background:#f0eaff;color:#6b3fd4;display:grid;place-items:center"><i class="ph ph-map-pin-area" style="font-size:22px"></i></span><h3 style="margin:0;font-family:'Newsreader',serif;font-size:22px;font-weight:600">Property Basics</h3></div><div style="margin-top:21px"><label style="${labelStyle}">Property title <b style="color:#db3d53">*</b><input name="title" value="${esc(this.addForm.title)}" style="${inputStyle}"></label><div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:17px"><label style="${labelStyle}">City <b style="color:#db3d53">*</b><select name="city" style="${inputStyle}">${cityOptions.map((item) => `<option ${item === this.addForm.city ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></label><label style="${labelStyle}">Area / Sector <b style="color:#db3d53">*</b><input name="area" value="${esc(this.addForm.area)}" style="${inputStyle}"></label><label style="${labelStyle}">Plot size <b style="color:#db3d53">*</b><input name="size" value="${esc(this.addForm.size)}" style="${inputStyle}"></label><label style="${labelStyle}">Price (₹)<input name="price" inputmode="numeric" value="${esc(this.addForm.price)}" placeholder="e.g. 8500000" style="${inputStyle}"></label><label style="${labelStyle}">Facing <b style="color:#db3d53">*</b><select name="facing" style="${inputStyle}">${["North-East", "East", "West", "North", "South", "North-West", "South-East", "South-West"].map((item) => `<option ${item === this.addForm.facing ? "selected" : ""}>${item}</option>`).join("")}</select></label><label style="${labelStyle}">Position <b style="color:#db3d53">*</b><select name="position" style="${inputStyle}">${["Park facing", "Corner plot", "Inside plot", "Road facing"].map((item) => `<option ${item === this.addForm.position ? "selected" : ""}>${item}</option>`).join("")}</select></label><label style="${labelStyle}">Sector<input name="sector" value="${esc(this.addForm.sector)}" style="${inputStyle}"></label><label style="${labelStyle}">Type<select name="type" style="${inputStyle}">${["Residential Plot", "Flat", "Floor", "Kothi", "Villa", "Commercial"].map((item) => `<option ${item === this.addForm.type ? "selected" : ""}>${item}</option>`).join("")}</select></label></div></div></section>`;
     
     // Step 2 — photos ONLY (no other fields).
-    const details = `<section style="border:1px solid #eadfc9;border-radius:18px;background:rgba(255,255,255,.68);padding:24px"><div style="display:flex;align-items:center;gap:13px"><span style="width:44px;height:44px;border-radius:11px;background:#f0eaff;color:#6b3fd4;display:grid;place-items:center"><i class="ph ph-image" style="font-size:22px"></i></span><h3 style="margin:0;font-family:'Newsreader',serif;font-size:22px;font-weight:600">Photos</h3></div><div style="margin-top:16px;font-size:13px;font-weight:700;color:#4c463d">Cover photo</div><button type="button" data-act="plot-photo" style="width:100%;height:96px;margin-top:8px;border:1px dashed #c9b8d8;border-radius:12px;background:#fbf8ff;color:#4c463d;display:flex;align-items:center;justify-content:center;gap:12px"><i class="ph ph-upload-simple" style="font-size:30px;color:#6b3fd4"></i><span style="text-align:left"><b style="display:block;font-size:14px">Upload cover photo <span style="font-weight:500">or drag &amp; drop</span></b><small style="display:block;margin-top:3px;color:#8d8271">16:9 or 4:3 looks best</small></span></button><div style="margin-top:16px;font-size:13px;font-weight:700;color:#4c463d">Gallery photos</div><div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:8px">${Array.from({ length: 6 }, (_, index) => index < 2 ? `<button type="button" data-act="plot-photo" style="height:92px;border-radius:10px;position:relative;background:url('${esc(previewPhotos[index] || "/assets/ph-plot-1.png")}') center/cover"><span style="position:absolute;right:5px;top:5px;width:22px;height:22px;border-radius:50%;background:#fff;color:#241f1c;display:grid;place-items:center"><i class="ph-bold ph-x" style="font-size:11px"></i></span></button>` : `<button type="button" data-act="plot-photo" style="height:92px;border:1px dashed #d7ccbd;border-radius:10px;background:#faf8f5;color:#b7ada1;display:grid;place-items:center"><i class="ph ph-plus" style="font-size:24px"></i></button>`).join("")}</div><p style="margin-top:14px;font-size:13px;color:#8d8271">Add as many photos as you like. That is all this step needs — next you will place it on the map.</p></section>`;
+    const gallerySlots = [
+      ...this.galleryPhotos.map((photo, index) => `<div style="height:92px;border-radius:10px;position:relative;background:url('${esc(photo.previewUrl)}') center/cover"><button type="button" data-act="remove-photo" data-kind="gallery" data-index="${index}" aria-label="Remove gallery photo" style="position:absolute;right:5px;top:5px;width:22px;height:22px;border-radius:50%;background:#fff;color:#241f1c;display:grid;place-items:center"><i class="ph-bold ph-x" style="font-size:11px"></i></button></div>`),
+      ...Array.from({ length: Math.max(1, 6 - this.galleryPhotos.length) }, () => `<button type="button" data-act="choose-gallery" data-drop-kind="gallery" style="height:92px;border:1px dashed #d7ccbd;border-radius:10px;background:#faf8f5;color:#b7ada1;display:grid;place-items:center"><i class="ph ph-plus" style="font-size:24px"></i></button>`),
+    ].join('');
+    const coverStyle = this.coverPhoto ? `background:#d8d2c5 url('${esc(this.coverPhoto.previewUrl)}') center/cover` : 'background:#fbf8ff';
+    const details = `<section style="border:1px solid #eadfc9;border-radius:18px;background:rgba(255,255,255,.68);padding:24px"><div style="display:flex;align-items:center;gap:13px"><span style="width:44px;height:44px;border-radius:11px;background:#f0eaff;color:#6b3fd4;display:grid;place-items:center"><i class="ph ph-image" style="font-size:22px"></i></span><h3 style="margin:0;font-family:'Newsreader',serif;font-size:22px;font-weight:600">Photos</h3></div><div style="margin-top:16px;font-size:13px;font-weight:700;color:#4c463d">Cover photo</div><button type="button" data-act="choose-cover" data-drop-kind="cover" style="width:100%;height:96px;margin-top:8px;border:1px dashed #c9b8d8;border-radius:12px;${coverStyle};color:#4c463d;display:flex;align-items:center;justify-content:center;gap:12px;position:relative">${this.coverPhoto ? `<span style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.2),transparent 45%)"></span><span style="position:relative;color:#fff;font-weight:800;text-shadow:0 1px 3px #000">Change cover photo</span><span data-act="remove-photo" data-kind="cover" role="button" aria-label="Remove cover photo" style="position:absolute;right:8px;top:8px;width:26px;height:26px;border-radius:50%;background:#fff;color:#241f1c;display:grid;place-items:center"><i class="ph-bold ph-x" style="font-size:12px"></i></span>` : `<i class="ph ph-upload-simple" style="font-size:30px;color:#6b3fd4"></i><span style="text-align:left"><b style="display:block;font-size:14px">Upload cover photo <span style="font-weight:500">or drag &amp; drop</span></b><small style="display:block;margin-top:3px;color:#8d8271">16:9 or 4:3 looks best</small></span>`}</button><input id="pm-cover-photo-input" type="file" accept="image/jpeg,image/png,image/webp" hidden><div style="margin-top:16px;font-size:13px;font-weight:700;color:#4c463d">Gallery photos</div><div data-drop-kind="gallery" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:8px">${gallerySlots}</div><input id="pm-gallery-photo-input" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden><p style="margin-top:14px;font-size:13px;color:${this.photoError ? '#b3123a' : '#8d8271'}">${esc(this.photoError || 'Add multiple photos here. Next you will place the property on the map.')}</p></section>`;
     
     const mapLocation = `<section style="border:1px solid #eadfc9;border-radius:18px;background:rgba(255,255,255,.68);display:flex;flex-direction:column;overflow:hidden;height:100%">
       <div style="flex:none;display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid #eadfc9">
@@ -136,7 +184,7 @@ export class AddPropertyFlow {
     </section>`;
 
     const body = this.addStep === 1 ? basics : this.addStep === 2 ? details : mapLocation;
-    const primaryLabel = this.addStep === 3 ? "Publish" : "Next";
+    const primaryLabel = this.saving ? "Saving..." : this.addStep === 3 ? "Publish" : "Next";
     const primaryAction = this.addStep === 3 ? "add-submit" : "add-next";
 
     this.el.innerHTML = `<div style="position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:24px;overflow:hidden">
@@ -156,11 +204,11 @@ export class AddPropertyFlow {
         </div>
         <footer style="height:104px;flex:none;display:flex;align-items:center;gap:16px;padding:0 30px;border-top:1px solid #eadfc9;background:rgba(255,250,240,.96)">
           <button type="button" data-act="add-back" style="display:flex;align-items:center;gap:8px;height:54px;padding:0 20px;border-radius:12px;background:#f0eaff;color:#4c463d;font-size:15px;font-weight:700"><i class="ph ph-arrow-left"></i>Back</button>
-          <div style="flex:1"></div>
+          <div style="flex:1;color:#b3123a;font-size:13px;font-weight:700">${this.photoError && this.addStep !== 2 ? esc(this.photoError) : ''}</div>
           ${this.addStep === 3
             ? '<button type="button" data-act="add-preview" style="display:flex;align-items:center;justify-content:center;gap:9px;height:54px;min-width:150px;padding:0 22px;border:1px solid #e6c980;border-radius:12px;background:#fffaf0;color:#6b3fd4;font-size:15px;font-weight:800"><i class="ph ph-eye" style="font-size:20px"></i>Preview</button>'
             : '<button type="button" data-act="save-draft" style="display:flex;align-items:center;justify-content:center;gap:9px;height:54px;min-width:150px;padding:0 22px;border:1px solid #e6c980;border-radius:12px;background:#fffaf0;color:#6b3fd4;font-size:15px;font-weight:800"><i class="ph ph-floppy-disk" style="font-size:20px"></i>Save Draft</button>'}
-          <button type="${primaryAction === "add-submit" ? "submit" : "button"}" data-act="${primaryAction}" style="display:flex;align-items:center;justify-content:center;gap:9px;height:54px;min-width:200px;padding:0 26px;border-radius:12px;background:#6b3fd4;background-image:linear-gradient(120deg,#7d49e8,#5b32c4);color:#fff;font-size:16px;font-weight:800;box-shadow:0 16px 28px -18px rgba(91,50,196,.9)"><i class="ph-fill ${this.addStep === 3 ? 'ph-broadcast' : 'ph-arrow-right'}" style="font-size:20px"></i>${primaryLabel}</button>
+          <button type="${primaryAction === "add-submit" ? "submit" : "button"}" data-act="${primaryAction}" ${this.saving ? 'disabled aria-busy="true"' : ''} style="display:flex;align-items:center;justify-content:center;gap:9px;height:54px;min-width:200px;padding:0 26px;border-radius:12px;background:#6b3fd4;background-image:linear-gradient(120deg,#7d49e8,#5b32c4);color:#fff;font-size:16px;font-weight:800;box-shadow:0 16px 28px -18px rgba(91,50,196,.9)"><i class="ph-fill ${this.addStep === 3 ? 'ph-broadcast' : 'ph-arrow-right'}" style="font-size:20px"></i>${primaryLabel}</button>
         </footer>
       </form>
     </div>`;
@@ -243,19 +291,83 @@ export class AddPropertyFlow {
         { name: 'PGIMER Hospital', distance: '22 min', icon: 'ph-fill ph-first-aid-kit' },
       ],
       price,
-      photos: ['/assets/ph-plot-1.png', '/assets/ph-plot-2.png', '/assets/ph-plot-3.png'],
+      photos: [this.coverPhoto, ...this.galleryPhotos]
+        .filter((photo): photo is PendingPropertyPhoto => !!photo).map((photo) => photo.previewUrl),
       published, sold: false, views: 0,
       mapPlacement: this.selectedMapPin || undefined,
     };
   }
 
-  /** Publish: persist the property (published) + its map pin, then hand back. */
-  private async publishProperty() {
-    const property = this.buildProperty(true);
-    const res = await adapter.properties.save(property);
-    const saved = res.ok ? res.value : property;
-    if (this.selectedMapPin) addPropertyToMap(this.selectedMapPin.mapId, saved.id);
-    this.onComplete(saved);
+  /** Save the draft record first (Storage RLS requires it), then upload and commit canonical refs. */
+  private async persistProperty(published: boolean) {
+    if (this.saving) return;
+    this.saving = true;
+    this.photoError = '';
+    this.render();
+    const draft = this.buildProperty(false);
+    const prepared = await adapter.properties.save(draft);
+    if (!prepared.ok) {
+      this.saving = false;
+      this.photoError = prepared.error.message;
+      this.render();
+      return;
+    }
+
+    let staged = prepared.value;
+    const uploaded: PropertyPhotoStorageRef[] = [];
+    for (const photo of [this.coverPhoto, ...this.galleryPhotos].filter((item): item is PendingPropertyPhoto => !!item)) {
+      const result = await adapter.media.uploadPropertyPhoto(prepared.value.id, photo.file);
+      if (!result.ok) {
+        const cleaned = await this.cleanupUploaded(uploaded);
+        if (cleaned) await adapter.properties.save({ ...staged, photos: [], photoStorage: [], published: false });
+        this.saving = false;
+        this.photoError = result.error.message;
+        this.render();
+        return;
+      }
+      uploaded.push(result.value);
+      // Checkpoint each successful object immediately. If the browser disappears
+      // mid-batch, the object remains attached to a private draft, never orphaned.
+      const checkpoint = await adapter.properties.save({
+        ...staged, photos: [], photoStorage: [...uploaded], published: false,
+      });
+      if (!checkpoint.ok) {
+        await this.cleanupUploaded(uploaded);
+        this.saving = false;
+        this.photoError = checkpoint.error.message;
+        this.render();
+        return;
+      }
+      staged = checkpoint.value;
+    }
+
+    const committed = await adapter.properties.save({
+      ...staged,
+      photos: [],
+      photoStorage: uploaded,
+      published,
+      mapPlacement: this.selectedMapPin || undefined,
+    });
+    if (!committed.ok) {
+      const cleaned = await this.cleanupUploaded(uploaded);
+      if (cleaned) await adapter.properties.save({ ...staged, photos: [], photoStorage: [], published: false });
+      this.saving = false;
+      this.photoError = committed.error.message;
+      this.render();
+      return;
+    }
+    if (published && this.selectedMapPin) addPropertyToMap(this.selectedMapPin.mapId, committed.value.id);
+    this.onComplete(committed.value);
+  }
+
+  private async cleanupUploaded(uploaded: readonly PropertyPhotoStorageRef[]): Promise<boolean> {
+    if (!uploaded.length) return true;
+    const paths = uploaded.map((item) => item.path);
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const result = await adapter.media.removePropertyPhotos(paths);
+      if (result.ok) return true;
+    }
+    return false;
   }
 
   private attachEvents() {
@@ -273,11 +385,29 @@ export class AddPropertyFlow {
       }
     });
 
+    this.el.addEventListener('change', (event) => {
+      const input = event.target as HTMLInputElement;
+      if (input.id === 'pm-cover-photo-input' && input.files) this.selectCover(input.files);
+      if (input.id === 'pm-gallery-photo-input' && input.files) this.selectGallery(input.files);
+    });
+
+    this.el.addEventListener('dragover', (event) => {
+      if ((event.target as HTMLElement).closest('[data-drop-kind]')) event.preventDefault();
+    });
+
+    this.el.addEventListener('drop', (event) => {
+      const zone = (event.target as HTMLElement).closest<HTMLElement>('[data-drop-kind]');
+      if (!zone || !event.dataTransfer?.files.length) return;
+      event.preventDefault();
+      if (zone.dataset.dropKind === 'cover') this.selectCover(event.dataTransfer.files);
+      else this.selectGallery(event.dataTransfer.files);
+    });
+
     this.el.addEventListener("submit", (event) => {
       const form = event.target as HTMLFormElement;
       if (form.id !== "pm-add-plot") return;
       event.preventDefault();
-      void this.publishProperty();
+      void this.persistProperty(true);
     });
 
     this.el.addEventListener("click", (event) => {
@@ -285,6 +415,7 @@ export class AddPropertyFlow {
       if (!target) return;
       
       const action = target.dataset.act;
+      if (this.saving) return;
       if (action === "toggle-map") {
         this.mapToggle = target.dataset.kind as 'masterplan' | 'sector';
         this.render();
@@ -303,8 +434,24 @@ export class AddPropertyFlow {
       } else if (action === "add-preview") {
         // Small preview at the last step — the exact detail the client would see.
         openPropertyDetail(this.buildProperty(false), {});
+      } else if (action === "choose-cover") {
+        this.el.querySelector<HTMLInputElement>('#pm-cover-photo-input')?.click();
+      } else if (action === "choose-gallery") {
+        this.el.querySelector<HTMLInputElement>('#pm-gallery-photo-input')?.click();
+      } else if (action === "remove-photo") {
+        event.preventDefault();
+        event.stopPropagation();
+        if (target.dataset.kind === 'cover' && this.coverPhoto) {
+          URL.revokeObjectURL(this.coverPhoto.previewUrl);
+          this.coverPhoto = null;
+        } else if (target.dataset.kind === 'gallery') {
+          const index = Number(target.dataset.index);
+          const [removed] = this.galleryPhotos.splice(index, 1);
+          if (removed) URL.revokeObjectURL(removed.previewUrl);
+        }
+        this.render();
       } else if (action === "save-draft") {
-        void (async () => { const p = this.buildProperty(false); const r = await adapter.properties.save(p); this.onComplete(r.ok ? r.value : p); })();
+        void this.persistProperty(false);
       } else if (action === "close-add") {
         this.onClose();
       }
@@ -487,9 +634,7 @@ export class GenerateLinkFlow {
     const sel: Record<string, string[]> = {};
     for (const id of this.chosenProps) {
       const p = this.properties.find((x) => x.id === id);
-      const refs: string[] = [];
-      (p?.photos ?? []).slice(0, 8).forEach((url, i) => { if (/^https:\/\//.test(url)) refs.push(`external:${i}`); });
-      sel[id] = refs;
+      sel[id] = p ? propertyPhotoSelections(p) : [];
     }
     return sel;
   }

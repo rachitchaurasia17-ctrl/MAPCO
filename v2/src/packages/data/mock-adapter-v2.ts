@@ -28,11 +28,24 @@ import {
 } from './contracts';
 import type { DealerPredictionSummary, PredictiveActionEvent } from '../performance';
 import { publishResourceInvalidation } from '../performance';
+import {
+  normalizePropertyPhotoStorage,
+  persistentPropertyPayload,
+  propertyPhotoObjectPath,
+  validatePropertyPhoto,
+} from './property-photos';
 
 /* ── helpers ─────────────────────────────────────────────────── */
 
 const DEFAULT_LIMIT = 12;
 const MAX_LIMIT = 50;
+const MOCK_PROPERTY_PHOTOS = new Map<string, string>();
+
+function hydrateMockProperty(property: Property): Property {
+  const privatePhotos = normalizePropertyPhotoStorage(property.photoStorage, property.id)
+    .flatMap((ref) => MOCK_PROPERTY_PHOTOS.get(ref.path) ?? []);
+  return { ...property, photos: [...(property.photos ?? []), ...privatePhotos] };
+}
 
 /** Reject a call if its AbortSignal already fired. */
 function aborted<T>(opts?: QueryOptions): Result<T> | null {
@@ -120,23 +133,24 @@ class MockPropertyRepository implements PropertyRepository {
   async list(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<Property>>> {
     const a = aborted<Page<Property>>(opts); if (a) return a;
     const s = scenarioResult<Property>(); if (s) return s;
-    return ok(paginate(PROPERTIES, params, (p, q) =>
-      p.area.toLowerCase().includes(q) || p.loc.toLowerCase().includes(q) || p.type.toLowerCase().includes(q)));
+    const page = paginate(PROPERTIES, params, (p, q) =>
+      p.area.toLowerCase().includes(q) || p.loc.toLowerCase().includes(q) || p.type.toLowerCase().includes(q));
+    return ok({ ...page, items: page.items.map(hydrateMockProperty) });
   }
   async get(id: string, opts?: QueryOptions): Promise<Result<Property>> {
     const a = aborted<Property>(opts); if (a) return a;
     const found = PROPERTIES.find((p) => p.id === id);
-    return found ? ok(found) : err('not_found', 'Property not found');
+    return found ? ok(hydrateMockProperty(found)) : err('not_found', 'Property not found');
   }
   async save(property: Property, opts?: QueryOptions): Promise<Result<Property>> {
     const a = aborted<Property>(opts); if (a) return a;
     const id = property.id || `prop-${Date.now()}`;
-    const row = { ...property, id };
+    const row = persistentPropertyPayload({ ...property, id });
     const i = PROPERTIES.findIndex((p) => p.id === id);
     if (i >= 0) PROPERTIES[i] = row; else PROPERTIES.unshift(row);
     persistMock();
     publishResourceInvalidation({ entity: 'property', id });
-    return ok(row);
+    return ok(hydrateMockProperty(row));
   }
 }
 
@@ -544,7 +558,25 @@ class MockMediaRepository implements MediaRepository {
   async full(assetId: string, opts?: QueryOptions): Promise<Result<MediaState>> {
     const a = aborted<MediaState>(opts); if (a) return a;
     if (sc() === 'error') return ok({ kind: 'image-unavailable' });
-    return ok({ kind: 'ready', url: assetId });
+    return ok({ kind: 'ready', url: MOCK_PROPERTY_PHOTOS.get(assetId.replace(/^property-photos\//, '')) ?? assetId });
+  }
+  async uploadPropertyPhoto(propertyId: string, file: File, opts?: QueryOptions) {
+    const a = aborted<import('./types').PropertyPhotoStorageRef>(opts); if (a) return a;
+    const validation = validatePropertyPhoto(file);
+    if (validation) return err('validation', validation);
+    const id = `mock${Date.now()}${MOCK_PROPERTY_PHOTOS.size}`;
+    const path = propertyPhotoObjectPath('dealer-mock', propertyId, id, file.type);
+    MOCK_PROPERTY_PHOTOS.set(path, URL.createObjectURL(file));
+    return ok({ kind: 'storage' as const, id, path });
+  }
+  async removePropertyPhotos(paths: readonly string[], opts?: QueryOptions): Promise<Result<void>> {
+    const a = aborted<void>(opts); if (a) return a;
+    for (const path of paths) {
+      const url = MOCK_PROPERTY_PHOTOS.get(path);
+      if (url) URL.revokeObjectURL(url);
+      MOCK_PROPERTY_PHOTOS.delete(path);
+    }
+    return ok(undefined);
   }
 }
 

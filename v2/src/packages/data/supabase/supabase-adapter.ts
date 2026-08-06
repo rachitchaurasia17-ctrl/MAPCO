@@ -27,6 +27,14 @@ import {
 import type { DealerPredictionSummary, PredictiveActionEvent } from '../../performance';
 import { publishResourceInvalidation } from '../../performance';
 import type { Property, Client, Deal, ClientLink, MapData, DemandSignal } from '../types';
+import {
+  PROPERTY_PHOTO_BUCKET,
+  isPersistentExternalPhoto,
+  normalizePropertyPhotoStorage,
+  persistentPropertyPayload,
+  propertyPhotoObjectPath,
+  validatePropertyPhoto,
+} from '../property-photos';
 
 const DEFAULT_LIMIT = 12;
 const MAX_LIMIT = 50;
@@ -128,14 +136,45 @@ async function crmUpsert<T extends { id?: string }>(
 /* ── CRM repositories ─────────────────────────────────────────── */
 
 class SupaProperties implements PropertyRepository {
-  list(p?: PageParams, o?: QueryOptions) {
-    return crmList<Property>('properties', p, o, (r, q) =>
-      `${r.payload.area} ${r.payload.loc} ${r.payload.type}`.toLowerCase().includes(q));
+  private async hydratedMany(properties: readonly Property[], o?: QueryOptions): Promise<Property[]> {
+    const normalized = properties.map((property) => ({
+      property,
+      refs: normalizePropertyPhotoStorage(property.photoStorage, property.id),
+    }));
+    const paths = [...new Set(normalized.flatMap((item) => item.refs.map((ref) => ref.path)))];
+    const signed = new Map<string, string>();
+    if (paths.length && !o?.signal?.aborted) {
+      try {
+        const c = await client();
+        const { data } = await c.storage.from(PROPERTY_PHOTO_BUCKET).createSignedUrls(paths, 900);
+        for (const item of data ?? []) if (item.path && item.signedUrl) signed.set(item.path, item.signedUrl);
+      } catch { /* keep property data usable with a clean no-photo state */ }
+    }
+    return normalized.map(({ property, refs }) => ({
+      ...property,
+      photos: [
+        ...(property.photos ?? []).filter(isPersistentExternalPhoto),
+        ...refs.flatMap((ref) => signed.get(ref.path) ?? []),
+      ],
+      photoStorage: refs,
+    }));
   }
-  get(id: string, o?: QueryOptions) { return crmGet<Property>('properties', id, o); }
-  save(property: Property, o?: QueryOptions) {
+
+  async list(p?: PageParams, o?: QueryOptions): Promise<Result<Page<Property>>> {
+    const result = await crmList<Property>('properties', p, o, (r, q) =>
+      `${r.payload.area} ${r.payload.loc} ${r.payload.type}`.toLowerCase().includes(q));
+    if (!result.ok) return result;
+    return ok({ ...result.value, items: await this.hydratedMany(result.value.items, o) });
+  }
+  async get(id: string, o?: QueryOptions): Promise<Result<Property>> {
+    const result = await crmGet<Property>('properties', id, o);
+    return result.ok ? ok((await this.hydratedMany([result.value], o))[0]!) : result;
+  }
+  async save(property: Property, o?: QueryOptions): Promise<Result<Property>> {
     const id = property.id || `prop-${Date.now()}`;
-    return crmUpsert<Property>('properties', id, { ...property, id }, o);
+    const canonical = persistentPropertyPayload({ ...property, id });
+    const result = await crmUpsert<Property>('properties', id, canonical, o);
+    return result.ok ? ok((await this.hydratedMany([result.value], o))[0]!) : result;
   }
 }
 
@@ -609,6 +648,44 @@ class SupaMedia implements MediaRepository {
       if (error || !data) return ok({ kind: 'image-unavailable' });
       return ok({ kind: 'ready', url: data.signedUrl });
     } catch { return ok({ kind: 'image-unavailable' }); }
+  }
+
+  async uploadPropertyPhoto(propertyId: string, file: File, o?: QueryOptions) {
+    const a = aborted<import('../types').PropertyPhotoStorageRef>(o); if (a) return a;
+    const validation = validatePropertyPhoto(file);
+    if (validation) return err('validation', validation);
+    try {
+      const c = await client();
+      const { data: auth, error: authError } = await c.auth.getUser();
+      if (authError || !auth.user) return err('unauthorized', 'Not signed in');
+      let dealerId = String(auth.user.app_metadata?.plotmap_dealer_id ?? auth.user.app_metadata?.dealer_id ?? '').trim();
+      if (!dealerId) {
+        const { data: profile, error: profileError } = await c.from('profiles')
+          .select('dealer_id').eq('id', auth.user.id).maybeSingle();
+        if (profileError) return toErr(profileError);
+        dealerId = String((profile as { dealer_id?: string } | null)?.dealer_id ?? '').trim();
+      }
+      if (!dealerId) return err('forbidden', 'Dealer membership is unavailable');
+      const objectId = cryptoId();
+      const path = propertyPhotoObjectPath(dealerId, propertyId, objectId, file.type);
+      const { error } = await c.storage.from(PROPERTY_PHOTO_BUCKET).upload(path, file, {
+        cacheControl: '3600', contentType: file.type, upsert: false,
+      });
+      if (error) return toErr(error);
+      return ok({ kind: 'storage' as const, id: objectId, path });
+    } catch (e) { return toErr(e); }
+  }
+
+  async removePropertyPhotos(paths: readonly string[], o?: QueryOptions): Promise<Result<void>> {
+    const a = aborted<void>(o); if (a) return a;
+    const safe = [...new Set(paths.map((path) => String(path).trim()).filter((path) =>
+      path.startsWith('dealers/') && path.includes('/properties/') && !path.includes('..') && !path.startsWith('/')))];
+    if (!safe.length) return ok(undefined);
+    try {
+      const c = await client();
+      const { error } = await c.storage.from(PROPERTY_PHOTO_BUCKET).remove(safe);
+      return error ? toErr(error) : ok(undefined);
+    } catch (e) { return toErr(e); }
   }
 }
 
