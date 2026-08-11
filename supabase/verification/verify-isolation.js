@@ -97,15 +97,29 @@ async function run() {
     event_type: 'presentation_opened'
   }));
   checks.push(await expectBlocked('anon cannot read crm_records', '/rest/v1/crm_records?select=*'));
+  checks.push(await expectBlocked('anon cannot set property locations', '/rest/v1/rpc/plotmap_set_property_location', 'POST', {
+    p_property_id: 'isolation-check',
+    p_latitude: 30.7,
+    p_longitude: 76.7,
+    p_source: 'dealer-selected'
+  }));
   checks.push(await expectBlocked('anon cannot read dealer_settings', '/rest/v1/dealer_settings?select=*'));
   checks.push(await expectBlocked('anon cannot read share_links', '/rest/v1/share_links?select=*'));
   checks.push(await expectBlocked('anon cannot read audit_logs', '/rest/v1/audit_logs?select=*'));
 
   console.log('\n--- PlotMap dealer-scoped RPC checks ---');
-  const suffix = DEVICE_TOKEN ? '_for_device' : '';
-  checks.push(await expectRpcDealerRows('client properties RPC is dealer-scoped', `plotmap_client_properties${suffix}`, PRIMARY_DEALER_ID));
-  checks.push(await expectRpcDealerRows('client maps RPC is dealer-scoped', `plotmap_client_maps${suffix}`, PRIMARY_DEALER_ID));
-  checks.push(await expectRpcDealerRows('client overlays RPC is dealer-scoped', `plotmap_client_overlays${suffix}`, PRIMARY_DEALER_ID));
+  if (DEVICE_TOKEN) {
+    checks.push(await expectRpcDealerRows('client properties RPC is dealer-scoped', 'plotmap_client_properties_for_device', PRIMARY_DEALER_ID));
+    checks.push(await expectRpcDealerRows('client maps RPC is dealer-scoped', 'plotmap_client_maps_for_device', PRIMARY_DEALER_ID));
+    checks.push(await expectRpcDealerRows('client overlays RPC is dealer-scoped', 'plotmap_client_overlays_for_device', PRIMARY_DEALER_ID));
+  } else {
+    // Current MAPCO-DEV requires an approved device token. With only an anon
+    // key, the old unscoped RPCs must be unavailable rather than returning a
+    // dealer selected by caller-controlled input.
+    checks.push(await expectBlocked('anon cannot invoke unscoped client properties RPC', '/rest/v1/rpc/plotmap_client_properties', 'POST', { p_dealer_id: PRIMARY_DEALER_ID }));
+    checks.push(await expectBlocked('anon cannot invoke unscoped client maps RPC', '/rest/v1/rpc/plotmap_client_maps', 'POST', { p_dealer_id: PRIMARY_DEALER_ID }));
+    checks.push(await expectBlocked('anon cannot invoke unscoped client overlays RPC', '/rest/v1/rpc/plotmap_client_overlays', 'POST', { p_dealer_id: PRIMARY_DEALER_ID }));
+  }
 
   const eventRpc = DEVICE_TOKEN
     ? 'plotmap_record_device_presentation_event'

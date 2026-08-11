@@ -26,7 +26,15 @@ import {
 } from '../contracts';
 import type { DealerPredictionSummary, PredictiveActionEvent } from '../../performance';
 import { publishResourceInvalidation } from '../../performance';
-import type { Property, Client, Deal, ClientLink, MapData, DemandSignal } from '../types';
+import type {
+  Property,
+  PropertyLocationInput,
+  Client,
+  Deal,
+  ClientLink,
+  MapData,
+  DemandSignal,
+} from '../types';
 import {
   PROPERTY_PHOTO_BUCKET,
   isPersistentExternalPhoto,
@@ -37,6 +45,10 @@ import {
 } from '../property-photos';
 import { resolveMapAssetUrl } from '../map-assets';
 import { normalizeCompletedDeal } from '../deal-normalization';
+import {
+  normalizePropertyLocationOnRead,
+  propertyLocationValidationError,
+} from '../property-location';
 
 const DEFAULT_LIMIT = 12;
 const MAX_LIMIT = 50;
@@ -153,7 +165,7 @@ class SupaProperties implements PropertyRepository {
       } catch { /* keep property data usable with a clean no-photo state */ }
     }
     return normalized.map(({ property, refs }) => ({
-      ...property,
+      ...normalizePropertyLocationOnRead(property),
       photos: [
         ...(property.photos ?? []).filter(isPersistentExternalPhoto),
         ...refs.flatMap((ref) => signed.get(ref.path) ?? []),
@@ -173,10 +185,37 @@ class SupaProperties implements PropertyRepository {
     return result.ok ? ok((await this.hydratedMany([result.value], o))[0]!) : result;
   }
   async save(property: Property, o?: QueryOptions): Promise<Result<Property>> {
+    const locationError = propertyLocationValidationError(property.location);
+    if (locationError) return err('validation', locationError);
     const id = property.id || `prop-${Date.now()}`;
     const canonical = persistentPropertyPayload({ ...property, id });
     const result = await crmUpsert<Property>('properties', id, canonical, o);
     return result.ok ? ok((await this.hydratedMany([result.value], o))[0]!) : result;
+  }
+  async setLocation(
+    id: string,
+    location: PropertyLocationInput | null,
+    o?: QueryOptions,
+  ): Promise<Result<Property>> {
+    const a = aborted<Property>(o); if (a) return a;
+    if (location) {
+      const locationError = propertyLocationValidationError(location);
+      if (locationError) return err('validation', locationError);
+    }
+    try {
+      const c = await client();
+      const { data, error } = await c.rpc('plotmap_set_property_location', {
+        p_property_id: id,
+        p_latitude: location?.latitude ?? null,
+        p_longitude: location?.longitude ?? null,
+        p_source: location?.source ?? 'dealer-selected',
+      });
+      if (error) return toErr(error);
+      const row = (Array.isArray(data) ? data[0] : data) as CrmRow | null;
+      if (!row) return err('not_found', 'Property not found');
+      publishResourceInvalidation({ entity: 'property', id });
+      return ok((await this.hydratedMany([mapEntity<Property>(row)], o))[0]!);
+    } catch (error) { return toErr(error); }
   }
 }
 

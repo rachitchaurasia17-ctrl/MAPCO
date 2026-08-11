@@ -1,3 +1,6 @@
+import { propertyLocationPoint } from '../data/property-location';
+import type { PropertyLocation } from '../data/types';
+
 /* ═══════════════════════════════════════════════════════════════
    MAPCO V2 — Utility: Currency formatting
    ═══════════════════════════════════════════════════════════════ */
@@ -17,8 +20,15 @@ export function formatDateShort(): string {
   return new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 }
 
-/** Generate a street-view URL for a location */
-export function streetViewUrl(label: string): string {
+/** Generate a Street View URL; canonical coordinates avoid a geocoding lookup. */
+export function streetViewUrl(location: string | PropertyLocation): string {
+  if (typeof location !== 'string') {
+    const point = propertyLocationPoint(location);
+    if (point) {
+      return `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${point.lat},${point.lng}`;
+    }
+  }
+  const label = typeof location === 'string' ? location : 'Punjab';
   return 'https://www.google.com/maps?q=' + encodeURIComponent(label.split(' · ')[0] + ', Punjab') + '&layer=c';
 }
 

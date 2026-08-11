@@ -43,7 +43,7 @@ function initLanding(container: HTMLElement) {
   
   .pm-land-card-1:hover{transform:translateY(-10px);box-shadow:0 2px 3px rgba(40,30,10,.05),0 44px 70px -34px rgba(255,175,20,.9) !important;border-color:#ffc93c !important;}
   .pm-land-card-2:hover{transform:translateY(-10px);box-shadow:0 2px 3px rgba(40,30,10,.05),0 44px 70px -34px rgba(18,161,80,.75) !important;border-color:#12a150 !important;}
-  .pm-land-card-3:hover{transform:translateY(-10px);box-shadow:0 2px 3px rgba(40,30,10,.05),0 44px 70px -34px rgba(151,110,235,.8) !important;border-color:#976eeb !important;}
+  .pm-land-card-3:hover{transform:translateY(-10px);box-shadow:0 2px 3px rgba(40,30,10,.05),0 44px 70px -34px rgba(18,120,80,.8) !important;border-color:#1f9d68 !important;}
 </style>
 <div class="pm-landing" style="position:fixed;inset:0;overflow:hidden;background:#f7ecd6;font-family:var(--pm-font-ui);display:flex;flex-direction:column">
 
@@ -125,18 +125,19 @@ function initLanding(container: HTMLElement) {
         </div>
       </a>
 
-      <a href="/admin/team.html" class="pm-land-card-3" style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;border-radius:clamp(18px,2.4vh,26px);background:#fffaf0;border:1px solid #ded1f4;box-shadow:0 2px 3px rgba(40,30,10,.04),0 30px 56px -38px rgba(70,40,150,.7);color:inherit;text-decoration:none;transition:transform .38s cubic-bezier(.2,.8,.2,1),box-shadow .38s ease,border-color .3s ease;animation:lRise .95s cubic-bezier(.2,.8,.2,1) both;animation-delay:.36s">
-        <div style="position:relative;flex:none;height:clamp(84px,13vh,120px);background:#5b32c4;background-image:radial-gradient(120% 130% at 18% 4%,#a983f5,#6a3ed6 58%,#4a26a8);overflow:hidden">
-          <div style="position:absolute;inset:0;background:repeating-linear-gradient(58deg,rgba(255,255,255,.14) 0 2px,transparent 2px 26px)"></div>
-          <div style="position:absolute;right:-20px;top:-34px;width:126px;height:126px;border-radius:50%;background:rgba(255,255,255,.16)"></div>
-          <div style="position:absolute;left:clamp(16px,2vw,22px);top:50%;transform:translateY(-50%);width:clamp(42px,6vh,54px);height:clamp(42px,6vh,54px);border-radius:16px;background:#ffe1e6;color:#5b32c4;display:grid;place-items:center;box-shadow:0 14px 26px -14px rgba(40,20,90,.7)"><i class="ph-fill ph-pen-nib" style="font-size:clamp(21px,3vh,27px)"></i></div>
-          <div style="position:absolute;right:clamp(16px,2vw,22px);top:clamp(10px,1.4vh,14px);font-family:var(--pm-font-display);font-size:clamp(20px,3vh,27px);color:rgba(239,232,251,.5)">03</div>
+      <a href="/app/earth/index.html" class="pm-land-card-3" style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;border-radius:clamp(18px,2.4vh,26px);background:#fffaf0;border:1px solid #c9e4d5;box-shadow:0 2px 3px rgba(40,30,10,.04),0 30px 56px -38px rgba(18,90,60,.7);color:inherit;text-decoration:none;transition:transform .38s cubic-bezier(.2,.8,.2,1),box-shadow .38s ease,border-color .3s ease;animation:lRise .95s cubic-bezier(.2,.8,.2,1) both;animation-delay:.36s">
+        <div style="position:relative;flex:none;height:clamp(84px,13vh,120px);background:#0f3b2c;background-image:radial-gradient(120% 140% at 82% 8%,#2f8d64,#134a37 56%,#0b2c21);overflow:hidden">
+          <div style="position:absolute;inset:0;background:repeating-linear-gradient(58deg,rgba(255,255,255,.10) 0 2px,transparent 2px 26px)"></div>
+          <div style="position:absolute;right:-26px;top:-30px;width:132px;height:132px;border-radius:50%;background:radial-gradient(circle at 34% 34%,rgba(143,226,127,.5),rgba(63,184,81,.14) 60%,transparent 72%)"></div>
+          <div style="position:absolute;right:-8px;bottom:-40px;width:96px;height:96px;border-radius:50%;border:1.5px solid rgba(255,255,255,.16)"></div>
+          <div style="position:absolute;left:clamp(16px,2vw,22px);top:50%;transform:translateY(-50%);width:clamp(42px,6vh,54px);height:clamp(42px,6vh,54px);border-radius:16px;background:#ffc93c;color:#0f3b2c;display:grid;place-items:center;box-shadow:0 14px 26px -14px rgba(0,0,0,.6)"><i class="ph-fill ph-globe-hemisphere-east" style="font-size:clamp(22px,3.1vh,28px)"></i></div>
+          <div style="position:absolute;right:clamp(16px,2vw,22px);top:clamp(10px,1.4vh,14px);font-family:var(--pm-font-display);font-size:clamp(20px,3vh,27px);color:rgba(217,245,227,.5)">03</div>
         </div>
         <div style="padding:clamp(14px,2.2vh,22px) clamp(16px,2vw,24px) clamp(16px,2.4vh,24px);display:flex;flex-direction:column;flex:1;min-height:0">
-          <div style="font-size:clamp(10px,1.3vh,11.5px);font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#5b32c4">For your team</div>
-          <div style="margin-top:6px;font-family:var(--pm-font-display);font-weight:500;font-size:clamp(21px,3.4vh,30px);line-height:1.05;letter-spacing:-.02em;color:#241f1c">Team Workspace</div>
-          <p style="margin:8px 0 0;font-size:clamp(13px,1.7vh,15px);line-height:1.45;color:#6b6156;text-wrap:pretty">Add properties, mark maps in Map Studio, send private client links.</p>
-          <div style="display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:clamp(12px,1.8vh,20px);font-size:clamp(14px,1.8vh,15.5px);font-weight:800;color:#5b32c4">Open workspace <i class="ph-bold ph-arrow-right" style="font-size:15px;animation:lSlide 2.6s ease-in-out infinite;animation-delay:.6s"></i></div>
+          <div style="font-size:clamp(10px,1.3vh,11.5px);font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#12704a">The real world</div>
+          <div style="margin-top:6px;font-family:var(--pm-font-display);font-weight:500;font-size:clamp(21px,3.4vh,30px);line-height:1.05;letter-spacing:-.02em;color:#241f1c">MAPCO Earth</div>
+          <p style="margin:8px 0 0;font-size:clamp(13px,1.7vh,15px);line-height:1.45;color:#6b6156;text-wrap:pretty">Find any plot, sector or landmark on live satellite — see exactly where a property sits on the ground.</p>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:clamp(12px,1.8vh,20px);font-size:clamp(14px,1.8vh,15.5px);font-weight:800;color:#12704a">Open the map <i class="ph-bold ph-arrow-right" style="font-size:15px;animation:lSlide 2.6s ease-in-out infinite;animation-delay:.6s"></i></div>
         </div>
       </a>
 

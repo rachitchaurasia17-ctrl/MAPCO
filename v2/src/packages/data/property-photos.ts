@@ -1,4 +1,5 @@
 import type { Property, PropertyPhotoStorageRef } from './types';
+import { normalizePropertyLocation } from './property-location';
 
 export const PROPERTY_PHOTO_BUCKET = 'property-photos';
 export const PROPERTY_PHOTO_MAX_BYTES = 5 * 1024 * 1024;
@@ -32,11 +33,15 @@ export function normalizePropertyPhotoStorage(value: unknown, propertyId?: strin
 }
 
 export function persistentPropertyPayload(property: Property): Property {
-  return {
+  const location = normalizePropertyLocation(property.location);
+  const persistent = {
     ...property,
     photos: (property.photos ?? []).filter(isPersistentExternalPhoto),
     photoStorage: normalizePropertyPhotoStorage(property.photoStorage, property.id),
   };
+  if (location) persistent.location = location;
+  else delete persistent.location;
+  return persistent;
 }
 
 export function propertyPhotoSelections(property: Property): string[] {

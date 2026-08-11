@@ -10,6 +10,27 @@ export type LinkStatus = 'active' | 'revoked' | 'expired';
 export type PriceVisibility = 'hidden' | 'shown';
 export type LocationVisibility = 'area' | 'exact' | 'hidden';
 
+export type PropertyLocationSource =
+  | 'dealer-selected'
+  | 'manually-verified'
+  | 'imported'
+  | 'migrated';
+
+/** One property's authoritative real-world Earth coordinate. */
+export interface PropertyLocation {
+  latitude: number;
+  longitude: number;
+  source?: PropertyLocationSource;
+  /** ISO timestamp for the last canonical location change. */
+  updatedAt?: string;
+}
+
+export interface PropertyLocationInput {
+  latitude: number;
+  longitude: number;
+  source?: PropertyLocationSource;
+}
+
 export interface PropertyPhotoStorageRef {
   kind: 'storage';
   id: string;
@@ -40,6 +61,8 @@ export interface Property {
   masterplanId?: string;
   sectorMapId?: string;
   mapPlacement?: { mapId: string; x: number; y: number };
+  /** Canonical real-world location. Independent from masterplan/SVG placement. */
+  location?: PropertyLocation;
   /** Private owner details — dealer-only, never projected into a client link. */
   owner?: { name: string; phone: string; priceConfirmedAt?: string };
 }

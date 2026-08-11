@@ -8,7 +8,7 @@
    ═══════════════════════════════════════════════════════════════ */
 
 import type {
-  Property, Client, Deal, ClientLink, MapData, DemandSignal,
+  Property, PropertyLocationInput, Client, Deal, ClientLink, MapData, DemandSignal,
 } from './types';
 import {
   PROPERTIES, CLIENTS, DEALS, CLIENT_LINKS, DEMAND_SIGNALS, persistMock,
@@ -34,6 +34,11 @@ import {
   propertyPhotoObjectPath,
   validatePropertyPhoto,
 } from './property-photos';
+import {
+  createPropertyLocation,
+  normalizePropertyLocationOnRead,
+  propertyLocationValidationError,
+} from './property-location';
 
 /* ── helpers ─────────────────────────────────────────────────── */
 
@@ -44,7 +49,10 @@ const MOCK_PROPERTY_PHOTOS = new Map<string, string>();
 function hydrateMockProperty(property: Property): Property {
   const privatePhotos = normalizePropertyPhotoStorage(property.photoStorage, property.id)
     .flatMap((ref) => MOCK_PROPERTY_PHOTOS.get(ref.path) ?? []);
-  return { ...property, photos: [...(property.photos ?? []), ...privatePhotos] };
+  return normalizePropertyLocationOnRead({
+    ...property,
+    photos: [...(property.photos ?? []), ...privatePhotos],
+  });
 }
 
 /** Reject a call if its AbortSignal already fired. */
@@ -144,6 +152,8 @@ class MockPropertyRepository implements PropertyRepository {
   }
   async save(property: Property, opts?: QueryOptions): Promise<Result<Property>> {
     const a = aborted<Property>(opts); if (a) return a;
+    const locationError = propertyLocationValidationError(property.location);
+    if (locationError) return err('validation', locationError);
     const id = property.id || `prop-${Date.now()}`;
     const row = persistentPropertyPayload({ ...property, id });
     const i = PROPERTIES.findIndex((p) => p.id === id);
@@ -151,6 +161,28 @@ class MockPropertyRepository implements PropertyRepository {
     persistMock();
     publishResourceInvalidation({ entity: 'property', id });
     return ok(hydrateMockProperty(row));
+  }
+  async setLocation(
+    id: string,
+    location: PropertyLocationInput | null,
+    opts?: QueryOptions,
+  ): Promise<Result<Property>> {
+    const a = aborted<Property>(opts); if (a) return a;
+    if (location) {
+      const locationError = propertyLocationValidationError(location);
+      if (locationError) return err('validation', locationError);
+    }
+    const index = PROPERTIES.findIndex((property) => property.id === id);
+    if (index < 0) return err('not_found', 'Property not found');
+    const property = PROPERTIES[index]!;
+    if (location) PROPERTIES[index] = { ...property, location: createPropertyLocation(location) };
+    else {
+      const { location: _removed, ...withoutLocation } = property;
+      PROPERTIES[index] = withoutLocation as Property;
+    }
+    persistMock();
+    publishResourceInvalidation({ entity: 'property', id });
+    return ok(hydrateMockProperty(PROPERTIES[index]!));
   }
 }
 

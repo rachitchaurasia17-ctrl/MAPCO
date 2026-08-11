@@ -17,7 +17,7 @@
    ═══════════════════════════════════════════════════════════════ */
 
 import type {
-  Property, Client, Deal, ClientLink, MapData, DemandSignal,
+  Property, PropertyLocationInput, Client, Deal, ClientLink, MapData, DemandSignal,
 } from './types';
 
 /* ───────────────────────────────────────────────────────────────
@@ -191,6 +191,8 @@ export interface PropertyRepository {
   get(id: string, opts?: QueryOptions): Promise<Result<Property>>;
   /** Create or update a property (dealer-scoped). */
   save(property: Property, opts?: QueryOptions): Promise<Result<Property>>;
+  /** Atomically set or clear the canonical real-world location. */
+  setLocation(id: string, location: PropertyLocationInput | null, opts?: QueryOptions): Promise<Result<Property>>;
 }
 
 export interface CustomerRepository {

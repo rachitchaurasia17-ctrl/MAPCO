@@ -1,3 +1,7 @@
 # Raw source-map working folders are local inputs, not production assets.
 /maps with svg/
 /normal maps/
+
+.env
+.env.local
+.env.*.local
