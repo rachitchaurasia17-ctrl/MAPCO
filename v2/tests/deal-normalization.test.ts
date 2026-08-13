@@ -32,4 +32,37 @@ describe('completed Deal normalization', () => {
     expect(normalizeCompletedDeal('d1', { ...base, stage: 'negotiating' })).toBeNull();
     expect(normalizeCompletedDeal('d3', { ...base, stage: 'token' })).toBeNull();
   });
+
+  it('lets an explicit non-completed stage win over a tentative sale date', () => {
+    const base = { prop: 'Pipeline record', client: 'Buyer', value: 9_500_000, saleDate: '2026-09-01' };
+    expect(normalizeCompletedDeal('d1', { ...base, stage: 'negotiating' })).toBeNull();
+    expect(normalizeCompletedDeal('d2', { ...base, stage: 'registry' })).toBeNull();
+    expect(normalizeCompletedDeal('d3', { ...base, stage: 'lost' })).toBeNull();
+  });
+
+  it('preserves nested legacy seller details', () => {
+    const deal = normalizeCompletedDeal('nested-seller', {
+      stage: 'closed', prop: 'Legacy plot', client: 'Buyer',
+      seller: { name: 'Legacy Seller', phone: '+919811111111' },
+    });
+    expect(deal?.seller).toBe('Legacy Seller');
+    expect(deal?.sellerPhone).toBe('+919811111111');
+  });
+
+  it('tracks absent private values without treating recorded zero or false as missing', () => {
+    const incomplete = normalizeCompletedDeal('incomplete', { stage: 'closed', prop: 'Old sale' });
+    expect(incomplete?.fieldPresence).toMatchObject({
+      soldPrice: false, commission: false, commissionReceived: false,
+      paymentReceived: false, documents: false,
+    });
+
+    const explicit = normalizeCompletedDeal('explicit', {
+      stage: 'closed', prop: 'Recorded sale', soldPrice: 1,
+      commission: 0, commissionReceived: false, paymentReceived: 0, documents: [],
+    });
+    expect(explicit?.fieldPresence).toMatchObject({
+      soldPrice: true, commission: true, commissionReceived: true,
+      paymentReceived: true, documents: true,
+    });
+  });
 });

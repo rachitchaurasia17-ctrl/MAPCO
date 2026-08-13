@@ -17,7 +17,7 @@ import {
   type AuthRepository, type ActivationState, type AccountState,
   type PropertyRepository, type CustomerRepository, type DealRepository, type RecordSaleInput,
   type DemandRepository, type DemandRecord, type DemandDraft, type DemandMatch,
-  type MapRepository, type PresentationRepository, type PresentationState,
+  type MapRepository, type PresentationRepository, type PresentationState, type PresentationProperty,
   type PresentationEventsRepository, type PresentationEvent,
   type PredictiveRepository,
   type ClientLinkRepository, type ClientLinkState, type ClientSafePayload, type ClientSafeMap,
@@ -192,6 +192,22 @@ class SupaProperties implements PropertyRepository {
     const result = await crmUpsert<Property>('properties', id, canonical, o);
     return result.ok ? ok((await this.hydratedMany([result.value], o))[0]!) : result;
   }
+  async remove(id: string, o?: QueryOptions): Promise<Result<void>> {
+    const a = aborted<void>(o); if (a) return a;
+    try {
+      const c = await client();
+      const { data, error } = await c.from('crm_records')
+        .update({ deleted: true, updated_at: new Date().toISOString() })
+        .eq('entity_type', 'properties')
+        .eq('id', id)
+        .select('id')
+        .maybeSingle();
+      if (error) return toErr(error);
+      if (!data) return err('not_found', 'Property not found');
+      publishResourceInvalidation({ entity: 'property', id });
+      return ok(undefined);
+    } catch (error) { return toErr(error); }
+  }
   async setLocation(
     id: string,
     location: PropertyLocationInput | null,
@@ -235,14 +251,39 @@ type UnknownDeal = Record<string, unknown> & { id?: unknown };
 
 class SupaDeals implements DealRepository {
   async list(p?: PageParams, o?: QueryOptions): Promise<Result<Page<Deal>>> {
-    const result = await crmList<UnknownDeal>('deals', p, o, (r, q) =>
-      `${r.payload.prop ?? ''} ${r.payload.buyer ?? r.payload.client ?? ''} ${r.payload.seller ?? ''} ${r.payload.city ?? r.payload.area ?? ''} ${r.payload.sector ?? ''}`.toLowerCase().includes(q));
-    if (!result.ok) return result;
-    const items = result.value.items.flatMap((payload) => {
+    /*
+     * Legacy crm_records can contain the retired opportunity pipeline under
+     * entity_type=deals. Paginating those raw rows before normalization can
+     * produce an empty completed-sales page even when older completed rows
+     * exist. Read the dealer-scoped register, normalize first, then paginate
+     * the completed-only result. RLS remains the authority for every chunk.
+     */
+    const raw: UnknownDeal[] = [];
+    let rawCursor: string | undefined;
+    do {
+      const page = await crmList<UnknownDeal>('deals', { cursor: rawCursor, limit: MAX_LIMIT }, o, () => true);
+      if (!page.ok) return page;
+      raw.push(...page.value.items);
+      rawCursor = page.value.nextCursor ?? undefined;
+    } while (rawCursor);
+
+    const query = (p?.query ?? '').trim().toLowerCase();
+    const completedById = new Map<string, Deal>();
+    for (const payload of raw) {
       const deal = normalizeCompletedDeal(String(payload.id ?? ''), payload);
-      return deal ? [deal] : [];
+      if (!deal) continue;
+      if (query && !`${deal.prop} ${deal.buyer} ${deal.seller} ${deal.city} ${deal.sector}`.toLowerCase().includes(query)) continue;
+      completedById.set(deal.id, deal);
+    }
+    const completed = [...completedById.values()];
+    const limit = Math.min(p?.limit ?? DEFAULT_LIMIT, MAX_LIMIT);
+    const offset = p?.cursor ? parseInt(p.cursor, 10) || 0 : 0;
+    const items = completed.slice(offset, offset + limit);
+    return ok({
+      items,
+      nextCursor: offset + limit < completed.length ? String(offset + limit) : null,
+      total: completed.length,
     });
-    return ok({ ...result.value, items });
   }
   async get(id: string, o?: QueryOptions): Promise<Result<Deal>> {
     const result = await crmGet<UnknownDeal>('deals', id, o);
@@ -263,15 +304,15 @@ class SupaDeals implements DealRepository {
           propertyId: input.propertyId,
           buyerId: input.buyerId ?? null,
           newBuyer: input.newBuyer ?? null,
-          seller: input.seller,
+          seller: input.seller ?? null,
           sellerPhone: input.sellerPhone ?? null,
           soldPrice: input.soldPrice,
           saleDate: input.saleDate,
           registrationDate: input.registrationDate ?? null,
-          brokerage: input.brokerage,
-          commission: input.commission,
-          commissionReceived: input.commissionReceived ?? false,
-          paymentReceived: input.paymentReceived ?? 0,
+          brokerage: input.brokerage ?? null,
+          commission: input.commission ?? null,
+          commissionReceived: input.commission === undefined ? null : (input.commissionReceived ?? false),
+          paymentReceived: input.paymentReceived ?? null,
           documents: input.documents ?? [],
         },
       });
@@ -369,18 +410,19 @@ function rowToMapMeta(
     parentMapId: (m.parent_map_id as string) ?? undefined,
     label: m.label ?? m.area ?? '', raster: assets.original?.path ?? resolveAsset(m.raster as string | undefined) ?? '',
     assets,
-    calibration: payload.calibration,
+    calibration: (m.calibration as MapData['calibration']) ?? payload.calibration,
     dims: {
       original: dims.original ?? { w: assets.original?.w ?? 0, h: assets.original?.h ?? 0 },
       ...(assets.threeD || dims.threeD ? { threeD: dims.threeD ?? { w: assets.threeD!.w ?? 0, h: assets.threeD!.h ?? 0 } } : {}),
     },
-    published: m.status === 'published', hidden: m.client_visible === false,
+    published: m.published === true || m.status === 'published',
+    hidden: m.hidden === true || m.client_visible === false,
     linkedProperties: [],
   } as unknown as Omit<MapData, 'sets'>;
 }
 
 class SupaMaps implements MapRepository {
-  private assetResolver(c: SupabaseClient) {
+  assetResolver(c: SupabaseClient) {
     return (value: string | undefined) => resolveMapAssetUrl(
       value,
       (path) => c.storage.from('maps').getPublicUrl(path).data.publicUrl,
@@ -434,11 +476,111 @@ class SupaMaps implements MapRepository {
 }
 
 class SupaPresentation implements PresentationRepository {
+  private normalizedProperties(rows: readonly PresentationProperty[]): PresentationProperty[] {
+    return rows.map((row) => ({
+      id: String(row.id ?? ''),
+      type: row.type,
+      city: String(row.city ?? ''),
+      area: String(row.area ?? ''),
+      loc: String(row.loc ?? ''),
+      sector: String(row.sector ?? ''),
+      size: String(row.size ?? ''),
+      facing: row.facing,
+      position: String(row.position ?? ''),
+      approvals: Array.isArray(row.approvals) ? row.approvals.map(String) : [],
+      landmarks: Array.isArray(row.landmarks) ? row.landmarks.map((landmark) => ({
+        name: String(landmark?.name ?? ''),
+        distance: String(landmark?.distance ?? ''),
+        icon: String(landmark?.icon ?? ''),
+      })) : [],
+      // Broker output is runtime-only: it may contain short-lived signed HTTPS
+      // URLs. Persistence filtering belongs at the write boundary, not here.
+      photos: Array.isArray(row.photos) ? row.photos.map(String).filter((url) => {
+        try { return new URL(url).protocol === 'https:'; } catch { return false; }
+      }) : [],
+      ...(row.masterplanId ? { masterplanId: String(row.masterplanId) } : {}),
+      ...(row.sectorMapId ? { sectorMapId: String(row.sectorMapId) } : {}),
+      ...(row.mapPlacement ? { mapPlacement: {
+        mapId: String(row.mapPlacement.mapId),
+        x: Number(row.mapPlacement.x),
+        y: Number(row.mapPlacement.y),
+      } } : {}),
+      hasEarthLocation: row.hasEarthLocation === true,
+    }));
+  }
+
+  private async readProperties(
+    input: { limit: number; offset: number; propertyId: string | null },
+    o?: QueryOptions,
+  ): Promise<Result<{ items: PresentationProperty[]; total: number; nextOffset: number | null }>> {
+    const a = aborted<{ items: PresentationProperty[]; total: number; nextOffset: number | null }>(o); if (a) return a;
+    try {
+      const c = await client();
+      const fn = await c.functions.invoke('presentation-properties', { body: input });
+      if (fn.error || !fn.data || typeof fn.data !== 'object') return fn.error ? toErr(fn.error) : err('unavailable', 'Presentation properties unavailable');
+      const envelope = fn.data as { ok?: boolean; items?: PresentationProperty[]; total?: number; nextOffset?: number | null };
+      if (envelope.ok !== true) return err('unavailable', 'Presentation properties unavailable');
+      return ok({
+        items: this.normalizedProperties(envelope.items ?? []),
+        total: Number(envelope.total) || 0,
+        nextOffset: envelope.nextOffset === null || Number.isInteger(envelope.nextOffset) ? envelope.nextOffset ?? null : null,
+      });
+    } catch (e) { return toErr(e); }
+  }
+
   async getState(o?: QueryOptions): Promise<Result<PresentationState>> {
-    const maps = await new SupaMaps().listRegistry({ limit: 200 }, o);
+    const maps = await this.listMaps(o);
     if (!maps.ok) return err('network', 'Presentation failed to load', { retryable: true });
-    if (maps.value.items.length === 0) return ok({ kind: 'no-map' });
-    return ok({ kind: 'ready', maps: maps.value.items });
+    if (maps.value.length === 0) return ok({ kind: 'no-map' });
+    return ok({ kind: 'ready', maps: maps.value });
+  }
+
+  async listMaps(o?: QueryOptions): Promise<Result<readonly Omit<MapData, 'sets'>[]>> {
+    const a = aborted<readonly Omit<MapData, 'sets'>[]>(o); if (a) return a;
+    try {
+      const c = await client();
+      const { data, error } = await c.rpc('plotmap_presentation_maps', { p_map_id: null });
+      if (error) return toErr(error);
+      const rows = Array.isArray(data) ? data as Record<string, unknown>[] : [];
+      return ok(rows.map((row) => rowToMapMeta(row, new SupaMaps().assetResolver(c))));
+    } catch (e) { return toErr(e); }
+  }
+
+  async getMap(id: string, o?: QueryOptions): Promise<Result<MapData>> {
+    const a = aborted<MapData>(o); if (a) return a;
+    try {
+      const c = await client();
+      const { data, error } = await c.rpc('plotmap_presentation_map', { p_map_id: id });
+      if (error) return toErr(error);
+      const envelope = data && typeof data === 'object' ? data as {
+        ok?: boolean;
+        map?: Record<string, unknown>;
+        sets?: Record<string, unknown>[];
+      } : {};
+      if (envelope.ok !== true || !envelope.map) return err('not_found', 'Presentation map not found');
+      const sets = (envelope.sets ?? []).map((set) => {
+        const payload = (set.payload as { itemIds?: unknown[]; marks?: unknown[]; accent?: string; labels?: Record<string, string> }) ?? {};
+        return { id: set.id, name: set.name ?? '', marks: payload.itemIds ?? payload.marks ?? [], accent: payload.accent, labels: payload.labels ?? {} };
+      });
+      return ok({ ...rowToMapMeta(envelope.map, new SupaMaps().assetResolver(c)), sets } as unknown as MapData);
+    } catch (e) { return toErr(e); }
+  }
+
+  async listProperties(p?: PageParams, o?: QueryOptions): Promise<Result<Page<PresentationProperty>>> {
+    const limit = Math.min(p?.limit ?? DEFAULT_LIMIT, MAX_LIMIT);
+    const offset = p?.cursor ? parseInt(p.cursor, 10) || 0 : 0;
+    const result = await this.readProperties({ limit, offset, propertyId: null }, o);
+    return result.ok ? ok({
+      items: result.value.items,
+      nextCursor: result.value.nextOffset === null ? null : String(result.value.nextOffset),
+      total: result.value.total,
+    }) : result;
+  }
+
+  async getProperty(id: string, o?: QueryOptions): Promise<Result<PresentationProperty>> {
+    const result = await this.readProperties({ limit: 1, offset: 0, propertyId: id }, o);
+    if (!result.ok) return result;
+    return result.value.items[0] ? ok(result.value.items[0]) : err('not_found', 'Presentation property not found');
   }
 }
 
@@ -698,6 +840,12 @@ export function snapshotToState(snap: Record<string, unknown>): ClientLinkState 
     })).filter((m) => m.id && m.raster) } : {}),
     properties: rawProps.map((p) => {
       const placement = p.placement as { mapId?: string; x?: number; y?: number } | undefined;
+      const placementMapId = typeof placement?.mapId === 'string' ? placement.mapId.trim() : '';
+      const placementX = typeof placement?.x === 'number' ? placement.x : Number.NaN;
+      const placementY = typeof placement?.y === 'number' ? placement.y : Number.NaN;
+      const hasValidPlacement = precise && Boolean(placementMapId)
+        && Number.isFinite(placementX) && placementX >= 0 && placementX <= 1
+        && Number.isFinite(placementY) && placementY >= 0 && placementY <= 1;
       return {
         id: String(p.id ?? ''),
         area: String(p.area ?? p.title ?? ''),
@@ -713,7 +861,7 @@ export function snapshotToState(snap: Record<string, unknown>): ClientLinkState 
         ...(precise && p.sector ? { mapSector: String(p.sector) } : {}),
         ...(precise && p.masterplanId ? { masterplanId: String(p.masterplanId) } : {}),
         ...(precise && p.sectorMapId ? { sectorMapId: String(p.sectorMapId) } : {}),
-        ...(precise && placement?.mapId ? { placement: { mapId: String(placement.mapId), x: Number(placement.x ?? 0.5), y: Number(placement.y ?? 0.5) } } : {}),
+        ...(hasValidPlacement ? { placement: { mapId: placementMapId, x: placementX, y: placementY } } : {}),
       };
     }),
   };

@@ -19,7 +19,7 @@ import {
   type AuthRepository, type ActivationState, type AccountState,
   type PropertyRepository, type CustomerRepository, type DealRepository, type RecordSaleInput,
   type DemandRepository, type DemandRecord, type DemandDraft, type DemandMatch,
-  type MapRepository, type PresentationRepository, type PresentationState,
+  type MapRepository, type PresentationRepository, type PresentationState, type PresentationProperty,
   type PresentationEventsRepository, type PresentationEvent,
   type PredictiveRepository,
   type ClientLinkRepository, type ClientLinkState, type ClientSafePayload, type ClientSafeProperty,
@@ -38,7 +38,9 @@ import {
   createPropertyLocation,
   normalizePropertyLocationOnRead,
   propertyLocationValidationError,
+  propertyLocationPoint,
 } from './property-location';
+import { normalizeCompletedDeal } from './deal-normalization';
 
 /* ── helpers ─────────────────────────────────────────────────── */
 
@@ -162,6 +164,15 @@ class MockPropertyRepository implements PropertyRepository {
     publishResourceInvalidation({ entity: 'property', id });
     return ok(hydrateMockProperty(row));
   }
+  async remove(id: string, opts?: QueryOptions): Promise<Result<void>> {
+    const a = aborted<void>(opts); if (a) return a;
+    const index = PROPERTIES.findIndex((property) => property.id === id);
+    if (index < 0) return err('not_found', 'Property not found');
+    PROPERTIES.splice(index, 1);
+    persistMock();
+    publishResourceInvalidation({ entity: 'property', id });
+    return ok(undefined);
+  }
   async setLocation(
     id: string,
     location: PropertyLocationInput | null,
@@ -214,13 +225,19 @@ class MockDealRepository implements DealRepository {
   async list(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<Deal>>> {
     const a = aborted<Page<Deal>>(opts); if (a) return a;
     const s = scenarioResult<Deal>(); if (s) return s;
-    return ok(paginate(DEALS, params, (d, q) =>
+    const completed = DEALS.flatMap((payload) => {
+      const deal = normalizeCompletedDeal(String(payload.id ?? ''), payload as unknown as Record<string, unknown>);
+      return deal ? [deal] : [];
+    });
+    return ok(paginate(completed, params, (d, q) =>
       `${d.prop} ${d.buyer} ${d.seller} ${d.city} ${d.sector}`.toLowerCase().includes(q)));
   }
   async get(id: string, opts?: QueryOptions): Promise<Result<Deal>> {
     const a = aborted<Deal>(opts); if (a) return a;
     const found = DEALS.find((d) => d.id === id);
-    return found ? ok(found) : err('not_found', 'Deal not found');
+    if (!found) return err('not_found', 'Deal not found');
+    const deal = normalizeCompletedDeal(String(found.id ?? id), found as unknown as Record<string, unknown>);
+    return deal ? ok(deal) : err('not_found', 'Completed sale not found');
   }
 
   /**
@@ -244,7 +261,7 @@ class MockDealRepository implements DealRepository {
       buyer = {
         id: `client-${Date.now()}`, name: input.newBuyer.name, phone: input.newBuyer.phone || '',
         city: input.newBuyer.city || prop.city, want: prop.want, budget: '', budgetMax: input.soldPrice,
-        status: 'active', seen: 'just now', note: '', viewed: [], interest: [], purchased: [],
+        status: 'active', seen: '', note: '', viewed: [], interest: [], purchased: [],
       };
       CLIENTS.unshift(buyer);
     }
@@ -254,8 +271,8 @@ class MockDealRepository implements DealRepository {
       propId: prop.id, prop: `${prop.area} ${prop.type.toLowerCase().includes('plot') ? 'plot' : 'site'}`,
       propSub: `${prop.size} · ${prop.facing}`, city: prop.city, sector: prop.sector || prop.loc,
       buyerId: buyer.id, buyer: buyer.name,
-      seller: input.seller || 'Owner', sellerPhone: input.sellerPhone,
-      soldPrice: input.soldPrice, brokerage: input.brokerage || 0, commission: input.commission || 0,
+      seller: input.seller || '', sellerPhone: input.sellerPhone,
+      soldPrice: input.soldPrice, brokerage: input.brokerage ?? 0, commission: input.commission ?? 0,
       commissionReceived: input.commissionReceived ?? false,
       paymentReceived: input.paymentReceived ?? 0,
       soldDate: input.saleDate, registrationDate: input.registrationDate,
@@ -265,6 +282,16 @@ class MockDealRepository implements DealRepository {
         { at: input.saleDate, label: 'Sold price recorded' },
         ...(input.registrationDate ? [{ at: input.registrationDate, label: 'Registration completed' }] : []),
       ],
+      fieldPresence: {
+        soldPrice: true,
+        brokerage: input.brokerage !== undefined,
+        commission: input.commission !== undefined,
+        commissionReceived: input.commission !== undefined,
+        paymentReceived: input.paymentReceived !== undefined,
+        soldDate: true,
+        documents: input.documents !== undefined,
+        timeline: true,
+      },
     };
 
     // Commit — mark sold (removes it from inventory, presentation and links),
@@ -430,6 +457,11 @@ class MockMapRepository implements MapRepository {
 }
 
 class MockPresentationRepository implements PresentationRepository {
+  async listMaps(opts?: QueryOptions): Promise<Result<readonly Omit<MapData, 'sets'>[]>> {
+    const a = aborted<readonly Omit<MapData, 'sets'>[]>(opts); if (a) return a;
+    return ok(MAP_REGISTRY.filter((map) => map.published && !map.hidden).map(({ sets: _sets, ...map }) => map));
+  }
+
   async getState(opts?: QueryOptions): Promise<Result<PresentationState>> {
     const a = aborted<PresentationState>(opts); if (a) return a;
     switch (sc()) {
@@ -443,6 +475,52 @@ class MockPresentationRepository implements PresentationRepository {
       default: return ok({ kind: 'ready', maps: MAP_REGISTRY });
     }
   }
+
+  async getMap(id: string, opts?: QueryOptions): Promise<Result<MapData>> {
+    const a = aborted<MapData>(opts); if (a) return a;
+    const map = MAP_REGISTRY.find((candidate) => candidate.id === id && candidate.published && !candidate.hidden);
+    return map ? ok({ ...map, sets: map.sets.map((set) => ({ ...set })) }) : err('not_found', 'Presentation map not found');
+  }
+
+  async listProperties(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<PresentationProperty>>> {
+    const a = aborted<Page<PresentationProperty>>(opts); if (a) return a;
+    if (sc() === 'empty' || sc() === 'no-properties') return ok({ items: [], nextCursor: null, total: 0 });
+    const visible = PROPERTIES.filter((property) => property.published && !property.sold);
+    const page = paginate(visible, params, (property, query) =>
+      `${property.area} ${property.loc} ${property.type} ${property.city}`.toLowerCase().includes(query));
+    return ok({
+      ...page,
+      items: page.items.map(projectPresentationProperty),
+    });
+  }
+
+  async getProperty(id: string, opts?: QueryOptions): Promise<Result<PresentationProperty>> {
+    const a = aborted<PresentationProperty>(opts); if (a) return a;
+    const property = PROPERTIES.find((candidate) => candidate.id === id && candidate.published && !candidate.sold);
+    return property ? ok(projectPresentationProperty(property)) : err('not_found', 'Presentation property not found');
+  }
+}
+
+function projectPresentationProperty(property: Property): PresentationProperty {
+  const hydrated = hydrateMockProperty(property);
+  return {
+    id: hydrated.id,
+    type: hydrated.type,
+    city: hydrated.city,
+    area: hydrated.area,
+    loc: hydrated.loc,
+    sector: hydrated.sector,
+    size: hydrated.size,
+    facing: hydrated.facing,
+    position: hydrated.position,
+    approvals: [...hydrated.approvals],
+    landmarks: hydrated.landmarks.map(({ name, distance, icon }) => ({ name, distance, icon })),
+    photos: [...hydrated.photos],
+    masterplanId: hydrated.masterplanId,
+    sectorMapId: hydrated.sectorMapId,
+    mapPlacement: hydrated.mapPlacement ? { ...hydrated.mapPlacement } : undefined,
+    hasEarthLocation: propertyLocationPoint(hydrated.location) !== null,
+  };
 }
 
 class MockPresentationEventsRepository implements PresentationEventsRepository {

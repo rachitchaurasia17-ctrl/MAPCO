@@ -60,7 +60,7 @@ describe('Buyer client does not import internal record data', () => {
 
 describe('Audited adapter and accessibility boundaries', () => {
   it('keeps migrated dealer screens on DataAdapterV2', () => {
-    for (const p of ['src/apps/dealer/pages/home.ts', 'src/apps/dealer/pages/links.ts']) {
+    for (const p of ['src/apps/dealer/pages/home.ts', 'src/apps/dealer/pages/links.ts', 'src/apps/dealer/pages/properties.ts']) {
       const source = readFileSync(join(root, p), 'utf8');
       // Screens import the mode-switched adapter entry, never a concrete adapter.
       expect(source).toMatch(/packages\/data\/adapter['"]/);
@@ -71,7 +71,7 @@ describe('Audited adapter and accessibility boundaries', () => {
   it('drives the presentation from the real catalog and places pins only from stored coordinates', () => {
     const source = readFileSync(join(root, 'src/apps/presentation/main.ts'), 'utf8');
     // Catalog-driven map list; no invented pin coordinates.
-    expect(source).toContain('adapter.maps.listRegistry');
+    expect(source).toContain('adapter.presentation.listMaps');
     expect(source).not.toContain('PIN_COORDS');
     // The old New Chandigarh placeholder raster must never be referenced again.
     expect(source).not.toContain('newchandigarh-map.png');

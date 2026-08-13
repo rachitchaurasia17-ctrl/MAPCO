@@ -191,6 +191,8 @@ export interface PropertyRepository {
   get(id: string, opts?: QueryOptions): Promise<Result<Property>>;
   /** Create or update a property (dealer-scoped). */
   save(property: Property, opts?: QueryOptions): Promise<Result<Property>>;
+  /** Soft-delete a dealer-scoped property from active inventory. */
+  remove(id: string, opts?: QueryOptions): Promise<Result<void>>;
   /** Atomically set or clear the canonical real-world location. */
   setLocation(id: string, location: PropertyLocationInput | null, opts?: QueryOptions): Promise<Result<Property>>;
 }
@@ -214,14 +216,14 @@ export interface RecordSaleInput {
   /** existing customer id, or provide newBuyer to create one. */
   buyerId?: string;
   newBuyer?: { name: string; phone: string; city?: string };
-  /** seller confirmed from the property's private owner details. */
-  seller: string;
+  /** seller confirmed from the property's private owner details, when recorded. */
+  seller?: string;
   sellerPhone?: string;
   soldPrice: number;
   saleDate: string;            // ISO yyyy-mm-dd
   registrationDate?: string;   // ISO yyyy-mm-dd
-  brokerage: number;
-  commission: number;
+  brokerage?: number;
+  commission?: number;
   commissionReceived?: boolean;
   paymentReceived?: number;
   documents?: { name: string; kind?: string }[];
@@ -313,8 +315,41 @@ export type PresentationState =
   | { readonly kind: 'overlay-unavailable' }
   | { readonly kind: 'error'; readonly error: RepoError };
 
+/**
+ * Server-projected property shape for the dealer's client-facing presentation.
+ * It deliberately cannot carry price, owner, views, internal status, canonical
+ * coordinates, or storage object paths. Earth availability is a boolean; the
+ * product handoff remains the property ID.
+ */
+export interface PresentationProperty {
+  readonly id: string;
+  readonly type: string;
+  readonly city: string;
+  readonly area: string;
+  readonly loc: string;
+  readonly sector: string;
+  readonly size: string;
+  readonly facing: string;
+  readonly position: string;
+  readonly approvals: readonly string[];
+  readonly landmarks: readonly { readonly name: string; readonly distance: string; readonly icon: string }[];
+  readonly photos: readonly string[];
+  readonly masterplanId?: string;
+  readonly sectorMapId?: string;
+  readonly mapPlacement?: { readonly mapId: string; readonly x: number; readonly y: number };
+  readonly hasEarthLocation: boolean;
+}
+
 export interface PresentationRepository {
   getState(opts?: QueryOptions): Promise<Result<PresentationState>>;
+  /** Published, client-visible map registry projected by the server. */
+  listMaps(opts?: QueryOptions): Promise<Result<readonly Omit<MapData, 'sets'>[]>>;
+  /** One published client-visible map plus published highlight sets only. */
+  getMap(id: string, opts?: QueryOptions): Promise<Result<MapData>>;
+  /** Published, unsold, client-visible properties projected by the server. */
+  listProperties(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<PresentationProperty>>>;
+  /** Safe deep-link resolution; never falls back to the dealer CRM payload. */
+  getProperty(id: string, opts?: QueryOptions): Promise<Result<PresentationProperty>>;
 }
 
 export type PresentationEventKind =

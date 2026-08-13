@@ -33,7 +33,9 @@ begin
      or octet_length(p_payload::text) > 32768 then
     return jsonb_build_object('ok', false, 'reason', 'invalid payload');
   end if;
-  if auth.uid() is null or v_dealer_id is null or not public.plotmap_is_active_member() then
+  if auth.uid() is null or v_dealer_id is null
+     or not public.plotmap_can_edit_crm()
+     or not public.plotmap_dealer_can_write(v_dealer_id) then
     raise exception 'deal access denied';
   end if;
   if v_property_id is null then

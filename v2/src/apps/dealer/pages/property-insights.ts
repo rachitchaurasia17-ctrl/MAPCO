@@ -1,66 +1,47 @@
-/* ═══════════════════════════════════════════════════════════════
-   MAPCO V2 — Property Insights
-   System-derived, extended consistently.
-   ═══════════════════════════════════════════════════════════════ */
+/* MAPCO V2 — factual property readiness; no synthetic views or demand. */
 import { adapter } from '../../../packages/data/adapter';
+import { listAllRecords } from '../../../packages/data/list-all';
+import { productRoutes } from '../../../packages/ui/product-routes';
+import { propertyAttentionLabel, propertyOperationalState } from '../property-operational-state';
 
-export async function renderPropertyInsights(el: HTMLElement) {
-  const res = await adapter.properties.list({ limit: 4 });
-  const props = res.ok ? res.value.items : [];
+const esc = (value: unknown): string => String(value ?? '').replace(
+  /[&<>"']/g,
+  (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!,
+);
 
-  el.innerHTML = `
-    <div style="max-width:1180px;margin:0 auto;padding:36px 34px 70px">
-      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:22px;flex-wrap:wrap;animation:wRise .5s cubic-bezier(.2,.8,.2,1) both">
-        <div>
-          <h1 style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:42px;letter-spacing:-.025em">Property Insights</h1>
-          <p style="margin:10px 0 0;font-size:16.5px;color:#6b6156">Analyze price history and demand signals for specific properties.</p>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px">
-          <input type="text" placeholder="Search a property..." style="padding:12px 16px;border-radius:12px;border:1px solid #ddd2f5;background:#fffaf0;font-size:15px;width:260px;outline:none"/>
-          <button style="display:flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:12px;background:#5b32c4;color:#fff;border:none;cursor:pointer" onmouseenter="this.style.background='#4a26a8'" onmouseleave="this.style.background='#5b32c4'"><i class="ph-bold ph-magnifying-glass" style="font-size:18px"></i></button>
-        </div>
-      </div>
+export async function renderPropertyInsights(el: HTMLElement): Promise<void> {
+  el.innerHTML = '<div role="status" style="max-width:1080px;margin:34px auto;padding:24px 26px;border-radius:18px;background:#faf7ff;color:#6b6156">Loading property readiness…</div>';
 
-      <div style="margin-top:30px;font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#8a5a0c;animation:wRise .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:.05s">Top Performing Plots</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-top:14px;animation:wRise .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:.1s">
-        ${props.map(p => `
-          <div style="padding:16px;border-radius:18px;background:#fffaf0;border:1px solid #e4dbf2;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='#c3a6f0'" onmouseout="this.style.borderColor='#e4dbf2'">
-            <div style="width:60px;height:60px;border-radius:12px;background:#efdcb2 url('${p.photos[0] || ''}') center/cover;flex:none"></div>
-            <div style="flex:1;min-width:0">
-              <div style="font-size:15.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.type}</div>
-              <div style="font-size:13px;color:#6b6156;margin-top:2px">${p.loc}</div>
-              <div style="display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;font-weight:700;color:#12a150"><i class="ph-fill ph-eye"></i> ${p.views} views</div>
-            </div>
-          </div>
-        `).join('')}
-      </div>
+  let result;
+  try {
+    result = await listAllRecords((params, opts) => adapter.properties.list(params, opts));
+  } catch {
+    el.innerHTML = '<div role="alert" style="max-width:1080px;margin:34px auto;padding:24px 26px;border-radius:18px;background:#ffe1e6;color:#9f2446">Property readiness could not be loaded.</div>';
+    return;
+  }
+  if (!result.ok) {
+    el.innerHTML = '<div role="alert" style="max-width:1080px;margin:34px auto;padding:24px 26px;border-radius:18px;background:#ffe1e6;color:#9f2446">Property readiness could not be loaded.</div>';
+    return;
+  }
 
-      <div style="margin-top:30px;display:flex;gap:20px;animation:wRise .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:.15s">
-        <div style="flex:2;padding:34px;border-radius:22px;background:#faf7ff;border:1px dashed #d6c6f5;display:flex;flex-direction:column;align-items:center;justify-content:center;height:340px;text-align:center">
-          <div style="width:64px;height:64px;border-radius:16px;background:#efe8fb;display:grid;place-items:center;margin-bottom:20px">
-            <i class="ph-fill ph-chart-bar" style="font-size:32px;color:#5b32c4"></i>
-          </div>
-          <div style="font-size:18px;font-weight:800;color:#241f1c">Price History</div>
-          <div style="margin-top:8px;font-size:15px;color:#6b6156;max-width:320px">Select a property above to see its historical price changes and valuation over time.</div>
-        </div>
+  const active = result.value.filter((property) => !property.sold);
+  const assessed = active.map((property) => ({ property, state: propertyOperationalState(property) }));
+  const ready = assessed.filter(({ state }) => state.readyToShow);
+  const attention = assessed.filter(({ state }) => !state.readyToShow);
 
-        <div style="flex:1;padding:24px;border-radius:22px;background:#fff3d1;border:1px solid #f6d98d;display:flex;flex-direction:column">
-          <div style="font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#8a5a0c">Similar Demand</div>
-          <div style="margin-top:16px;flex:1;display:flex;flex-direction:column;gap:12px">
-            <div style="padding:12px 14px;border-radius:12px;background:#fffaf0;border:1px solid #e4dbf2">
-              <div style="font-size:14px;font-weight:800;color:#241f1c">300 sq yd Plots</div>
-              <div style="font-size:13px;color:#6b6156;margin-top:4px">12 active buyers</div>
-            </div>
-            <div style="padding:12px 14px;border-radius:12px;background:#fffaf0;border:1px solid #e4dbf2">
-              <div style="font-size:14px;font-weight:800;color:#241f1c">Corner Plots</div>
-              <div style="font-size:13px;color:#6b6156;margin-top:4px">8 active buyers</div>
-            </div>
-            <div style="padding:12px 14px;border-radius:12px;background:#fffaf0;border:1px dashed #d6c6f5;color:#5b32c4;font-size:13px;font-weight:800;display:grid;place-items:center;cursor:pointer" onmouseenter="this.style.background='#f0eaff'" onmouseleave="this.style.background='#fffaf0'">
-              View all matching
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
+  const card = ({ property, state }: (typeof assessed)[number]) => {
+    const reasons = state.attentionReasons.map((reason) => propertyAttentionLabel(reason));
+    return `<a href="${esc(productRoutes.properties(property.id))}" style="display:flex;align-items:center;gap:14px;padding:16px;border-radius:18px;background:#fffaf0;border:1px solid #e4dbf2;color:inherit;text-decoration:none">
+      <span style="width:64px;height:64px;border-radius:13px;background:#efe8fb;display:grid;place-items:center;overflow:hidden;flex:none">${state.hasDisplayPhoto ? `<img src="${esc(property.photos[0])}" alt="" style="width:100%;height:100%;object-fit:cover">` : '<i class="ph-fill ph-image" style="font-size:25px;color:#8d7bb6"></i>'}</span>
+      <span style="min-width:0;flex:1"><span style="display:block;font-size:16px;font-weight:800;color:#241f1c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(property.area || property.type)}</span><span style="display:block;margin-top:3px;font-size:13px;color:#6b6156">${esc([property.city, property.sector || property.loc, property.size].filter(Boolean).join(' · '))}</span><span style="display:block;margin-top:7px;font-size:12px;font-weight:800;color:${state.readyToShow ? '#0b8f45' : '#a65b0d'}">${state.readyToShow ? 'Ready to show' : esc(reasons.join(' · '))}</span></span>
+      <i class="ph-bold ph-caret-right" style="color:#8d8271"></i>
+    </a>`;
+  };
+
+  el.innerHTML = `<div style="max-width:1080px;margin:0 auto;padding:34px 40px 70px">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap"><div><h1 style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:36px;color:#241f1c">Property readiness</h1><p style="margin:8px 0 0;font-size:16px;color:#6b6156">Operational checks from your real inventory. MAPCO does not infer views, demand, or price history.</p></div><a href="${productRoutes.properties()}" style="height:46px;padding:0 18px;border-radius:13px;background:#5b32c4;color:#fff;display:inline-flex;align-items:center;gap:8px;text-decoration:none;font-weight:800"><i class="ph-bold ph-buildings"></i>Open My Plots</a></div>
+    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:24px"><div style="padding:22px;border-radius:19px;background:#ffc93c"><div style="font-size:13px;font-weight:800;color:#7b5b08">Active stock</div><div style="font-family:'Newsreader',serif;font-size:38px;margin-top:5px">${active.length}</div></div><div style="padding:22px;border-radius:19px;background:#d9f5e3"><div style="font-size:13px;font-weight:800;color:#0b6f39">Ready to show</div><div style="font-family:'Newsreader',serif;font-size:38px;margin-top:5px">${ready.length}</div></div><div style="padding:22px;border-radius:19px;background:#fff0d8"><div style="font-size:13px;font-weight:800;color:#9b5910">Needs attention</div><div style="font-family:'Newsreader',serif;font-size:38px;margin-top:5px">${attention.length}</div></div></div>
+    <h2 style="margin:30px 0 13px;font-family:'Newsreader',serif;font-size:25px;font-weight:500;color:#241f1c">${attention.length ? 'Needs attention' : 'Ready inventory'}</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:13px">${(attention.length ? attention : ready).map(card).join('') || '<div style="grid-column:1/-1;padding:34px;text-align:center;border:1px dashed #d6c6f5;border-radius:18px;color:#8d8271">No active properties yet.</div>'}</div>
+  </div>`;
 }

@@ -1,4 +1,4 @@
-import { Property, PropertyType, WantType, Facing, ClientLink, Client, type PropertyPhotoStorageRef } from '../data/types';
+import { Property, PropertyType, WantType, Facing, Client, type PropertyPhotoStorageRef } from '../data/types';
 import {
   getMap, registerMaps, mountMapEngine, addPropertyToMap, relatedMapPair,
   sectorMapsForCity, placementVisibleOn, renderingFor,
@@ -52,19 +52,14 @@ export class AddPropertyFlow {
   private saving = false;
   private photoError = '';
   private addForm = {
-    title: "Eco City plot",
-    city: "New Chandigarh",
-    area: "Eco City",
-    size: "500 sq yd",
+    city: "",
+    area: "",
+    size: "",
     price: "",
-    facing: "North-East",
-    position: "Park facing",
-    sector: "Eco City",
-    type: "Residential Plot" as PropertyType,
-    status: "Available",
-    possession: "Ready to build",
-    description:
-      "Premium 500 sq yd park facing plot in Eco City, New Chandigarh. North-East facing with excellent connectivity to major landmarks. Ideal for luxury living or smart investment.",
+    facing: "" as Facing | '',
+    position: "",
+    sector: "",
+    type: "" as PropertyType | '',
   };
   private onComplete: (p: Property) => void;
   private onClose: () => void;
@@ -166,11 +161,13 @@ export class AddPropertyFlow {
     const labelStyle = "display:block;font-size:13px;font-weight:700;color:#6b6156";
     const previewPhotos = [this.coverPhoto, ...this.galleryPhotos]
       .filter((photo): photo is PendingPropertyPhoto => !!photo).map((photo) => photo.previewUrl);
+    const previewThumbs = previewPhotos.length
+      ? previewPhotos.slice(0, 6).map((photo, index) => `<span style="height:42px;border-radius:7px;background:#d8d2c5 url('${esc(photo)}') center/cover;border:${index === 0 ? "2px solid #ffc400" : "1px solid rgba(255,255,255,.24)"}"></span>`).join("")
+      : '<span style="grid-column:1 / -1;height:42px;border-radius:7px;background:rgba(255,255,255,.08);border:1px dashed rgba(255,255,255,.24);display:grid;place-items:center;color:#c9b477;font-size:11px;font-weight:800">No photos added</span>';
     const cityOptions = [...new Set([
-      this.addForm.city,
       ...this.allCities,
       ...this.placementCatalog.map((map) => map.city),
-    ])];
+    ].map((city) => city.trim()).filter(Boolean))];
     const sectorOptions = sectorMapsForCity(this.placementCatalog, this.addForm.city);
     const mapPair = relatedMapPair(this.placementCatalog, this.selectedSectorMapId);
     const targetMap = this.mapToggle === 'sector' ? mapPair?.sector : mapPair?.masterplan;
@@ -181,17 +178,22 @@ export class AddPropertyFlow {
       return `<button type="button" data-act="add-step" data-step="${number}" style="display:flex;align-items:center;gap:10px;color:${active ? "#241f1c" : "#6b6156"};font-size:14px;font-weight:${active ? "800" : "600"};white-space:nowrap"><span style="width:34px;height:34px;border-radius:50%;display:grid;place-items:center;border:1px solid ${complete ? "#e5a90e" : active ? "#6b3fd4" : "#d9d1c3"};background:${complete ? "#e5a90e" : active ? "#6b3fd4" : "#fff"};color:${complete || active ? "#fff" : "#6b6156"};font-weight:800">${complete ? '<i class="ph-bold ph-check" style="font-size:15px"></i>' : number}</span>${label}</button>`;
     };
     
+    const previewTitle = [this.addForm.type, this.addForm.size].filter(Boolean).join(' · ') || 'Property details not entered';
+    const previewLocation = [this.addForm.area, this.addForm.city].filter(Boolean).join(', ') || 'Location not entered';
+    const previewImage = previewPhotos[0]
+      ? `background:#d8d2c5 url('${esc(previewPhotos[0])}') center/cover`
+      : 'background:rgba(255,255,255,.07);display:grid;place-items:center;color:#c9b477;font-size:13px;font-weight:800';
     const preview = `<aside style="min-width:0;border-radius:18px;background:#241904;background-image:radial-gradient(80% 56% at 92% 0%,rgba(145,97,0,.55),transparent 72%),linear-gradient(145deg,#3a2605,#171006);color:#fff8e6;padding:17px;box-shadow:0 18px 42px -28px rgba(20,14,2,.9);display:flex;flex-direction:column;align-self:stretch">
       <div style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:800"><i class="ph ph-eye" style="font-size:20px"></i>Client Preview</div>
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-top:23px"><div><div style="font-size:11px;font-weight:800;letter-spacing:.14em;color:#ffd75e;text-transform:uppercase">${esc(this.addForm.city)}</div><div id="pm-add-preview-title" style="font-family:'Newsreader',serif;font-size:28px;font-weight:500;line-height:1.05;margin-top:4px">${esc(this.addForm.title)}</div><div id="pm-add-preview-location" style="font-size:13.5px;color:#e4c98a;margin-top:7px">${esc(this.addForm.area)}, ${esc(this.addForm.city)}</div></div><span style="display:inline-flex;align-items:center;gap:6px;padding:8px 10px;border-radius:9px;background:rgba(255,255,255,.1);font-size:11px;font-weight:800;white-space:nowrap"><i class="ph-fill ph-seal-check" style="font-size:15px;color:#55dd8a"></i>RERA + GMADA approved</span></div>
-      <div style="height:176px;border-radius:14px;margin-top:14px;position:relative;overflow:hidden;background:#d8d2c5 url('${esc(previewPhotos[0] || "/assets/ph-plot-1.png")}') center/cover"><button type="button" aria-label="Previous photo" style="position:absolute;left:9px;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;background:#fffaf0;color:#241f1c;display:grid;place-items:center"><i class="ph-bold ph-caret-left"></i></button><button type="button" aria-label="Next photo" style="position:absolute;right:9px;top:50%;transform:translateY(-50%);width:40px;height:40px;border-radius:50%;background:#fffaf0;color:#241f1c;display:grid;place-items:center"><i class="ph-bold ph-caret-right"></i></button></div>
-      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-top:-1px">${Array.from({ length: 6 }, (_, index) => `<span style="height:42px;border-radius:7px;background:#d8d2c5 url('${esc(previewPhotos[index % previewPhotos.length] || "/assets/ph-plot-1.png")}') center/cover;border:${index === 0 ? "2px solid #ffc400" : "1px solid rgba(255,255,255,.24)"}"></span>`).join("")}</div>
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-top:23px"><div><div style="font-size:11px;font-weight:800;letter-spacing:.14em;color:#ffd75e;text-transform:uppercase">${esc(this.addForm.city || 'City not entered')}</div><div id="pm-add-preview-title" style="font-family:'Newsreader',serif;font-size:28px;font-weight:500;line-height:1.05;margin-top:4px">${esc(previewTitle)}</div><div id="pm-add-preview-location" style="font-size:13.5px;color:#e4c98a;margin-top:7px">${esc(previewLocation)}</div></div></div>
+      <div style="height:176px;border-radius:14px;margin-top:14px;position:relative;overflow:hidden;${previewImage}">${previewPhotos[0] ? '' : 'No property photo added'}</div>
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-top:-1px">${previewThumbs}</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px">${[["Plot size", this.addForm.size], ["Facing", this.addForm.facing], ["Position", this.addForm.position], ["Sector", this.addForm.sector]].map(([label, value]) => `<div style="border:1px solid rgba(255,255,255,.12);border-radius:11px;background:rgba(255,255,255,.07);padding:9px 11px"><div style="font-size:9.5px;font-weight:800;letter-spacing:.13em;text-transform:uppercase;color:#c9b477">${label}</div><div style="font-family:'Newsreader',serif;font-size:18px;line-height:1.1;margin-top:3px">${esc(value)}</div></div>`).join("")}</div>
-      <div style="font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#ffd75e;margin-top:10px">What is close by</div>
-      <div style="display:flex;flex-direction:column;gap:5px;margin-top:7px">${[["ph-graduation-cap", "Chandigarh University", "10 min"], ["ph-storefront", "CP67 Mall", "8 min"], ["ph-first-aid-kit", "PGIMER Hospital", "22 min"]].map(([icon, name, time]) => `<div style="display:flex;align-items:center;gap:9px;border-radius:9px;background:rgba(255,255,255,.07);padding:8px 10px;font-size:11.5px;font-weight:700"><i class="ph-fill ${icon}" style="font-size:15px;color:#ffd75e"></i><span style="flex:1">${name}</span><span style="color:#55dd8a">${time}</span></div>`).join("")}</div>
+      <div style="font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#ffd75e;margin-top:10px">Location context</div>
+      <div style="margin-top:7px;border-radius:9px;background:rgba(255,255,255,.07);padding:10px 11px;font-size:11.5px;font-weight:600;line-height:1.4;color:#d8c8b0">Verified nearby places and road intelligence appear after the property has an Earth location.</div>
     </aside>`;
     
-    const basics = `<section style="border:1px solid #eadfc9;border-radius:18px;background:rgba(255,255,255,.68);padding:24px"><div style="display:flex;align-items:center;gap:13px"><span style="width:44px;height:44px;border-radius:11px;background:#f0eaff;color:#6b3fd4;display:grid;place-items:center"><i class="ph ph-map-pin-area" style="font-size:22px"></i></span><h3 style="margin:0;font-family:'Newsreader',serif;font-size:22px;font-weight:600">Property Basics</h3></div><div style="margin-top:21px"><label style="${labelStyle}">Property title <b style="color:#db3d53">*</b><input name="title" value="${esc(this.addForm.title)}" style="${inputStyle}"></label><div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:17px"><label style="${labelStyle}">City <b style="color:#db3d53">*</b><select name="city" style="${inputStyle}">${cityOptions.map((item) => `<option ${item === this.addForm.city ? "selected" : ""}>${esc(item)}</option>`).join("")}</select></label><label style="${labelStyle}">Area / Sector <b style="color:#db3d53">*</b><input name="area" value="${esc(this.addForm.area)}" style="${inputStyle}"></label><label style="${labelStyle}">Plot size <b style="color:#db3d53">*</b><input name="size" value="${esc(this.addForm.size)}" style="${inputStyle}"></label><label style="${labelStyle}">Price (₹)<input name="price" inputmode="numeric" value="${esc(this.addForm.price)}" placeholder="e.g. 8500000" style="${inputStyle}"></label><label style="${labelStyle}">Facing <b style="color:#db3d53">*</b><select name="facing" style="${inputStyle}">${["North-East", "East", "West", "North", "South", "North-West", "South-East", "South-West"].map((item) => `<option ${item === this.addForm.facing ? "selected" : ""}>${item}</option>`).join("")}</select></label><label style="${labelStyle}">Position <b style="color:#db3d53">*</b><select name="position" style="${inputStyle}">${["Park facing", "Corner plot", "Inside plot", "Road facing"].map((item) => `<option ${item === this.addForm.position ? "selected" : ""}>${item}</option>`).join("")}</select></label><label style="${labelStyle}">Sector map<select name="sectorMapId" style="${inputStyle}" ${sectorOptions.length ? '' : 'disabled'}><option value="">${sectorOptions.length ? 'Choose sector map' : 'No sector map available'}</option>${sectorOptions.map((map) => `<option value="${esc(map.id)}" ${map.id === this.selectedSectorMapId ? 'selected' : ''}>${esc(map.title)}</option>`).join('')}</select></label><label style="${labelStyle}">Type<select name="type" style="${inputStyle}">${["Residential Plot", "Flat", "Floor", "Kothi", "Villa", "Commercial"].map((item) => `<option ${item === this.addForm.type ? "selected" : ""}>${item}</option>`).join("")}</select></label></div></div></section>`;
+    const basics = `<section style="border:1px solid #eadfc9;border-radius:18px;background:rgba(255,255,255,.68);padding:24px"><div style="display:flex;align-items:center;gap:13px"><span style="width:44px;height:44px;border-radius:11px;background:#f0eaff;color:#6b3fd4;display:grid;place-items:center"><i class="ph ph-map-pin-area" style="font-size:22px"></i></span><h3 style="margin:0;font-family:'Newsreader',serif;font-size:22px;font-weight:600">Property Basics</h3></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:21px"><label style="${labelStyle}">City <b style="color:#db3d53">*</b><input name="city" list="pm-property-cities" value="${esc(this.addForm.city)}" placeholder="Enter city" style="${inputStyle}"><datalist id="pm-property-cities">${cityOptions.map((item) => `<option value="${esc(item)}"></option>`).join('')}</datalist></label><label style="${labelStyle}">Area / Sector <b style="color:#db3d53">*</b><input name="area" value="${esc(this.addForm.area)}" style="${inputStyle}"></label><label style="${labelStyle}">Plot size <b style="color:#db3d53">*</b><input name="size" value="${esc(this.addForm.size)}" style="${inputStyle}"></label><label style="${labelStyle}">Price (₹)<input name="price" inputmode="numeric" value="${esc(this.addForm.price)}" placeholder="e.g. 8500000" style="${inputStyle}"></label><label style="${labelStyle}">Facing <b style="color:#db3d53">*</b><select name="facing" style="${inputStyle}"><option value="">Choose facing</option>${["North-East", "East", "West", "North", "South", "North-West", "South-East", "South-West"].map((item) => `<option ${item === this.addForm.facing ? "selected" : ""}>${item}</option>`).join("")}</select></label><label style="${labelStyle}">Position <b style="color:#db3d53">*</b><select name="position" style="${inputStyle}"><option value="">Choose position</option>${["Park facing", "Corner plot", "Inside plot", "Road facing"].map((item) => `<option ${item === this.addForm.position ? "selected" : ""}>${item}</option>`).join("")}</select></label><label style="${labelStyle}">Sector map<select name="sectorMapId" style="${inputStyle}" ${sectorOptions.length ? '' : 'disabled'}><option value="">${sectorOptions.length ? 'Choose sector map' : 'No sector map available'}</option>${sectorOptions.map((map) => `<option value="${esc(map.id)}" ${map.id === this.selectedSectorMapId ? 'selected' : ''}>${esc(map.title)}</option>`).join('')}</select></label><label style="${labelStyle}">Type <b style="color:#db3d53">*</b><select name="type" style="${inputStyle}"><option value="">Choose property type</option>${["Residential Plot", "Flat", "Floor", "Kothi", "Villa", "Commercial"].map((item) => `<option ${item === this.addForm.type ? "selected" : ""}>${item}</option>`).join("")}</select></label></div></section>`;
     
     // Step 2 — photos ONLY (no other fields).
     const gallerySlots = [
@@ -323,10 +325,20 @@ export class AddPropertyFlow {
     }
   }
 
+  private basicsError(): string {
+    if (!this.addForm.city.trim()) return 'Choose a city.';
+    if (!this.addForm.area.trim()) return 'Enter the area or sector.';
+    if (!this.addForm.size.trim()) return 'Enter the property size.';
+    if (!this.addForm.facing) return 'Choose the property facing.';
+    if (!this.addForm.position.trim()) return 'Choose the property position.';
+    if (!this.addForm.type) return 'Choose the property type.';
+    return '';
+  }
+
   private buildProperty(published: boolean): Property {
-    const type = this.addForm.type;
-    const area = this.addForm.area || 'New property';
-    const city = this.addForm.city || 'New Chandigarh';
+    const type = this.addForm.type as PropertyType;
+    const area = this.addForm.area.trim();
+    const city = this.addForm.city.trim();
     const price = Number(String(this.addForm.price).replace(/[^0-9.]/g, '')) || 0;
     const pair = relatedMapPair(this.placementCatalog, this.selectedSectorMapId);
     const relatedIds = new Set([pair?.sector.id, pair?.masterplan?.id].filter((id): id is string => !!id));
@@ -338,13 +350,9 @@ export class AddPropertyFlow {
       id: this.propId, type,
       want: (type === 'Residential Plot' ? 'Plot' : type === 'Floor' ? 'Flat' : type) as WantType,
       city, area, loc: `${area}, ${city}`, sector: this.addForm.sector || area,
-      size: this.addForm.size, facing: this.addForm.facing as Facing, position: this.addForm.position,
-      approvals: ['RERA', 'GMADA'],
-      landmarks: [
-        { name: 'Chandigarh University', distance: '10 min', icon: 'ph-fill ph-graduation-cap' },
-        { name: 'CP67 Mall', distance: '8 min', icon: 'ph-fill ph-storefront' },
-        { name: 'PGIMER Hospital', distance: '22 min', icon: 'ph-fill ph-first-aid-kit' },
-      ],
+      size: this.addForm.size.trim(), facing: this.addForm.facing as Facing, position: this.addForm.position.trim(),
+      approvals: [],
+      landmarks: [],
       price,
       photos: [this.coverPhoto, ...this.galleryPhotos]
         .filter((photo): photo is PendingPropertyPhoto => !!photo).map((photo) => photo.previewUrl),
@@ -358,6 +366,13 @@ export class AddPropertyFlow {
   /** Save the draft record first (Storage RLS requires it), then upload and commit canonical refs. */
   private async persistProperty(published: boolean) {
     if (this.saving) return;
+    const basicsError = this.basicsError();
+    if (basicsError) {
+      this.addStep = 1;
+      this.photoError = basicsError;
+      this.render();
+      return;
+    }
     this.saving = true;
     this.photoError = '';
     this.render();
@@ -442,23 +457,21 @@ export class AddPropertyFlow {
       }
       if (!(target.name in this.addForm)) return;
       this.addForm = { ...this.addForm, [target.name as keyof typeof this.addForm]: target.value } as any;
-      if (target.name === "title") {
-        const title = this.el.querySelector<HTMLElement>("#pm-add-preview-title");
-        if (title) title.textContent = target.value;
-      }
+      this.photoError = '';
       if (target.name === "city" || target.name === "area") {
         const locationLabel = this.el.querySelector<HTMLElement>("#pm-add-preview-location");
         if (locationLabel) locationLabel.textContent = `${this.addForm.area}, ${this.addForm.city}`;
-      }
-      if (target.name === 'city') {
-        this.syncSectorSelection();
-        this.mapMode = 'original';
-        this.render();
       }
     });
 
     this.el.addEventListener('change', (event) => {
       const input = event.target as HTMLInputElement;
+      if (input.name === 'city') {
+        this.syncSectorSelection();
+        this.mapMode = 'original';
+        this.render();
+        return;
+      }
       if (input.id === 'pm-cover-photo-input' && input.files) this.selectCover(input.files);
       if (input.id === 'pm-gallery-photo-input' && input.files) this.selectGallery(input.files);
     });
@@ -507,9 +520,24 @@ export class AddPropertyFlow {
         return;
       }
       if (action === "add-step") {
-        this.addStep = Math.max(1, Math.min(3, Number(target.dataset.step) || 1));
+        const requestedStep = Math.max(1, Math.min(3, Number(target.dataset.step) || 1));
+        const basicsError = requestedStep > 1 ? this.basicsError() : '';
+        if (basicsError) {
+          this.addStep = 1;
+          this.photoError = basicsError;
+        } else {
+          this.addStep = requestedStep;
+          this.photoError = '';
+        }
         this.render();
       } else if (action === "add-next") {
+        const basicsError = this.addStep === 1 ? this.basicsError() : '';
+        if (basicsError) {
+          this.photoError = basicsError;
+          this.render();
+          return;
+        }
+        this.photoError = '';
         this.addStep = Math.min(3, this.addStep + 1);
         this.render();
       } else if (action === "add-back") {
@@ -518,7 +546,14 @@ export class AddPropertyFlow {
         this.render();
       } else if (action === "add-preview") {
         // Small preview at the last step — the exact detail the client would see.
-        openPropertyDetail(this.buildProperty(false), {});
+        const basicsError = this.basicsError();
+        if (basicsError) {
+          this.addStep = 1;
+          this.photoError = basicsError;
+          this.render();
+        } else {
+          openPropertyDetail(this.buildProperty(false), {});
+        }
       } else if (action === "choose-cover") {
         this.el.querySelector<HTMLInputElement>('#pm-cover-photo-input')?.click();
       } else if (action === "choose-gallery") {
@@ -546,10 +581,12 @@ export class AddPropertyFlow {
 
 export class AddClientFlow {
   private el: HTMLElement;
-  private form = { name: '', phone: '', want: 'Plot' as WantType, city: 'Mohali', budgetFrom: '', budgetTo: '', note: '', photo: '', linkProp: '' };
+  private form = { name: '', phone: '', want: '' as WantType | '', city: '', budgetFrom: '', budgetTo: '', note: '', photo: '', linkProp: '' };
   private properties: Property[] = [];
   private onComplete: (c: Client) => void;
   private onClose: () => void;
+  private saving = false;
+  private saveError = '';
 
   constructor(onComplete: (c: Client) => void, onClose: () => void) {
     this.onComplete = onComplete;
@@ -580,7 +617,8 @@ export class AddClientFlow {
         <input name="photo" value="${esc(this.form.photo)}" placeholder="Customer photo URL" style="padding:15px;border-radius:13px;border:1px solid #ddd0f5;background:#faf7ff;font-size:15px;color:#241f1c;outline:none">
         <select name="linkProp" style="padding:15px;border-radius:13px;border:1px solid #ddd0f5;background:#faf7ff;font-size:15px;color:#241f1c;outline:none"><option value="">Link a property…</option>${this.properties.map((p) => `<option value="${esc(p.id)}"${this.form.linkProp === p.id ? ' selected' : ''}>${esc(p.area)}${p.size ? ` · ${esc(p.size)}` : ''}</option>`).join('')}</select>
       </div></div>
-      <div style="display:flex;align-items:center;gap:11px;padding:16px 26px;border-top:1px solid #ece5f8;background:#faf7ff"><button type="button" data-act="close-add" style="padding:15px 20px;border-radius:14px;background:#f4f0fb;color:#6b6156;font-size:15px;font-weight:700">Cancel</button><div style="flex:1"></div><button type="button" data-act="save-link" ${ready ? '' : 'disabled'} style="display:flex;align-items:center;gap:8px;padding:15px 20px;border-radius:14px;font-size:15px;font-weight:800;${ready ? 'background:#dcf3e5;color:#12704a' : 'background:#eef2ee;color:#a5b8ac'}"><i class="ph-fill ph-paper-plane-tilt"></i>Save &amp; send link</button><button id="pm-save-client" type="submit" ${ready ? '' : 'disabled'} style="padding:15px 24px;border-radius:14px;font-size:15px;font-weight:800;${ready ? 'background:#6b3fd4;color:#fff' : 'background:#ddd2f5;color:#b3a37a'}">Save customer</button></div>
+      ${this.saveError ? `<div role="alert" style="margin:0 26px 14px;padding:11px 14px;border-radius:12px;background:#ffe1e6;color:#b3123a;font-size:13.5px;font-weight:700">${esc(this.saveError)}</div>` : ''}
+      <div style="display:flex;align-items:center;gap:11px;padding:16px 26px;border-top:1px solid #ece5f8;background:#faf7ff"><button type="button" data-act="close-add" style="padding:15px 20px;border-radius:14px;background:#f4f0fb;color:#6b6156;font-size:15px;font-weight:700">Cancel</button><div style="flex:1"></div><button type="button" data-act="save-link" ${ready && !this.saving ? '' : 'disabled'} style="display:flex;align-items:center;gap:8px;padding:15px 20px;border-radius:14px;font-size:15px;font-weight:800;${ready && !this.saving ? 'background:#dcf3e5;color:#12704a' : 'background:#eef2ee;color:#a5b8ac'}"><i class="ph-fill ph-paper-plane-tilt"></i>Save &amp; send link</button><button id="pm-save-client" type="submit" ${ready && !this.saving ? '' : 'disabled'} style="padding:15px 24px;border-radius:14px;font-size:15px;font-weight:800;${ready && !this.saving ? 'background:#6b3fd4;color:#fff' : 'background:#ddd2f5;color:#b3a37a'}">${this.saving ? 'Saving…' : 'Save customer'}</button></div>
     </form></div>`;
   }
 
@@ -622,31 +660,52 @@ export class AddClientFlow {
 
   private buildClient(): Client {
     const f = this.form;
-    const budget = f.budgetFrom && f.budgetTo ? `₹${f.budgetFrom}–${f.budgetTo} Cr` : f.budgetFrom ? `₹${f.budgetFrom} Cr+` : f.budgetTo ? `Up to ₹${f.budgetTo} Cr` : '—';
+    const budget = f.budgetFrom && f.budgetTo ? `₹${f.budgetFrom}–${f.budgetTo} Cr` : f.budgetFrom ? `₹${f.budgetFrom} Cr+` : f.budgetTo ? `Up to ₹${f.budgetTo} Cr` : '';
     return {
-      id: `client-${Date.now()}`, name: f.name.trim(), phone: f.phone || '—', city: f.city || 'Mohali',
+      id: `client-${Date.now()}`, name: f.name.trim(), phone: f.phone.trim(), city: f.city.trim(),
       want: f.want, budget, budgetMax: (Number(f.budgetTo || f.budgetFrom) || 0) * 10_000_000,
-      status: 'active', seen: 'just now', note: f.note, viewed: [],
-      interest: f.linkProp ? [f.linkProp] : [], isNew: true,
+      status: 'active', seen: '', note: f.note, viewed: [],
+      interest: f.linkProp ? [f.linkProp] : [],
       ...(f.photo ? { photo: f.photo } : {}), ...(f.linkProp ? { linkedPropertyId: f.linkProp } : {}),
     };
   }
 
   /** Persist the customer; if `andLink`, open the send-link flow prefilled for them. */
   private async saveClient(andLink: boolean) {
-    if (!this.form.name.trim()) return;
+    if (!this.form.name.trim() || this.saving) return;
+    this.saving = true;
+    this.saveError = '';
+    this.render();
     const client = this.buildClient();
-    const res = await adapter.customers.save(client);
-    const saved = res.ok ? res.value : client;
+    let res;
+    try {
+      res = await adapter.customers.save(client);
+    } catch {
+      this.saving = false;
+      this.saveError = 'The customer could not be saved. Check your connection and try again.';
+      this.render();
+      return;
+    }
+    if (!res.ok) {
+      this.saving = false;
+      this.saveError = res.error.message || 'The customer could not be saved.';
+      this.render();
+      return;
+    }
+    const saved = res.value;
+    this.saving = false;
     this.onComplete(saved);
     if (andLink) {
-      let props: Property[] = this.properties;
-      const link = new GenerateLinkFlow([saved], props, () => { /* list refresh handled by caller */ }, () => link.unmount());
+      const props: Property[] = this.properties;
+      const link = new GenerateLinkFlow(
+        [saved],
+        props,
+        () => { /* list refresh handled by caller */ },
+        () => link.unmount(),
+        undefined,
+        { clientId: saved.id, propertyIds: this.form.linkProp ? [this.form.linkProp] : [] },
+      );
       link.mount(document.body);
-      // preselect this customer (+ linked property) in the link flow
-      (link as unknown as { chosenClient: string; chosenProps: string[]; render: () => void }).chosenClient = saved.id;
-      if (this.form.linkProp) (link as unknown as { chosenProps: string[] }).chosenProps = [this.form.linkProp];
-      (link as unknown as { render: () => void }).render();
     }
   }
 }
@@ -679,18 +738,32 @@ export class GenerateLinkFlow {
   private audioSeconds = 0;
   private recStart = 0;
 
-  private onComplete: (l: ClientLink) => void;
+  private onComplete: () => void;
   private onClose: () => void;
   private clients: Client[];
   private properties: Property[];
   private predictive?: PredictiveRuntime;
 
-  constructor(clients: Client[], properties: Property[], onComplete: (l: ClientLink) => void, onClose: () => void, predictive?: PredictiveRuntime) {
+  constructor(
+    clients: Client[],
+    properties: Property[],
+    onComplete: () => void,
+    onClose: () => void,
+    predictive?: PredictiveRuntime,
+    initial?: { clientId?: string; propertyIds?: string[] },
+  ) {
     this.clients = clients;
     this.properties = properties;
     this.onComplete = onComplete;
     this.onClose = onClose;
     this.predictive = predictive;
+    if (initial?.clientId && clients.some((client) => client.id === initial.clientId)) {
+      this.chosenClient = initial.clientId;
+    }
+    const validPropertyIds = new Set(properties.map((property) => property.id));
+    this.chosenProps = [...new Set(initial?.propertyIds || [])]
+      .filter((propertyId) => validPropertyIds.has(propertyId))
+      .slice(0, 4);
     this.el = document.createElement('div');
     this.el.id = 'pm-generate-link-flow';
     this.attachEvents();
@@ -743,19 +816,22 @@ export class GenerateLinkFlow {
       return;
     }
 
+    const preciseAvailable = this.chosenProps.length > 0 && this.chosenProps.every((id) =>
+      Boolean(this.properties.find((property) => property.id === id)?.mapPlacement));
+    const preciseOn = this.locationPrecise && preciseAvailable;
     const ready = Boolean(this.chosenClient && this.chosenProps.length) && !this.busy;
     const priceLabelFor = (id: string) => { const v = Number(this.prices[id]); return v > 0 ? formatINR(v) : 'Price on call'; };
-    const previewPanel = this.showPreview ? `<div style="margin-top:18px;border-radius:16px;background:#241904;background-image:linear-gradient(145deg,#3a2605,#171006);color:#fff8e6;padding:16px"><div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800"><i class="ph ph-eye"></i>What the client will see</div><div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">${this.chosenProps.map((id) => { const p = this.properties.find((x) => x.id === id); if (!p) return ''; return `<div style="display:flex;align-items:center;gap:11px;background:rgba(255,255,255,.06);border-radius:12px;padding:9px 11px"><span style="width:46px;height:46px;border-radius:9px;flex:none;background:${p.photos[0] ? `url('${esc(p.photos[0])}') center/cover` : '#5a4a2a'}"></span><span style="flex:1;min-width:0"><span style="display:block;font-weight:800;font-size:14px">${esc(this.locationPrecise ? p.loc : (p.area.split(',')[0] || 'Property'))}</span><span style="display:block;font-size:12px;color:#e2cf9f">${esc(p.size)} · ${esc(p.facing)} facing · ${esc(priceLabelFor(id))}</span></span></div>`; }).join('') || '<span style="color:#c9b477;font-size:13px">Pick plots to preview.</span>'}</div><div style="margin-top:10px;font-size:12px;color:#c9b477">${this.locationPrecise ? 'Precise location — pin on sector map + masterplan' : 'Area only'} · Expires in ${this.expiresInDays} days${this.audioBlob ? ' · Voice note attached' : ''}</div></div>` : '';
+    const previewPanel = this.showPreview ? `<div style="margin-top:18px;border-radius:16px;background:#241904;background-image:linear-gradient(145deg,#3a2605,#171006);color:#fff8e6;padding:16px"><div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:800"><i class="ph ph-eye"></i>What the client will see</div><div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">${this.chosenProps.map((id) => { const p = this.properties.find((x) => x.id === id); if (!p) return ''; const photo = p.photos?.[0]; return `<div style="display:flex;align-items:center;gap:11px;background:rgba(255,255,255,.06);border-radius:12px;padding:9px 11px"><span style="width:46px;height:46px;border-radius:9px;flex:none;background:${photo ? `url('${esc(photo)}') center/cover` : '#5a4a2a'}"></span><span style="flex:1;min-width:0"><span style="display:block;font-weight:800;font-size:14px">${esc(preciseOn ? p.loc : (p.area.split(',')[0] || 'Property'))}</span><span style="display:block;font-size:12px;color:#e2cf9f">${esc(p.size)} · ${esc(p.facing)} facing · ${esc(priceLabelFor(id))}</span></span></div>`; }).join('') || '<span style="color:#c9b477;font-size:13px">Pick plots to preview.</span>'}</div><div style="margin-top:10px;font-size:12px;color:#c9b477">${preciseOn ? 'Exact stored map placement shared' : 'Area only'} · Expires in ${this.expiresInDays} days${this.audioBlob ? ' · Voice note attached' : ''}</div></div>` : '';
 
     this.el.innerHTML = `<div style="position:fixed;inset:0;z-index:86;display:flex;justify-content:center;align-items:flex-start;padding:28px 24px;overflow-y:auto"><div data-act="close-build" style="position:fixed;inset:0;background:rgba(60,44,12,.58);animation:omVeil .2s ease both"></div><section role="dialog" aria-modal="true" aria-label="Send a private link" style="position:relative;width:100%;max-width:660px;border-radius:28px;background:#fffaf0;box-shadow:0 0 0 1px #cfe6d8,0 40px 80px -30px rgba(40,26,2,.8);overflow:hidden;animation:omSheet .34s cubic-bezier(.2,.8,.2,1) both">
       <div style="display:flex;align-items:center;gap:14px;padding:22px 26px;border-bottom:1px solid #ddeee4;background:#dcf3e5"><span style="width:46px;height:46px;border-radius:14px;background:#12704a;color:#fff;display:grid;place-items:center;flex:none"><i class="ph-fill ph-paper-plane-tilt" style="font-size:23px"></i></span><div style="flex:1;min-width:0"><div style="font-family:'Newsreader',serif;font-weight:500;font-size:26px;letter-spacing:-.02em;color:#241d0c">Send a private link</div><div style="font-size:14px;color:#12704a">One page, only for them. Voice note optional.</div></div><button data-act="close-build" style="width:38px;height:38px;border-radius:12px;background:#fffaf0;color:#6b6156;display:grid;place-items:center;flex:none"><i class="ph-bold ph-x" style="font-size:16px"></i></button></div>
       <div data-scroll style="padding:22px 26px;max-height:60vh;overflow-y:auto">
-        <div style="font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">Who is it for</div><div style="display:flex;flex-direction:column;gap:9px;margin-top:11px">${this.clients.length ? this.clients.map((client) => { const on = this.chosenClient === client.id; return `<button data-act="choose-client" data-id="${esc(client.id)}" style="display:flex;align-items:center;gap:12px;width:100%;padding:11px 13px;border-radius:14px;transition:all .16s;${on ? 'background:#dcf3e5;border:1px solid #12a150' : 'background:#faf7ff;border:1px solid #e4dbf7'}"><span style="width:40px;height:40px;border-radius:12px;flex:none;display:grid;place-items:center;font-size:13px;font-weight:800;${on ? 'background:#12704a;color:#fff' : 'background:#e2f2e6;color:#12704a'}">${this.getInitials(client.name)}</span><span style="flex:1;min-width:0;text-align:left"><span style="display:block;font-size:15.5px;font-weight:800;color:#2f2a2d">${esc(client.name)}</span><span style="display:block;font-size:13px;color:#8d8271">${esc(client.want)} · ${esc(client.city)}</span></span><i class="${on ? 'ph-fill ph-check-circle' : 'ph ph-circle'}" style="font-size:20px;color:#12a150;flex:none"></i></button>`; }).join('') : '<div style="font-size:13.5px;color:#8d8271;padding:8px 2px">Add a customer first, then send them a link.</div>'}</div>
+        <div style="font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">Who is it for</div><div style="display:flex;flex-direction:column;gap:9px;margin-top:11px">${this.clients.length ? this.clients.map((client) => { const on = this.chosenClient === client.id; const requirement = [client.want, client.city].filter(Boolean).join(' · ') || 'Requirements not recorded'; return `<button data-act="choose-client" data-id="${esc(client.id)}" style="display:flex;align-items:center;gap:12px;width:100%;padding:11px 13px;border-radius:14px;transition:all .16s;${on ? 'background:#dcf3e5;border:1px solid #12a150' : 'background:#faf7ff;border:1px solid #e4dbf7'}"><span style="width:40px;height:40px;border-radius:12px;flex:none;display:grid;place-items:center;font-size:13px;font-weight:800;${on ? 'background:#12704a;color:#fff' : 'background:#e2f2e6;color:#12704a'}">${this.getInitials(client.name)}</span><span style="flex:1;min-width:0;text-align:left"><span style="display:block;font-size:15.5px;font-weight:800;color:#2f2a2d">${esc(client.name)}</span><span style="display:block;font-size:13px;color:#8d8271">${esc(requirement)}</span></span><i class="${on ? 'ph-fill ph-check-circle' : 'ph ph-circle'}" style="font-size:20px;color:#12a150;flex:none"></i></button>`; }).join('') : '<div style="font-size:13.5px;color:#8d8271;padding:8px 2px">Add a customer first, then send them a link.</div>'}</div>
         <div style="margin-top:22px;display:flex;align-items:baseline;justify-content:space-between;gap:10px"><div style="font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">Which plots</div><div style="font-size:13.5px;font-weight:700;color:#12704a">${this.chosenProps.length ? `${this.chosenProps.length} ${this.chosenProps.length === 1 ? 'plot' : 'plots'} chosen` : 'Pick up to 4'}</div></div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:11px">${this.properties.slice(0, 12).map((property) => { const on = this.chosenProps.includes(property.id); const photo = property.photos[0]; return `<button data-act="choose-prop" data-id="${esc(property.id)}" style="position:relative;overflow:hidden;border-radius:14px;background:#faf7ff;border:2px solid ${on ? '#12a150' : '#e4dbf7'}"><span style="display:block;width:100%;height:70px;background:#efe8fb;overflow:hidden">${photo ? `<img src="${esc(photo)}" alt="" loading="lazy" decoding="async" style="display:block;width:100%;height:100%;object-fit:cover">` : ''}</span><span style="display:block;padding:9px 10px;font-size:12.5px;font-weight:700;text-align:left;line-height:1.3;color:#241f1c">${esc(property.loc)}</span>${on ? '<span style="position:absolute;top:7px;right:7px;width:24px;height:24px;border-radius:50%;background:#12a150;color:#fff;display:grid;place-items:center"><i class="ph-bold ph-check" style="font-size:13px"></i></span>' : ''}</button>`; }).join('')}</div>
         <div style="margin-top:22px;font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">Price for this link <span style="font-weight:700;text-transform:none;letter-spacing:0;color:#a5946f">· blank = Price on call</span></div>
         <div style="display:flex;flex-direction:column;gap:9px;margin-top:11px">${this.chosenProps.length ? this.chosenProps.map((id) => { const p = this.properties.find((x) => x.id === id); if (!p) return ''; return `<div style="display:flex;align-items:center;gap:11px"><span style="flex:1;min-width:0;font-size:14px;font-weight:700;color:#4c463d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.area)}</span><div style="display:flex;align-items:center;gap:6px;background:#faf7ff;border:1px solid #e4dbf7;border-radius:11px;padding:0 12px"><span style="color:#8d8271;font-weight:800">₹</span><input data-price-for="${esc(id)}" inputmode="numeric" value="${esc(this.prices[id] ?? '')}" placeholder="Price on call" style="width:150px;height:44px;border:none;outline:none;background:none;font-size:15px;font-weight:700;color:#241f1c"></div></div>`; }).join('') : '<div style="font-size:13.5px;color:#8d8271">Pick plots above to set their price.</div>'}</div>
         <div style="margin-top:22px;font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">Location</div>
-        <button type="button" data-act="toggle-precise" style="display:flex;align-items:center;gap:13px;width:100%;margin-top:11px;padding:14px 16px;border-radius:14px;background:${this.locationPrecise ? '#dcf3e5' : '#faf7ff'};border:1px solid ${this.locationPrecise ? '#12a150' : '#e4dbf7'};text-align:left;cursor:pointer"><span style="width:46px;height:28px;border-radius:999px;flex:none;background:${this.locationPrecise ? '#12a150' : '#d8cff0'};position:relative;transition:background .15s"><span style="position:absolute;top:3px;left:${this.locationPrecise ? '21px' : '3px'};width:22px;height:22px;border-radius:50%;background:#fff;transition:left .15s"></span></span><span style="flex:1;min-width:0"><span style="display:block;font-size:15px;font-weight:800;color:#241f1c">Precise location ${this.locationPrecise ? 'ON' : 'OFF'}</span><span style="display:block;font-size:12.5px;color:#8d8271">${this.locationPrecise ? 'Client sees the exact plot pin on the sector map + masterplan.' : 'Client sees the overall area/sector only — no exact pin.'}</span></span></button>
+        <button type="button" data-act="toggle-precise" ${preciseAvailable ? '' : 'disabled'} style="display:flex;align-items:center;gap:13px;width:100%;margin-top:11px;padding:14px 16px;border-radius:14px;background:${preciseOn ? '#dcf3e5' : '#faf7ff'};border:1px solid ${preciseOn ? '#12a150' : '#e4dbf7'};text-align:left;cursor:${preciseAvailable ? 'pointer' : 'not-allowed'};opacity:${preciseAvailable ? '1' : '.62'}"><span style="width:46px;height:28px;border-radius:999px;flex:none;background:${preciseOn ? '#12a150' : '#d8cff0'};position:relative;transition:background .15s"><span style="position:absolute;top:3px;left:${preciseOn ? '21px' : '3px'};width:22px;height:22px;border-radius:50%;background:#fff;transition:left .15s"></span></span><span style="flex:1;min-width:0"><span style="display:block;font-size:15px;font-weight:800;color:#241f1c">Precise map placement ${preciseOn ? 'ON' : 'OFF'}</span><span style="display:block;font-size:12.5px;color:#8d8271">${!preciseAvailable ? 'Every selected property needs a stored map placement before an exact pin can be shared.' : preciseOn ? 'The stored plot placement is shared on its related maps.' : 'Client sees the overall area/sector only — no exact pin.'}</span></span></button>
         <div style="margin-top:14px;display:flex;align-items:center;gap:10px"><div style="font-size:13.5px;color:#4c463d;font-weight:700">Link expires in</div><select data-act="expiry" style="height:38px;border:1px solid #ddd0f5;border-radius:10px;padding:0 10px;font:inherit;font-size:14px;background:#fff">${[3, 7, 14, 30].map((d) => `<option value="${d}"${this.expiresInDays === d ? ' selected' : ''}>${d} days</option>`).join('')}</select></div>
         <div style="margin-top:22px;font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">Your voice <span style="font-weight:700;text-transform:none;letter-spacing:0;color:#a5946f">· optional</span></div>
         ${this.audioBlob
@@ -847,9 +923,9 @@ export class GenerateLinkFlow {
       clientId: this.chosenClient,
       propertyIds: [...this.chosenProps],
       priceVisibility: Object.keys(customPrices).length ? 'shown' : 'hidden',
-      locationVisibility: this.locationPrecise ? 'exact' : 'area',
+      locationVisibility: this.locationPrecise && this.chosenProps.every((id) => Boolean(this.properties.find((property) => property.id === id)?.mapPlacement)) ? 'exact' : 'area',
       customPrices,
-      locationPrecise: this.locationPrecise,
+      locationPrecise: this.locationPrecise && this.chosenProps.every((id) => Boolean(this.properties.find((property) => property.id === id)?.mapPlacement)),
       expiresInDays: this.expiresInDays,
       photoSelections: this.photoSelections(),
       audioBlob: this.audioBlob,
@@ -860,7 +936,7 @@ export class GenerateLinkFlow {
       this.result = { url: res.value.url, token: res.value.token };
       this.stopStream();
       this.render();
-      this.onComplete({} as ClientLink); // signal the list to refresh
+      this.onComplete();
     } else {
       this.error = res.error.message || 'Could not create the link. Make sure each plot has an approved photo.';
       this.render();
@@ -894,7 +970,12 @@ export class GenerateLinkFlow {
         if (adding) this.prepareSelectedProperty(id);
         this.render();
       }
-      else if (action === 'toggle-precise') { this.locationPrecise = !this.locationPrecise; this.render(); }
+      else if (action === 'toggle-precise') {
+        const available = this.chosenProps.length > 0 && this.chosenProps.every((propertyId) =>
+          Boolean(this.properties.find((property) => property.id === propertyId)?.mapPlacement));
+        if (available) this.locationPrecise = !this.locationPrecise;
+        this.render();
+      }
       else if (action === 'toggle-preview') { this.showPreview = !this.showPreview; this.render(); }
       else if (action === 'rec-toggle') { void this.toggleRecord(); }
       else if (action === 'rec-remove') { this.audioBlob = null; if (this.audioUrl) URL.revokeObjectURL(this.audioUrl); this.audioUrl = ''; this.audioSeconds = 0; this.render(); }

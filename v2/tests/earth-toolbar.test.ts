@@ -10,6 +10,7 @@ describe('MAPCO Earth toolbar composition', () => {
     const tools = brandRow?.querySelector('#e-tools');
 
     expect(brandRow?.firstElementChild?.id).toBe('e-brand');
+    expect(brandRow?.firstElementChild?.getAttribute('href')).toBe('/admin/owner.html');
     expect(tools).not.toBeNull();
     expect(Array.from(tools?.children ?? []).map((child) => child.id)).toEqual(['e-svbtn', 'e-roads']);
     expect(tools?.querySelector('#e-svbtn')?.getAttribute('aria-pressed')).toBe('false');

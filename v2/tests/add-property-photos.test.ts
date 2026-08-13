@@ -11,6 +11,22 @@ function setFiles(input: HTMLInputElement, files: File[]) {
   input.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
+function setField(name: string, value: string, change = false) {
+  const field = document.querySelector<HTMLInputElement | HTMLSelectElement>(`[name="${name}"]`)!;
+  field.value = value;
+  field.dispatchEvent(new Event('input', { bubbles: true }));
+  if (change) field.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+function enterRequiredBasics(city = 'Mohali') {
+  setField('city', city, true);
+  setField('area', 'Sector 90');
+  setField('size', '250 sq yd');
+  setField('facing', 'East');
+  setField('position', 'Inside plot');
+  setField('type', 'Residential Plot');
+}
+
 describe('Add Property photo workflow', () => {
   beforeEach(() => {
     objectId = 0;
@@ -31,6 +47,7 @@ describe('Add Property photo workflow', () => {
     const completed = vi.fn();
     const flow = new AddPropertyFlow([], completed, () => flow.unmount());
     flow.mount(document.body);
+    enterRequiredBasics();
     document.querySelector<HTMLButtonElement>('[data-step="2"]')!.click();
     setFiles(document.querySelector<HTMLInputElement>('#pm-cover-photo-input')!, [
       new File(['cover'], 'cover.jpg', { type: 'image/jpeg' }),
@@ -55,11 +72,9 @@ describe('Add Property photo workflow', () => {
     flow.mount(document.body);
 
     await vi.waitFor(() => {
-      expect([...document.querySelectorAll('select[name="city"] option')].some((option) => option.textContent === 'Mohali')).toBe(true);
+      expect(document.querySelector('#pm-property-cities option[value="Mohali"]')).not.toBeNull();
     });
-    const city = document.querySelector<HTMLSelectElement>('select[name="city"]')!;
-    city.value = 'Mohali';
-    city.dispatchEvent(new Event('input', { bubbles: true }));
+    enterRequiredBasics();
 
     const sector = document.querySelector<HTMLSelectElement>('select[name="sectorMapId"]')!;
     expect(sector.value).toBe('mohali-sector-90-91');
@@ -87,6 +102,7 @@ describe('Add Property photo workflow', () => {
     const completed = vi.fn();
     const flow = new AddPropertyFlow([], completed, () => flow.unmount());
     flow.mount(document.body);
+    enterRequiredBasics();
     document.querySelector<HTMLButtonElement>('[data-step="2"]')!.click();
     setFiles(document.querySelector<HTMLInputElement>('#pm-cover-photo-input')!, [
       new File(['cover'], 'cover.jpg', { type: 'image/jpeg' }),

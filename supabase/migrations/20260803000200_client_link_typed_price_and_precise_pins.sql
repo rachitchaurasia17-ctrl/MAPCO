@@ -176,11 +176,23 @@ begin
       'area', case when v_location_visibility in ('area', 'exact') then left(nullif(trim(v_property.payload ->> 'area'), ''), 120) else null end,
       'sector', case when v_location_visibility = 'exact' then left(nullif(trim(coalesce(v_property.payload ->> 'sector', v_property.payload ->> 'block')), ''), 120) else null end,
       'plotNumber', case when v_location_visibility = 'exact' then left(nullif(trim(v_property.payload ->> 'plotNumber'), ''), 80) else null end,
-      'price', nullif(p_payload -> 'customPrices' ->> v_property.id, ''),
+      'price', case when v_price_visibility = 'shown'
+        then nullif(p_payload -> 'customPrices' ->> v_property.id, '') else null end,
       'city', case when v_location_visibility = 'exact' then left(nullif(trim(v_property.payload ->> 'city'), ''), 80) else null end,
       'masterplanId', case when v_location_visibility = 'exact' then nullif(trim(v_property.payload ->> 'masterplanId'), '') else null end,
       'sectorMapId', case when v_location_visibility = 'exact' then nullif(trim(v_property.payload ->> 'sectorMapId'), '') else null end,
-      'placement', case when v_location_visibility = 'exact' then v_property.payload -> 'mapPlacement' else null end,
+      'placement', case when v_location_visibility = 'exact'
+        and jsonb_typeof(v_property.payload -> 'mapPlacement') = 'object'
+        and nullif(trim(v_property.payload -> 'mapPlacement' ->> 'mapId'), '') is not null
+        and jsonb_typeof(v_property.payload -> 'mapPlacement' -> 'x') = 'number'
+        and jsonb_typeof(v_property.payload -> 'mapPlacement' -> 'y') = 'number'
+        and (v_property.payload -> 'mapPlacement' ->> 'x')::numeric between 0 and 1
+        and (v_property.payload -> 'mapPlacement' ->> 'y')::numeric between 0 and 1
+        then jsonb_build_object(
+          'mapId', left(trim(v_property.payload -> 'mapPlacement' ->> 'mapId'), 160),
+          'x', (v_property.payload -> 'mapPlacement' ->> 'x')::numeric,
+          'y', (v_property.payload -> 'mapPlacement' ->> 'y')::numeric
+        ) else null end,
       'photos', v_photos_safe
     )));
   end loop;

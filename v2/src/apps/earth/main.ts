@@ -28,9 +28,10 @@ import {
 import {
   DEFAULT_CENTER, DEFAULT_ZOOM, FOCUS_ZOOM,
   JUMP_AREAS, SEARCH_INDEX,
-  allProperties, createPropertyAt, placesStore, locationSource,
+  allProperties, placesStore, locationSource,
   type Property, type LatLng, type SearchEntry, type PlaceKind,
 } from './config';
+import { productRoutes, requestedPropertyId } from '../../packages/ui/product-routes';
 import {
   analyseLocation, intentOf, roadAdvantagesFor,
   type Advantage, type LocationIntel, type Section,
@@ -57,7 +58,7 @@ import {
 type View = 'earth' | 'map' | 'masterplan' | '3d';
 /** Earth and Map are the SAME Google map instance, different basemap. */
 const isLiveMapView = (v: View) => v === 'earth' || v === 'map';
-type AddMode = null | 'property' | 'place' | 'relocate';
+type AddMode = null | 'place' | 'relocate';
 type CardTab = 'details' | 'advantage';
 
 const KMETA: Record<PlaceKind, { icon: string; bed: string; fg: string }> = {
@@ -90,6 +91,7 @@ const state: State = {
   addMode: null, relocateFor: null, svSelect: false, activeAdvId: null, laLoading: false,
   laContext: 'around', roadsOn: false,
 };
+const requestedProperty = requestedPropertyId(window.location.search);
 
 /* ── Google objects (populated lazily) ─────────────────────────── */
 let map: any = null;
@@ -136,7 +138,7 @@ export function earthShellHtml(): string {
     <div class="e-top-left">
       <div class="e-brandrow">
         <!-- The brand IS the way back. No separate back control. -->
-        <a class="e-brand e-glass" id="e-brand" href="/" aria-label="Back to MAPCO">
+        <a class="e-brand e-glass" id="e-brand" href="${productRoutes.home}" aria-label="Back to MAPCO">
           <img class="e-brand-logo" src="/assets/mapco-logo.png" alt="" width="30" height="30"/>
           <div class="e-brand-text">
             <div class="e-brand-name">MAPCO</div>
@@ -527,6 +529,7 @@ function selectProperty(id: string): void {
   state.selId = id; state.photoIdx = 0; state.view = 'earth'; state.cardTab = 'details';
   state.roadsOn = keepRoads;
   state.panelOpen = false; state.addMode = null;
+  window.history.replaceState(null, '', productRoutes.earth(id));
   closeSearch();
   syncRoadLayerForContext();
   renderViews(); renderPlanOverlay(); renderMinePanel(); renderControls();
@@ -541,6 +544,7 @@ function closeCard(): void {
   const keepRoads = state.roadsOn;
   laDeactivate();
   state.selId = null;
+  window.history.replaceState(null, '', productRoutes.earth());
   state.roadsOn = keepRoads;
   syncRoadLayerForContext();
   renderCard(); renderPropMarkers(); renderControls();
@@ -558,11 +562,15 @@ function renderCard(): void {
   const p = currentProp();
   if (!p || !isLiveMapView(state.view) || state.addMode || state.svSelect) { wrap.innerHTML = ''; return; }
 
-  const hero = p.photos[state.photoIdx] || p.photos[0];
+  const hero = p.photos[state.photoIdx] ?? p.photos[0] ?? null;
+  const canPresent = Boolean(p.canonicalRecord?.published && !p.canonicalRecord.sold);
   wrap.innerHTML = `
   <div class="e-card">
     <div class="e-card-scroll escroll">
-      <div class="e-hero" style="background-image:url('${hero}')">
+      <div class="e-hero">
+        ${hero
+          ? `<img src="${escapeHtml(hero)}" alt="${escapeHtml(p.plotNo)}" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">`
+          : `<div style="position:absolute;inset:0;display:grid;place-items:center;background:#e9e4da;color:#706858"><span style="text-align:center"><i class="ph-fill ph-image" style="font-size:42px"></i><br><b>No property photo</b></span></div>`}
         <div class="e-hero-grad"></div>
         <div class="e-hero-top">
           <span class="e-hero-btn gold" id="e-share" title="Share"><span class="ph-fill ph-share-network"></span></span>
@@ -576,7 +584,7 @@ function renderCard(): void {
         </div>
       </div>
       ${p.photos.length > 1 ? `<div class="e-thumbs">${p.photos.map((src, i) =>
-        `<div class="e-thumb ${i === state.photoIdx ? 'on' : ''}" data-i="${i}" style="background-image:url('${src}')"></div>`).join('')}</div>` : ''}
+        `<button class="e-thumb ${i === state.photoIdx ? 'on' : ''}" data-i="${i}" aria-label="Photo ${i + 1}"><img src="${escapeHtml(src)}" alt="" loading="lazy" decoding="async" style="display:block;width:100%;height:100%;object-fit:cover"></button>`).join('')}</div>` : ''}
 
       <div class="e-card-body">
         <div class="e-seg" role="tablist">
@@ -584,14 +592,18 @@ function renderCard(): void {
           <button class="e-seg-btn ${state.cardTab === 'advantage' ? 'on' : ''}" id="e-tab-adv" role="tab"><i class="ph-fill ph-map-trifold"></i>Location advantage</button>
         </div>
         <div id="e-tabbody">${state.cardTab === 'details' ? detailsHtml(p) : advantageBodyHtml()}</div>
-        <button class="e-primary" id="e-details">Open full details<span class="ph-bold ph-arrow-right" style="font-size:16px"></span></button>
+        <button class="e-primary" id="e-details">Open dealer property<span class="ph-bold ph-arrow-right" style="font-size:16px"></span></button>
+        ${canPresent ? `<button class="e-primary" id="e-present" style="margin-top:8px">Open in Client Presentation<span class="ph-bold ph-presentation-chart" style="font-size:16px"></span></button>` : ''}
+        <button class="e-primary" id="e-relocate" style="margin-top:8px;background:#f0eadf;color:#392f20">Update Earth location<span class="ph-fill ph-crosshair" style="font-size:16px"></span></button>
       </div>
     </div>
   </div>`;
 
   $('e-close').addEventListener('click', closeCard);
-  $('e-share').addEventListener('click', () => showToast('Share link copied'));
-  $('e-details').addEventListener('click', () => showToast('Opening full property details…'));
+  $('e-share').addEventListener('click', () => void copyEarthLink(p.id));
+  $('e-details').addEventListener('click', () => window.location.assign(productRoutes.properties(p.id)));
+  document.getElementById('e-present')?.addEventListener('click', () => window.location.assign(productRoutes.presentation(p.id)));
+  $('e-relocate').addEventListener('click', () => startRelocate(p.id));
   $('e-tab-details').addEventListener('click', () => setCardTab('details'));
   $('e-tab-adv').addEventListener('click', () => setCardTab('advantage'));
   const next = document.getElementById('e-next');
@@ -599,6 +611,16 @@ function renderCard(): void {
   wrap.querySelectorAll<HTMLElement>('.e-thumb').forEach((t) =>
     t.addEventListener('click', () => { state.photoIdx = Number(t.dataset.i); renderCard(); }));
   if (state.cardTab === 'advantage') wireAdvList();
+}
+
+async function copyEarthLink(id: string): Promise<void> {
+  try {
+    if (!navigator.clipboard) throw new Error('Clipboard unavailable');
+    await navigator.clipboard.writeText(new URL(productRoutes.earth(id), window.location.origin).href);
+    showToast('Earth link copied');
+  } catch {
+    showToast('Could not copy the Earth link');
+  }
 }
 
 function detailsHtml(p: Property): string {
@@ -612,7 +634,7 @@ function detailsHtml(p: Property): string {
     { k: 'Ownership', v: p.ownership, icon: 'ph-fill ph-scroll' },
     { k: 'Possession', v: p.possession, icon: 'ph-fill ph-key' },
   ];
-  return `<div class="e-specs">${specs.map((s) =>
+  return `<div class="e-specs">${specs.filter((s) => s.v.trim().length > 0).map((s) =>
     `<div class="e-spec"><div class="e-spec-k"><span class="${s.icon}" style="font-size:16px;color:#b39a63"></span>${s.k}</div><div class="e-spec-v">${escapeHtml(s.v)}</div></div>`).join('')}</div>`;
 }
 
@@ -1053,6 +1075,17 @@ function renderControls(): void {
 /* ═══════════════════════════════════════════════════════════════
    ADD / RELOCATE  (pin → drag → save)  — single location source
    ═══════════════════════════════════════════════════════════════ */
+function startRelocate(id: string): void {
+  if (!mapReady) { showToast('Map still loading…'); return; }
+  const property = allProperties().find((item) => item.id === id);
+  if (!property) return;
+  laDeactivate();
+  state.addMode = 'relocate'; state.relocateFor = id; state.selId = null; state.panelOpen = false;
+  closeSearch();
+  dropAddPin(geographicOriginForProperty(property) ?? map.getCenter());
+  renderCard(); renderMinePanel(); renderControls(); renderAddUI();
+}
+
 function startAdd(mode: Exclude<AddMode, null | 'relocate'>): void {
   if (!mapReady) { showToast('Map still loading…'); return; }
   laDeactivate();
@@ -1063,7 +1096,8 @@ function startAdd(mode: Exclude<AddMode, null | 'relocate'>): void {
 }
 function dropAddPin(pos: any): void {
   clearAddPin();
-  const rootEl = buildPin('add', state.addMode === 'place' ? 'New place' : 'Property', false);
+  const relocating = state.relocateFor ? allProperties().find((item) => item.id === state.relocateFor) : null;
+  const rootEl = buildPin('add', state.addMode === 'place' ? 'New place' : relocating?.tag ?? 'Property', false);
   addMarker = new AdvancedMarkerElement({ map, position: pos, content: rootEl, gmpDraggable: true, zIndex: 60 });
 }
 function clearAddPin(): void { if (addMarker) { addMarker.map = null; addMarker = null; } }
@@ -1099,11 +1133,13 @@ async function confirmAdd(): Promise<void> {
     const place = placesStore.add(nameInput?.value || 'New place', latLng);
     finishAdd(); renderPlaceMarkers(); showToast(`Saved place — ${place.name}`); return;
   }
+  const propertyId = state.relocateFor;
+  if (!propertyId) { finishAdd(); return; }
   try {
-    const plot = await createPropertyAt(latLng);
-    finishAdd(); renderPropMarkers(); renderMineButton(); selectProperty(plot.id); showToast(`Property saved — ${plot.tag}`);
+    const record = await locationSource.set(propertyId, latLng);
+    finishAdd(); renderPropMarkers(); renderMineButton(); selectProperty(record.id); showToast('Earth location updated');
   } catch (error) {
-    showToast(error instanceof Error ? error.message : 'Could not save the property');
+    showToast(error instanceof Error ? error.message : 'Could not update the Earth location');
   }
 }
 function cancelAdd(): void { finishAdd(); showToast('Cancelled'); }
@@ -1289,14 +1325,21 @@ const appEl = document.getElementById('app');
 if (appEl) {
   renderShell(appEl);
   renderControls();
-  void locationSource.load()
-    .then(() => {
+  void (async () => {
+    const mapLoad = ensureMap();
+    try {
+      await locationSource.load();
+      const requested = requestedProperty ? await locationSource.resolve(requestedProperty) : null;
       renderMineButton();
       renderMinePanel();
+      await mapLoad;
       renderPropMarkers();
-      if (state.selId) renderCard();
+      if (requested) selectProperty(requested.id);
+      else if (requestedProperty) showToast('That property is not available in your inventory');
       if (state.roadsOn) syncRoadLayerForContext();
-    })
-    .catch((error) => showToast(error instanceof Error ? error.message : 'Could not load properties'));
-  void ensureMap();
+    } catch (error) {
+      await mapLoad;
+      showToast(error instanceof Error ? error.message : 'Could not load properties');
+    }
+  })();
 }

@@ -41,42 +41,9 @@ alter table public.crm_records
 alter table public.crm_records
   validate constraint crm_records_property_location_valid;
 
--- Deterministic compatibility backfill only. These are the five exact legacy
--- MAPCO Earth fixture IDs, additionally guarded by their city + sector identity.
--- No area/sector centroid or inferred coordinate is ever written.
-with legacy_location(id, city, sector_token, latitude, longitude) as (
-  values
-    ('p1', 'Mohali', 'sector 78', 30.6889::numeric, 76.7361::numeric),
-    ('p2', 'Mohali', 'sector 88', 30.6743::numeric, 76.7189::numeric),
-    ('p3', 'Mohali', 'sector 89', 30.6698::numeric, 76.7147::numeric),
-    ('p4', 'Mohali', 'sector 79', 30.6842::numeric, 76.7442::numeric),
-    ('p5', 'Mohali', 'sector 68', 30.7061::numeric, 76.7328::numeric)
-)
-update public.crm_records r
-set payload = jsonb_set(
-      r.payload,
-      '{location}',
-      jsonb_build_object(
-        'latitude', legacy_location.latitude,
-        'longitude', legacy_location.longitude,
-        'source', 'migrated',
-        'updatedAt', now()
-      ),
-      true
-    ),
-    updated_at = timezone('utc'::text, now())
-from legacy_location
-where r.id = legacy_location.id
-  and r.entity_type = 'properties'
-  and r.deleted = false
-  and (not (r.payload ? 'location') or r.payload -> 'location' = 'null'::jsonb)
-  and lower(trim(coalesce(r.payload ->> 'city', ''))) = lower(legacy_location.city)
-  and lower(coalesce(
-        nullif(trim(r.payload ->> 'sector'), ''),
-        nullif(trim(r.payload ->> 'loc'), ''),
-        nullif(trim(r.payload ->> 'area'), ''),
-        ''
-      )) like '%' || legacy_location.sector_token || '%';
+-- Existing properties remain without an Earth marker until a dealer explicitly
+-- saves or verifies their real location. No fixture, centroid, or inferred
+-- coordinate is promoted into Property.location.
 
 -- Atomic location-only writer. It is SECURITY INVOKER, so the existing
 -- dealer ownership and property-editor RLS policies remain authoritative.

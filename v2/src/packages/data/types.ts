@@ -72,7 +72,8 @@ export interface Client {
   name: string;
   phone: string;
   city: string;
-  want: WantType;
+  /** Empty when a buyer has not stated a property requirement yet. */
+  want: WantType | '';
   budget: string;
   budgetMax: number;
   status: 'active' | 'cold' | 'hot';
@@ -90,6 +91,22 @@ export interface Client {
 
 export interface DealDocument { name: string; kind?: string; url?: string; }
 export interface DealTimelineEntry { at: string; label: string; }
+
+/**
+ * Legacy completed-sale rows predate parts of the current private Deal shape.
+ * Normalizers keep numeric fallbacks render-safe, while this metadata lets the
+ * dealer UI distinguish an explicitly recorded zero/false from a missing value.
+ */
+export interface DealFieldPresence {
+  soldPrice: boolean;
+  brokerage: boolean;
+  commission: boolean;
+  commissionReceived: boolean;
+  paymentReceived: boolean;
+  soldDate: boolean;
+  documents: boolean;
+  timeline: boolean;
+}
 
 /**
  * A Deal is a COMPLETED property transaction — never an ongoing negotiation.
@@ -124,6 +141,8 @@ export interface Deal {
   // records
   documents: DealDocument[];
   timeline: DealTimelineEntry[];
+  /** Adapter-derived only; omitted by complete in-memory/current records. */
+  fieldPresence?: DealFieldPresence;
 }
 
 export interface ClientLink {

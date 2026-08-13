@@ -184,11 +184,10 @@ describe('migration and tenant boundary', () => {
     expect(migration).not.toContain("'{mapPlacement}'");
   });
 
-  it('backfills only exact legacy IDs guarded by city and sector identity', () => {
-    for (const id of ['p1', 'p2', 'p3', 'p4', 'p5']) expect(migration).toContain(`('${id}', 'Mohali'`);
-    expect(migration).toContain("r.id = legacy_location.id");
-    expect(migration).toContain("payload ->> 'city'");
-    expect(migration).toContain('sector_token');
+  it('does not promote legacy fixtures or inferred points into canonical locations', () => {
+    expect(migration).not.toContain('legacy_location');
+    expect(migration).not.toContain('30.6889');
+    expect(migration).toContain('No fixture, centroid, or inferred');
   });
 
   it('keeps the writer behind authenticated dealer RLS and verifies anon denial', () => {

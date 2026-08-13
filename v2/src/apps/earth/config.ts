@@ -1,15 +1,9 @@
 import { adapter } from '../../packages/data/adapter';
 import {
   coordinateValidationError,
-  createPropertyLocation,
   resolvePropertyPoint,
 } from '../../packages/data/property-location';
-import type {
-  Facing,
-  Property as CanonicalProperty,
-  PropertyType,
-  WantType,
-} from '../../packages/data/types';
+import type { Property as CanonicalProperty } from '../../packages/data/types';
 
 /* ═══════════════════════════════════════════════════════════════
    MAPCO EARTH — canonical property adapter + compatibility fixtures
@@ -86,57 +80,10 @@ export interface SavedLocation {
   savedAt: number;
 }
 
-/* ── Default camera: the Aerocity / south-Mohali belt where most
-      of the mock inventory sits. ────────────────────────────────── */
+/* ── Default camera: the Aerocity / south-Mohali belt. ───────────── */
 export const DEFAULT_CENTER: LatLng = { lat: 30.678, lng: 76.74 };
 export const DEFAULT_ZOOM = 13;
 export const FOCUS_ZOOM = 17; // when flying to a single plot
-
-/* ── Mock inventory (Tri-City, believable) ───────────────────────── */
-export const PROPERTIES: Property[] = [
-  {
-    id: 'p1', tag: 'P-382', plotNo: 'Plot 627', sector: 'Sector 78', city: 'Mohali',
-    size: '250 sq yd', facing: 'East', road: '30 ft', type: 'Residential plot',
-    price: '₹2.75 Cr', ppu: '₹1.10 L', dims: '50 × 45 ft', approval: 'GMADA',
-    ownership: 'Freehold', possession: 'Ready to build',
-    pos: { lat: 30.6889, lng: 76.7361 },
-    photos: ['/assets/ph-plot-1.png', '/assets/ph-plot-3.png', '/assets/ph-road-1.png', '/assets/ph-amenity-1.png'],
-  },
-  {
-    id: 'p2', tag: 'P-118', plotNo: 'Plot 92', sector: 'Sector 88', city: 'Mohali',
-    size: '200 sq yd', facing: 'West', road: '24 ft', type: 'Residential plot',
-    price: '₹1.95 Cr', ppu: '₹97,500', dims: '40 × 45 ft', approval: 'GMADA',
-    ownership: 'Freehold', possession: 'Ready to build',
-    pos: { lat: 30.6743, lng: 76.7189 },
-    photos: ['/assets/ph-plot-2.png', '/assets/ph-plot-1.png', '/assets/ph-road-2.png', '/assets/ph-amenity-2.png'],
-  },
-  {
-    id: 'p3', tag: 'P-540', plotNo: 'Plot 12', sector: 'Sector 89', city: 'Mohali',
-    size: '500 sq yd', facing: 'North-East', road: '40 ft', type: 'Kothi plot',
-    price: '₹5.50 Cr', ppu: '₹1.10 L', dims: '90 × 50 ft', approval: 'GMADA',
-    ownership: 'Freehold', possession: 'Ready to build',
-    pos: { lat: 30.6698, lng: 76.7147 },
-    photos: ['/assets/ph-plot-3.png', '/assets/ph-project-1.png', '/assets/ph-road-3.png', '/assets/ph-amenity-3.png'],
-  },
-  {
-    id: 'p4', tag: 'P-206', plotNo: 'Plot 344', sector: 'Sector 79', city: 'Mohali',
-    size: '300 sq yd', facing: 'South', road: '30 ft', type: 'Residential plot',
-    price: '₹3.15 Cr', ppu: '₹1.05 L', dims: '60 × 45 ft', approval: 'GMADA',
-    ownership: 'Freehold', possession: 'Ready to build',
-    pos: { lat: 30.6842, lng: 76.7442 },
-    intent: 'investment',
-    photos: ['/assets/ph-plot-1.png', '/assets/ph-project-2.png', '/assets/ph-road-1.png', '/assets/ph-landmark-1.png'],
-  },
-  {
-    id: 'p5', tag: 'P-771', plotNo: 'Plot 58', sector: 'Sector 68', city: 'Mohali',
-    size: '420 sq yd', facing: 'North', road: '33 ft', type: 'Corner plot',
-    price: '₹4.40 Cr', ppu: '₹1.05 L', dims: '75 × 50 ft', approval: 'GMADA',
-    ownership: 'Freehold', possession: 'Ready to build',
-    pos: { lat: 30.7061, lng: 76.7328 },
-    intent: 'commercial',
-    photos: ['/assets/ph-plot-2.png', '/assets/ph-project-3.png', '/assets/ph-road-2.png', '/assets/ph-landmark-2.png'],
-  },
-];
 
 /* ── Quick Jump areas (real Tri-City places) ─────────────────────── */
 export const JUMP_AREAS: JumpArea[] = [
@@ -162,10 +109,6 @@ export const SEED_IMPORTANT_PLACES: ImportantPlace[] = [
       Google Places (New) results are merged in at runtime so the dealer
       never has to think about the source. ──────────────────────────── */
 export const SEARCH_INDEX: SearchEntry[] = [
-  ...PROPERTIES.flatMap((p): SearchEntry[] => [
-    { kind: 'plot', label: `${p.tag} · ${p.plotNo}`, sub: `${p.sector}, ${p.city} · your inventory`, pid: p.id },
-    { kind: 'plot', label: `${p.plotNo} (${p.tag})`, sub: `${p.sector}, ${p.city} · your inventory`, pid: p.id },
-  ]),
   { kind: 'sector', label: 'Sector 78', sub: 'Mohali', pos: { lat: 30.6889, lng: 76.7361 }, zoom: 15 },
   { kind: 'sector', label: 'Sector 79', sub: 'Mohali', pos: { lat: 30.6842, lng: 76.7442 }, zoom: 15 },
   { kind: 'sector', label: 'Sector 82', sub: 'Mohali · Aerocity belt', pos: { lat: 30.6725, lng: 76.752 }, zoom: 15 },
@@ -287,41 +230,21 @@ export const placesStore = {
   },
 };
 
-/** Legacy plots dropped before Earth wrote through the canonical repository. */
+/** Legacy browser records are retained only so canonical writes can clean them up. */
 export const userPlotsStore = {
   all(): Property[] {
     return readJSON<Property[]>(PLOTS_KEY, []);
-  },
-  add(pos: LatLng): Property {
-    const list = this.all();
-    const n = PROPERTIES.length + list.length + 1;
-    const plot: Property = {
-      id: 'u-' + Date.now().toString(36),
-      tag: 'P-' + (900 + list.length),
-      plotNo: 'New plot ' + n,
-      sector: 'Dropped on Earth', city: 'Tri-City',
-      size: '—', facing: '—', road: '—', type: 'Plot',
-      price: 'Add price', ppu: '—', dims: '—', approval: 'GMADA',
-      ownership: 'Freehold', possession: '—',
-      pos,
-      photos: ['/assets/ph-plot-2.png', '/assets/ph-road-2.png'],
-    };
-    list.push(plot);
-    writeJSON(PLOTS_KEY, list);
-    return plot;
   },
   remove(id: string): void {
     writeJSON(PLOTS_KEY, this.all().filter((p) => p.id !== id));
   },
 };
 
-/** Seed inventory plus any plots the dealer has dropped this session. */
+/** Dealer-scoped records loaded through the active adapter. */
 let canonicalRecords: CanonicalProperty[] = [];
 
-const fallbackPhotos = ['/assets/ph-plot-2.png', '/assets/ph-road-2.png'];
-
 function displayPrice(price: number): string {
-  if (!(price > 0)) return 'Add price';
+  if (!(price > 0)) return '';
   if (price >= 10_000_000) return `₹${(price / 10_000_000).toFixed(2)} Cr`;
   if (price >= 100_000) return `₹${(price / 100_000).toFixed(2)} L`;
   return `₹${price.toLocaleString('en-IN')}`;
@@ -336,63 +259,18 @@ function earthProperty(record: CanonicalProperty): Property {
     city: record.city,
     size: record.size,
     facing: record.facing,
-    road: record.position || '—',
+    road: record.position,
     type: record.type,
     price: displayPrice(record.price),
-    ppu: '—',
-    dims: '—',
-    approval: record.approvals.join(', ') || '—',
-    ownership: '—',
-    possession: '—',
-    photos: record.photos.length ? record.photos : fallbackPhotos,
+    ppu: '',
+    dims: '',
+    approval: record.approvals.join(', '),
+    ownership: '',
+    possession: '',
+    photos: [...record.photos],
     canonicalRecord: record,
     intent: record.want === 'Commercial' ? 'commercial' : 'residential',
   };
-}
-
-function propertyTypeOf(value: string): PropertyType {
-  const supported: PropertyType[] = ['Residential Plot', 'Flat', 'Floor', 'Kothi', 'Villa', 'Commercial'];
-  return supported.includes(value as PropertyType) ? value as PropertyType : 'Residential Plot';
-}
-
-function wantTypeOf(value: string): WantType {
-  const supported: WantType[] = ['Plot', 'Flat', 'Kothi', 'Villa', 'Commercial'];
-  if (supported.includes(value as WantType)) return value as WantType;
-  return value.toLowerCase().includes('commercial') ? 'Commercial' : 'Plot';
-}
-
-function facingOf(value: string): Facing {
-  const supported: Facing[] = ['East', 'West', 'North', 'South', 'North-East', 'North-West', 'South-East', 'South-West'];
-  return supported.includes(value as Facing) ? value as Facing : 'East';
-}
-
-function canonicalProperty(p: Property, pos: LatLng): CanonicalProperty {
-  return {
-    id: p.id,
-    type: propertyTypeOf(p.type),
-    want: wantTypeOf(p.type),
-    city: p.city,
-    area: p.plotNo,
-    loc: `${p.sector}, ${p.city}`,
-    sector: p.sector,
-    size: p.size,
-    facing: facingOf(p.facing),
-    position: p.road,
-    approvals: p.approval === '—' ? [] : [p.approval],
-    landmarks: [],
-    price: 0,
-    photos: p.photos,
-    published: false,
-    sold: false,
-    views: 0,
-    location: createPropertyLocation({ latitude: pos.lat, longitude: pos.lng, source: 'dealer-selected' }),
-  };
-}
-
-function sameLegacyIdentity(record: CanonicalProperty, legacy: Property): boolean {
-  const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-  const sector = normalize(`${record.sector} ${record.area} ${record.loc}`);
-  return normalize(record.city) === normalize(legacy.city) && sector.includes(normalize(legacy.sector));
 }
 
 function replaceCanonical(record: CanonicalProperty): void {
@@ -413,50 +291,11 @@ async function loadAllCanonicalProperties(): Promise<CanonicalProperty[]> {
   return records;
 }
 
-async function migrateDeterministicLegacyLocations(): Promise<void> {
-  for (const record of [...canonicalRecords]) {
-    if (record.location) continue;
-    const legacy = PROPERTIES.find((candidate) => candidate.id === record.id);
-    if (!legacy || !sameLegacyIdentity(record, legacy)) continue;
-    const point = savedStore.get(record.id)?.pos ?? legacy.pos;
-    if (!point || coordinateValidationError(point.lat, point.lng)) continue;
-    const result = await adapter.properties.setLocation(record.id, {
-      latitude: point.lat,
-      longitude: point.lng,
-      source: 'migrated',
-    });
-    if (result.ok) {
-      replaceCanonical(result.value);
-      savedStore.clear(record.id);
-    }
-  }
-
-  // Browser-created plots have a deterministic id-to-coordinate relationship.
-  // Move them once, but retain the old record if a backend write fails.
-  for (const legacy of userPlotsStore.all()) {
-    if (canonicalRecords.some((record) => record.id === legacy.id)) continue;
-    const point = savedStore.get(legacy.id)?.pos ?? legacy.pos;
-    if (!point || coordinateValidationError(point.lat, point.lng)) continue;
-    const result = await adapter.properties.save(canonicalProperty(legacy, point));
-    if (result.ok) {
-      replaceCanonical(result.value);
-      userPlotsStore.remove(legacy.id);
-      savedStore.clear(legacy.id);
-    }
-  }
-}
-
 export function allProperties(): Property[] {
-  const canonical = canonicalRecords.map(earthProperty);
-  const canonicalIds = new Set(canonical.map((property) => property.id));
-  return [
-    ...canonical,
-    ...PROPERTIES.filter((property) => !canonicalIds.has(property.id)),
-    ...userPlotsStore.all().filter((property) => !canonicalIds.has(property.id)),
-  ];
+  return canonicalRecords.map(earthProperty);
 }
 
-/** Canonical real-world location first; validated legacy point only as fallback. */
+/** Canonical real-world location first; a validated dealer-saved legacy point only as fallback. */
 export function propertyPos(p: Property): LatLng | null {
   const legacy = savedStore.get(p.id)?.pos ?? p.pos ?? null;
   return p.canonicalRecord
@@ -467,13 +306,19 @@ export function propertyPos(p: Property): LatLng | null {
 /* ═══════════════════════════════════════════════════════════════
    locationSource — the ONE place Earth reads/writes a property's
    geographic location. Reads prefer the canonical property payload;
-   validated local fixtures are compatibility-only. Every write goes
+   validated dealer-saved legacy coordinates are compatibility-only. Every write goes
    through the canonical property repository.
    ═══════════════════════════════════════════════════════════════ */
 export const locationSource = {
   async load(): Promise<void> {
     canonicalRecords = await loadAllCanonicalProperties();
-    await migrateDeterministicLegacyLocations();
+  },
+  /** Resolve a handoff ID through the active adapter, never fixture inventory. */
+  async resolve(id: string): Promise<Property | null> {
+    const result = await adapter.properties.get(id);
+    if (!result.ok) return null;
+    replaceCanonical(result.value);
+    return earthProperty(result.value);
   },
   /** Resolve a property's authoritative coordinate. */
   get(id: string): LatLng | null {
@@ -486,13 +331,11 @@ export const locationSource = {
     if (error) throw new RangeError(error);
     const property = allProperties().find((candidate) => candidate.id === id);
     if (!property) throw new Error('Property not found');
-    const result = property.canonicalRecord
-      ? await adapter.properties.setLocation(id, {
-          latitude: pos.lat,
-          longitude: pos.lng,
-          source: 'dealer-selected',
-        })
-      : await adapter.properties.save(canonicalProperty(property, pos));
+    const result = await adapter.properties.setLocation(id, {
+      latitude: pos.lat,
+      longitude: pos.lng,
+      source: 'dealer-selected',
+    });
     if (!result.ok) throw new Error(result.error.message);
     replaceCanonical(result.value);
     savedStore.clear(id);
@@ -505,32 +348,3 @@ export const locationSource = {
     return Boolean(property?.canonicalRecord?.location ?? savedStore.get(id));
   },
 };
-
-/** Existing Add Property pin UX, now persisted through the canonical repository. */
-export async function createPropertyAt(pos: LatLng): Promise<Property> {
-  const error = coordinateValidationError(pos.lat, pos.lng);
-  if (error) throw new RangeError(error);
-  const number = allProperties().length + 1;
-  const legacy: Property = {
-    id: `prop-${Date.now()}`,
-    tag: `P-${900 + number}`,
-    plotNo: `New plot ${number}`,
-    sector: 'Dropped on Earth',
-    city: 'Tri-City',
-    size: '—',
-    facing: 'East',
-    road: '—',
-    type: 'Residential Plot',
-    price: 'Add price',
-    ppu: '—',
-    dims: '—',
-    approval: '—',
-    ownership: '—',
-    possession: '—',
-    photos: fallbackPhotos,
-  };
-  const result = await adapter.properties.save(canonicalProperty(legacy, pos));
-  if (!result.ok) throw new Error(result.error.message);
-  replaceCanonical(result.value);
-  return earthProperty(result.value);
-}

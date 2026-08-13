@@ -1,10 +1,12 @@
-import { adapter } from '../../../packages/data/adapter';
+import { activeDataMode, adapter } from '../../../packages/data/adapter';
 import { getInitials, getProfile } from '../../../packages/auth/auth';
 import type { Client, ClientLink, Property } from '../../../packages/data/types';
 import { GenerateLinkFlow } from '../../../packages/ui/shared-modals';
 import { renderClientLinkView, previewPayloadFromLink, type ClientLinkViewMap } from '../../../packages/ui/client-link-view';
 import { getSession } from '../../../packages/data/session';
 import { PredictiveRuntime, dealerScope, sessionScope } from '../../../packages/performance';
+import { productRoutes, requestedPropertyId } from '../../../packages/ui/product-routes';
+import { listAllRecords } from '../../../packages/data/list-all';
 
 const esc = (value: string) => value.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!);
 const titleCase = (value: string) => value.charAt(0).toUpperCase() + value.slice(1);
@@ -12,6 +14,7 @@ let activeLinkPredictive: PredictiveRuntime | null = null;
 
 export async function renderLinks(el: HTMLElement): Promise<void> {
   activeLinkPredictive?.dispose();
+  el.innerHTML = '<div role="status" style="max-width:1080px;margin:34px auto;padding:24px 26px;border-radius:18px;background:#faf7ff;color:#6b6156">Loading client links…</div>';
   const dealerSession = await getSession().catch(() => null);
   const predictive = new PredictiveRuntime(dealerSession ? dealerScope(dealerSession.userId) : sessionScope(), {
     async record(event, signal) {
@@ -32,35 +35,35 @@ export async function renderLinks(el: HTMLElement): Promise<void> {
   let previewId: string | null = null;
 
   const [linkResult, clientResult, propertyResult, mapResult] = await Promise.all([
-    adapter.clientLinks.list({ limit: 50 }),
-    adapter.customers.list({ limit: 50 }),
-    adapter.properties.list({ limit: 50 }),
-    adapter.maps.listRegistry({ limit: 50 }),
+    listAllRecords((params, opts) => adapter.clientLinks.list(params, opts)),
+    listAllRecords((params, opts) => adapter.customers.list(params, opts)),
+    listAllRecords((params, opts) => adapter.properties.list(params, opts)),
+    listAllRecords((params, opts) => adapter.maps.listRegistry(params, opts)),
   ]);
   if (!linkResult.ok || !clientResult.ok || !propertyResult.ok) {
     el.innerHTML = '<div role="alert" style="max-width:1080px;margin:34px auto;padding:24px 26px;border-radius:18px;background:#ffe1e6;color:#9f2446">Client links could not be loaded.</div>';
     return;
   }
-  links = [...linkResult.value.items];
-  clients = [...clientResult.value.items];
-  properties = [...propertyResult.value.items];
+  links = linkResult.value;
+  clients = clientResult.value;
+  properties = propertyResult.value;
   predictive.recordAction('route-opened', { type: 'route', id: 'client-links' });
   void predictive.loadHistory();
-  if (mapResult.ok) maps = mapResult.value.items.map((m) => ({
+  if (mapResult.ok) maps = mapResult.value.map((m) => ({
     id: m.id, kind: m.kind, city: m.city, sector: m.sector, area: m.area,
     label: m.label, parentMapId: m.parentMapId, raster: m.raster,
     assets: m.assets, dims: m.dims,
   }));
 
-  const eventChip = (on: boolean, icon: string, label: string) => `<span style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:11.5px;font-weight:800;${on ? 'background:#d9f5e3;color:#0b6f39' : 'background:#f3eeff;color:#a5946f'}"><i class="ph-fill ${icon}" style="font-size:14px"></i>${label}</span>`;
-  const linkCard = (link: ClientLink, index: number) => {
+  const eventChip = (icon: string, label: string) => `<span style="display:flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:11.5px;font-weight:800;background:#d9f5e3;color:#0b6f39"><i class="ph-fill ${icon}" style="font-size:14px"></i>${label}</span>`;
+  const linkCard = (link: ClientLink) => {
     const active = link.status === 'active';
     const propChips = link.props.map((id, propIndex) => {
       const property = properties.find((item) => item.id === id);
       const label = property ? `${property.type.replace('Residential ', '')} · ${property.area}` : (link.propNames[propIndex] || id);
       return `<span style="display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:9px;background:#fff0c9;border:1px solid #f2dfab;color:#5b4a21;font-size:11.5px;font-weight:700"><i class="ph-fill ph-map-pin-area" style="font-size:14px"></i>${esc(label)}</span>`;
     }).join('');
-    const created = ['24 Jul', '22 Jul', '18 Jul', '20 Jul'][index] || 'today';
+    const created = link.createdAt ? `Sent ${esc(link.createdAt)} · ` : '';
     const firstProperty = link.props.length === 1
       ? properties.find((item) => item.id === link.props[0])
       : undefined;
@@ -68,11 +71,18 @@ export async function renderLinks(el: HTMLElement): Promise<void> {
     const plotsText = firstProperty
       ? `${firstProperty.type} · ${firstProperty.loc}`
       : `${plotCount} ${plotCount === 1 ? 'plot' : 'plots'} in this link`;
+    const recordedEvents = [
+      link.audio === 'done' ? eventChip('ph-microphone', 'Voice note attached') : '',
+      link.events.played > 0 ? eventChip('ph-waveform', 'Voice note played') : '',
+      link.events.called > 0 ? eventChip('ph-phone', 'Call tapped') : '',
+      link.events.wa > 0 ? eventChip('ph-whatsapp-logo', 'WhatsApp tapped') : '',
+      link.events.visit > 0 ? eventChip('ph-calendar-check', 'Visit requested') : '',
+    ].filter(Boolean);
     return `<article style="background:#faf7ff;border:1px solid #e4dbf7;border-radius:20px;padding:20px 22px;box-shadow:0 1px 2px rgba(30,28,22,.03),0 16px 34px -28px rgba(30,28,22,.7)">
-      <div style="display:flex;align-items:center;gap:14px"><div style="width:48px;height:48px;border-radius:50%;background:#efe8fb;color:#6b3fd4;display:grid;place-items:center;font-size:16px;font-weight:800;flex:none">${getInitials(link.clientName)}</div><div style="flex:1;min-width:0"><div style="font-size:19px;font-weight:800;color:#241f1c">${esc(link.clientName)}</div><div style="font-size:13.5px;color:#8d8271">Sent ${created} · expires ${esc(link.expiry)}</div></div><div style="text-align:right;flex:none"><div style="font-family:'Newsreader',serif;font-weight:600;font-size:26px;color:#241f1c">${link.events.opens} ${link.events.opens === 1 ? 'open' : 'opens'}</div><div style="font-size:12.5px;color:#8d8271">Last: ${esc(link.lastOpen)}</div></div><span style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:800;${active ? 'background:#d9f5e3;color:#0b8f45' : 'background:#f3eeff;color:#8a7a52'}">${active ? 'Live' : titleCase(link.status)}</span></div>
+      <div style="display:flex;align-items:center;gap:14px"><div style="width:48px;height:48px;border-radius:50%;background:#efe8fb;color:#6b3fd4;display:grid;place-items:center;font-size:16px;font-weight:800;flex:none">${getInitials(link.clientName)}</div><div style="flex:1;min-width:0"><div style="font-size:19px;font-weight:800;color:#241f1c">${esc(link.clientName)}</div><div style="font-size:13.5px;color:#8d8271">${created}expires ${esc(link.expiry)}</div></div><div style="text-align:right;flex:none"><div style="font-family:'Newsreader',serif;font-weight:600;font-size:26px;color:#241f1c">${link.events.opens} ${link.events.opens === 1 ? 'open' : 'opens'}</div><div style="font-size:12.5px;color:#8d8271">Last: ${esc(link.lastOpen)}</div></div><span style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:800;${active ? 'background:#d9f5e3;color:#0b8f45' : 'background:#f3eeff;color:#8a7a52'}">${active ? 'Live' : titleCase(link.status)}</span></div>
       <div style="font-size:15px;font-weight:700;color:#4c463d;margin-top:14px">${esc(plotsText)}</div><div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:9px">${propChips}</div>
-      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:12px">${eventChip(link.audio === 'done', 'ph-microphone', link.audio === 'done' ? 'Voice note attached' : 'No voice note')}${eventChip(link.events.played > 0, 'ph-waveform', 'Heard your voice note')}${eventChip(link.events.called > 0, 'ph-phone', 'Tapped call')}${eventChip(link.events.wa > 0, 'ph-whatsapp-logo', 'Tapped WhatsApp')}${eventChip(link.events.visit > 0, 'ph-calendar-check', 'Asked for a visit')}</div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid #f6e8c8"><button data-act="preview" data-id="${esc(link.id)}" style="display:flex;align-items:center;gap:8px;height:46px;padding:0 16px;border-radius:12px;background:#efe8fb;color:#6b3fd4;font-size:15px;font-weight:800"><i class="ph-fill ph-device-mobile" style="font-size:18px"></i>See their page</button>${active ? `<button style="display:flex;align-items:center;gap:8px;height:46px;padding:0 16px;border-radius:12px;background:#e2f2e6;color:#146c3a;font-size:15px;font-weight:800"><i class="ph-fill ph-whatsapp-logo" style="font-size:18px"></i>Send again</button><button data-act="stop" data-id="${esc(link.id)}" style="display:flex;align-items:center;gap:8px;height:46px;padding:0 16px;border-radius:12px;background:#ffe1e6;color:#c2185b;font-size:15px;font-weight:800"><i class="ph-fill ph-prohibit" style="font-size:18px"></i>Stop this link</button>` : ''}<div style="flex:1"></div><button data-act="delete" data-id="${esc(link.id)}" style="display:flex;align-items:center;gap:8px;height:46px;padding:0 16px;border-radius:12px;background:#f3eeff;color:#8a7a52;font-size:15px;font-weight:800"><i class="ph-fill ph-trash" style="font-size:18px"></i>Delete</button></div>
+      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:12px">${recordedEvents.join('') || '<span style="font-size:12.5px;color:#8d8271">No link actions recorded yet.</span>'}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;padding-top:16px;border-top:1px solid #f6e8c8"><button data-act="preview" data-id="${esc(link.id)}" style="display:flex;align-items:center;gap:8px;height:46px;padding:0 16px;border-radius:12px;background:#efe8fb;color:#6b3fd4;font-size:15px;font-weight:800"><i class="ph-fill ph-device-mobile" style="font-size:18px"></i>See their page</button>${active ? `<button data-act="stop" data-id="${esc(link.id)}" style="display:flex;align-items:center;gap:8px;height:46px;padding:0 16px;border-radius:12px;background:#ffe1e6;color:#c2185b;font-size:15px;font-weight:800"><i class="ph-fill ph-prohibit" style="font-size:18px"></i>Stop this link</button>` : ''}</div>
     </article>`;
   };
 
@@ -94,10 +104,9 @@ export async function renderLinks(el: HTMLElement): Promise<void> {
   const mountPreview = (link: ClientLink) => {
     const screen = el.querySelector<HTMLElement>('#pm-link-preview-screen');
     if (!screen) return;
-    const profile = getProfile();
-    const dealerName = profile.dealerName || profile.name || 'Your dealer';
+    const profile = activeDataMode() === 'supabase' ? null : getProfile();
+    const dealerName = profile?.dealerName || profile?.name || 'Your dealer';
     const payload = previewPayloadFromLink(link, properties, dealerName, {
-      phone: '+919876500000', whatsapp: '+919876500000',
       buyerName: (link.clientName || '').split(' ')[0],
     });
     renderClientLinkView(screen, payload, { embedded: true, maps });
@@ -112,6 +121,27 @@ export async function renderLinks(el: HTMLElement): Promise<void> {
     if (preview) mountPreview(preview);
   };
 
+  const openBuilder = (initialPropertyId?: string) => {
+    let flow: GenerateLinkFlow;
+    flow = new GenerateLinkFlow(
+      clients,
+      properties,
+      () => {
+        // A link was created server-side — refresh the real list.
+        void listAllRecords((params, opts) => adapter.clientLinks.list(params, opts)).then((result) => {
+          if (result.ok) {
+            links = result.value;
+            render();
+          }
+        });
+      },
+      () => { flow.unmount(); },
+      predictive,
+      { propertyIds: initialPropertyId ? [initialPropertyId] : [] },
+    );
+    flow.mount(document.body);
+  };
+
   el.addEventListener('click', (event) => {
     if ((event.target as HTMLElement).id === 'pm-preview-backdrop') { previewId = null; render(); return; }
     const target = (event.target as HTMLElement).closest<HTMLElement>('[data-act]');
@@ -119,18 +149,7 @@ export async function renderLinks(el: HTMLElement): Promise<void> {
     const action = target.dataset.act;
     const id = target.dataset.id || '';
     if (action === 'open-build') {
-      let flow: GenerateLinkFlow;
-      flow = new GenerateLinkFlow(
-        clients,
-        properties,
-        () => {
-          // A link was created server-side — refresh the real list.
-          void adapter.clientLinks.list({ limit: 50 }).then((r) => { if (r.ok) { links = [...r.value.items]; render(); } });
-        },
-        () => { flow.unmount(); },
-        predictive,
-      );
-      flow.mount(document.body);
+      openBuilder();
       return;
     }
     if (action === 'stop') {
@@ -138,14 +157,18 @@ export async function renderLinks(el: HTMLElement): Promise<void> {
       links = links.map((link) => link.id === id ? { ...link, status: 'revoked' } : link);
       render();
       void adapter.clientLinks.revoke(id).then((r) => {
-        if (!r.ok) void adapter.clientLinks.list({ limit: 50 }).then((res) => { if (res.ok) { links = [...res.value.items]; render(); } });
+        if (!r.ok) void listAllRecords((params, opts) => adapter.clientLinks.list(params, opts)).then((res) => { if (res.ok) { links = res.value; render(); } });
       });
       return;
     }
-    if (action === 'delete') links = links.filter((link) => link.id !== id);
     if (action === 'preview') previewId = id;
     if (action === 'close-preview') previewId = null;
     render();
   });
   render();
+  const initialPropertyId = requestedPropertyId();
+  if (initialPropertyId && properties.some((property) => property.id === initialPropertyId)) {
+    history.replaceState({}, '', productRoutes.privateLink());
+    openBuilder(initialPropertyId);
+  }
 }

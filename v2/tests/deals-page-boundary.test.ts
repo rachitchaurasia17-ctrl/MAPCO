@@ -2,6 +2,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { adapter, ok } from '../src/packages/data/adapter';
 import { renderDeals } from '../src/apps/dealer/pages/deals';
+import { normalizeCompletedDeal } from '../src/packages/data/deal-normalization';
 
 describe('Deals page async boundary', () => {
   afterEach(() => {
@@ -48,5 +49,27 @@ describe('Deals page async boundary', () => {
     expect(next.disabled).toBe(false);
     next.click();
     expect(host.textContent).toContain('Sale price & dates');
+  });
+
+  it('keeps an incomplete legacy completed-sale row usable without claiming unknown values', async () => {
+    const legacy = normalizeCompletedDeal('legacy-complete', {
+      stage: 'closed', prop: 'Legacy plot', buyerId: 'buyer-legacy', propId: 'property-legacy',
+    });
+    expect(legacy).not.toBeNull();
+    vi.spyOn(adapter.deals, 'list').mockResolvedValue(ok({ items: [legacy!], nextCursor: null, total: 1 }));
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+
+    await renderDeals(host);
+    expect(host.textContent).toContain('Legacy plot');
+    expect(host.textContent).toContain('Commission not recorded');
+    expect(host.textContent).not.toContain('₹0 pending');
+
+    host.querySelector<HTMLButtonElement>('[data-act="open"]')!.click();
+    expect(host.querySelector('[role="dialog"]')).not.toBeNull();
+    expect(host.textContent).toContain('Payment information was not recorded');
+    expect(host.querySelector<HTMLAnchorElement>('a[href="/admin/properties.html?property=property-legacy"]')).not.toBeNull();
+    expect(host.querySelector<HTMLAnchorElement>('a[href="/admin/clients.html?customer=buyer-legacy"]')).not.toBeNull();
+    expect(host.innerHTML).not.toBe('');
   });
 });
