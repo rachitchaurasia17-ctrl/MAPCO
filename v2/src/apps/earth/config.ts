@@ -264,7 +264,7 @@ function earthProperty(record: CanonicalProperty): Property {
     price: displayPrice(record.price),
     ppu: '',
     dims: '',
-    approval: record.approvals.join(', '),
+    approval: record.approvals?.join(', ') || '',
     ownership: '',
     possession: '',
     photos: [...record.photos],
