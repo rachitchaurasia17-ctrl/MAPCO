@@ -49,6 +49,7 @@ import {
   normalizePropertyLocationOnRead,
   propertyLocationValidationError,
 } from '../property-location';
+import { SupabaseAiRepository } from './ai-repository';
 
 const DEFAULT_LIMIT = 12;
 const MAX_LIMIT = 50;
@@ -967,6 +968,7 @@ class SupaAuth implements AuthRepository {
 
 export class SupabaseDataAdapter implements DataAdapterV2 {
   readonly auth = new SupaAuth();
+  readonly ai = new SupabaseAiRepository();
   readonly properties = new SupaProperties();
   readonly customers = new SupaCustomers();
   readonly deals = new SupaDeals();

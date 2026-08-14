@@ -560,6 +560,13 @@ export interface DemandSignalsRepository {
 
 export interface DataAdapterV2 {
   readonly auth: AuthRepository;
+  /**
+   * MAPCO Intelligence read surface. Every method is safe to call at any
+   * time: with AI off, or with no backend, it reports `unavailable`
+   * rather than failing. No dealer screen consumes it yet — see
+   * `packages/ai/contracts.ts`.
+   */
+  readonly ai: import('../ai/contracts').AiRepository;
   readonly properties: PropertyRepository;
   readonly customers: CustomerRepository;
   readonly deals: DealRepository;

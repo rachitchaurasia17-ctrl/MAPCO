@@ -28,6 +28,7 @@ import {
 } from './contracts';
 import type { DealerPredictionSummary, PredictiveActionEvent } from '../performance';
 import { publishResourceInvalidation } from '../performance';
+import { MockAiRepository } from './mock-ai-repository';
 import {
   normalizePropertyPhotoStorage,
   persistentPropertyPayload,
@@ -723,6 +724,7 @@ class MockDemandSignalsRepository implements DemandSignalsRepository {
 
 export class MockDataAdapterV2 implements DataAdapterV2 {
   readonly auth = new MockAuthRepository();
+  readonly ai = new MockAiRepository();
   readonly properties = new MockPropertyRepository();
   readonly customers = new MockCustomerRepository();
   readonly deals = new MockDealRepository();
