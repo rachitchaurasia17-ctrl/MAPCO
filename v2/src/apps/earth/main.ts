@@ -33,6 +33,7 @@ import {
 } from './config';
 import { productRoutes, requestedPropertyId } from '../../packages/ui/product-routes';
 import { showPlan, teardownPlan, resizePlan, loadPlanCatalog, sectorMaps } from './plan-maps';
+import { openPropertyDetail } from './property-detail';
 import {
   analyseLocation, intentOf, roadAdvantagesFor,
   type Advantage, type LocationIntel, type Section,
@@ -333,7 +334,10 @@ async function renderSheet(): Promise<void> {
     });
   });
   host.querySelectorAll<HTMLElement>('[data-prop]').forEach((el) => {
-    el.addEventListener('click', () => { openSheet(null); selectProperty(el.dataset.prop!); });
+    el.addEventListener('click', () => {
+      const property = allProperties().find((candidate) => candidate.id === el.dataset.prop);
+      if (property) openPropertyDetail(property);
+    });
   });
   host.querySelectorAll<HTMLElement>('[data-sector]').forEach((el) => {
     el.addEventListener('click', () => {

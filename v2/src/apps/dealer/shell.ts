@@ -41,6 +41,10 @@ const navItemStyle = (on: boolean): string =>
 const navBadgeStyle = (on: boolean): string =>
   `margin-left:auto;background:${on ? '#c2185b' : '#fff2cf'};color:${on ? '#fff' : '#a8792a'};font-size:12.5px;font-weight:800;border-radius:999px;padding:2px 10px`;
 
+/* Sections the shell renders in place. A nav item NOT in this set (Marketing)
+   is a real page navigation, not an in-shell swap. */
+const SECTION_KEYS = new Set(['areas', 'deals', 'properties', 'clients', 'links', 'demand', 'area-intelligence', 'property-insights']);
+
 export const SECMETA: Record<string, {name:string, icon:string}> = {
   'areas': {name: 'Home', icon: 'ph-fill ph-house'},
   'deals': {name: 'Deals', icon: 'ph-fill ph-handshake'},
@@ -199,11 +203,14 @@ export function initDealerShell(container: HTMLElement, initialSection: string):
   if (navEl) {
     navEl.addEventListener('click', (e) => {
       const a = (e.target as Element).closest('a');
-      if (a && a.dataset.section) {
-        e.preventDefault();
-        window.history.pushState({}, '', a.getAttribute('href'));
-        initDealerShell(container, a.dataset.section);
-      }
+      if (!a || !a.dataset.section) return;
+      // Marketing is a separate page, not an in-shell section — let the real
+      // navigation happen instead of re-initing the shell (which would fall
+      // through to Home). Only the true in-shell sections are intercepted.
+      if (!SECTION_KEYS.has(a.dataset.section)) return;
+      e.preventDefault();
+      window.history.pushState({}, '', a.getAttribute('href'));
+      initDealerShell(container, a.dataset.section);
     });
   }
 
