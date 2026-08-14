@@ -12,8 +12,8 @@ export default defineConfig(({ mode }) => {
 
   return {
     define: {
-      'import.meta.env.VITE_GOOGLE_MAPS_API_KEY': JSON.stringify(merged.VITE_GOOGLE_MAPS_API_KEY ?? ''),
-      'import.meta.env.VITE_GOOGLE_MAPS_MAP_ID': JSON.stringify(merged.VITE_GOOGLE_MAPS_MAP_ID ?? ''),
+      'import.meta.env.VITE_GOOGLE_MAPS_API_KEY': JSON.stringify(process.env.VITE_GOOGLE_MAPS_API_KEY || merged.VITE_GOOGLE_MAPS_API_KEY || ''),
+      'import.meta.env.VITE_GOOGLE_MAPS_MAP_ID': JSON.stringify(process.env.VITE_GOOGLE_MAPS_MAP_ID || merged.VITE_GOOGLE_MAPS_MAP_ID || ''),
     },
     server: {
       // Authoritative hand-mapped roads live beside the MAPCO repository in
