@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600&amp;family=Hanken+Grotesk:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
+<script src="./image-slot.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%}
+  body{background:#fff2dd;background-image:radial-gradient(58% 46% at 0% -4%,rgba(255,193,26,.92),transparent 60%),radial-gradient(50% 46% at 102% 0%,rgba(140,74,242,.62),transparent 62%),radial-gradient(54% 48% at 92% 102%,rgba(0,200,166,.6),transparent 64%),radial-gradient(48% 42% at 12% 106%,rgba(255,110,158,.58),transparent 64%),radial-gradient(38% 34% at 48% 52%,rgba(255,255,255,.72),transparent 70%);background-attachment:fixed;color:#241f1c;font-family:'Hanken Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  a{color:#d95d1e;text-decoration:none}
+  a:hover{color:#bd4d16}
+  ::selection{background:#ffc93c;color:#241f1c}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  [data-scroll]::-webkit-scrollbar{width:11px;height:11px}
+  [data-scroll]::-webkit-scrollbar-thumb{background:#e0d3bd;border-radius:9px;border:3px solid transparent;background-clip:content-box}
+  [data-scroll]::-webkit-scrollbar-track{background:transparent}
+  image-slot{--radius:8px}
+  @keyframes omRise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+  @keyframes omStage{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
+  @keyframes omStamp{0%{opacity:0;transform:scale(1.4) rotate(-8deg)}60%{opacity:1;transform:scale(.96) rotate(-8deg)}100%{opacity:1;transform:scale(1) rotate(-8deg)}}
+</style>
+</helmet>
+
+<div style="display:flex;height:100vh;min-height:0;width:100%;overflow:hidden">
+
+  <aside style="width:258px;flex:none;height:100%;overflow:hidden;background:rgba(255,255,255,.82);backdrop-filter:blur(18px);border-right:1px solid rgba(255,255,255,.7);display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;gap:11px;padding:22px 20px 16px">
+      <img src="assets/mapco-logo.png" alt="MAPCO" style="width:44px;height:auto;display:block">
+      <div style="font-weight:800;font-size:24px;letter-spacing:-.01em;color:#241f1c">MAPCO</div>
+    </div>
+    <nav style="flex:1;min-height:0;display:flex;flex-direction:column;gap:4px;padding:6px 14px 8px">
+      <a href="./Dealer Dashboard.dc.html" style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;color:#4c4437;text-decoration:none" style-hover="background:#fff0cc;color:#1f1a12"><i class="ph ph-house" style="font-size:23px;width:26px;text-align:center"></i><span style="font-size:16.5px;font-weight:700">Home</span></a>
+      <a href="./Dealer Dashboard.dc.html" style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;color:#4c4437;text-decoration:none" style-hover="background:#fff0cc;color:#1f1a12"><i class="ph ph-handshake" style="font-size:23px;width:26px;text-align:center"></i><span style="font-size:16.5px;font-weight:700">Deals</span></a>
+      <a href="./Dealer Dashboard.dc.html" style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;color:#4c4437;text-decoration:none" style-hover="background:#fff0cc;color:#1f1a12"><i class="ph ph-buildings" style="font-size:23px;width:26px;text-align:center"></i><span style="font-size:16.5px;font-weight:700">Properties</span></a>
+      <a href="./Dealer Dashboard.dc.html" style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;color:#4c4437;text-decoration:none" style-hover="background:#fff0cc;color:#1f1a12"><i class="ph ph-users-three" style="font-size:23px;width:26px;text-align:center"></i><span style="font-size:16.5px;font-weight:700">Customers</span></a>
+      <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;background:#ffc93c;color:#1f1a12;box-shadow:0 10px 22px -14px rgba(190,140,20,.95)">
+        <i class="ph-fill ph-megaphone-simple" style="font-size:23px;width:26px;text-align:center"></i>
+        <span style="font-size:16.5px;font-weight:800;flex:1">Marketing</span>
+        <span style="width:9px;height:9px;border-radius:50%;background:#16c2a3;box-shadow:0 0 0 3px rgba(22,194,163,.28)"></span>
+      </div>
+    </nav>
+    <div style="padding:14px 14px 18px;border-top:1px solid #f2e6cd">
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:#fff8ea">
+        <div style="width:40px;height:40px;border-radius:12px;background:#241d0c;color:#ffc93c;display:grid;place-items:center;font-weight:800;font-size:15px;flex:none">RC</div>
+        <div style="min-width:0"><div style="font-size:15px;font-weight:800;color:#211c17;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Rachit Chaurasia</div><div style="font-size:12.5px;color:#8a8070">Chaurasia Properties</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <main style="flex:1;min-width:0;height:100%;display:flex;flex-direction:column;overflow:hidden">
+
+    <div style="flex:none;padding:11px 32px 9px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3">
+        <button onClick="{{ t.go }}" style="{{ t.style }}">
+          <i class="{{ t.icon }}" style="font-size:19px"></i>
+          <span>{{ t.label }}</span>
+          <sc-if value="{{ t.count }}" hint-placeholder-val="{{ true }}"><span style="{{ t.countStyle }}">{{ t.count }}</span></sc-if>
+        </button>
+      </sc-for>
+    </div>
+
+    <sc-if value="{{ isToday }}" hint-placeholder-val="{{ true }}">
+    <div style="flex:1;min-height:0;display:flex;gap:22px;padding:2px 32px 20px 0;align-items:stretch;overflow:hidden">
+
+      <div style="{{ stageStyle }}">
+        <div style="flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px">
+          <span style="{{ dateChipStyle }}"><i class="ph-fill ph-sun-horizon" style="font-size:18px"></i>{{ dateStr }}</span>
+          <span style="{{ posChipStyle }}">{{ posLabel }}</span>
+        </div>
+
+        <div style="flex:1;min-height:0;position:relative;display:grid;place-items:center;padding:4px 0 2px;perspective:1400px">
+          <div style="{{ frameStyle }}">
+            <image-slot id="{{ slotId }}" placeholder="{{ slotHint }}" style="width:100%;height:100%;display:block"></image-slot>
+            <sc-if value="{{ isPosted }}">
+              <span style="position:absolute;top:16px;left:16px;z-index:3;display:inline-flex;align-items:center;gap:8px;padding:11px 17px;border-radius:13px;background:#0f9c73;color:#fff;font-size:17px;font-weight:800;transform:rotate(-8deg);animation:omStamp .4s cubic-bezier(.2,.8,.2,1) both;box-shadow:0 12px 26px -12px rgba(15,156,115,.9)"><i class="ph-fill ph-check-circle" style="font-size:21px"></i>Posted</span>
+            </sc-if>
+            <sc-if value="{{ isSkipped }}">
+              <span style="position:absolute;inset:0;z-index:3;background:rgba(36,31,28,.58);display:grid;place-items:center;color:#fff;font-size:20px;font-weight:800">Not today</span>
+            </sc-if>
+          </div>
+          <button onClick="{{ prev }}" style="{{ arrowLeftStyle }}" style-hover="transform:translateY(-50%) scale(1.1)"><i class="ph-bold ph-caret-left" style="font-size:22px"></i></button>
+          <button onClick="{{ next }}" style="{{ arrowRightStyle }}" style-hover="transform:translateY(-50%) scale(1.1)"><i class="ph-bold ph-caret-right" style="font-size:22px"></i></button>
+        </div>
+
+        <div style="flex:none;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;min-width:0;padding:2px 4px">
+          <button onClick="{{ skipOne }}" style="{{ crossStyle }}" style-hover="transform:scale(1.06)"><i class="ph-bold ph-x" style="font-size:20px"></i><span style="font-size:15.5px;font-weight:800;white-space:nowrap">Not today</span></button>
+          <div style="display:flex;align-items:center;gap:8px;flex:none">
+            <sc-for list="{{ thumbs }}" as="t" hint-placeholder-count="4">
+              <button onClick="{{ t.go }}" style="{{ t.style }}"><span style="{{ t.dot }}"></span></button>
+            </sc-for>
+          </div>
+          <button onClick="{{ postOne }}" style="{{ tickStyle }}" style-hover="transform:scale(1.06)"><i class="{{ tickIcon }}" style="font-size:21px"></i><span style="font-size:16.5px;font-weight:800;white-space:nowrap">{{ tickLabel }}</span></button>
+        </div>
+      </div>
+
+      <div style="flex:0 1 clamp(280px,31%,470px);min-width:280px;display:flex;flex-direction:column;justify-content:center;gap:14px;overflow:hidden">
+
+        <div style="flex:none;border-radius:26px;background:rgba(255,255,255,.9);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.9);padding:18px;box-shadow:0 28px 56px -30px rgba(80,50,120,.55)">
+          <div style="display:flex;align-items:center;gap:14px;min-width:0">
+            <div style="{{ propPhotoStyle }}"></div>
+            <div style="min-width:0;flex:1">
+              <div style="font-size:21px;font-weight:800;color:#241f1c;letter-spacing:-.015em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ propTitle }}</div>
+              <div style="font-size:15px;color:#7c705d;margin-top:2px">{{ propSub }}</div>
+            </div>
+          </div>
+          <button onClick="{{ togglePrice }}" style="{{ priceRowStyle }}" style-hover="border-color:#8c4af2">
+            <span style="{{ priceIconStyle }}"><i class="{{ priceIcon }}" style="font-size:19px"></i></span>
+            <span style="flex:1;text-align:left"><span style="display:block;font-size:17.5px;font-weight:800;color:#241f1c">{{ priceShown }}</span><span style="display:block;font-size:13.5px;color:#8a8070">{{ priceHint }}</span></span>
+            <i class="ph-bold ph-arrows-left-right" style="font-size:16px;color:#a49a8a"></i>
+          </button>
+          <div style="margin-top:14px;padding-top:14px;border-top:1px solid #f3ecdf;display:flex;flex-direction:column;gap:9px">
+            <span style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#a08c5c">Goes to</span>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <sc-for list="{{ channels }}" as="c" hint-placeholder-count="3">
+                <div style="{{ c.style }}"><i class="{{ c.icon }}" style="font-size:18px"></i><span style="font-size:14px;font-weight:800">{{ c.name }}</span></div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <button onClick="{{ postAll }}" style="{{ postAllStyle }}" style-hover="transform:translateY(-2px)"><i class="ph-fill ph-check-circle" style="font-size:24px"></i>{{ postAllLabel }}</button>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isLibrary }}">
+    <div data-scroll="" style="flex:1;min-height:0;overflow-y:auto;padding:6px 32px 40px">
+      <h1 style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:36px;letter-spacing:-.02em;color:#241f1c">Everything MAPCO made for you</h1>
+      <p style="margin:8px 0 0;font-size:18px;color:#5f5648">Pick a day to see that day's posts.</p>
+
+      <div data-scroll="" style="display:flex;gap:12px;margin-top:20px;overflow-x:auto;padding-bottom:8px">
+        <sc-for list="{{ dayPills }}" as="d" hint-placeholder-count="7">
+          <button onClick="{{ d.go }}" style="{{ d.style }}">
+            <span style="font-size:12.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.75">{{ d.dow }}</span>
+            <span style="font-size:22px;font-weight:800;font-family:'Newsreader',serif;line-height:1.1">{{ d.label }}</span>
+            <span style="{{ d.countStyle }}">{{ d.count }}</span>
+          </button>
+        </sc-for>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;margin-top:22px">
+        <sc-for list="{{ libItems }}" as="a" hint-placeholder-count="4">
+          <div style="border-radius:28px;background:rgba(255,255,255,.94);border:1px solid rgba(255,255,255,.9);overflow:hidden;transition:transform .18s,box-shadow .18s;box-shadow:0 22px 46px -30px rgba(80,50,120,.55)" style-hover="transform:translateY(-4px);box-shadow:0 34px 60px -28px rgba(80,50,120,.6)">
+            <div style="{{ a.canvasStyle }}">
+              <image-slot id="{{ a.slotId }}" placeholder="{{ a.slotHint }}" style="width:100%;height:100%;display:block"></image-slot>
+              <span style="{{ a.chanStyle }}"><i class="{{ a.chanIcon }}" style="font-size:21px"></i></span>
+            </div>
+            <div style="padding:18px 20px 20px">
+              <div style="font-size:20px;font-weight:800;color:#241f1c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.title }}</div>
+              <div style="font-size:15.5px;color:#8a8070;margin-top:3px">{{ a.meta }}</div>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:15px">
+                <span style="{{ a.statusStyle }}"><i class="{{ a.statusIcon }}" style="font-size:16px"></i>{{ a.statusLabel }}</span>
+                <button onClick="{{ a.send }}" style="display:inline-flex;align-items:center;gap:8px;padding:11px 16px;border-radius:13px;background:#e6f9f2;color:#0c7a5a;font-size:15.5px;font-weight:800" style-hover="background:#d7f4ea"><i class="ph-fill ph-whatsapp-logo" style="font-size:18px"></i>Send</button>
+              </div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isPerf }}">
+    <div data-scroll="" style="flex:1;min-height:0;overflow-y:auto;padding:6px 32px 40px">
+
+      <div style="border-radius:30px;background:#1c1608;background-image:radial-gradient(70% 120% at 8% 0%,rgba(255,201,60,.28),transparent 60%),radial-gradient(60% 110% at 96% 100%,rgba(22,194,163,.22),transparent 62%),linear-gradient(140deg,#2a2110,#140f06);padding:30px 34px;color:#fff6e2;box-shadow:0 30px 60px -30px rgba(36,29,12,.9)">
+        <div style="display:flex;align-items:flex-start;gap:34px;flex-wrap:wrap">
+          <div style="flex:1;min-width:320px">
+            <div style="font-size:13px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#c9a94f">What your marketing earned you</div>
+            <div style="font-family:'Newsreader',serif;font-weight:500;font-size:118px;line-height:.92;letter-spacing:-.03em;color:#ffc93c;margin-top:12px;white-space:nowrap">{{ perfEarned }}</div>
+            <div style="font-size:20px;font-weight:700;color:#f4e7c9;margin-top:12px;text-wrap:pretty">{{ perfEarnedLine }}</div>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:18px;flex-wrap:wrap">
+              <span style="display:inline-flex;align-items:center;gap:9px;padding:11px 16px;border-radius:14px;background:rgba(255,255,255,.09);font-size:16px;font-weight:800;color:#ffe9ae"><i class="ph-fill ph-eye" style="font-size:19px;color:#ffc93c"></i>{{ perfViews }} views</span>
+              <span style="display:inline-flex;align-items:center;gap:9px;padding:11px 16px;border-radius:14px;background:rgba(255,255,255,.09);font-size:16px;font-weight:800;color:#ffe9ae"><i class="ph-fill ph-cursor-click" style="font-size:19px;color:#16c2a3"></i>{{ perfOpens }} link opens</span>
+              <span style="display:inline-flex;align-items:center;gap:9px;padding:11px 16px;border-radius:14px;background:rgba(255,255,255,.09);font-size:16px;font-weight:800;color:#ffe9ae"><i class="ph-fill ph-trend-up" style="font-size:19px;color:#7ee3a6"></i>{{ perfTrend }}</span>
+            </div>
+          </div>
+          <div style="flex:none;width:300px;max-width:100%">
+            <div style="font-size:12.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#8d7a46">Last 7 days</div>
+            <div style="display:flex;align-items:flex-end;gap:9px;height:150px;margin-top:14px">
+              <sc-for list="{{ perfSpark }}" as="b" hint-placeholder-count="7">
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:9px">
+                  <div style="{{ b.barStyle }}"></div>
+                  <span style="{{ b.dayStyle }}">{{ b.day }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:18px;margin-top:18px">
+
+        <div style="border-radius:26px;background:#241d0c;background-image:linear-gradient(150deg,#2f2612,#1a1408);padding:24px 26px;color:#fff6e2">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+            <div style="font-size:13px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#c9a94f">Views per property</div>
+            <span style="font-size:13px;font-weight:800;color:#241d0c;background:#ffc93c;border-radius:999px;padding:5px 12px">This week</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:14px;margin-top:20px">
+            <sc-for list="{{ perfProps }}" as="p" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;gap:15px">
+                <span style="{{ p.rankStyle }}">{{ p.rank }}</span>
+                <div style="{{ p.photoStyle }}"></div>
+                <div style="flex:1;min-width:0">
+                  <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+                    <span style="font-size:17px;font-weight:800;color:#fff6e2">{{ p.title }}</span>
+                    <span style="font-size:14px;font-weight:700;color:#9c8c66">{{ p.sub }}</span>
+                  </div>
+                  <div style="height:14px;border-radius:999px;background:rgba(255,255,255,.08);margin-top:9px;overflow:hidden">
+                    <div style="{{ p.barStyle }}"></div>
+                  </div>
+                </div>
+                <div style="text-align:right;flex:none">
+                  <div style="font-family:'Newsreader',serif;font-weight:600;font-size:30px;line-height:1;color:#ffc93c">{{ p.views }}</div>
+                  <div style="font-size:13px;font-weight:800;color:#16c2a3;margin-top:4px">{{ p.opens }} opens</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:18px">
+          <div style="border-radius:26px;background:#0d3b32;background-image:linear-gradient(150deg,#14554a,#08251f);padding:24px 26px;color:#e6fff8">
+            <div style="font-size:13px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#7fd9c6">Link opens</div>
+            <div style="font-family:'Newsreader',serif;font-weight:500;font-size:72px;line-height:1;color:#6ff0d0;margin-top:10px">{{ perfOpens }}</div>
+            <div style="font-size:16px;color:#a9e0d4;margin-top:6px">{{ perfOpensLine }}</div>
+            <div style="display:flex;flex-direction:column;gap:11px;margin-top:18px">
+              <sc-for list="{{ perfChannels }}" as="c" hint-placeholder-count="3">
+                <div>
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14.5px;font-weight:800;color:#d9f6ee"><span>{{ c.name }}</span><span style="color:#6ff0d0">{{ c.value }}</span></div>
+                  <div style="height:9px;border-radius:999px;background:rgba(255,255,255,.1);margin-top:6px;overflow:hidden"><div style="{{ c.barStyle }}"></div></div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="border-radius:26px;background:#241d0c;background-image:linear-gradient(150deg,#2f2612,#1a1408);padding:22px 24px;color:#fff6e2">
+            <div style="font-size:13px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#c9a94f">Your posting days</div>
+            <div style="display:flex;align-items:center;gap:9px;margin-top:16px">
+              <sc-for list="{{ dayDots }}" as="d" hint-placeholder-count="7">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:8px;flex:1">
+                  <span style="{{ d.style }}"><i class="{{ d.icon }}" style="font-size:19px"></i></span>
+                  <span style="font-size:12.5px;font-weight:800;color:#8d7a46">{{ d.l }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="font-size:16px;color:#f4e7c9;font-weight:700;margin-top:16px">{{ streakLine }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:18px;border-radius:26px;background:linear-gradient(120deg,#ffe9a8,#ffd6e2 52%,#d7e6ff);border:1px solid #f4dfae;padding:24px 26px;display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+        <span style="width:58px;height:58px;flex:none;border-radius:18px;background:#241d0c;color:#ffc93c;display:grid;place-items:center"><i class="ph-fill ph-lightbulb" style="font-size:28px"></i></span>
+        <div style="flex:1;min-width:240px">
+          <div style="font-size:14px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8a6d24">MAPCO suggests</div>
+          <p style="margin:6px 0 0;font-size:20px;font-weight:700;color:#241f1c;line-height:1.35;text-wrap:pretty">{{ suggestion }}</p>
+        </div>
+        <button onClick="{{ applySuggestion }}" style="padding:17px 24px;border-radius:16px;background:#241d0c;color:#ffdd85;font-size:18px;font-weight:800" style-hover="background:#3a2f16"><i class="ph-bold ph-check" style="font-size:19px;margin-right:9px"></i>Yes, do it</button>
+      </div>
+    </div>
+    </sc-if>
+
+  </main>
+
+  <sc-if value="{{ toast }}">
+  <div style="position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:90;display:flex;align-items:center;gap:12px;padding:17px 26px;border-radius:18px;background:#241d0c;color:#fff6e2;font-size:18px;font-weight:800;box-shadow:0 22px 44px -18px rgba(36,29,12,.85);animation:omRise .24s ease both">
+    <i class="ph-fill ph-check-circle" style="font-size:23px;color:#ffc93c"></i>{{ toast }}
+  </div>
+  </sc-if>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;hidePrices&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Marketing&quot;}}">
+class Component extends DCLogic {
+  PROPS = [
+    {id:'p1',title:'Sector 88 · Plot 214',sub:'Mohali · 250 sq yd · park facing',price:'₹1.95 Cr',photo:'assets/mkt-prop-1.jpg'},
+    {id:'p2',title:'Sector 78 · Plot 61',sub:'Mohali · 150 sq yd · east facing',price:'₹1.10 Cr',photo:'assets/mkt-prop-2.jpg'},
+    {id:'p3',title:'Aerocity · Plot 908',sub:'Aerocity · 300 sq yd · corner',price:'₹2.40 Cr',photo:'assets/mkt-prop-3.webp'},
+    {id:'p4',title:'Sector 89 · 4 plots',sub:'Mohali · 125 to 300 sq yd',price:'From ₹85 L',photo:'assets/mkt-prop-4.jpg'}
+  ];
+  TONES = [
+    {bg:'linear-gradient(150deg,#ffe08a,#ffc93c)',ink:'#5a4207',chip:'rgba(90,66,7,.13)'},
+    {bg:'linear-gradient(150deg,#a8f0dc,#16c2a3)',ink:'#0a5545',chip:'rgba(10,85,69,.14)'},
+    {bg:'linear-gradient(150deg,#e2d2ff,#b48cff)',ink:'#412a70',chip:'rgba(65,42,112,.14)'},
+    {bg:'linear-gradient(150deg,#ffd0de,#ff8fb1)',ink:'#7a2444',chip:'rgba(122,36,68,.14)'}
+  ];
+  CH = {
+    ig:{name:'Instagram',icon:'ph-fill ph-instagram-logo',c:'#d6317f',soft:'#ffe9f3'},
+    gbp:{name:'Google',icon:'ph-fill ph-storefront',c:'#2b6fd6',soft:'#e7f0ff'},
+    wa:{name:'WhatsApp',icon:'ph-fill ph-whatsapp-logo',c:'#0f9c73',soft:'#e3f8f0'}
+  };
+  DAYS = [
+    {key:'d12',dow:'Wed',label:'Today'},
+    {key:'d11',dow:'Tue',label:'11 Aug'},
+    {key:'d10',dow:'Mon',label:'10 Aug'},
+    {key:'d09',dow:'Sun',label:'9 Aug'},
+    {key:'d08',dow:'Sat',label:'8 Aug'},
+    {key:'d07',dow:'Fri',label:'7 Aug'},
+    {key:'d06',dow:'Thu',label:'6 Aug'}
+  ];
+  POSTED_DATES=[1,2,3,4,5,6,7,8,9,10,11];
+  PLANNED_DATES=[13,14,15];
+
+  state = {
+    section:'today', idx:0, libDay:'d12', toast:'',
+    posts:[
+      {pi:0,status:'ready',priceHeld:true},
+      {pi:1,status:'ready',priceHeld:false},
+      {pi:2,status:'ready',priceHeld:false},
+      {pi:3,status:'posted',priceHeld:false}
+    ]
+  };
+
+  componentDidMount(){
+    const p=this.props||{};
+    if(typeof p.hidePrices==='boolean') this.setState(s=>({posts:s.posts.map(x=>({...x,priceHeld:p.hidePrices}))}));
+    this.onKey = e => {
+      if(this.state.section!=='today') return;
+      if(e.key==='ArrowRight') this.move(1);
+      if(e.key==='ArrowLeft') this.move(-1);
+    };
+    window.addEventListener('keydown',this.onKey);
+  }
+  componentWillUnmount(){ window.removeEventListener('keydown',this.onKey); }
+
+  say(t){ clearTimeout(this._t); this.setState({toast:t}); this._t=setTimeout(()=>this.setState({toast:''}),2400); }
+  move(d){ this.setState(s=>({idx:(s.idx+d+s.posts.length)%s.posts.length})); }
+  set(st,msg){
+    this.setState(s=>{ const posts=s.posts.slice(); posts[s.idx]={...posts[s.idx],status:st}; return {posts}; });
+    if(msg) this.say(msg);
+    setTimeout(()=>{ const n=this.state.posts.findIndex((p,i)=>i>this.state.idx&&p.status==='ready'); if(n>-1) this.setState({idx:n}); },600);
+  }
+
+  renderVals(){
+    const s=this.state, P=this.PROPS, CH=this.CH;
+    const ready=s.posts.filter(p=>p.status==='ready').length;
+    const posted=s.posts.filter(p=>p.status==='posted').length;
+
+    const TABS=[
+      {key:'today',label:'Today',icon:'ph-sun-horizon',count:ready?String(ready):''},
+      {key:'library',label:'Library',icon:'ph-images-square',count:''},
+      {key:'performance',label:'Performance',icon:'ph-chart-line-up',count:''}
+    ];
+    const tabs=TABS.map(t=>{ const on=s.section===t.key; return {
+      label:t.label, icon:(on?'ph-fill ':'ph ')+t.icon, count:t.count,
+      countStyle:`min-width:22px;height:22px;padding:0 7px;border-radius:8px;background:${on?'rgba(36,29,12,.18)':'#ffe6ae'};color:#3a2f16;font-size:13px;font-weight:800;display:grid;place-items:center`,
+      style:`display:flex;align-items:center;gap:8px;padding:9px 15px;border-radius:13px;font-size:15.5px;font-weight:800;transition:transform .15s,box-shadow .15s;${on?'background:linear-gradient(135deg,#ffd45c,#ffb52e);color:#241f1c;box-shadow:0 12px 24px -14px rgba(190,140,20,.95)':'background:rgba(255,255,255,.72);color:#6b6157;box-shadow:0 8px 20px -18px rgba(120,90,20,.6)'}`,
+      go:()=>this.setState({section:t.key})
+    };});
+
+    const cp=s.posts[s.idx], prop=P[cp.pi], tone=this.TONES[s.idx%this.TONES.length];
+    const isPosted=cp.status==='posted', isSkipped=cp.status==='skipped';
+
+    const thumbs=s.posts.map((p,i)=>{ const on=i===s.idx;
+      const c = p.status==='posted'?'#0f9c73':(p.status==='skipped'?'#b3a999':'rgba(0,0,0,.28)');
+      return {
+        style:`width:${on?'40px':'14px'};height:14px;border-radius:99px;transition:width .22s;display:grid;place-items:center;background:${on?'rgba(255,255,255,.92)':'rgba(255,255,255,.55)'}`,
+        dot:`width:${on?'9px':'7px'};height:${on?'9px':'7px'};border-radius:50%;background:${p.status==='ready'?(on?tone.ink:'rgba(0,0,0,.28)'):c}`,
+        go:()=>this.setState({idx:i})
+      };
+    });
+
+    const dowLabels=['S','M','T','W','T','F','S'].map(l=>({l}));
+    const calDays=[]; const firstDow=5;
+    for(let i=0;i<firstDow;i++) calDays.push({n:'',style:'height:26px'});
+    for(let d=1;d<=31;d++){
+      const isT=d===12, wasPosted=this.POSTED_DATES.indexOf(d)>-1, isPlan=this.PLANNED_DATES.indexOf(d)>-1;
+      calDays.push({
+        n:String(d),
+        style:`position:relative;height:26px;display:grid;place-items:center;border-radius:8px;font-size:12.5px;font-weight:${isT?'800':'700'};${isT?'background:#241d0c;color:#ffdd85':(wasPosted?'color:#241f1c':'color:#a49a8a')}`,
+        dot:`position:absolute;bottom:2px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:${isT?'#ffc93c':(wasPosted?'#16c2a3':(isPlan?'#ffc93c':'transparent'))}`
+      });
+    }
+
+    const channels=['ig','gbp','wa'].map(k=>{ const c=CH[k]; return {
+      name:c.name, icon:c.icon,
+      style:`display:flex;align-items:center;gap:6px;padding:8px 11px;border-radius:12px;background:${c.soft};color:${c.c}`
+    };});
+
+    const perDay=[[0,'ig'],[1,'wa'],[2,'gbp'],[3,'ig']];
+    const dayPills=this.DAYS.map(d=>{ const on=s.libDay===d.key; return {
+      dow:d.dow, label:d.label, count:'4',
+      countStyle:`margin-top:6px;min-width:28px;height:26px;padding:0 8px;border-radius:9px;font-size:14px;font-weight:800;display:grid;place-items:center;${on?'background:rgba(36,29,12,.16);color:#3a2f16':'background:#fff2d4;color:#8a6d24'}`,
+      style:`flex:none;display:flex;flex-direction:column;align-items:center;gap:1px;padding:13px 18px;border-radius:18px;transition:transform .15s;${on?'background:#ffc93c;color:#241f1c;box-shadow:0 14px 28px -14px rgba(190,140,20,.95)':'background:#fff;border:1px solid #f0e4cc;color:#5f5648'}`,
+      go:()=>this.setState({libDay:d.key})
+    };});
+    const dayMeta=this.DAYS.find(d=>d.key===s.libDay)||this.DAYS[0];
+    const dayIdx=this.DAYS.indexOf(dayMeta);
+    const libItems=perDay.map(([pi,ck],i)=>{ const pr=P[(pi+dayIdx)%P.length], c=CH[ck], tn=this.TONES[(pi+dayIdx)%this.TONES.length];
+      const isPostedItem = dayIdx>0 || i===3;
+      return {
+        title:pr.title, meta:dayIdx===0?'Made today':('Made '+dayMeta.label),
+        canvasStyle:`position:relative;height:400px;background:${tn.bg};color:${tn.ink};padding:20px`,
+        chanStyle:`position:absolute;top:16px;right:16px;width:44px;height:44px;border-radius:14px;background:#fff;color:${c.c};display:grid;place-items:center;z-index:2;box-shadow:0 8px 18px -10px rgba(0,0,0,.35)`,
+        chanIcon:c.icon,
+        slotId:'mkt-lib-'+dayMeta.key+'-'+pr.id+'-'+ck, slotHint:'Your finished post',
+        statusStyle:`display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:10px;font-size:14.5px;font-weight:800;${isPostedItem?'background:#e6f9f2;color:#0c7a5a':'background:#fff3d6;color:#8a6d24'}`,
+        statusIcon:isPostedItem?'ph-fill ph-check-circle':'ph-fill ph-clock',
+        statusLabel:isPostedItem?'Posted':'Not posted yet',
+        send:()=>this.say('Ready to send on WhatsApp.')
+      };
+    });
+
+    const stats=[
+      {value:'12',label:'posts went out',sub:'Three more than last week. Good week.',icon:'ph-fill ph-paper-plane-right',bg:'linear-gradient(150deg,#ffe9a8,#ffc93c)',ink:'#5a4207'},
+      {value:'6,200',label:'people saw them',sub:'Mostly buyers around Mohali and Kharar.',icon:'ph-fill ph-users-three',bg:'linear-gradient(150deg,#d8e4ff,#9db6ff)',ink:'#22406f'},
+      {value:'9',label:'people enquired',sub:'Three of them came for a site visit.',icon:'ph-fill ph-chat-circle-dots',bg:'linear-gradient(150deg,#a8f0dc,#16c2a3)',ink:'#0a5545'}
+    ].map(x=>({
+      value:x.value,label:x.label,sub:x.sub,icon:x.icon,
+      cardStyle:`border-radius:26px;padding:24px 26px 26px;background:${x.bg};box-shadow:0 22px 44px -28px rgba(120,90,20,.6)`,
+      iconStyle:`width:52px;height:52px;border-radius:17px;background:rgba(255,255,255,.75);color:${x.ink};display:grid;place-items:center`
+    }));
+    const chanStats=[
+      {k:'ig',line:'5 posts · 3,100 people saw them'},
+      {k:'gbp',line:'4 posts · 38 people searched you'},
+      {k:'wa',line:'3 status creatives · you shared all 3'}
+    ].map(x=>{ const c=CH[x.k]; return {
+      name:c.name, line:x.line, icon:c.icon,
+      cardStyle:`border-radius:24px;background:${c.soft};border:1px solid rgba(0,0,0,.05);padding:20px 22px`,
+      iconStyle:`width:48px;height:48px;border-radius:15px;background:#fff;color:${c.c};display:grid;place-items:center`
+    };});
+    const dayDots=['M','T','W','T','F','S','S'].map((l,i)=>{ const on=i!==5; return {
+      l, icon:on?'ph-bold ph-check':'ph-bold ph-minus',
+      style:`width:42px;height:42px;border-radius:14px;display:grid;place-items:center;${on?'background:#16c2a3;color:#06322a':'background:rgba(255,255,255,.08);color:#7a6c4c'}`
+    };});
+
+    return {
+      isToday:s.section==='today', isLibrary:s.section==='library', isPerf:s.section==='performance', tabs,
+
+      dateStr:'Wednesday, 12 August', posLabel:(s.idx+1)+' of '+s.posts.length,
+      readyLine: ready ? (ready+' waiting for you. '+posted+' already out.') : 'Everything for today is handled. Well done.',
+      stageStyle:`flex:1 1 66%;min-width:340px;min-height:0;border-radius:0 36px 36px 0;padding:10px 12px 8px 14px;display:flex;flex-direction:column;gap:6px;background:${tone.bg};box-shadow:0 34px 70px -34px rgba(70,40,110,.72);transition:background .35s`,
+      dateChipStyle:`display:inline-flex;align-items:center;gap:9px;padding:10px 15px;border-radius:13px;background:rgba(255,255,255,.75);color:${tone.ink};font-size:15.5px;font-weight:800`,
+      posChipStyle:`display:inline-flex;align-items:center;padding:10px 15px;border-radius:13px;background:${tone.chip};color:${tone.ink};font-size:15.5px;font-weight:800`,
+      arrowLeftStyle:`position:absolute;left:6px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.9);color:${tone.ink};display:grid;place-items:center;transition:transform .15s;box-shadow:0 10px 22px -12px rgba(0,0,0,.35);z-index:4`,
+      arrowRightStyle:`position:absolute;right:0;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.9);color:${tone.ink};display:grid;place-items:center;transition:transform .15s;box-shadow:0 10px 22px -12px rgba(0,0,0,.35);z-index:4`,
+      frameStyle:'position:relative;height:100%;width:100%;max-width:100%;max-height:100%;border-radius:20px;overflow:hidden;background:#fffdf8;color:#8a8070;transform:perspective(1600px) rotateX(1.4deg);transform-style:preserve-3d;border:1px solid rgba(255,255,255,.85);box-shadow:0 2px 0 rgba(255,255,255,.9) inset,0 -18px 30px -26px rgba(90,60,10,.5) inset,0 42px 70px -26px rgba(90,60,20,.55),0 90px 90px -60px rgba(60,35,90,.45);animation:omStage .32s cubic-bezier(.2,.8,.2,1) both',
+      slotId:'mkt-today-'+prop.id, slotHint:'Drop your finished post here',
+      isPosted, isSkipped,
+      prev:()=>this.move(-1), next:()=>this.move(1), thumbs,
+
+      crossStyle:'display:flex;align-items:center;gap:8px;flex:0 1 auto;min-width:0;height:46px;padding:0 18px;border-radius:99px;background:#fff;color:#c9436b;transition:transform .15s;box-shadow:0 10px 22px -14px rgba(0,0,0,.4)',
+      tickStyle:`display:flex;align-items:center;gap:9px;flex:0 1 auto;min-width:0;height:52px;padding:0 24px;border-radius:99px;background:${isPosted?'#0b7d5c':'#0f9c73'};color:#fff;transition:transform .15s;box-shadow:0 14px 28px -14px rgba(11,125,92,.9)`,
+      tickIcon:isPosted?'ph-bold ph-arrows-clockwise':'ph-bold ph-check',
+      tickLabel:isPosted?'Post again':'Post it',
+      postOne:()=>this.set('posted','Posted. That plot is out there now.'),
+      skipOne:()=>this.set('skipped','Skipped. MAPCO will bring something else.'),
+
+      propTitle:prop.title, propSub:prop.sub,
+      propPhotoStyle:`width:74px;height:74px;flex:none;border-radius:19px;background-image:url("${prop.photo}");background-size:cover;background-position:center;background-color:#efe6d6;box-shadow:0 12px 26px -14px rgba(80,50,120,.6)`,
+      priceShown:cp.priceHeld?'Price on request':prop.price,
+      priceHint:cp.priceHeld?'Tap to show the price instead':'Tap to hide the price',
+      priceIcon:cp.priceHeld?'ph-fill ph-lock-simple':'ph-fill ph-tag',
+      priceIconStyle:`width:42px;height:42px;flex:none;border-radius:13px;display:grid;place-items:center;${cp.priceHeld?'background:#fff3d6;color:#8a6d24':'background:#e6f9f2;color:#0c7a5a'}`,
+      priceRowStyle:'width:100%;margin-top:14px;display:flex;align-items:center;gap:11px;padding:12px 13px;border-radius:16px;background:#fdf7ff;border:2px solid #efe4fb;transition:border-color .15s',
+      togglePrice:()=>this.setState(st=>{ const posts=st.posts.slice(); posts[st.idx]={...posts[st.idx],priceHeld:!posts[st.idx].priceHeld}; return {posts}; }),
+      channels,
+
+      postAllLabel: ready?('Post all '+ready+' at once'):'Everything is handled',
+      postAllStyle:`flex:none;width:100%;display:flex;align-items:center;justify-content:center;gap:11px;padding:19px;border-radius:19px;font-size:19px;font-weight:800;transition:transform .15s;${ready?'background:linear-gradient(135deg,#2b1a4d,#151022);color:#ffd45c;box-shadow:0 20px 38px -18px rgba(43,26,77,.95)':'background:rgba(255,255,255,.7);color:#a49a8a'}`,
+      postAll:()=>{ if(!ready){ this.say('Nothing left for today.'); return; } this.setState(st=>({posts:st.posts.map(p=>p.status==='ready'?{...p,status:'posted'}:p)})); this.say('All done. Today\u2019s marketing is out.'); },
+
+      dayPills, libItems,
+      stats, chanStats, dayDots, streakLine:'You posted on 6 of the last 7 days.',
+      perfEarned:'₹6.7 L', perfEarnedLine:'Three deals this month started from a post or a link you sent.',
+      perfViews:'6,200', perfOpens:'41', perfTrend:'Up 38% on last week',
+      perfOpensLine:'People who tapped through to a property page.',
+      perfSpark:[
+        {d:'M',v:38},{d:'T',v:62},{d:'W',v:44},{d:'T',v:88},{d:'F',v:100},{d:'S',v:26},{d:'S',v:54}
+      ].map((b,i)=>({ day:b.d,
+        barStyle:'width:100%;height:'+Math.round(b.v*1.1)+'px;border-radius:9px;background:'+(b.v===100?'linear-gradient(180deg,#ffdc7a,#f4ae14)':'rgba(255,255,255,.14)'),
+        dayStyle:'font-size:12.5px;font-weight:800;color:'+(b.v===100?'#ffc93c':'#8d7a46') })),
+      perfProps:[
+        {i:0,views:1900,opens:16},{i:3,views:1420,opens:11},{i:2,views:1180,opens:9},{i:1,views:700,opens:5}
+      ].map((r,idx)=>{ const pr=P[r.i]; const top=idx===0; return {
+        rank:String(idx+1), title:pr.title, sub:pr.sub.split(' · ').slice(1).join(' · '),
+        views:r.views.toLocaleString('en-IN'), opens:r.opens,
+        rankStyle:'width:32px;height:32px;flex:none;border-radius:11px;display:grid;place-items:center;font-size:15px;font-weight:800;'+(top?'background:#ffc93c;color:#241d0c':'background:rgba(255,255,255,.08);color:#9c8c66'),
+        photoStyle:'width:54px;height:54px;flex:none;border-radius:15px;background-image:url("'+pr.photo+'");background-size:cover;background-position:center;background-color:#3a2f16',
+        barStyle:'height:100%;width:'+Math.round(r.views/1900*100)+'%;border-radius:999px;background:'+(top?'linear-gradient(90deg,#ffdc7a,#f4ae14)':'linear-gradient(90deg,#6b6152,#9c8c66)') }; }),
+      perfChannels:[{name:'WhatsApp links',v:22},{name:'Instagram',v:13},{name:'Google profile',v:6}].map(c=>({
+        name:c.name, value:c.v,
+        barStyle:'height:100%;width:'+Math.round(c.v/22*100)+'%;border-radius:999px;background:linear-gradient(90deg,#6ff0d0,#16c2a3)' })),
+      bestTitle:P[0].title, bestLine:'1,900 people saw it and 4 asked about it.',
+      bestPhotoStyle:`width:82px;height:82px;flex:none;border-radius:20px;background-image:url("${P[0].photo}");background-size:cover;background-position:center;background-color:#efe6d6`,
+      suggestion:'Sector 89 is getting the most attention right now. Should MAPCO make one more Sector 89 post this week?',
+      applySuggestion:()=>this.say('Done. It is added for this week.'),
+      toast:s.toast
+    };
+  }
+}
+</script>
+</body>
+</html>

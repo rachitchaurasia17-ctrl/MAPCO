@@ -123,6 +123,37 @@ function hydrateMock(): void {
 
 hydrateMock();
 
+/* ─────────────────────────────────────────────────────────────────
+   Development fixture coordinates — mock mode only.
+
+   MAPCO Earth pins a property only when it carries a canonical
+   `location`. The seeded demo inventory has none, so without this
+   Earth lists all 8 properties in "My properties" and draws zero
+   pins — an empty map that reads as broken.
+
+   These are approximate sector centroids for the Tri-City belt, not
+   survey coordinates. They are applied only to seeded fixtures that
+   have no location yet, so a dealer's own pin-and-save in Earth
+   (`adapter.properties.setLocation`) always wins and is never
+   overwritten on reload. Supabase mode never runs this file.
+   ───────────────────────────────────────────────────────────────── */
+const FIXTURE_LOCATIONS: Record<string, { latitude: number; longitude: number }> = {
+  ecocity: { latitude: 30.7852, longitude: 76.6905 },  // Eco City, New Chandigarh
+  block5:  { latitude: 30.7921, longitude: 76.6788 },  // Zone 2, New Chandigarh
+  aero:    { latitude: 30.6614, longitude: 76.7452 },  // Aerocity, Mohali
+  sec79:   { latitude: 30.6842, longitude: 76.7442 },  // Sector 79, Mohali
+  sec66:   { latitude: 30.7031, longitude: 76.7261 },  // Sector 66, Mohali
+  omx:     { latitude: 30.7789, longitude: 76.6981 },  // Omaxe, New Chandigarh
+  jlpl:    { latitude: 30.6989, longitude: 76.7221 },  // Sector 66A, Mohali
+  villa1:  { latitude: 30.6689, longitude: 76.8442 },  // Sector 20, Panchkula
+};
+
+for (const property of PROPERTIES) {
+  if (property.location) continue;
+  const point = FIXTURE_LOCATIONS[property.id];
+  if (point) property.location = { ...point, source: 'imported' };
+}
+
 export class MockDataAdapter implements DataAdapter {
   async getProperties(): Promise<Property[]> { return PROPERTIES; }
   async getClients(): Promise<Client[]> { return CLIENTS; }

@@ -20,19 +20,33 @@ const esc = (value: unknown): string => String(value ?? '').replace(
   (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]!,
 );
 
+/* Nav order and labels from the current design
+   (design-latest/Dealer Dashboard.dc.html line 1440).
+   Client Links is deliberately NOT a nav item any more — it lives inside
+   Properties. Marketing is its own screen. */
 const NAV = [
-  { key: 'areas', label: 'Home', icon: 'ph ph-house', iconFill: 'ph-fill ph-house', path: productRoutes.home },
-  { key: 'deals', label: 'My Deals', icon: 'ph ph-handshake', iconFill: 'ph-fill ph-handshake', path: productRoutes.deals() },
-  { key: 'properties', label: 'My Plots', icon: 'ph ph-buildings', iconFill: 'ph-fill ph-buildings', path: productRoutes.properties() },
-  { key: 'clients', label: 'My Customers', icon: 'ph ph-users-three', iconFill: 'ph-fill ph-users-three', path: productRoutes.customers() },
-  { key: 'links', label: 'Client Links', icon: 'ph ph-paper-plane-tilt', iconFill: 'ph-fill ph-paper-plane-tilt', path: productRoutes.privateLink() }
+  { key: 'areas', label: 'Home', icon: 'ph-house', path: productRoutes.home },
+  { key: 'properties', label: 'Properties', icon: 'ph-buildings', path: productRoutes.properties() },
+  { key: 'deals', label: 'Deals', icon: 'ph-handshake', path: productRoutes.deals() },
+  { key: 'clients', label: 'Customers', icon: 'ph-users-three', path: productRoutes.customers() },
+  { key: 'marketing', label: 'Marketing', icon: 'ph-megaphone-simple', path: productRoutes.marketing() }
 ];
+
+/* Nav item chrome, copied from the design's navItems view-model
+   (Dealer Dashboard.dc.html, renderVals ~line 1438). */
+const navItemStyle = (on: boolean): string =>
+  `width:100%;display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;text-align:left;text-decoration:none;transition:background .15s;${
+    on ? 'background:#ffc93c;color:#1f1a12;box-shadow:inset 3px 0 0 #f4ae14' : 'background:transparent;color:#6b6156'}`;
+
+const navBadgeStyle = (on: boolean): string =>
+  `margin-left:auto;background:${on ? '#c2185b' : '#fff2cf'};color:${on ? '#fff' : '#a8792a'};font-size:12.5px;font-weight:800;border-radius:999px;padding:2px 10px`;
 
 export const SECMETA: Record<string, {name:string, icon:string}> = {
   'areas': {name: 'Home', icon: 'ph-fill ph-house'},
-  'deals': {name: 'My Deals', icon: 'ph-fill ph-handshake'},
-  'properties': {name: 'My Plots', icon: 'ph-fill ph-buildings'},
-  'clients': {name: 'My Customers', icon: 'ph-fill ph-users-three'},
+  'deals': {name: 'Deals', icon: 'ph-fill ph-handshake'},
+  'properties': {name: 'Properties', icon: 'ph-fill ph-buildings'},
+  'clients': {name: 'Customers', icon: 'ph-fill ph-users-three'},
+  'marketing': {name: 'Marketing', icon: 'ph-fill ph-megaphone-simple'},
   'demand': {name: 'Demand Pipeline', icon: 'ph-fill ph-list-magnifying-glass'},
   'links': {name: 'Client Links', icon: 'ph-fill ph-paper-plane-tilt'},
   'area-intelligence': {name: 'Area Intelligence', icon: 'ph-fill ph-chart-polar'},
@@ -55,35 +69,39 @@ export function initDealerShell(container: HTMLElement, initialSection: string):
     style.innerHTML = `@import '/src/packages/ui/reset.css'; @import '/src/packages/ui/tokens.css';`;
     head.appendChild(style);
   }
+  // Design hover states (style-hover="…" in Dealer Dashboard.dc.html).
+  if (!head.querySelector('#pm-dash-hover')) {
+    const hover = document.createElement('style');
+    hover.id = 'pm-dash-hover';
+    hover.textContent = `#pm-dash-sidebar a[data-nav-on="false"]:hover{background:#fdefc9;color:#1f1a12}`;
+    head.appendChild(hover);
+  }
 
   container.innerHTML = `
-<div id="pm-dash-shell" style="display:flex;height:100vh;min-height:0;width:100%;overflow:hidden;background:#e7ddfb;background-image:radial-gradient(64% 52% at -2% -4%,rgba(123,78,224,.62),transparent 64%),radial-gradient(54% 44% at 101% 4%,rgba(56,138,186,.36),transparent 62%),radial-gradient(66% 48% at 46% 108%,rgba(255,190,48,.4),transparent 64%),radial-gradient(120% 120% at 55% 45%,rgba(139,96,232,.16),transparent 70%)">
+<div id="pm-dash-shell" style="display:flex;height:100vh;min-height:0;width:100%;overflow:hidden;background:#f5efff;background-image:radial-gradient(62% 50% at -2% -4%,rgba(139,96,232,.5),transparent 62%),radial-gradient(54% 44% at 101% 4%,rgba(56,138,186,.4),transparent 62%),radial-gradient(66% 48% at 46% 108%,rgba(255,190,48,.44),transparent 64%),radial-gradient(40% 34% at 86% 66%,rgba(236,120,168,.22),transparent 68%)">
 
 
   <aside id="pm-dash-sidebar" style="width:270px;flex:none;height:100%;min-height:0;overflow:hidden;background:rgba(252,250,255,.82);background-image:linear-gradient(180deg,rgba(253,251,255,.95),rgba(243,236,255,.76) 55%,rgba(236,227,255,.66));backdrop-filter:blur(16px);box-shadow:inset -1px 0 0 rgba(88,52,168,.14);display:flex;flex-direction:column;border-right:1px solid #ddd2f5">
-    <div style="display:flex;align-items:center;gap:11px;padding:26px 24px 18px">
-      <img src="/assets/mapco-logo.png" alt="MAPCO" style="width:50px;height:50px;flex:none;display:block;object-fit:contain">
-      <div style="font-weight:800;font-size:23px;letter-spacing:-.01em;color:#1f1a12">MAPCO</div>
+    <div style="display:flex;align-items:center;gap:12px;padding:26px 24px 18px">
+      <img src="/assets/mapco-logo.png" alt="MAPCO" style="width:40px;height:40px;flex:none;display:block;object-fit:contain">
+      <div style="font-weight:800;font-size:22px;letter-spacing:-.02em;color:#1f1a12">MAPCO</div>
     </div>
     <nav data-scroll style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:4px;padding:6px 16px 8px">
-      ${NAV.map(n => {
+      ${NAV.map((n) => {
+        const on = currentSection === n.key;
         return `
-        <a href="${n.path}" data-section="${n.key}" style="${currentSection === n.key ? 'width:100%;display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;transition:background .15s;background:#ffc93c;color:#1f1a12;box-shadow:inset 3px 0 0 #f4ae14;text-decoration:none' : 'width:100%;display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;transition:background .15s;color:#6b6156;text-decoration:none'}" onmouseover="if(this.dataset.section!=='${currentSection}'){this.style.background='#fdefc9';this.style.color='#1f1a12';}" onmouseout="if(this.dataset.section!=='${currentSection}'){this.style.background='transparent';this.style.color='#6b6156';}" >
-          <i class="${currentSection === n.key ? n.iconFill : n.icon}" style="font-size:23px;line-height:1;width:26px;text-align:center"></i>
+        <a href="${n.path}" data-section="${n.key}" data-nav-on="${on}" style="${navItemStyle(on)}">
+          <i class="${on ? 'ph-fill ' : 'ph '}${n.icon}" style="font-size:23px;line-height:1;width:26px;text-align:center"></i>
           <span style="font-size:16.5px;font-weight:700;letter-spacing:-.01em">${n.label}</span>
-          ${n.key === 'deals' ? `<span data-deal-count hidden style="margin-left:auto;background:${currentSection === n.key ? '#c2185b' : '#fff2cf'};color:${currentSection === n.key ? '#fff' : '#a8792a'};font-size:12.5px;font-weight:800;border-radius:999px;padding:2px 10px"></span>` : ``}
+          ${n.key === 'deals' ? `<span data-deal-count hidden style="${navBadgeStyle(on)}"></span>` : ``}
         </a>
       `}).join('')}
     </nav>
-    <div style="flex:none;padding:14px 18px 10px;display:flex;flex-direction:column;gap:8px">
-      <div style="font-size:11px;font-weight:800;letter-spacing:.14em;color:#9a8f7c;text-transform:uppercase;padding:0 4px 2px">Quick launch</div>
-      <a href="${productRoutes.presentation()}" style="width:100%;display:flex;align-items:center;gap:13px;padding:14px 15px;border-radius:16px;background:#f0a83c;color:#3a2410;text-align:left;text-decoration:none;box-shadow:0 10px 26px -12px rgba(0,0,0,.45)" onmouseover="this.style.background='#ffb84a'" onmouseout="this.style.background='#f0a83c'">
-        <i class="ph-fill ph-projector-screen-chart" style="font-size:24px"></i>
-        <span style="display:block"><span style="display:block;font-size:15px;font-weight:800;letter-spacing:-.01em">Start Client Presentation</span><span style="display:block;font-size:12px;font-weight:700;color:#8a5a12">Open the full-screen map</span></span>
-      </a>
-      <a href="${productRoutes.earth()}" style="width:100%;display:flex;align-items:center;gap:13px;padding:13px 15px;border-radius:15px;background:#1f4d3a;color:#eafff2;text-align:left;text-decoration:none;box-shadow:0 10px 24px -14px rgba(12,60,38,.7)">
-        <i class="ph-fill ph-globe-hemisphere-east" style="font-size:23px;color:#ffc93c"></i>
-        <span style="display:block"><span style="display:block;font-size:14.5px;font-weight:800">Open MAPCO Earth</span><span style="display:block;font-size:12px;font-weight:600;color:#bfe4cf">Locations, roads and context</span></span>
+    <div style="flex:none;padding:14px 18px 10px">
+      <div style="font-size:11px;font-weight:800;letter-spacing:.14em;color:#9a8f7c;text-transform:uppercase;padding:0 4px 9px">With a customer?</div>
+      <a href="${productRoutes.presentation()}" style="width:100%;display:flex;align-items:center;gap:13px;padding:16px 16px;border-radius:16px;background:#f0a83c;color:#3a2410;text-align:left;text-decoration:none;box-shadow:0 10px 26px -12px rgba(0,0,0,.6);animation:omGlow 3.4s ease-in-out infinite" onmouseover="this.style.background='#ffb84a'" onmouseout="this.style.background='#f0a83c'">
+        <i class="ph-fill ph-projector-screen-chart" style="font-size:26px"></i>
+        <span style="display:block"><span style="display:block;font-size:15.5px;font-weight:800;letter-spacing:-.01em">Show Map to Customer</span><span style="display:block;font-size:12.5px;font-weight:700;color:#8a5a12">Opens the full-screen map</span></span>
       </a>
     </div>
     <div style="position:relative;flex:none;display:flex;align-items:center;gap:12px;padding:12px 20px 16px;border-top:1px solid #ddd2f5">
@@ -106,8 +124,9 @@ export function initDealerShell(container: HTMLElement, initialSection: string):
       <i class="${SECMETA[currentSection].icon}" style="font-size:21px;color:#d95d1e"></i>
       <span style="font-size:17px;font-weight:800;letter-spacing:-.01em;color:#2f2a2d">${SECMETA[currentSection].name}</span>
       <div style="display:flex;align-items:center;gap:8px;color:#6b6156;font-size:14.5px;font-weight:600"><i class="ph ph-calendar-blank" style="font-size:17px"></i>${formatDateShort()}</div>
+      <div style="width:1px;height:22px;background:#e6cf9a"></div>
+      <span data-account-chip hidden style="display:flex;align-items:center;gap:7px;background:#f3eeff;color:#a86a08;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700"><i class="ph-fill ph-seal-check" style="font-size:15px"></i><span data-account-chip-text></span></span>
       <div style="flex:1"></div>
-      <a href="${productRoutes.earth()}" style="display:inline-flex;align-items:center;gap:7px;height:38px;padding:0 13px;border-radius:11px;background:#e2f2e6;color:#186c3c;font-size:13px;font-weight:800;text-decoration:none"><i class="ph-fill ph-globe-hemisphere-east" style="font-size:16px"></i>MAPCO Earth</a>
       <span id="pm-dash-fs"></span>
     </header>
     <div data-scroll style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden" id="pm-dash-content"></div>
@@ -217,6 +236,34 @@ export function initDealerShell(container: HTMLElement, initialSection: string):
     } catch { /* shell stays usable; the Deals page owns its visible error state */ }
   }
 
+  /* The design's "Trial · N days left" chip. Driven by the real
+     AccountState contract (adapter.auth.getAccountState) rather than a
+     fixed number, so whatever the Developer Control panel provisions is
+     what a dealer sees. Hidden entirely on an active paid account. */
+  async function hydrateAccountChip(): Promise<void> {
+    try {
+      const accountResult = await adapter.auth.getAccountState();
+      if (!accountResult.ok || !isCurrentShell()) return;
+      const account = accountResult.value;
+      const label = account.kind === 'trial' || account.kind === 'trial-ending'
+        ? `Trial · ${account.daysLeft} day${account.daysLeft === 1 ? '' : 's'} left`
+        : account.kind === 'expired' ? 'Subscription expired'
+        : account.kind === 'suspended' ? 'Account suspended'
+        : '';
+      if (!label) return;
+      const chip = navEl?.querySelector<HTMLElement>('[data-account-chip]');
+      const text = navEl?.querySelector<HTMLElement>('[data-account-chip-text]');
+      if (!chip || !text) return;
+      text.textContent = label;
+      if (account.kind !== 'trial') {
+        chip.style.background = '#ffe1e6';
+        chip.style.color = '#c2185b';
+      }
+      chip.hidden = false;
+    } catch { /* the chip is informational; the workspace stays usable without it */ }
+  }
+
   if (productionData) void hydrateDealerIdentity();
   void hydrateDealCount();
+  void hydrateAccountChip();
 }

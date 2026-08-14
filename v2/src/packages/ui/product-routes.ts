@@ -19,8 +19,12 @@ const withContext = (path: string, key: string, value?: string | null): string =
 export const productRoutes = {
   home: '/admin/owner.html',
   properties: (propertyId?: string | null) => withProperty('/admin/properties.html', propertyId),
+  /** My Plots pre-filtered to one city (Dealer Home's demand legend and attention cards). */
+  propertiesInCity: (city?: string | null) => withContext('/admin/properties.html', 'city', city),
   customers: (customerId?: string | null) => withContext('/admin/clients.html', 'customer', customerId),
   deals: (dealId?: string | null) => withContext('/admin/deals.html', 'deal', dealId),
+  /** Marketing is its own screen in the current design, not a dashboard section. */
+  marketing: () => '/admin/marketing.html',
   presentation: (propertyId?: string | null) => withProperty('/app/plotmap/index.html', propertyId),
   earth: (propertyId?: string | null) => withProperty('/app/earth/index.html', propertyId),
   privateLink: (propertyId?: string | null) => {

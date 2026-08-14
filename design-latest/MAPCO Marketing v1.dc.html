@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
+<script src="./image-slot.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:#f5efff;background-image:radial-gradient(62% 50% at -2% -4%,rgba(139,96,232,.5),transparent 62%),radial-gradient(54% 44% at 101% 4%,rgba(56,138,186,.4),transparent 62%),radial-gradient(66% 48% at 46% 108%,rgba(255,190,48,.44),transparent 64%),radial-gradient(40% 34% at 86% 66%,rgba(236,120,168,.22),transparent 68%);background-attachment:fixed;color:#241f1c;font-family:'Hanken Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  a{color:#d95d1e;text-decoration:none}
+  a:hover{color:#bd4d16}
+  ::selection{background:#f0a83c;color:#241f1c}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  input,select,textarea{font-family:inherit}
+  [data-scroll]::-webkit-scrollbar{width:11px;height:11px}
+  [data-scroll]::-webkit-scrollbar-thumb{background:#d8d1c1;border-radius:9px;border:3px solid transparent;background-clip:content-box}
+  [data-scroll]::-webkit-scrollbar-track{background:transparent}
+  image-slot{--radius:4px}
+  @keyframes omRise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+  @keyframes omSlide{from{opacity:0;transform:translateX(34px)}to{opacity:1;transform:none}}
+  @keyframes omPop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+  @keyframes omVeil{from{opacity:0}to{opacity:1}}
+  @keyframes omStage{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
+  @keyframes barGrow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+  @keyframes omGlow{0%,100%{box-shadow:0 0 0 0 rgba(240,168,60,.45)}50%{box-shadow:0 0 0 12px rgba(240,168,60,0)}}
+  @keyframes omShimmer{0%{background-position:-380px 0}100%{background-position:380px 0}}
+  @keyframes omSpin{to{transform:rotate(360deg)}}
+</style>
+</helmet>
+
+<div style="display:flex;height:100vh;min-height:0;width:100%;overflow:hidden">
+
+  <aside style="width:270px;flex:none;height:100%;min-height:0;overflow:hidden;background:rgba(252,250,255,.82);background-image:linear-gradient(180deg,rgba(253,251,255,.95),rgba(243,236,255,.76) 55%,rgba(236,227,255,.66));backdrop-filter:blur(16px);box-shadow:inset -1px 0 0 rgba(88,52,168,.14);display:flex;flex-direction:column;border-right:1px solid #ddd2f5">
+    <div style="display:flex;align-items:center;gap:12px;padding:26px 24px 18px">
+      <svg viewBox="0 0 40 40" style="width:40px;height:40px;flex:none;display:block">
+        <rect x="0" y="0" width="40" height="40" rx="12" fill="#241d0c"></rect>
+        <path d="M20 8.5 L33 16 L20 23.5 L7 16 Z" fill="#ffc93c"></path>
+        <path d="M7 22 L20 29.5 L33 22 L33 25.5 L20 33 L7 25.5 Z" fill="#f4ae14" opacity="0.55"></path>
+        <circle cx="20" cy="16" r="3.6" fill="#241d0c"></circle>
+      </svg>
+      <div style="font-weight:800;font-size:22px;letter-spacing:-.02em;color:#1f1a12">Plot<span style="color:#c2622a">Map</span></div>
+    </div>
+    <nav data-scroll style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:4px;padding:6px 16px 8px">
+      <a href="./Dealer Dashboard.dc.html" style="width:100%;display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;color:#4c4437;text-decoration:none;transition:background .15s" style-hover="background:#fdefc9;color:#1f1a12"><i class="ph ph-house" style="font-size:23px;line-height:1;width:26px;text-align:center"></i><span style="font-size:16.5px;font-weight:700">Home</span></a>
+      <a href="./Dealer Dashboard.dc.html" style="width:100%;display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;color:#4c4437;text-decoration:none;transition:background .15s" style-hover="background:#fdefc9;color:#1f1a12"><i class="ph ph-handshake" style="font-size:23px;line-height:1;width:26px;text-align:center"></i><span style="font-size:16.5px;font-weight:700;flex:1">My Deals</span><span style="min-width:24px;height:24px;padding:0 7px;border-radius:8px;background:#ece3fb;color:#5b32c4;font-size:13px;font-weight:800;display:grid;place-items:center">9</span></a>
+      <a href="./Dealer Dashboard.dc.html" style="width:100%;display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;color:#4c4437;text-decoration:none;transition:background .15s" style-hover="background:#fdefc9;color:#1f1a12"><i class="ph ph-buildings" style="font-size:23px;line-height:1;width:26px;text-align:center"></i><span style="font-size:16.5px;font-weight:700">My Plots</span></a>
+      <a href="./Dealer Dashboard.dc.html" style="width:100%;display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;color:#4c4437;text-decoration:none;transition:background .15s" style-hover="background:#fdefc9;color:#1f1a12"><i class="ph ph-users-three" style="font-size:23px;line-height:1;width:26px;text-align:center"></i><span style="font-size:16.5px;font-weight:700">My Customers</span></a>
+      <div style="width:100%;display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;background:#ffc93c;color:#1f1a12;box-shadow:inset 0 0 0 1px rgba(120,80,10,.14),0 8px 20px -12px rgba(190,140,20,.7)">
+        <i class="ph-fill ph-megaphone-simple" style="font-size:23px;line-height:1;width:26px;text-align:center"></i>
+        <span style="font-size:16.5px;font-weight:800;flex:1">Marketing</span>
+        <span style="width:9px;height:9px;border-radius:50%;background:#1f9d5b;box-shadow:0 0 0 3px rgba(31,157,91,.22)"></span>
+      </div>
+      <a href="./Dealer Dashboard.dc.html" style="width:100%;display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;color:#4c4437;text-decoration:none;transition:background .15s" style-hover="background:#fdefc9;color:#1f1a12"><i class="ph ph-paper-plane-tilt" style="font-size:23px;line-height:1;width:26px;text-align:center"></i><span style="font-size:16.5px;font-weight:700">Client Links</span></a>
+      <a href="./MAPCO Earth.dc.html" style="width:100%;display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:14px;color:#4c4437;text-decoration:none;transition:background .15s" style-hover="background:#fdefc9;color:#1f1a12"><i class="ph ph-globe-hemisphere-east" style="font-size:23px;line-height:1;width:26px;text-align:center"></i><span style="font-size:16.5px;font-weight:700">MAPCO Earth</span></a>
+    </nav>
+    <div style="padding:14px 16px 20px;border-top:1px solid #e3daf7">
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.7)">
+        <div style="width:40px;height:40px;border-radius:12px;background:#241d0c;color:#ffc93c;display:grid;place-items:center;font-weight:800;font-size:15px;flex:none">RC</div>
+        <div style="min-width:0"><div style="font-size:15px;font-weight:800;color:#211c17;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Rachit Chaurasia</div><div style="font-size:12.5px;color:#8a8070;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Chaurasia Properties</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <main data-scroll style="flex:1;min-width:0;height:100%;overflow-y:auto;overflow-x:hidden">
+
+    <div style="position:sticky;top:0;z-index:30;background:rgba(247,242,255,.86);backdrop-filter:blur(14px);border-bottom:1px solid #e2d8f6">
+      <div style="max-width:1360px;margin:0 auto;padding:16px 40px 14px;display:flex;align-items:center;justify-content:space-between;gap:22px;flex-wrap:wrap">
+        <div data-scroll style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;max-width:100%;background:rgba(255,255,255,.72);border:1px solid #e6ddf8;border-radius:16px;padding:5px">
+          <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="5">
+            <button onClick="{{ t.go }}" style="{{ t.style }}">
+              <i class="{{ t.icon }}" style="font-size:18px"></i>
+              <span>{{ t.label }}</span>
+              <sc-if value="{{ t.count }}" hint-placeholder-val="{{ true }}"><span style="{{ t.countStyle }}">{{ t.count }}</span></sc-if>
+            </button>
+          </sc-for>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <button onClick="{{ goAutopilot }}" style="{{ apPillStyle }}" style-hover="border-color:#1f9d5b">
+            <span style="{{ apDotStyle }}"></span>
+            <span style="font-size:14.5px;font-weight:800">{{ apPillLabel }}</span>
+            <i class="ph ph-caret-right" style="font-size:14px;opacity:.6"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <sc-if value="{{ isToday }}" hint-placeholder-val="{{ true }}">
+    <div style="max-width:1360px;margin:0 auto;padding:30px 40px 80px">
+
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:28px;flex-wrap:wrap;animation:omRise .5s cubic-bezier(.2,.8,.2,1) both">
+        <div style="min-width:0">
+          <div style="display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8a7a5a"><i class="ph-fill ph-sun-horizon" style="font-size:17px;color:#e0a41c"></i><span>{{ dateStr }}</span></div>
+          <h1 style="margin:9px 0 0;font-family:'Newsreader',serif;font-weight:500;font-size:42px;line-height:1.08;letter-spacing:-.02em;color:#241f1c">Today's marketing is ready.</h1>
+          <p style="margin:10px 0 0;font-size:17.5px;color:#6b6157;max-width:640px;text-wrap:pretty">Good morning, Rachit. MAPCO prepared <strong style="color:#241f1c">{{ packCount }} finished creatives</strong> from your plots — {{ readyCount }} waiting on you, {{ doneCount }} already handled.</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button onClick="{{ openConnectHub }}" style="display:flex;align-items:center;gap:9px;padding:14px 18px;border-radius:14px;background:rgba(255,255,255,.8);border:1px solid #e2d8f6;color:#3d3529;font-size:15.5px;font-weight:700" style-hover="border-color:#c9b6ef;background:#fff"><i class="ph ph-plugs-connected" style="font-size:19px"></i>Channels</button>
+          <button onClick="{{ publishAll }}" style="display:flex;align-items:center;gap:10px;padding:15px 24px;border-radius:14px;background:#241d0c;color:#ffdd85;font-size:16px;font-weight:800;box-shadow:0 14px 30px -16px rgba(36,29,12,.9)" style-hover="background:#332a14"><i class="ph-fill ph-paper-plane-right" style="font-size:19px"></i>Publish all {{ readyCount }}</button>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;margin-top:26px;overflow-x:auto;padding-bottom:6px" data-scroll>
+        <sc-for list="{{ rail }}" as="r" hint-placeholder-count="5">
+          <button onClick="{{ r.go }}" style="{{ r.style }}">
+            <div style="position:relative;width:54px;height:54px;flex:none">
+              <div style="{{ r.photoStyle }}"></div>
+              <span style="{{ r.dotStyle }}"></span>
+            </div>
+            <div style="min-width:0;text-align:left">
+              <div style="font-size:14.5px;font-weight:800;color:#241f1c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.title }}</div>
+              <div style="font-size:12.5px;font-weight:700;color:#8a8070;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.statusLabel }}</div>
+            </div>
+          </button>
+        </sc-for>
+      </div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:22px;margin-top:20px;align-items:stretch">
+
+        <div style="flex:1 1 520px;min-width:0;position:relative;border-radius:26px;overflow:hidden;background:#17130f;background-image:radial-gradient(70% 60% at 50% 0%,rgba(255,201,60,.16),transparent 70%),radial-gradient(50% 50% at 12% 100%,rgba(107,63,212,.22),transparent 72%);box-shadow:0 34px 70px -34px rgba(23,19,15,.8);min-height:660px;display:flex;flex-direction:column">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:20px 24px 6px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="{{ cur.chanChipStyle }}"><i class="{{ cur.chanIcon }}" style="font-size:15px"></i>{{ cur.chanLabel }}</span>
+              <span style="display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border-radius:10px;background:rgba(255,255,255,.08);color:#d9cfbd;font-size:13px;font-weight:800;letter-spacing:.04em">{{ cur.formatLabel }}</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800;color:#9b9384">{{ posLabel }}</div>
+          </div>
+
+          <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:16px;padding:10px 22px 4px">
+            <button onClick="{{ prev }}" style="width:44px;height:44px;flex:none;border-radius:50%;background:rgba(255,255,255,.07);color:#e8dfd0;display:grid;place-items:center" style-hover="background:rgba(255,255,255,.16)"><i class="ph-bold ph-caret-left" style="font-size:19px"></i></button>
+            <div style="{{ cur.frameStyle }}">
+              <image-slot id="{{ cur.slotId }}" placeholder="{{ cur.slotHint }}" style="width:100%;height:100%;display:block"></image-slot>
+            </div>
+            <button onClick="{{ next }}" style="width:44px;height:44px;flex:none;border-radius:50%;background:rgba(255,255,255,.07);color:#e8dfd0;display:grid;place-items:center" style-hover="background:rgba(255,255,255,.16)"><i class="ph-bold ph-caret-right" style="font-size:19px"></i></button>
+          </div>
+
+          <div style="margin:6px 22px 0;padding:14px 18px;border-radius:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09);display:flex;align-items:center;gap:14px">
+            <svg viewBox="0 0 40 40" style="width:34px;height:34px;flex:none;display:block"><rect x="0" y="0" width="40" height="40" rx="11" fill="#ffc93c"></rect><path d="M20 9 L32 16 L20 23 L8 16 Z" fill="#241d0c"></path><circle cx="20" cy="16" r="3.4" fill="#ffc93c"></circle></svg>
+            <div style="min-width:0;flex:1">
+              <div style="font-size:14.5px;font-weight:800;color:#f3ead9">Chaurasia Properties · +91 98140 22119</div>
+              <div style="font-size:12.5px;color:#9b9384;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">SCO 42, Sector 82, Mohali · on every creative MAPCO makes</div>
+            </div>
+            <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:9px;background:rgba(31,157,91,.16);color:#7fe0aa;font-size:12px;font-weight:800"><i class="ph-fill ph-shield-check" style="font-size:14px"></i>Locked</span>
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:16px 22px 22px">
+            <sc-for list="{{ dots }}" as="d" hint-placeholder-count="5">
+              <button onClick="{{ d.go }}" style="{{ d.style }}"></button>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="flex:1 1 340px;min-width:0;max-width:460px;display:flex;flex-direction:column;gap:14px">
+
+          <div style="border-radius:20px;background:linear-gradient(180deg,#fff8e6,#fff);border:1px solid #f2e3bd;padding:18px 20px;box-shadow:0 18px 36px -26px rgba(140,110,30,.5)">
+            <div style="display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9a7c33"><i class="ph-fill ph-sparkle" style="font-size:16px"></i>Why this, today</div>
+            <div style="margin-top:10px;display:flex;align-items:flex-start;gap:12px">
+              <span style="width:38px;height:38px;flex:none;border-radius:12px;background:#241d0c;color:#ffc93c;display:grid;place-items:center"><i class="{{ cur.reasonIcon }}" style="font-size:19px"></i></span>
+              <div style="min-width:0"><div style="font-size:16.5px;font-weight:800;color:#241f1c;line-height:1.3">{{ cur.reason }}</div><div style="font-size:13.5px;color:#7c705d;margin-top:3px">{{ cur.reasonSub }}</div></div>
+            </div>
+          </div>
+
+          <div style="border-radius:20px;background:#fff;border:1px solid #ece5f8;overflow:hidden;box-shadow:0 18px 36px -28px rgba(60,40,120,.35)">
+            <div style="display:flex;gap:14px;padding:16px">
+              <div style="{{ cur.photoStyle }}"></div>
+              <div style="min-width:0;flex:1">
+                <div style="font-size:17px;font-weight:800;color:#241f1c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ cur.title }}</div>
+                <div style="font-size:13.5px;color:#8a8070;margin-top:2px">{{ cur.sub }}</div>
+                <div style="display:flex;align-items:center;gap:8px;margin-top:9px;flex-wrap:wrap">
+                  <span style="padding:5px 9px;border-radius:8px;background:#f5f0ff;color:#5b32c4;font-size:12.5px;font-weight:800">{{ cur.size }}</span>
+                  <span style="padding:5px 9px;border-radius:8px;background:#f3f6f4;color:#4a6b58;font-size:12.5px;font-weight:800">{{ cur.facing }}</span>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 16px;background:#faf8ff;border-top:1px solid #efe9fa">
+              <div style="min-width:0">
+                <div style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9a9184">On the creative</div>
+                <div style="font-size:16px;font-weight:800;color:#241f1c;margin-top:2px">{{ cur.priceShown }}</div>
+              </div>
+              <button onClick="{{ togglePrice }}" style="{{ priceToggleStyle }}"><span style="{{ priceKnobStyle }}"></span></button>
+            </div>
+            <sc-if value="{{ cur.priceHeld }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;align-items:center;gap:8px;padding:11px 16px;background:#fff6e6;border-top:1px solid #f6e6c4;font-size:13px;color:#8a6d24;font-weight:600"><i class="ph-fill ph-lock-simple" style="font-size:15px"></i>Your rule: MAPCO never posts an exact price on its own.</div>
+            </sc-if>
+          </div>
+
+          <div style="border-radius:20px;background:#fff;border:1px solid #ece5f8;padding:16px 18px">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+              <div style="font-size:12.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9a9184">Caption</div>
+              <button onClick="{{ copyCaption }}" style="display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border-radius:10px;background:#f5f0ff;color:#5b32c4;font-size:13px;font-weight:800" style-hover="background:#ebe2ff"><i class="ph-bold ph-copy" style="font-size:15px"></i>Copy</button>
+            </div>
+            <p style="margin:10px 0 0;font-size:15px;line-height:1.55;color:#4c4437;text-wrap:pretty">{{ cur.caption }}</p>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <button onClick="{{ publishNow }}" style="grid-column:1/-1;display:flex;align-items:center;justify-content:center;gap:10px;padding:18px;border-radius:16px;background:#ffc93c;color:#1f1a12;font-size:17px;font-weight:800;box-shadow:0 16px 32px -18px rgba(200,150,20,.9)" style-hover="background:#ffd45c"><i class="ph-fill ph-paper-plane-right" style="font-size:20px"></i>{{ cur.publishLabel }}</button>
+            <button onClick="{{ approveOne }}" style="display:flex;align-items:center;justify-content:center;gap:9px;padding:15px;border-radius:14px;background:#fff;border:1px solid #ddd2f5;color:#3d3529;font-size:15.5px;font-weight:800" style-hover="border-color:#6b3fd4;color:#5b32c4"><i class="ph-bold ph-check" style="font-size:18px"></i>Schedule</button>
+            <button onClick="{{ skipOne }}" style="display:flex;align-items:center;justify-content:center;gap:9px;padding:15px;border-radius:14px;background:#fff;border:1px solid #e6dfd2;color:#6b6157;font-size:15.5px;font-weight:800" style-hover="border-color:#c9bfae;color:#3d3529"><i class="ph-bold ph-arrow-elbow-down-right" style="font-size:17px"></i>Skip today</button>
+            <button onClick="{{ shareWhatsApp }}" style="display:flex;align-items:center;justify-content:center;gap:9px;padding:15px;border-radius:14px;background:#e8f7ee;border:1px solid #c6e8d5;color:#146c3f;font-size:15.5px;font-weight:800" style-hover="background:#ddf2e6"><i class="ph-fill ph-whatsapp-logo" style="font-size:19px"></i>Share</button>
+            <button onClick="{{ openPack }}" style="display:flex;align-items:center;justify-content:center;gap:9px;padding:15px;border-radius:14px;background:#f7f4ff;border:1px solid #e2d8f6;color:#5b32c4;font-size:15.5px;font-weight:800" style-hover="background:#efe8ff"><i class="ph-bold ph-squares-four" style="font-size:18px"></i>Full pack</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isLibrary }}">
+    <div style="max-width:1360px;margin:0 auto;padding:30px 40px 80px">
+      <div style="animation:omRise .5s cubic-bezier(.2,.8,.2,1) both">
+        <h1 style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:40px;letter-spacing:-.02em;color:#241f1c">Content Library</h1>
+        <p style="margin:9px 0 0;font-size:17px;color:#6b6157">Every finished creative MAPCO has made for you — {{ libTotal }} assets across {{ libProps }} plots. Reuse any of them any time.</p>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:22px">
+        <sc-for list="{{ libFilters }}" as="f" hint-placeholder-count="5">
+          <button onClick="{{ f.go }}" style="{{ f.style }}"><i class="{{ f.icon }}" style="font-size:16px"></i>{{ f.label }}</button>
+        </sc-for>
+        <div style="flex:1"></div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:#8a8070"><i class="ph ph-funnel" style="font-size:17px"></i>{{ libShown }} shown</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(238px,1fr));gap:18px;margin-top:20px">
+        <sc-for list="{{ libItems }}" as="a" hint-placeholder-count="8">
+          <div style="border-radius:20px;background:#fff;border:1px solid #ece5f8;overflow:hidden;transition:transform .18s,box-shadow .18s;box-shadow:0 14px 30px -26px rgba(60,40,120,.4)" style-hover="transform:translateY(-4px);box-shadow:0 26px 44px -26px rgba(60,40,120,.5)">
+            <div style="{{ a.canvasStyle }}">
+              <image-slot id="{{ a.slotId }}" placeholder="{{ a.slotHint }}" style="width:100%;height:100%;display:block"></image-slot>
+              <span style="{{ a.badgeStyle }}"><i class="{{ a.chanIcon }}" style="font-size:13px"></i>{{ a.chanLabel }}</span>
+            </div>
+            <div style="padding:13px 14px 14px">
+              <div style="font-size:15px;font-weight:800;color:#241f1c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.title }}</div>
+              <div style="font-size:12.5px;color:#8a8070;margin-top:2px">{{ a.meta }}</div>
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:11px">
+                <span style="{{ a.statusStyle }}">{{ a.statusLabel }}</span>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <button onClick="{{ a.share }}" style="width:32px;height:32px;border-radius:10px;background:#f3f0fa;color:#5b4a7a;display:grid;place-items:center" style-hover="background:#e8e1f7"><i class="ph-bold ph-share-fat" style="font-size:15px"></i></button>
+                  <button onClick="{{ a.openPack }}" style="width:32px;height:32px;border-radius:10px;background:#f3f0fa;color:#5b4a7a;display:grid;place-items:center" style-hover="background:#e8e1f7"><i class="ph-bold ph-arrow-up-right" style="font-size:15px"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isCalendar }}">
+    <div style="max-width:1360px;margin:0 auto;padding:30px 40px 80px">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;animation:omRise .5s cubic-bezier(.2,.8,.2,1) both">
+        <div>
+          <h1 style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:40px;letter-spacing:-.02em;color:#241f1c">This week</h1>
+          <p style="margin:9px 0 0;font-size:17px;color:#6b6157">{{ weekSummary }}</p>
+        </div>
+        <button onClick="{{ autofill }}" style="display:flex;align-items:center;gap:10px;padding:15px 22px;border-radius:14px;background:#241d0c;color:#ffdd85;font-size:15.5px;font-weight:800" style-hover="background:#332a14"><i class="ph-fill ph-magic-wand" style="font-size:19px"></i>Fill the rest of the week</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:12px;margin-top:24px">
+        <sc-for list="{{ week }}" as="d" hint-placeholder-count="7">
+          <div style="{{ d.colStyle }}">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:6px;padding:2px 2px 10px">
+              <div><div style="font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#9a9184">{{ d.dow }}</div><div style="font-size:22px;font-weight:800;color:#241f1c;font-family:'Newsreader',serif">{{ d.num }}</div></div>
+              <sc-if value="{{ d.isToday }}"><span style="padding:4px 8px;border-radius:8px;background:#ffc93c;color:#1f1a12;font-size:11px;font-weight:800">TODAY</span></sc-if>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;min-height:210px">
+              <sc-for list="{{ d.posts }}" as="p" hint-placeholder-count="2">
+                <button onClick="{{ p.go }}" style="{{ p.style }}">
+                  <span style="display:flex;align-items:center;gap:6px"><i class="{{ p.chanIcon }}" style="{{ p.chanIconStyle }}"></i><span style="font-size:11.5px;font-weight:800;color:#8a8070">{{ p.time }}</span></span>
+                  <span style="display:block;font-size:13px;font-weight:800;color:#241f1c;margin-top:4px;text-align:left;line-height:1.25">{{ p.title }}</span>
+                  <span style="{{ p.statusStyle }}">{{ p.statusLabel }}</span>
+                </button>
+              </sc-for>
+            </div>
+            <button onClick="{{ d.approveAll }}" style="width:100%;margin-top:10px;padding:9px;border-radius:11px;background:rgba(255,255,255,.7);border:1px dashed #d6cbf0;color:#6b5f8a;font-size:12.5px;font-weight:800" style-hover="border-color:#6b3fd4;color:#5b32c4">{{ d.approveLabel }}</button>
+          </div>
+        </sc-for>
+      </div>
+      <sc-if value="{{ hasSelectedPost }}">
+      <div style="position:sticky;bottom:18px;margin-top:20px;display:flex;align-items:center;gap:14px;padding:14px 18px;border-radius:18px;background:#241d0c;color:#f3ead9;box-shadow:0 22px 44px -20px rgba(36,29,12,.8);animation:omRise .3s ease both">
+        <i class="ph-fill ph-cursor-click" style="font-size:20px;color:#ffc93c"></i>
+        <div style="flex:1;min-width:0"><div style="font-size:15.5px;font-weight:800">{{ selPost.title }}</div><div style="font-size:13px;color:#a89e8c">{{ selPost.meta }}</div></div>
+        <button onClick="{{ movePost }}" style="padding:11px 15px;border-radius:12px;background:rgba(255,255,255,.1);color:#f3ead9;font-size:14px;font-weight:800" style-hover="background:rgba(255,255,255,.18)">Move to tomorrow</button>
+        <button onClick="{{ skipPost }}" style="padding:11px 15px;border-radius:12px;background:rgba(255,255,255,.1);color:#f3ead9;font-size:14px;font-weight:800" style-hover="background:rgba(255,255,255,.18)">Skip</button>
+        <button onClick="{{ publishPost }}" style="padding:11px 17px;border-radius:12px;background:#ffc93c;color:#1f1a12;font-size:14px;font-weight:800" style-hover="background:#ffd45c">Publish now</button>
+        <button onClick="{{ clearSel }}" style="width:34px;height:34px;border-radius:10px;color:#a89e8c;display:grid;place-items:center" style-hover="background:rgba(255,255,255,.1)"><i class="ph-bold ph-x" style="font-size:16px"></i></button>
+      </div>
+      </sc-if>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isPerf }}">
+    <div style="max-width:1360px;margin:0 auto;padding:30px 40px 80px">
+      <div style="animation:omRise .5s cubic-bezier(.2,.8,.2,1) both">
+        <h1 style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:40px;letter-spacing:-.02em;color:#241f1c">Here's what is working</h1>
+        <p style="margin:9px 0 0;font-size:17px;color:#6b6157">Last 7 days · {{ perfWindow }}</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(212px,1fr));gap:16px;margin-top:24px">
+        <sc-for list="{{ perfStats }}" as="s" hint-placeholder-count="4">
+          <div style="border-radius:20px;background:#fff;border:1px solid #ece5f8;padding:20px;box-shadow:0 16px 34px -28px rgba(60,40,120,.4)">
+            <div style="display:flex;align-items:center;gap:9px"><span style="{{ s.iconStyle }}"><i class="{{ s.icon }}" style="font-size:17px"></i></span><span style="font-size:13.5px;font-weight:800;color:#8a8070">{{ s.label }}</span></div>
+            <div style="font-size:40px;font-weight:800;letter-spacing:-.03em;color:#241f1c;margin-top:12px;line-height:1;font-family:'Newsreader',serif">{{ s.value }}</div>
+            <div style="{{ s.deltaStyle }}"><i class="{{ s.deltaIcon }}" style="font-size:14px"></i>{{ s.delta }}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(320px,1fr);gap:18px;margin-top:18px;align-items:start">
+        <div style="border-radius:22px;background:#fff;border:1px solid #ece5f8;padding:22px 24px">
+          <div style="font-size:12.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9a9184">Marketing consistency</div>
+          <div style="display:flex;align-items:flex-end;gap:10px;height:150px;margin-top:20px">
+            <sc-for list="{{ bars }}" as="b" hint-placeholder-count="8">
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:9px">
+                <div style="{{ b.style }}"></div>
+                <div style="font-size:11.5px;font-weight:800;color:#a49a8a">{{ b.label }}</div>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid #f1ecf9;font-size:14.5px;color:#6b6157"><i class="ph-fill ph-fire" style="font-size:18px;color:#e0721c"></i><strong style="color:#241f1c">{{ streak }}</strong> — MAPCO has not missed a day since you turned autopilot on.</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <sc-for list="{{ bests }}" as="b" hint-placeholder-count="3">
+            <div style="border-radius:20px;background:#fff;border:1px solid #ece5f8;padding:16px 18px;display:flex;align-items:center;gap:14px">
+              <div style="{{ b.photoStyle }}"></div>
+              <div style="min-width:0;flex:1"><div style="font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#9a9184">{{ b.kicker }}</div><div style="font-size:16.5px;font-weight:800;color:#241f1c;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.title }}</div><div style="font-size:13px;color:#8a8070">{{ b.stat }}</div></div>
+            </div>
+          </sc-for>
+          <div style="border-radius:20px;background:linear-gradient(180deg,#fff8e6,#fff);border:1px solid #f2e3bd;padding:18px 20px">
+            <div style="display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9a7c33"><i class="ph-fill ph-lightbulb" style="font-size:16px"></i>MAPCO suggests</div>
+            <p style="margin:10px 0 14px;font-size:15.5px;line-height:1.5;color:#4c4437;text-wrap:pretty">{{ insight }}</p>
+            <button onClick="{{ applyInsight }}" style="display:inline-flex;align-items:center;gap:8px;padding:12px 16px;border-radius:12px;background:#241d0c;color:#ffdd85;font-size:14.5px;font-weight:800" style-hover="background:#332a14"><i class="ph-bold ph-check" style="font-size:16px"></i>Do it for me</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ isAuto }}">
+    <div style="max-width:1000px;margin:0 auto;padding:30px 40px 80px">
+      <div style="animation:omRise .5s cubic-bezier(.2,.8,.2,1) both">
+        <h1 style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:40px;letter-spacing:-.02em;color:#241f1c">Autopilot</h1>
+        <p style="margin:9px 0 0;font-size:17px;color:#6b6157">Set it once. MAPCO keeps your marketing moving every day.</p>
+      </div>
+
+      <div style="{{ masterCardStyle }}">
+        <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+          <span style="{{ masterIconStyle }}"><i class="ph-fill ph-lightning" style="font-size:26px"></i></span>
+          <div style="flex:1;min-width:200px"><div style="font-size:21px;font-weight:800;color:#241f1c">{{ masterTitle }}</div><div style="font-size:15px;color:#6b6157;margin-top:3px">{{ masterSub }}</div></div>
+          <button onClick="{{ toggleAuto }}" style="{{ masterToggleStyle }}"><span style="{{ masterKnobStyle }}"></span></button>
+        </div>
+        <div style="display:flex;align-items:center;gap:16px;margin-top:22px;padding-top:20px;border-top:1px solid #f1e6c9;flex-wrap:wrap">
+          <div style="min-width:190px"><div style="font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#9a8a5a">Creatives per day</div><div style="font-size:15px;color:#6b6157;margin-top:3px">A steady daily rhythm, never spammy.</div></div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <sc-for list="{{ perDayOpts }}" as="o" hint-placeholder-count="6">
+              <button onClick="{{ o.go }}" style="{{ o.style }}">{{ o.n }}</button>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:26px">
+        <div style="font-size:12.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9a9184;padding-left:2px">Channels</div>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-top:12px">
+          <sc-for list="{{ channels }}" as="c" hint-placeholder-count="3">
+            <div style="border-radius:20px;background:#fff;border:1px solid #ece5f8;padding:18px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+              <span style="{{ c.iconStyle }}"><i class="{{ c.icon }}" style="font-size:23px"></i></span>
+              <div style="flex:1;min-width:180px"><div style="font-size:17.5px;font-weight:800;color:#241f1c">{{ c.name }}</div><div style="font-size:14px;color:#6b6157;margin-top:2px">{{ c.sub }}</div></div>
+              <span style="{{ c.stateStyle }}"><i class="{{ c.stateIcon }}" style="font-size:14px"></i>{{ c.stateLabel }}</span>
+              <button onClick="{{ c.action }}" style="{{ c.btnStyle }}">{{ c.btnLabel }}</button>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="margin-top:26px">
+        <div style="font-size:12.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9a9184;padding-left:2px">How MAPCO should choose</div>
+        <div style="border-radius:22px;background:#fff;border:1px solid #ece5f8;margin-top:12px;overflow:hidden">
+          <sc-for list="{{ rules }}" as="r" hint-placeholder-count="5">
+            <div style="{{ r.rowStyle }}">
+              <span style="width:40px;height:40px;flex:none;border-radius:12px;background:#f6f2ff;color:#5b32c4;display:grid;place-items:center"><i class="{{ r.icon }}" style="font-size:19px"></i></span>
+              <div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:800;color:#241f1c">{{ r.label }}</div><div style="font-size:13.5px;color:#8a8070;margin-top:2px">{{ r.sub }}</div></div>
+              <button onClick="{{ r.go }}" style="{{ r.toggleStyle }}"><span style="{{ r.knobStyle }}"></span></button>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="margin-top:22px;border-radius:20px;background:#f4f8f5;border:1px solid #d8e9de;padding:18px 20px;display:flex;align-items:flex-start;gap:14px">
+        <span style="width:42px;height:42px;flex:none;border-radius:13px;background:#146c3f;color:#dff5e8;display:grid;place-items:center"><i class="ph-fill ph-shield-check" style="font-size:21px"></i></span>
+        <div><div style="font-size:16.5px;font-weight:800;color:#17402c">Your private data never leaves MAPCO</div><div style="font-size:14.5px;color:#3f6b53;margin-top:3px;line-height:1.5">Seller names, seller phone numbers, your commission and negotiation notes are never used in any creative or caption — on any channel, ever.</div></div>
+      </div>
+    </div>
+    </sc-if>
+
+  </main>
+
+  <sc-if value="{{ packOpen }}">
+  <div onClick="{{ closePack }}" style="position:fixed;inset:0;background:rgba(28,22,14,.5);backdrop-filter:blur(3px);z-index:60;animation:omVeil .2s ease both"></div>
+  <div style="position:fixed;top:0;right:0;bottom:0;width:min(760px,94vw);z-index:61;background:#faf7ff;box-shadow:-30px 0 70px -30px rgba(30,20,50,.6);display:flex;flex-direction:column;animation:omSlide .32s cubic-bezier(.2,.8,.2,1) both">
+    <div style="padding:22px 26px 18px;background:#fff;border-bottom:1px solid #ece5f8;display:flex;align-items:flex-start;gap:16px">
+      <div style="{{ packProp.photoStyle }}"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9a9184">Marketing pack</div>
+        <div style="font-family:'Newsreader',serif;font-size:27px;font-weight:500;color:#241f1c;margin-top:3px;letter-spacing:-.015em">{{ packProp.title }}</div>
+        <div style="font-size:14px;color:#8a8070">{{ packProp.sub }} · {{ packAssetCount }} finished assets</div>
+      </div>
+      <button onClick="{{ closePack }}" style="width:40px;height:40px;border-radius:12px;background:#f3f0fa;color:#5b4a7a;display:grid;place-items:center;flex:none" style-hover="background:#e8e1f7"><i class="ph-bold ph-x" style="font-size:18px"></i></button>
+    </div>
+    <div data-scroll style="flex:1;min-height:0;overflow-y:auto;padding:22px 26px 30px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px">
+        <sc-for list="{{ packAssets }}" as="a" hint-placeholder-count="6">
+          <div style="border-radius:18px;background:#fff;border:1px solid #ece5f8;overflow:hidden">
+            <div style="{{ a.canvasStyle }}">
+              <sc-if value="{{ a.busy }}"><span style="position:absolute;inset:0;display:grid;place-items:center;background:linear-gradient(100deg,#efe9fa 20%,#f9f6ff 40%,#efe9fa 60%);background-size:380px 100%;animation:omShimmer 1.1s linear infinite;z-index:2"><i class="ph-bold ph-spinner" style="font-size:24px;color:#8a7ab0;animation:omSpin .9s linear infinite"></i></span></sc-if>
+              <image-slot id="{{ a.slotId }}" placeholder="{{ a.slotHint }}" style="width:100%;height:100%;display:block"></image-slot>
+            </div>
+            <div style="padding:12px 13px 13px">
+              <div style="font-size:14.5px;font-weight:800;color:#241f1c">{{ a.kind }}</div>
+              <div style="font-size:12.5px;color:#8a8070;margin-top:2px">{{ a.meta }}</div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="margin-top:20px;border-radius:20px;background:#fff;border:1px solid #ece5f8;padding:18px 20px">
+        <div style="font-size:12.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#9a9184">Caption MAPCO wrote</div>
+        <p style="margin:10px 0 0;font-size:15px;line-height:1.55;color:#4c4437">{{ packProp.caption }}</p>
+      </div>
+    </div>
+    <div style="padding:16px 26px 20px;background:#fff;border-top:1px solid #ece5f8;display:flex;align-items:center;gap:12px">
+      <button onClick="{{ regenerate }}" style="{{ regenBtnStyle }}"><i class="{{ regenIcon }}" style="font-size:19px"></i>{{ regenLabel }}</button>
+      <div style="flex:1"></div>
+      <button onClick="{{ shareWhatsApp }}" style="display:flex;align-items:center;gap:9px;padding:14px 18px;border-radius:14px;background:#e8f7ee;border:1px solid #c6e8d5;color:#146c3f;font-size:15px;font-weight:800" style-hover="background:#ddf2e6"><i class="ph-fill ph-whatsapp-logo" style="font-size:19px"></i>Share</button>
+      <button onClick="{{ publishPack }}" style="display:flex;align-items:center;gap:9px;padding:14px 20px;border-radius:14px;background:#ffc93c;color:#1f1a12;font-size:15px;font-weight:800" style-hover="background:#ffd45c"><i class="ph-fill ph-paper-plane-right" style="font-size:18px"></i>Publish pack</button>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ connectOpen }}">
+  <div onClick="{{ closeConnect }}" style="position:fixed;inset:0;background:rgba(28,22,14,.55);backdrop-filter:blur(4px);z-index:70;animation:omVeil .2s ease both"></div>
+  <div style="position:fixed;inset:0;z-index:71;display:grid;place-items:center;padding:24px;pointer-events:none">
+    <div style="pointer-events:auto;width:min(560px,100%);border-radius:26px;background:#fff;box-shadow:0 40px 90px -30px rgba(30,20,50,.6);overflow:hidden;animation:omPop .26s cubic-bezier(.2,.8,.2,1) both">
+      <div style="padding:24px 26px 20px;display:flex;align-items:center;gap:14px;border-bottom:1px solid #f1ecf9">
+        <span style="{{ connIconStyle }}"><i class="{{ connIcon }}" style="font-size:24px"></i></span>
+        <div style="flex:1;min-width:0"><div style="font-size:20px;font-weight:800;color:#241f1c">{{ connTitle }}</div><div style="font-size:14px;color:#8a8070">{{ connSub }}</div></div>
+        <button onClick="{{ closeConnect }}" style="width:38px;height:38px;border-radius:11px;background:#f3f0fa;color:#5b4a7a;display:grid;place-items:center;flex:none" style-hover="background:#e8e1f7"><i class="ph-bold ph-x" style="font-size:17px"></i></button>
+      </div>
+      <div style="padding:22px 26px 24px">
+        <sc-for list="{{ connSteps }}" as="s" hint-placeholder-count="3">
+          <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 0">
+            <span style="{{ s.dotStyle }}"><i class="{{ s.dotIcon }}" style="font-size:15px"></i></span>
+            <div style="min-width:0;flex:1"><div style="{{ s.labelStyle }}">{{ s.label }}</div><div style="font-size:13.5px;color:#8a8070;margin-top:2px">{{ s.sub }}</div></div>
+          </div>
+        </sc-for>
+        <button onClick="{{ connAdvance }}" style="{{ connBtnStyle }}"><i class="{{ connBtnIcon }}" style="font-size:19px"></i>{{ connBtnLabel }}</button>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;color:#8a8070"><i class="ph ph-lock-simple" style="font-size:15px"></i>MAPCO only gets permission to post. It can never read your messages.</div>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ toast }}">
+  <div style="position:fixed;left:50%;bottom:30px;transform:translateX(-50%);z-index:90;display:flex;align-items:center;gap:11px;padding:15px 22px;border-radius:16px;background:#241d0c;color:#f6efdf;font-size:15.5px;font-weight:700;box-shadow:0 22px 44px -18px rgba(36,29,12,.85);animation:omRise .26s ease both">
+    <i class="ph-fill ph-check-circle" style="font-size:20px;color:#ffc93c"></i>{{ toast }}
+  </div>
+  </sc-if>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:940},&quot;autopilotOn&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Autopilot&quot;},&quot;creativesPerDay&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:5,&quot;min&quot;:1,&quot;max&quot;:6,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Autopilot&quot;},&quot;requireApproval&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Autopilot&quot;}}">
+class Component extends DCLogic {
+  PROPS = [
+    {id:'p1',title:'Sector 88 · Plot 214',sub:'Mohali · GMADA approved',area:'Mohali',size:'250 sq yd',facing:'Park facing',price:'₹1.95 Cr',photo:'assets/mkt-prop-1.jpg',
+     caption:'New in Sector 88, Mohali — 250 sq yd corner plot, park facing, 30 ft road. GMADA approved with clear title. Call Chaurasia Properties for details. #MohaliPlots #Sector88 #GMADA'},
+    {id:'p2',title:'Sector 78 · Plot 61',sub:'Mohali · Ready to register',area:'Mohali',size:'150 sq yd',facing:'East facing',price:'₹1.10 Cr',photo:'assets/mkt-prop-2.jpg',
+     caption:'150 sq yd east-facing plot in Sector 78, Mohali. Registry ready, loan friendly, walking distance to the market. Ask Chaurasia Properties. #Sector78 #MohaliProperty'},
+    {id:'p3',title:'Aerocity · Plot 908',area:'Aerocity',sub:'Aerocity · 300 sq yd corner',size:'300 sq yd',facing:'Corner plot',price:'₹2.40 Cr',photo:'assets/mkt-prop-3.webp',
+     caption:'Aerocity, Mohali — 300 sq yd corner plot on a 40 ft road, minutes from the airport road. Clear title, immediate possession. Chaurasia Properties. #Aerocity #MohaliPlots'},
+    {id:'p4',title:'Sector 89 · 4 plots',area:'Mohali',sub:'Area spotlight · 4 plots with me',size:'Area spotlight',facing:'125–300 sq yd',price:'From ₹85 L',photo:'assets/mkt-prop-4.jpg',
+     caption:'Sector 89 is moving fast. I have 4 plots available right now, 125 to 300 sq yd, all GMADA approved. Tell me your budget and I will shortlist. #Sector89 #Mohali'},
+    {id:'p5',title:'New Chandigarh · Plot 12',area:'New Chandigarh',sub:'New Chandigarh · villa plot',size:'500 sq yd',facing:'North-east',price:'₹3.60 Cr',photo:'assets/mkt-prop-1.jpg',
+     caption:'A 500 sq yd villa plot in New Chandigarh — wide green belt frontage, gated sector, premium neighbours. Serious buyers only. Chaurasia Properties. #NewChandigarh #VillaPlot'}
+  ];
+  CH = {
+    ig:{label:'Instagram',icon:'ph-fill ph-instagram-logo',color:'#d6317f',soft:'#fdeef6'},
+    gbp:{label:'Google Business',icon:'ph-fill ph-storefront',color:'#2b6fd6',soft:'#eaf1fd'},
+    wa:{label:'WhatsApp Status',icon:'ph-fill ph-whatsapp-logo',color:'#1f9d5b',soft:'#e8f7ee'}
+  };
+  PACKKINDS = [
+    {kind:'Hero post',meta:'Instagram · 1:1',ratio:'1:1'},
+    {kind:'Detail post',meta:'Instagram · 1:1',ratio:'1:1'},
+    {kind:'WhatsApp status',meta:'Status · 9:16',ratio:'9:16'},
+    {kind:'Carousel slide 1',meta:'Instagram · 1:1',ratio:'1:1'},
+    {kind:'Carousel slide 2',meta:'Instagram · 1:1',ratio:'1:1'},
+    {kind:'Google Business post',meta:'GBP · 4:3',ratio:'4:3'}
+  ];
+
+  state = {
+    section:'today', idx:0,
+    pack:[
+      {pi:0,ch:'ig',fmt:'1:1',reason:'You added this plot yesterday',reasonSub:'New listings get the most attention in their first three days.',reasonIcon:'ph-fill ph-plus-circle',status:'ready',priceHeld:true},
+      {pi:1,ch:'wa',fmt:'9:16',reason:'12 people opened this plot this week',reasonSub:'Your Sector 78 client link was viewed 12 times — worth a status.',reasonIcon:'ph-fill ph-eye',status:'ready',priceHeld:false},
+      {pi:2,ch:'gbp',fmt:'4:3',reason:'Not promoted for 24 days',reasonSub:'This plot has been quiet the longest of everything you hold.',reasonIcon:'ph-fill ph-clock-counter-clockwise',status:'ready',priceHeld:false},
+      {pi:3,ch:'ig',fmt:'1:1',reason:'Sector 89 searches are up 38%',reasonSub:'An area spotlight brings enquiries for every plot you hold there.',reasonIcon:'ph-fill ph-trend-up',status:'published',priceHeld:false},
+      {pi:4,ch:'ig',fmt:'1:1',reason:'Your premium listing of the week',reasonSub:'One high-value plot a week keeps your page looking serious.',reasonIcon:'ph-fill ph-crown-simple',status:'ready',priceHeld:true}
+    ],
+    libFilter:'all', packOpen:false, packPi:0, packExtra:0, busySlot:null,
+    connectOpen:false, connectCh:null, connectStep:0,
+    auto:true, perDay:5, rules:{newFirst:true,attention:true,noRepeat:true,approve:false,priceHold:true},
+    conn:{ig:true,gbp:false},
+    selPost:null, weekFilled:false, toast:'',
+    week:[
+      {dow:'Mon',num:10,posts:[{pi:1,ch:'ig',time:'9:30 AM',status:'published'},{pi:3,ch:'gbp',time:'6:00 PM',status:'published'}]},
+      {dow:'Tue',num:11,posts:[{pi:2,ch:'ig',time:'10:00 AM',status:'published'},{pi:0,ch:'wa',time:'7:00 PM',status:'published'}]},
+      {dow:'Wed',num:12,today:true,posts:[{pi:0,ch:'ig',time:'9:30 AM',status:'ready'},{pi:1,ch:'wa',time:'1:00 PM',status:'ready'},{pi:2,ch:'gbp',time:'6:00 PM',status:'ready'},{pi:3,ch:'ig',time:'8:00 PM',status:'published'}]},
+      {dow:'Thu',num:13,posts:[{pi:4,ch:'ig',time:'9:30 AM',status:'approved'},{pi:2,ch:'wa',time:'7:00 PM',status:'approved'}]},
+      {dow:'Fri',num:14,posts:[{pi:3,ch:'ig',time:'10:00 AM',status:'approved'}]},
+      {dow:'Sat',num:15,posts:[]},
+      {dow:'Sun',num:16,posts:[]}
+    ]
+  };
+
+  componentDidMount(){
+    const p=this.props||{}, patch={};
+    if(typeof p.autopilotOn==='boolean') patch.auto=p.autopilotOn;
+    if(typeof p.creativesPerDay==='number') patch.perDay=p.creativesPerDay;
+    if(typeof p.requireApproval==='boolean') patch.rules={...this.state.rules,approve:p.requireApproval};
+    if(Object.keys(patch).length) this.setState(patch);
+    this.onKey = e => {
+      if(this.state.section!=='today'||this.state.packOpen||this.state.connectOpen) return;
+      if(e.key==='ArrowRight') this.move(1);
+      else if(e.key==='ArrowLeft') this.move(-1);
+      else if(e.key==='a'||e.key==='A') this.setStatus('approved','Scheduled for today.');
+    };
+    window.addEventListener('keydown',this.onKey);
+  }
+  componentWillUnmount(){ window.removeEventListener('keydown',this.onKey); }
+
+  say(t){ clearTimeout(this._t); this.setState({toast:t}); this._t=setTimeout(()=>this.setState({toast:''}),2400); }
+  move(d){ this.setState(s=>({idx:(s.idx+d+s.pack.length)%s.pack.length})); }
+  setStatus(st,msg){
+    this.setState(s=>{ const pack=s.pack.slice(); pack[s.idx]={...pack[s.idx],status:st}; return {pack}; });
+    if(msg) this.say(msg);
+    setTimeout(()=>{ const n=this.state.pack.findIndex((p,i)=>i>this.state.idx&&p.status==='ready'); if(n>-1) this.setState({idx:n}); },420);
+  }
+  statusMeta(st){
+    if(st==='published') return {label:'Published',bg:'#e6f7ee',fg:'#146c3f',dot:'#1f9d5b',icon:'ph-fill ph-check-circle'};
+    if(st==='approved') return {label:'Scheduled',bg:'#f0e9ff',fg:'#5b32c4',dot:'#6b3fd4',icon:'ph-fill ph-clock'};
+    if(st==='skipped') return {label:'Skipped today',bg:'#f2efea',fg:'#7c7365',dot:'#b3a999',icon:'ph-fill ph-minus-circle'};
+    return {label:'Ready for you',bg:'#fff3d6',fg:'#8a6d24',dot:'#ffc93c',icon:'ph-fill ph-sparkle'};
+  }
+  frameBox(fmt){
+    if(fmt==='9:16') return 'aspect-ratio:9/16;width:min(304px,100%);max-height:540px;color:#cfc6b6';
+    if(fmt==='4:3') return 'aspect-ratio:4/3;width:min(468px,100%);color:#cfc6b6';
+    return 'aspect-ratio:1/1;width:min(432px,100%);color:#cfc6b6';
+  }
+  thumb(src,size,radius){
+    return `width:${size}px;height:${size}px;flex:none;border-radius:${radius}px;background-image:url("${src}");background-size:cover;background-position:center;background-color:#e8e0d4`;
+  }
+  toggleStyle(on,tone){
+    const bg = on ? (tone||'#1f9d5b') : '#ddd6ca';
+    return `width:56px;height:32px;flex:none;border-radius:99px;background:${bg};position:relative;transition:background .2s;box-shadow:inset 0 1px 3px rgba(0,0,0,.12)`;
+  }
+  knobStyle(on){
+    return `position:absolute;top:4px;left:${on?'28px':'4px'};width:24px;height:24px;border-radius:50%;background:#fff;transition:left .2s cubic-bezier(.2,.8,.2,1);box-shadow:0 2px 6px rgba(0,0,0,.2)`;
+  }
+
+  openConnect(ch){ this.setState({connectOpen:true,connectCh:ch,connectStep:0}); }
+
+  renderVals(){
+    const s=this.state, P=this.PROPS, CH=this.CH;
+    const cnt = k => s.pack.filter(p=>p.status===k).length;
+    const readyCount = cnt('ready'), doneCount = s.pack.length-readyCount;
+
+    const TABS=[
+      {key:'today',label:'Today',icon:'ph-sun-horizon',count:readyCount?String(readyCount):''},
+      {key:'library',label:'Library',icon:'ph-images-square',count:''},
+      {key:'calendar',label:'Calendar',icon:'ph-calendar-blank',count:''},
+      {key:'performance',label:'Performance',icon:'ph-chart-line-up',count:''},
+      {key:'autopilot',label:'Autopilot',icon:'ph-lightning',count:''}
+    ];
+    const tabs=TABS.map(t=>{ const on=s.section===t.key; return {
+      label:t.label, icon:(on?'ph-fill ':'ph ')+t.icon, count:t.count,
+      countStyle:`min-width:22px;height:22px;padding:0 6px;border-radius:7px;background:${on?'rgba(36,29,12,.14)':'#ece3fb'};color:${on?'#1f1a12':'#5b32c4'};font-size:12.5px;font-weight:800;display:grid;place-items:center`,
+      style:`display:flex;align-items:center;gap:9px;padding:11px 16px;border-radius:12px;font-size:15.5px;font-weight:${on?'800':'700'};transition:background .15s;${on?'background:#ffc93c;color:#1f1a12;box-shadow:0 8px 18px -12px rgba(190,140,20,.9)':'color:#5f5648;background:transparent'}`,
+      go:()=>this.setState({section:t.key})
+    };});
+
+    const cp=s.pack[s.idx], prop=P[cp.pi], ch=CH[cp.ch];
+    const cur={
+      title:prop.title, sub:prop.sub, size:prop.size, facing:prop.facing, photo:prop.photo, caption:prop.caption,
+      photoStyle:this.thumb(prop.photo,82,14),
+      chanLabel:ch.label, chanIcon:ch.icon, reason:cp.reason, reasonSub:cp.reasonSub, reasonIcon:cp.reasonIcon,
+      formatLabel:cp.fmt==='9:16'?'Story · 9:16':(cp.fmt==='4:3'?'Business post · 4:3':'Post · 1:1'),
+      chanChipStyle:`display:inline-flex;align-items:center;gap:7px;padding:7px 13px;border-radius:10px;background:${ch.color};color:#fff;font-size:13.5px;font-weight:800`,
+      frameStyle:`${this.frameBox(cp.fmt)};flex:0 1 auto;border-radius:6px;overflow:hidden;background:#241f1c;box-shadow:0 30px 60px -20px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.08);animation:omStage .34s cubic-bezier(.2,.8,.2,1) both`,
+      slotId:'mkt-today-'+prop.id+'-'+cp.fmt, slotHint:'Drop your finished '+ch.label+' creative',
+      priceHeld:cp.priceHeld, priceShown:cp.priceHeld?'Price on request':prop.price,
+      publishLabel:cp.status==='published'?'Publish again':'Publish now to '+ch.label
+    };
+
+    const rail=s.pack.map((p,i)=>{ const pr=P[p.pi], m=this.statusMeta(p.status), on=i===s.idx; return {
+      photo:pr.photo, photoStyle:this.thumb(pr.photo,54,12), title:pr.title, statusLabel:m.label,
+      dotStyle:`position:absolute;right:-3px;bottom:-3px;width:15px;height:15px;border-radius:50%;background:${m.dot};box-shadow:0 0 0 3px #f7f2ff`,
+      style:`display:flex;align-items:center;gap:12px;flex:none;width:236px;padding:10px 14px 10px 10px;border-radius:16px;text-align:left;transition:transform .16s,box-shadow .16s;${on?'background:#fff;border:1px solid #d9c9f2;box-shadow:0 16px 30px -20px rgba(60,40,120,.6)':'background:rgba(255,255,255,.6);border:1px solid #e8e0f6'}`,
+      go:()=>this.setState({idx:i})
+    };});
+    const dots=s.pack.map((p,i)=>{ const on=i===s.idx; const m=this.statusMeta(p.status); return {
+      style:`width:${on?'34px':'10px'};height:10px;border-radius:99px;background:${on?'#ffc93c':m.dot};opacity:${on?1:.45};transition:width .22s,opacity .2s`,
+      go:()=>this.setState({idx:i})
+    };});
+
+    const LIBF=[{k:'all',label:'Everything',icon:'ph-squares-four'},{k:'ig',label:'Instagram',icon:'ph-instagram-logo'},{k:'gbp',label:'Google Business',icon:'ph-storefront'},{k:'wa',label:'WhatsApp',icon:'ph-whatsapp-logo'},{k:'unpub',label:'Not posted yet',icon:'ph-clock'}];
+    const libFilters=LIBF.map(f=>{ const on=s.libFilter===f.k; return {
+      label:f.label, icon:(on?'ph-fill ':'ph ')+f.icon,
+      style:`display:inline-flex;align-items:center;gap:8px;padding:11px 15px;border-radius:12px;font-size:14.5px;font-weight:800;transition:background .15s;${on?'background:#241d0c;color:#ffdd85':'background:rgba(255,255,255,.72);border:1px solid #e6ddf8;color:#5f5648'}`,
+      go:()=>this.setState({libFilter:f.k})
+    };});
+    const LIB=[];
+    const chOrder=['ig','wa','gbp'], fmts={ig:'1:1',wa:'9:16',gbp:'4:3'};
+    const days=['Today','Yesterday','2 days ago','3 days ago','Last week','Last week','2 weeks ago','3 weeks ago'];
+    P.forEach((pr,pi)=>{ chOrder.forEach((c,ci)=>{
+      const published=(pi+ci)%3!==0;
+      LIB.push({pi,ch:c,fmt:fmts[c],published,when:days[(pi*2+ci)%days.length],idx:LIB.length});
+    });});
+    const libVisible=LIB.filter(a=> s.libFilter==='all'?true: s.libFilter==='unpub'? !a.published : a.ch===s.libFilter);
+    const libItems=libVisible.map(a=>{ const pr=P[a.pi], c=CH[a.ch], m=this.statusMeta(a.published?'published':'ready');
+      const h = a.fmt==='9:16'?300:(a.fmt==='4:3'?168:216);
+      return {
+        title:pr.title, meta:pr.area+' · '+a.when, chanLabel:c.label, chanIcon:c.icon,
+        canvasStyle:`position:relative;height:${h}px;background:#241f1c;color:#cfc6b6`,
+        badgeStyle:`position:absolute;top:10px;left:10px;display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:9px;background:${c.color};color:#fff;font-size:12px;font-weight:800;z-index:2`,
+        slotId:'mkt-lib-'+pr.id+'-'+a.ch, slotHint:'Your '+c.label+' creative',
+        statusStyle:`display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:8px;background:${m.bg};color:${m.fg};font-size:12.5px;font-weight:800`,
+        statusLabel:m.label,
+        share:()=>this.say('Ready to send on WhatsApp.'),
+        openPack:()=>this.setState({packOpen:true,packPi:a.pi,packExtra:0})
+      };
+    });
+
+    const week=s.week.map((d,di)=>{
+      const posts=d.posts.map((p,pj)=>{ const pr=P[p.pi], c=CH[p.ch], m=this.statusMeta(p.status);
+        const on=s.selPost&&s.selPost.di===di&&s.selPost.pj===pj;
+        return {
+          title:pr.title, time:p.time, chanIcon:c.icon, chanIconStyle:`font-size:15px;color:${c.color}`,
+          statusStyle:`display:inline-block;margin-top:7px;padding:4px 8px;border-radius:7px;background:${m.bg};color:${m.fg};font-size:11.5px;font-weight:800`,
+          statusLabel:m.label,
+          style:`display:block;width:100%;padding:11px 12px;border-radius:14px;text-align:left;transition:transform .15s,box-shadow .15s;${on?'background:#fff;border:1px solid #ffc93c;box-shadow:0 14px 26px -18px rgba(190,140,20,.9)':'background:#fff;border:1px solid #ece5f8'}`,
+          go:()=>this.setState({selPost:{di,pj}})
+        };
+      });
+      return {
+        dow:d.dow, num:String(d.num), isToday:!!d.today, posts,
+        approveLabel:d.posts.length?'Approve all '+d.posts.length:'Nothing planned',
+        colStyle:`border-radius:20px;padding:14px;min-height:320px;${d.today?'background:#fff;border:1px solid #f0dca8;box-shadow:0 18px 36px -26px rgba(140,110,30,.6)':'background:rgba(255,255,255,.62);border:1px solid #e8e0f6'}`,
+        approveAll:()=>this.say(d.posts.length?d.dow+': all '+d.posts.length+' approved.':'Nothing planned for '+d.dow+' yet.')
+      };
+    });
+    const sel=s.selPost?s.week[s.selPost.di].posts[s.selPost.pj]:null;
+    const selPost=sel?{title:P[sel.pi].title,meta:CH[sel.ch].label+' · '+s.week[s.selPost.di].dow+' '+sel.time}:{title:'',meta:''};
+
+    const perfStats=[
+      {label:'Posts published',value:'14',delta:'4 more than last week',up:true,icon:'ph-fill ph-paper-plane-right',c:'#ffc93c',cf:'#241d0c'},
+      {label:'People reached',value:'6.2k',delta:'up 31%',up:true,icon:'ph-fill ph-users-three',c:'#f0e9ff',cf:'#5b32c4'},
+      {label:'Saves & shares',value:'184',delta:'up 12%',up:true,icon:'ph-fill ph-bookmark-simple',c:'#fdeef6',cf:'#c02a72'},
+      {label:'Enquiries from posts',value:'9',delta:'3 became site visits',up:true,icon:'ph-fill ph-chat-circle-dots',c:'#e6f7ee',cf:'#146c3f'}
+    ].map(x=>({
+      label:x.label,value:x.value,delta:x.delta,icon:x.icon,
+      iconStyle:`width:34px;height:34px;border-radius:11px;background:${x.c};color:${x.cf};display:grid;place-items:center`,
+      deltaIcon:x.up?'ph-bold ph-trend-up':'ph-bold ph-trend-down',
+      deltaStyle:`display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:13.5px;font-weight:800;color:${x.up?'#1f9d5b':'#c0562a'}`
+    }));
+    const barVals=[3,5,4,5,5,2,5,4];
+    const bars=barVals.map((v,i)=>({
+      label:['M','T','W','T','F','S','S','M'][i],
+      style:`width:100%;max-width:34px;height:${18+v*24}px;border-radius:9px;background:${i===4?'#ffc93c':'#e6ddf8'};transform-origin:bottom;animation:barGrow .5s ${i*0.05}s cubic-bezier(.2,.8,.2,1) both`
+    }));
+    const bests=[
+      {kicker:'Best performing plot',title:P[0].title,stat:'1.9k reached · 4 enquiries',photo:P[0].photo},
+      {kicker:'Best performing area',title:'Sector 89, Mohali',stat:'Searches up 38% this week',photo:P[3].photo},
+      {kicker:'Best creative',title:'Aerocity hero post',stat:'Saved 46 times',photo:P[2].photo}
+    ].map(b=>({...b,photoStyle:this.thumb(b.photo,56,14)}));
+
+    const perDayOpts=[1,2,3,4,5,6].map(n=>({
+      n:String(n),
+      style:`width:46px;height:46px;border-radius:14px;font-size:16px;font-weight:800;transition:transform .15s;${s.perDay===n?'background:#241d0c;color:#ffdd85;box-shadow:0 10px 22px -12px rgba(36,29,12,.9)':'background:rgba(255,255,255,.8);border:1px solid #e6ddf8;color:#5f5648'}`,
+      go:()=>this.setState({perDay:n})
+    }));
+
+    const chanRow=(k,name,sub,connected,mode)=>{
+      const c=CH[k];
+      const st = mode==='share' ? {label:'Share-ready',bg:'#e6f7ee',fg:'#146c3f',icon:'ph-fill ph-hand-tap'} :
+        connected ? {label:'Connected',bg:'#e6f7ee',fg:'#146c3f',icon:'ph-fill ph-check-circle'} : {label:'Not connected',bg:'#f4f1ec',fg:'#7c7365',icon:'ph-fill ph-plug'};
+      return {
+        name,sub,icon:c.icon,
+        iconStyle:`width:48px;height:48px;flex:none;border-radius:15px;background:${c.soft};color:${c.color};display:grid;place-items:center`,
+        stateStyle:`display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border-radius:10px;background:${st.bg};color:${st.fg};font-size:13.5px;font-weight:800`,
+        stateIcon:st.icon, stateLabel:st.label,
+        btnLabel: mode==='share' ? 'How it works' : (connected?'Manage':'Connect'),
+        btnStyle:`padding:12px 18px;border-radius:13px;font-size:14.5px;font-weight:800;${(!connected&&mode!=='share')?'background:#241d0c;color:#ffdd85':'background:#f6f3fc;color:#5b4a7a;border:1px solid #e6ddf8'}`,
+        action:()=> (mode==='share'? this.say('WhatsApp creatives are ready to share from Today and Library.') : this.openConnect(k))
+      };
+    };
+    const channels=[
+      chanRow('ig','Instagram','MAPCO posts automatically at the best time of day.',s.conn.ig),
+      chanRow('gbp','Google Business Profile','Keeps your listing active so nearby buyers find you.',s.conn.gbp),
+      chanRow('wa','WhatsApp','Status creatives prepared for you to share in one tap.',true,'share')
+    ];
+
+    const RULES=[
+      {k:'newFirst',label:'Push new plots first',sub:'A freshly added plot gets marketed the same day.',icon:'ph-fill ph-plus-circle'},
+      {k:'attention',label:'Follow the attention',sub:'Plots buyers are opening get promoted again.',icon:'ph-fill ph-eye'},
+      {k:'noRepeat',label:'Never repeat a plot within 10 days',sub:'Keeps your page from looking repetitive.',icon:'ph-fill ph-arrows-clockwise'},
+      {k:'priceHold',label:'Never post an exact price on its own',sub:'MAPCO writes "price on request" unless you allow it.',icon:'ph-fill ph-lock-simple'},
+      {k:'approve',label:'Ask me before publishing',sub:'Off means MAPCO publishes on its own. You can still skip anything.',icon:'ph-fill ph-hand-tap'}
+    ];
+    const rules=RULES.map((r,i)=>{ const on=!!s.rules[r.k]; return {
+      label:r.label, sub:r.sub, icon:r.icon,
+      rowStyle:`display:flex;align-items:center;gap:15px;padding:17px 20px;${i?'border-top:1px solid #f1ecf9':''}`,
+      toggleStyle:this.toggleStyle(on,'#6b3fd4'), knobStyle:this.knobStyle(on),
+      go:()=>this.setState(st=>({rules:{...st.rules,[r.k]:!st.rules[r.k]}}))
+    };});
+
+    const packProp={...P[s.packPi],photoStyle:this.thumb(P[s.packPi].photo,64,16)};
+    const packAssets=this.PACKKINDS.concat(Array.from({length:s.packExtra},(_,i)=>({kind:'New version '+(i+1),meta:'Instagram · 1:1',ratio:'1:1',fresh:i===s.packExtra-1}))).map((a,i)=>{
+      const h=a.ratio==='9:16'?270:(a.ratio==='4:3'?158:196);
+      return {
+        kind:a.kind, meta:a.meta, busy:!!(a.fresh&&s.busySlot==='pack'),
+        canvasStyle:`position:relative;height:${h}px;background:#241f1c;color:#cfc6b6`,
+        slotId:'mkt-pack-'+packProp.id+'-'+i, slotHint:a.kind
+      };
+    });
+
+    const connCh=s.connectCh?CH[s.connectCh]:CH.ig;
+    const connName=s.connectCh==='gbp'?'Google Business Profile':'Instagram';
+    const CSTEPS=s.connectCh==='gbp'
+      ? [{label:'Sign in with Google',sub:'Use the account that owns your business listing.'},{label:'Pick your business',sub:'Chaurasia Properties, Sector 82, Mohali.'},{label:'Allow MAPCO to post',sub:'Posts and offers only. Nothing else.'}]
+      : [{label:'Sign in with Instagram',sub:'Your professional or business account.'},{label:'Pick the account to post to',sub:'@chaurasia.properties'},{label:'Allow MAPCO to post',sub:'Publishing only. MAPCO never reads your DMs.'}];
+    const connSteps=CSTEPS.map((c,i)=>{ const done=i<s.connectStep, now=i===s.connectStep; return {
+      label:c.label, sub:c.sub,
+      labelStyle:`font-size:16.5px;font-weight:800;color:${done?'#146c3f':(now?'#241f1c':'#a49a8a')}`,
+      dotIcon:done?'ph-bold ph-check':(now?'ph-fill ph-circle':'ph-bold ph-minus'),
+      dotStyle:`width:30px;height:30px;flex:none;border-radius:50%;display:grid;place-items:center;${done?'background:#e6f7ee;color:#146c3f':(now?'background:#241d0c;color:#ffc93c':'background:#f3f0ea;color:#b3a999')}`
+    };});
+    const connDone=s.connectStep>=CSTEPS.length;
+
+    return {
+      isToday:s.section==='today', isLibrary:s.section==='library', isCalendar:s.section==='calendar',
+      isPerf:s.section==='performance', isAuto:s.section==='autopilot',
+      tabs, goAutopilot:()=>this.setState({section:'autopilot'}),
+      apPillLabel: s.auto?('Autopilot on · '+s.perDay+' a day'):'Autopilot paused',
+      apPillStyle:`display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:14px;background:rgba(255,255,255,.8);border:1px solid ${s.auto?'#c6e8d5':'#e6dfd2'};color:#3d3529;transition:border-color .15s`,
+      apDotStyle:`width:10px;height:10px;border-radius:50%;background:${s.auto?'#1f9d5b':'#b3a999'};${s.auto?'animation:omGlow 2.4s ease-in-out infinite;box-shadow:0 0 0 0 rgba(31,157,91,.5)':''}`,
+
+      dateStr:'Wednesday, 12 August', packCount:String(s.pack.length), readyCount:String(readyCount), doneCount:String(doneCount),
+      cur, rail, dots, posLabel:(s.idx+1)+' of '+s.pack.length,
+      prev:()=>this.move(-1), next:()=>this.move(1),
+      publishNow:()=>this.setStatus('published', s.rules.approve?'Sent for your approval.':'Published to '+ch.label+'.'),
+      approveOne:()=>this.setStatus('approved','Scheduled for today.'),
+      skipOne:()=>this.setStatus('skipped','Skipped. MAPCO will pick something else.'),
+      shareWhatsApp:()=>this.say('Creative copied — ready to share on WhatsApp.'),
+      copyCaption:()=>this.say('Caption copied.'),
+      togglePrice:()=>{ this.setState(st=>{ const pack=st.pack.slice(); pack[st.idx]={...pack[st.idx],priceHeld:!pack[st.idx].priceHeld}; return {pack}; }); },
+      priceToggleStyle:this.toggleStyle(!cp.priceHeld,'#1f9d5b'), priceKnobStyle:this.knobStyle(!cp.priceHeld),
+      publishAll:()=>{ this.setState(st=>({pack:st.pack.map(p=>p.status==='ready'?{...p,status:'published'}:p)})); this.say('All of today\u2019s marketing is out.'); },
+      openConnectHub:()=>this.openConnect(s.conn.gbp?'ig':'gbp'),
+      openPack:()=>this.setState({packOpen:true,packPi:cp.pi,packExtra:0}),
+
+      libFilters, libItems, libShown:String(libItems.length), libTotal:String(LIB.length), libProps:String(P.length),
+
+      week, weekSummary: s.weekFilled?'Every day this week has content planned. 6 already published.':'3 going out today, 3 scheduled, 2 days still open.',
+      autofill:()=>{ this.setState(st=>{ const week=st.week.map(d=>d.posts.length?d:{...d,posts:[{pi:(d.num%5),ch:'ig',time:'10:00 AM',status:'approved'}]}); return {week,weekFilled:true}; }); this.say('Week filled. You can still change anything.'); },
+      hasSelectedPost:!!sel, selPost,
+      movePost:()=>{ this.setState({selPost:null}); this.say('Moved to tomorrow.'); },
+      skipPost:()=>{ this.setState({selPost:null}); this.say('Skipped.'); },
+      publishPost:()=>{ this.setState({selPost:null}); this.say('Published.'); },
+      clearSel:()=>this.setState({selPost:null}),
+
+      perfWindow:'6 Aug – 12 Aug', perfStats, bars, bests, streak:'23-day streak',
+      insight:'Your Sector 89 posts bring twice the enquiries of anything else. MAPCO can add one more Sector 89 creative a week without repeating a plot.',
+      applyInsight:()=>this.say('Added to your autopilot plan.'),
+
+      masterCardStyle:`margin-top:26px;border-radius:26px;padding:24px 26px;background:${s.auto?'linear-gradient(180deg,#fff8e6,#fff)':'#fff'};border:1px solid ${s.auto?'#f2e3bd':'#e8e0f6'};box-shadow:0 22px 44px -30px rgba(140,110,30,.5)`,
+      masterIconStyle:`width:56px;height:56px;flex:none;border-radius:18px;display:grid;place-items:center;${s.auto?'background:#241d0c;color:#ffc93c':'background:#f3f0ea;color:#a49a8a'}`,
+      masterTitle:s.auto?'MAPCO is running your marketing':'Autopilot is paused',
+      masterSub:s.auto?('Every day it picks '+s.perDay+' plots, makes the creatives and posts them for you.'):'Nothing will be prepared or posted until you turn this back on.',
+      masterToggleStyle:this.toggleStyle(s.auto,'#1f9d5b'), masterKnobStyle:this.knobStyle(s.auto),
+      toggleAuto:()=>{ const nv=!s.auto; this.setState({auto:nv}); this.say(nv?'Autopilot on. Tomorrow\u2019s pack is already being prepared.':'Autopilot paused.'); },
+      perDayOpts, channels, rules,
+
+      packOpen:s.packOpen, packProp, packAssets, packAssetCount:String(packAssets.length),
+      closePack:()=>this.setState({packOpen:false}),
+      regenLabel:s.busySlot==='pack'?'Making a new version…':'Generate another version',
+      regenIcon:s.busySlot==='pack'?'ph-bold ph-spinner':'ph-fill ph-sparkle',
+      regenBtnStyle:`display:flex;align-items:center;gap:10px;padding:14px 20px;border-radius:14px;font-size:15px;font-weight:800;${s.busySlot==='pack'?'background:#f6f3fc;color:#8a7ab0':'background:#241d0c;color:#ffdd85'}`,
+      regenerate:()=>{ if(s.busySlot) return; this.setState(st=>({packExtra:st.packExtra+1,busySlot:'pack'})); setTimeout(()=>{ this.setState({busySlot:null}); this.say('A new version is ready.'); },1500); },
+      publishPack:()=>{ this.setState({packOpen:false}); this.say('Pack published across your channels.'); },
+
+      connectOpen:s.connectOpen, connIcon:connCh.icon,
+      connIconStyle:`width:48px;height:48px;flex:none;border-radius:15px;background:${connCh.soft};color:${connCh.color};display:grid;place-items:center`,
+      connTitle:connDone?connName+' connected':'Connect '+connName,
+      connSub:connDone?'MAPCO can now post for you.':'Three taps. MAPCO handles the rest.',
+      connSteps,
+      connBtnLabel:connDone?'Done':(s.connectStep===0?'Sign in':(s.connectStep===1?'Use this account':'Allow and finish')),
+      connBtnIcon:connDone?'ph-bold ph-check':'ph-bold ph-arrow-right',
+      connBtnStyle:`width:100%;margin-top:14px;display:flex;align-items:center;justify-content:center;gap:10px;padding:17px;border-radius:15px;background:${connDone?'#1f9d5b':'#241d0c'};color:${connDone?'#fff':'#ffdd85'};font-size:16.5px;font-weight:800`,
+      connAdvance:()=>{
+        if(connDone){ this.setState({connectOpen:false}); return; }
+        const nx=s.connectStep+1;
+        if(nx>=CSTEPS.length){ this.setState(st=>({connectStep:nx,conn:{...st.conn,[s.connectCh]:true}})); this.say(connName+' connected.'); }
+        else this.setState({connectStep:nx});
+      },
+      closeConnect:()=>this.setState({connectOpen:false}),
+      toast:s.toast
+    };
+  }
+}
+</script>
+</body>
+</html>

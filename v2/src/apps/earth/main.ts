@@ -32,6 +32,7 @@ import {
   type Property, type LatLng, type SearchEntry, type PlaceKind,
 } from './config';
 import { productRoutes, requestedPropertyId } from '../../packages/ui/product-routes';
+import { showPlan, teardownPlan, resizePlan, loadPlanCatalog, sectorMaps } from './plan-maps';
 import {
   analyseLocation, intentOf, roadAdvantagesFor,
   type Advantage, type LocationIntel, type Section,
@@ -83,13 +84,16 @@ interface State {
   laLoading: boolean;     // Location Advantage discovery in flight
   laContext: Section;     // which of the three contexts is shown
   roadsOn: boolean;       // global Roads layer
+  /** Sector/masterplan sheet chosen from the Sector picker; null = default. */
+  planMapId: string | null;
+  sectorOpen: boolean;    // the Sector maps picker
 }
 
 const state: State = {
   view: 'earth', selId: null, photoIdx: 0, cardTab: 'details',
   panelOpen: false, searchOpen: false,
   addMode: null, relocateFor: null, svSelect: false, activeAdvId: null, laLoading: false,
-  laContext: 'around', roadsOn: false,
+  laContext: 'around', roadsOn: false, planMapId: null, sectorOpen: false,
 };
 const requestedProperty = requestedPropertyId(window.location.search);
 
@@ -172,6 +176,17 @@ export function earthShellHtml(): string {
     </div>
   </div>
 
+  <!-- Properties / Sector browse sheets -->
+  <div id="e-sheet" style="display:none"></div>
+
+  <!-- Browse openers. Deliberately their OWN layer above the browse sheet
+       (z-index 46 > sheet's 40) so Properties ⇄ Sector can be switched
+       while a sheet is open, instead of being buried under it. -->
+  <div class="e-browse" role="toolbar" aria-label="Browse">
+    <button class="e-sheetbtn" id="e-open-props" type="button"><i class="ph-fill ph-squares-four"></i><span>Properties</span></button>
+    <button class="e-sheetbtn" id="e-open-sectors" type="button"><i class="ph-fill ph-map-trifold"></i><span>Sector</span></button>
+  </div>
+
   <!-- my properties -->
   <div class="e-mine">
     <div id="e-minepanel" style="display:none"></div>
@@ -200,6 +215,133 @@ function renderShell(container: HTMLElement): void {
   renderViews();
   renderMineButton();
   wireStaticEvents();
+  wireSheetButtons();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BROWSE SHEETS — Properties and Sector maps
+   Source: Client Presentation.dc.html lines 154–185 (isProps) and
+   187–215 (isSectors). Client-safe: no price, seller or internals.
+   ═══════════════════════════════════════════════════════════════ */
+type Sheet = null | 'props' | 'sectors';
+let sheet: Sheet = null;
+let sheetCity = 'all';
+
+function wireSheetButtons(): void {
+  $('e-open-props').addEventListener('click', () => openSheet('props'));
+  $('e-open-sectors').addEventListener('click', () => openSheet('sectors'));
+}
+
+function openSheet(next: Sheet): void {
+  sheet = sheet === next ? null : next;
+  sheetCity = 'all';
+  closeSearch();
+  void renderSheet();
+}
+
+/** Dismiss any open browse sheet without re-rendering the map views. */
+function closeSheets(): void {
+  if (!sheet) return;
+  sheet = null;
+  void renderSheet();
+}
+
+const chip = (label: string, count: number, on: boolean): string =>
+  `<button data-chip="${escapeHtml(label)}" style="display:inline-flex;align-items:center;gap:8px;padding:9px 15px;border-radius:999px;border:none;cursor:pointer;font:800 14px 'Hanken Grotesk',sans-serif;letter-spacing:.01em;${
+    on ? 'background:#1c1533;color:#fff8e6' : 'background:rgba(255,253,249,.86);color:#4a4160;box-shadow:inset 0 0 0 1px rgba(139,96,232,.22)'
+  }">${escapeHtml(label)}<span style="font-variant-numeric:tabular-nums;font-size:12.5px;${on ? 'color:#c8b9f5' : 'color:#8a7fae'}">${count}</span></button>`;
+
+const SHEET_WRAP = 'position:absolute;inset:0;overflow-y:auto;z-index:40;background:#f5efff;background-image:radial-gradient(62% 50% at -2% -4%,rgba(139,96,232,.5),transparent 62%),radial-gradient(54% 44% at 101% 4%,rgba(56,138,186,.4),transparent 62%),radial-gradient(66% 48% at 46% 108%,rgba(255,190,48,.44),transparent 64%),radial-gradient(40% 34% at 86% 66%,rgba(236,120,168,.22),transparent 68%)';
+
+async function renderSheet(): Promise<void> {
+  const host = $('e-sheet');
+  if (!sheet) { host.style.display = 'none'; host.innerHTML = ''; return; }
+  host.style.display = 'block';
+
+  // Bottom-right: clear of the top bar's view tabs and of the recenter
+  // control, so the sheet never covers Earth's own chrome.
+  const close = `<button data-sheet-close style="position:fixed;right:18px;bottom:74px;z-index:45;display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border:none;border-radius:12px;cursor:pointer;background:#1c1533;color:#fff8e6;box-shadow:0 10px 26px -12px rgba(0,0,0,.7);font:800 14px 'Hanken Grotesk',sans-serif"><i class="ph-bold ph-x"></i>Close</button>`;
+
+  if (sheet === 'props') {
+    const all = allProperties();
+    const cities = [...new Set(all.map((p) => p.city).filter(Boolean))];
+    const shown = sheetCity === 'all' ? all : all.filter((p) => p.city === sheetCity);
+    host.innerHTML = `${close}<div data-scroll style="${SHEET_WRAP}"><div style="max-width:1260px;margin:0 auto;padding:84px 34px 56px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${chip('All', all.length, sheetCity === 'all')}
+        ${cities.map((c) => chip(c, all.filter((p) => p.city === c).length, sheetCity === c)).join('')}
+      </div>
+      ${shown.length ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(298px,1fr));gap:20px;margin-top:22px">
+        ${shown.map((p) => {
+          const shot = p.photos[0] || '';
+          return `<button data-prop="${escapeHtml(p.id)}" style="min-width:0;display:block;padding:0;border:none;cursor:pointer;text-align:left;border-radius:22px;overflow:hidden;background:rgba(255,253,249,.96);box-shadow:0 0 0 1px rgba(139,96,232,.16),0 3px 4px rgba(40,26,2,.05),0 30px 54px -34px rgba(139,96,232,.5);transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s ease" onmouseover="this.style.transform='translateY(-8px)'" onmouseout="this.style.transform='none'">
+            <span style="position:relative;display:block;overflow:hidden">
+              <span style="display:block;height:186px;${shot ? `background-image:url('${escapeHtml(shot)}');background-size:cover;background-position:center` : 'background:#efe8fb'}"></span>
+              <span style="position:absolute;top:13px;left:13px;display:inline-block;white-space:nowrap;padding:6px 11px;border-radius:8px;background:rgba(28,21,51,.72);backdrop-filter:blur(10px);font-size:12px;font-weight:800;letter-spacing:.02em;font-variant-numeric:tabular-nums;color:#fff8e6">${escapeHtml(p.size)}</span>
+              <span style="position:absolute;right:13px;bottom:13px;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:rgba(255,253,249,.95);box-shadow:0 2px 8px -3px rgba(28,21,51,.4);font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;color:#1c1533"><i class="ph-fill ph-images" style="font-size:13px"></i>${p.photos.length} photos</span>
+            </span>
+            <span style="display:block;padding:18px 20px 20px;text-align:left">
+              <span style="display:block;font-family:'Newsreader',serif;font-weight:500;font-size:27px;letter-spacing:-.025em;color:#1c1533;line-height:1.06">${escapeHtml(p.plotNo)}</span>
+              <span style="display:block;margin-top:5px;font-size:14px;font-weight:600;letter-spacing:.005em;color:#6f6489">${escapeHtml(p.sector)}</span>
+              <span style="display:flex;flex-wrap:wrap;gap:7px;margin-top:14px">
+                ${p.facing ? `<span style="padding:6px 11px;border-radius:8px;background:#fff2cd;box-shadow:inset 0 0 0 1px rgba(168,121,42,.22);font-size:12px;font-weight:800;letter-spacing:.02em;color:#8a5a0c">${escapeHtml(p.facing)} facing</span>` : ''}
+                ${p.road ? `<span style="padding:6px 11px;border-radius:8px;background:#e0f2e7;box-shadow:inset 0 0 0 1px rgba(20,108,58,.2);font-size:12px;font-weight:800;letter-spacing:.02em;color:#146c3a">${escapeHtml(p.road)}</span>` : ''}
+              </span>
+              <span style="display:flex;align-items:center;gap:8px;margin-top:16px;font-size:14.5px;font-weight:800;letter-spacing:.01em;color:#8a5a0c">See everything <i class="ph-bold ph-arrow-right" style="font-size:15px"></i></span>
+            </span>
+          </button>`;
+        }).join('')}
+      </div>` : `<div style="margin-top:22px;padding:40px;text-align:center;border-radius:20px;background:rgba(255,253,249,.8);color:#6f6489;font-size:15px">No properties here yet.</div>`}
+    </div></div>`;
+  } else {
+    await loadPlanCatalog();
+    const maps = sectorMaps();
+    const cities = [...new Set(maps.map((m) => m.city).filter(Boolean))];
+    const shown = sheetCity === 'all' ? maps : maps.filter((m) => m.city === sheetCity);
+    const plotsOn = (mapId: string): number =>
+      allProperties().filter((p) => p.canonicalRecord?.mapPlacement?.mapId === mapId).length;
+    host.innerHTML = `${close}<div data-scroll style="${SHEET_WRAP}"><div style="max-width:1260px;margin:0 auto;padding:84px 34px 56px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        ${chip('All', maps.length, sheetCity === 'all')}
+        ${cities.map((c) => chip(c, maps.filter((m) => m.city === c).length, sheetCity === c)).join('')}
+      </div>
+      ${shown.length ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(288px,1fr));gap:20px;margin-top:22px">
+        ${shown.map((m) => {
+          const plots = plotsOn(m.id);
+          return `<button data-sector="${escapeHtml(m.id)}" style="min-width:0;display:block;padding:0;border:none;cursor:pointer;text-align:left;border-radius:22px;overflow:hidden;background:rgba(255,253,249,.96);box-shadow:0 0 0 1px rgba(139,96,232,.16),0 3px 4px rgba(40,26,2,.05),0 30px 54px -34px rgba(107,63,212,.55);transition:transform .28s cubic-bezier(.2,.8,.2,1)" onmouseover="this.style.transform='translateY(-8px)'" onmouseout="this.style.transform='none'">
+            <span style="position:relative;display:block;height:172px;overflow:hidden">
+              <span style="display:block;height:100%;background-image:url('${escapeHtml(m.original.src)}');background-size:cover;background-position:center"></span>
+              <span style="position:absolute;top:13px;left:13px;display:inline-block;white-space:nowrap;padding:6px 11px;border-radius:8px;background:rgba(28,21,51,.72);backdrop-filter:blur(10px);font-size:12px;font-weight:800;letter-spacing:.02em;color:#fff8e6">${escapeHtml(m.city)}</span>
+              ${plots ? `<span style="position:absolute;right:13px;bottom:13px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;padding:6px 12px;border-radius:999px;background:#ffc21e;box-shadow:0 2px 8px -3px rgba(120,86,10,.6);font-size:12px;font-weight:800;color:#231a04"><i class="ph-fill ph-map-pin-area" style="font-size:13px"></i>${plots} plot${plots === 1 ? '' : 's'}</span>` : ''}
+            </span>
+            <span style="display:block;padding:18px 20px 20px;text-align:left">
+              <span style="display:block;font-family:'Newsreader',serif;font-weight:500;font-size:26px;letter-spacing:-.025em;color:#1c1533;line-height:1.06">${escapeHtml(m.title)}</span>
+              <span style="display:block;margin-top:5px;font-size:14px;font-weight:600;color:#6f6489">${escapeHtml(m.sectorOrBlock || m.city)}</span>
+              <span style="display:flex;align-items:center;gap:8px;margin-top:16px;font-size:15px;font-weight:800;color:#8a5a0c">Open the layout <i class="ph-bold ph-arrow-right" style="font-size:15px"></i></span>
+            </span>
+          </button>`;
+        }).join('')}
+      </div>` : `<div style="margin-top:22px;padding:40px;text-align:center;border-radius:20px;background:rgba(255,253,249,.8);color:#6f6489;font-size:15px">No sector maps are published yet.</div>`}
+    </div></div>`;
+  }
+
+  host.querySelector('[data-sheet-close]')?.addEventListener('click', () => openSheet(null));
+  host.querySelectorAll<HTMLElement>('[data-chip]').forEach((el) => {
+    el.addEventListener('click', () => {
+      sheetCity = el.dataset.chip === 'All' ? 'all' : (el.dataset.chip ?? 'all');
+      void renderSheet();
+    });
+  });
+  host.querySelectorAll<HTMLElement>('[data-prop]').forEach((el) => {
+    el.addEventListener('click', () => { openSheet(null); selectProperty(el.dataset.prop!); });
+  });
+  host.querySelectorAll<HTMLElement>('[data-sector]').forEach((el) => {
+    el.addEventListener('click', () => {
+      state.planMapId = el.dataset.sector ?? null;
+      openSheet(null);
+      setView('masterplan');
+    });
+  });
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -334,6 +476,9 @@ function setView(v: View): void {
   const wasLive = isLiveMapView(state.view);
   state.view = v;
   closeSearch();
+  // Picking a map view leaves any open browse sheet — the view tabs are the
+  // way out of Properties/Sector, exactly as in the presentation design.
+  closeSheets();
 
   // Earth ↔ Map is a basemap swap on the SAME instance: camera, markers,
   // property card, Location Advantage and overlays all survive untouched.
@@ -354,23 +499,17 @@ function setView(v: View): void {
 }
 function renderPlanOverlay(): void {
   const plan = $('e-plan');
-  if (isLiveMapView(state.view)) { plan.style.display = 'none'; return; }
-  const sel = currentProp();
-  const is3d = state.view === '3d';
+  if (isLiveMapView(state.view)) {
+    plan.style.display = 'none';
+    // Free the raster engine, its listeners and cached imagery while the
+    // live Google map is the visible surface.
+    teardownPlan(plan);
+    return;
+  }
   plan.style.display = 'block';
-  plan.innerHTML = `
-  <div class="e-plan">
-    <div class="e-plan-grid ${is3d ? 'e-plan-grid--3d' : 'e-plan-grid--plan'}"></div>
-    <div class="e-plan-inner">
-      <div class="e-plan-ic"><i class="${is3d ? 'ph-fill ph-cube' : 'ph-fill ph-map-trifold'}"></i></div>
-      <div class="e-plan-eyebrow">${is3d ? 'Presentation view' : 'Official layout'}</div>
-      <div class="e-plan-title">${is3d ? '3D masterplan' : 'Masterplan'}</div>
-      <p class="e-plan-body">${is3d
-        ? 'The 3D presentation layout for this area will appear here — the same property, shown the way clients love to see it.'
-        : 'The official plot layout for this area will appear here — plot numbers, roads and blocks, matched to the same property you have on Earth.'}</p>
-      ${sel ? `<div class="e-plan-sel"><span class="ph-fill ph-map-pin"></span>Showing ${escapeHtml(sel.tag)} · ${escapeHtml(sel.sector)}</div>` : ''}
-    </div>
-  </div>`;
+  // The real authored masterplan / 3D sheets, rendered by the shared map
+  // engine. A specific sector sheet can be requested from the Sector picker.
+  void showPlan(plan, state.view === '3d' ? 'threeD' : 'masterplan', state.planMapId ?? undefined);
 }
 
 /* ═══════════════════════════════════════════════════════════════

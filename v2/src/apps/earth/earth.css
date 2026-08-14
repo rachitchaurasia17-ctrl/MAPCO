@@ -320,7 +320,48 @@
 .e-add-name { height: 54px; width: 220px; border: 1.5px solid #e4dbf7; border-radius: 14px; background: #fff; padding: 0 16px; font: 700 16px 'Hanken Grotesk', sans-serif; color: #241f1c; outline: none; }
 .e-add-name:focus { border-color: #5b32c4; }
 
-/* ── Masterplan / 3D overlay ───────────────────────────────────── */
+/* ── Small browse openers (Properties / Sector) ────────────────── */
+/* Its own layer ABOVE the browse sheet (z 46 > sheet 40), so Properties and
+   Sector stay switchable while a sheet is open. Container is click-through;
+   the buttons re-enable pointer events themselves — a child of a
+   pointer-events:none parent that forgets this renders perfectly and is
+   completely inert. */
+.e-browse {
+  position: absolute; left: 18px; bottom: 82px; z-index: 46;
+  display: flex; gap: 8px; pointer-events: none;
+}
+.e-sheetbtn {
+  pointer-events: auto;
+  display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 13px;
+  border: none; border-radius: 11px; cursor: pointer;
+  background: rgba(28,21,51,.62); backdrop-filter: blur(10px);
+  box-shadow: inset 0 0 0 1px rgba(255,248,230,.16);
+  color: #fff8e6; font: 800 13px 'Hanken Grotesk', sans-serif; letter-spacing: .01em;
+  transition: background .16s ease;
+}
+.e-sheetbtn:hover { background: rgba(28,21,51,.82); }
+.e-sheetbtn i { font-size: 15px; color: #ffc93c; }
+
+/* ── Masterplan / 3D raster stage ──────────────────────────────────
+   The real authored sheets, rendered by the shared map engine. Sits
+   under Earth's glass chrome and owns its own pan/zoom surface. */
+#e-plan { position: absolute; inset: 0; z-index: 20; }
+/* The map engine sets `position:relative` inline on its mount root, which
+   beats a stylesheet `position:absolute` — so `inset:0` would offset the box
+   without ever stretching it and the stage collapsed to height 0, clipping
+   the map away entirely. Explicit width/height fill the host either way.
+   No entrance animation here: a stalled/non-running animation with
+   `fill-mode: both` would leave the map stuck at opacity 0. */
+.e-plan-stage {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  overflow: hidden; touch-action: none; cursor: grab;
+  background: #efe7dc;
+  background-image: radial-gradient(62% 50% at -2% -4%, rgba(139,96,232,.28), transparent 62%),
+                    radial-gradient(54% 44% at 104% 0%, rgba(255,201,60,.24), transparent 60%);
+}
+.e-plan-stage:active { cursor: grabbing; }
+
+/* ── Masterplan / 3D message overlay (no maps published, 3D missing) ── */
 .e-plan {
   position: absolute; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; overflow: hidden;
   background: #f5efff;

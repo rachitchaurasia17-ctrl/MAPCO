@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&amp;family=Hanken+Grotesk:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#f4e9d2}
+  body{font-family:'Hanken Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;font-feature-settings:'ss01','cv01','tnum'}
+  a{color:#7d6c40;text-decoration:none}
+  a:hover{color:#5f5130}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  [data-scroll]::-webkit-scrollbar{width:10px}
+  [data-scroll]::-webkit-scrollbar-thumb{background:#e6cf9a;border-radius:9px;border:3px solid transparent;background-clip:content-box}
+  [data-scroll]::-webkit-scrollbar-track{background:transparent}
+  @keyframes rowIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  @keyframes pinIn{0%{opacity:0;transform:scale(.7)}60%{transform:scale(1.06)}100%{opacity:1;transform:scale(1)}}
+  @keyframes ringPulse{0%{transform:translate(-50%,-50%) scale(.35);opacity:.9}100%{transform:translate(-50%,-50%) scale(2.8);opacity:0}}
+  @keyframes glowCard{0%,100%{box-shadow:0 0 0 4px #ffb703,0 0 22px 6px rgba(255,183,3,.85),0 0 54px 16px rgba(255,183,3,.45)}50%{box-shadow:0 0 0 4px #ffd60a,0 0 34px 12px rgba(255,214,10,.95),0 0 80px 28px rgba(255,183,3,.55)}}
+  @keyframes lbIn{from{opacity:0;transform:scale(.985)}to{opacity:1;transform:none}}
+  @keyframes veil{from{opacity:0}to{opacity:1}}
+</style>
+</helmet>
+<div style="position:fixed;inset:0;display:flex;background:#241a08;background-image:radial-gradient(70% 55% at 8% 0%,rgba(255,201,60,.3),transparent 60%),radial-gradient(60% 50% at 96% 6%,rgba(151,110,235,.26),transparent 62%),radial-gradient(75% 55% at 50% 104%,rgba(31,161,110,.22),transparent 62%);font-family:'Hanken Grotesk',sans-serif">
+  <sc-if value="{{ showTopBar }}" hint-placeholder-val="{{ true }}">
+  <div style="position:absolute;top:14px;left:14px;z-index:34;display:flex;align-items:center;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px;padding:3px 10px 3px 3px;border-radius:14px;background:rgba(24,16,4,.5);backdrop-filter:blur(12px)">
+        <svg viewBox="0 0 40 40" style="width:34px;height:34px;flex:none;display:block">
+          <rect x="0" y="0" width="40" height="40" rx="12" fill="#ffc21e"></rect>
+          <path d="M20 8.5 L33 16 L20 23.5 L7 16 Z" fill="#231a04"></path>
+          <path d="M7 22 L20 29.5 L33 22 L33 25.5 L20 33 L7 25.5 Z" fill="#231a04" opacity="0.45"></path>
+          <circle cx="20" cy="16" r="3.6" fill="#231a04"></circle>
+        </svg>
+        <span style="font-size:17px;font-weight:800;letter-spacing:-.02em;color:#fff8e6">Plot<span style="color:#ffc21e">Map</span></span>
+      </div>
+
+      <div style="position:relative">
+        <button onClick="{{ toggleMaps }}" style="{{ mapBtnStyle }}">
+          <i class="ph-fill ph-map-trifold" style="font-size:19px;color:#ffd76b;flex:none"></i>
+          <span style="font-size:15.5px;font-weight:800;color:#fff8e6;white-space:nowrap">{{ mapName }}</span>
+          <i class="{{ mapsCaret }}" style="font-size:12px;color:#ffd76b;flex:none"></i>
+        </button>
+        <sc-if value="{{ mapsOpen }}">
+        <div style="position:absolute;top:calc(100% + 9px);left:0;width:286px;background:#fffdfb;border-radius:16px;padding:9px;box-shadow:0 0 0 1px rgba(88,52,168,.14),0 26px 60px -20px rgba(28,21,51,.55);z-index:40;animation:rowIn .16s ease both">
+          <sc-for list="{{ mapsList }}" as="mp" hint-placeholder-count="5">
+            <button onClick="{{ mp.go }}" style="{{ mp.style }}" style-hover="background:#fff6e2">
+              <i class="{{ mp.icon }}" style="font-size:18px;{{ mp.iconColor }}"></i>
+              <span style="flex:1;text-align:left;font-size:15.5px;font-weight:700;color:#1c1533">{{ mp.label }}</span>
+              <span style="{{ mp.tagStyle }}">{{ mp.tag }}</span>
+            </button>
+          </sc-for>
+        </div>
+        </sc-if>
+      </div>
+
+      <div style="display:flex;gap:5px;padding:4px;border-radius:14px;background:rgba(24,16,4,.5);backdrop-filter:blur(9px)">
+        <sc-for list="{{ viewTabs }}" as="t" hint-placeholder-count="3"><button onClick="{{ t.go }}" style="{{ t.style }}">{{ t.label }}</button></sc-for>
+      </div>
+
+    </div>
+
+
+  </sc-if>
+
+  <sc-if value="{{ isPlan }}" hint-placeholder-val="{{ true }}">
+  <div style="{{ mapAreaStyle }}">
+    <div onMouseDown="{{ onDown }}" onWheel="{{ onWheel }}" style="{{ stageStyle }}">
+      <div style="{{ mapInnerStyle }}">
+        <img src="assets/newchandigarh-map.png" draggable="false" style="{{ mapImgStyle }}">
+
+        <sc-for list="{{ pins }}" as="p" hint-placeholder-count="0">
+          <div style="{{ p.wrapStyle }}">
+            <div style="{{ p.ringStyle }}"></div>
+            <button onClick="{{ p.go }}" style="{{ p.innerStyle }}">
+              <span style="{{ p.tagStyle }}"><i class="{{ p.tagIcon }}" style="font-size:15px"></i>{{ p.label }}</span>
+              <span style="{{ p.stemStyle }}"></span>
+              <span style="{{ p.dotStyle }}"></span>
+            </button>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="position:absolute;left:10px;bottom:10px;z-index:26;display:flex;align-items:center;gap:4px;padding:4px;border-radius:12px;background:rgba(24,16,4,.3);backdrop-filter:blur(10px)">
+      <sc-for list="{{ dimTabs }}" as="d" hint-placeholder-count="2"><button onClick="{{ d.go }}" title="{{ d.label }}" style="{{ d.style }}"><i class="{{ d.icon }}" style="font-size:15px"></i>{{ d.label }}</button></sc-for>
+      <span style="width:1px;height:24px;background:rgba(255,248,230,.22);margin:0 3px"></span>
+      <button onClick="{{ nextHl }}" title="{{ hlTitle }}" style="{{ hlBtnStyle }}"><i class="ph-fill ph-highlighter-circle" style="font-size:16px"></i>{{ hlLabel }}</button>
+    </div>
+
+    <sc-if value="{{ hasPins }}">
+    <div style="position:absolute;right:16px;bottom:16px;z-index:26;display:flex;align-items:center;gap:12px;padding:9px 9px 9px 16px;border-radius:15px;background:rgba(24,16,4,.5);backdrop-filter:blur(12px)">
+      <i class="ph-fill ph-map-pin" style="font-size:19px;color:#ffd76b"></i>
+      <span style="font-size:15.5px;font-weight:700;color:#fff8e6">{{ pinCountText }}</span>
+      <button onClick="{{ clearPins }}" style="height:38px;padding:0 14px;border-radius:11px;background:rgba(255,248,230,.16);color:#fff8e6;font-size:14.5px;font-weight:800" style-hover="background:rgba(255,248,230,.3)">Clear all</button>
+    </div>
+    </sc-if>
+  </div>
+
+  <aside style="{{ railStyle }}">
+    <div style="flex:none;display:flex;align-items:center;gap:8px;padding:14px 16px 12px">
+      <div style="position:relative;flex:1;min-width:0">
+        <button onClick="{{ toggleFilter }}" style="{{ filterBtnStyle }}" style-hover="background:#ffe9a8">
+          <i class="{{ filterIcon }}" style="font-size:20px;color:#a8792a;flex:none"></i>
+          <span style="flex:1;text-align:left;min-width:0"><span style="display:block;font-size:10.5px;font-weight:800;letter-spacing:.12em;color:#a8792a">SHOWING</span><span style="display:block;font-size:17px;font-weight:800;color:#241d0c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ filterLabel }}</span></span>
+          <span style="{{ filterCountStyle }}">{{ filterCount }}</span>
+          <i class="{{ filterCaret }}" style="font-size:14px;color:#a8792a;flex:none"></i>
+        </button>
+        <sc-if value="{{ filterOpen }}">
+        <div style="position:absolute;top:calc(100% + 8px);left:0;right:0;background:#fffdfb;border-radius:18px;padding:9px;box-shadow:0 28px 64px -22px rgba(28,21,51,.5),0 0 0 1px rgba(88,52,168,.14);z-index:44;animation:rowIn .16s ease both">
+          <sc-for list="{{ catRows }}" as="c" hint-placeholder-count="5">
+            <button onClick="{{ c.go }}" style="{{ c.style }}" style-hover="background:#fff6e2">
+              <span style="{{ c.iconWrap }}"><i class="{{ c.icon }}" style="font-size:19px"></i></span>
+              <span style="flex:1;text-align:left;font-size:16.5px;font-weight:800;color:#1c1533">{{ c.label }}</span>
+              <span style="{{ c.countStyle }}">{{ c.count }}</span>
+            </button>
+          </sc-for>
+        </div>
+        </sc-if>
+      </div>
+    </div>
+
+    <div data-scroll="" style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:0 16px 18px;display:flex;flex-direction:column;gap:14px">
+      <sc-for list="{{ places }}" as="p" hint-placeholder-count="4">
+        <div style="{{ p.cardStyle }}" style-hover="transform:translateY(-3px)">
+          <div style="padding:12px 14px 10px">
+            <span style="display:block;font-size:19px;font-weight:800;color:#241d0c;line-height:1.2;text-wrap:pretty">{{ p.label }}</span>
+          </div>
+          <button onClick="{{ p.open }}" title="See all photos" style="display:block;width:100%;position:relative;cursor:pointer;background:none">
+            <span style="{{ p.photoStyle }}"></span>
+            <span style="position:absolute;right:10px;bottom:10px;display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;color:#241d0c;background:rgba(255,253,247,.92);border-radius:999px;padding:6px 12px"><i class="ph-fill ph-images" style="font-size:14px"></i>{{ p.countText }}</span>
+          </button>
+          <div style="display:flex;align-items:center;gap:7px;padding:9px 10px 10px">
+            <button onClick="{{ p.pin }}" style="{{ p.pinBtn }}"><i class="{{ p.pinIcon }}" style="font-size:16px"></i>{{ p.pinText }}</button>
+            <a href="{{ p.streetUrl }}" target="_blank" rel="noopener" title="Opens Google Street View in a new tab" style="display:flex;align-items:center;justify-content:center;gap:7px;flex:none;height:38px;padding:0 12px;border-radius:11px;background:#e8f0fe;color:#1a56c4;font-size:13.5px;font-weight:800;text-decoration:none;box-shadow:inset 0 0 0 1.5px #c3d7fb" style-hover="background:#d7e5fd"><i class="ph-fill ph-person-simple-walk" style="font-size:17px"></i>Street view</a>
+          </div>
+        </div>
+      </sc-for>
+      <sc-if value="{{ noPlaces }}"><div style="padding:26px 14px;text-align:center;font-size:15px;color:#7d6c40">Nothing here on this map yet.</div></sc-if>
+    </div>
+  </aside>
+  </sc-if>
+
+  <sc-if value="{{ isProps }}">
+  <div data-scroll="" style="position:absolute;inset:0;overflow-y:auto;background:#f5efff;background-image:radial-gradient(62% 50% at -2% -4%,rgba(139,96,232,.5),transparent 62%),radial-gradient(54% 44% at 101% 4%,rgba(56,138,186,.4),transparent 62%),radial-gradient(66% 48% at 46% 108%,rgba(255,190,48,.44),transparent 64%),radial-gradient(40% 34% at 86% 66%,rgba(236,120,168,.22),transparent 68%)">
+    <div style="max-width:1260px;margin:0 auto;padding:84px 34px 56px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;animation:rowIn .45s ease both">
+        <sc-for list="{{ pChips }}" as="c" hint-placeholder-count="4">
+          <button onClick="{{ c.go }}" style="{{ c.style }}">{{ c.label }}<span style="{{ c.numStyle }}">{{ c.n }}</span></button>
+        </sc-for>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(298px,1fr));gap:20px;margin-top:22px">
+        <sc-for list="{{ propCards }}" as="p" hint-placeholder-count="0">
+          <button onClick="{{ p.open }}" style="{{ p.cardStyle }}" style-hover="transform:translateY(-8px);box-shadow:0 0 0 1px rgba(139,96,232,.35),0 3px 4px rgba(40,26,2,.06),0 44px 66px -36px rgba(139,96,232,.6)">
+            <span style="position:relative;display:block;overflow:hidden">
+              <span style="{{ p.photoStyle }}"></span>
+              <span style="position:absolute;top:13px;left:13px;display:inline-block;white-space:nowrap;padding:6px 11px;border-radius:8px;background:rgba(28,21,51,.72);backdrop-filter:blur(10px);font-size:12px;font-weight:800;letter-spacing:.02em;font-variant-numeric:tabular-nums;color:#fff8e6">{{ p.size }}</span>
+              <span style="position:absolute;right:13px;bottom:13px;display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:rgba(255,253,249,.95);box-shadow:0 2px 8px -3px rgba(28,21,51,.4);font-size:12px;font-weight:800;font-variant-numeric:tabular-nums;color:#1c1533"><i class="ph-fill ph-images" style="font-size:13px"></i>{{ p.shots }} photos</span>
+            </span>
+            <span style="display:block;padding:18px 20px 20px;text-align:left">
+              <span style="display:block;font-family:'Newsreader',serif;font-weight:500;font-size:27px;letter-spacing:-.025em;color:#1c1533;line-height:1.06">{{ p.name }}</span>
+              <span style="display:block;margin-top:5px;font-size:14px;font-weight:600;letter-spacing:.005em;color:#6f6489">{{ p.sector }}</span>
+              <span style="display:flex;flex-wrap:wrap;gap:7px;margin-top:14px">
+                <sc-if value="{{ p.hasFacing }}"><span style="padding:6px 11px;border-radius:8px;background:#fff2cd;box-shadow:inset 0 0 0 1px rgba(168,121,42,.22);font-size:12px;font-weight:800;letter-spacing:.02em;color:#8a5a0c">{{ p.facingText }}</span></sc-if>
+                <sc-if value="{{ p.hasFlag }}"><span style="padding:6px 11px;border-radius:8px;background:#e0f2e7;box-shadow:inset 0 0 0 1px rgba(20,108,58,.2);font-size:12px;font-weight:800;letter-spacing:.02em;color:#146c3a">{{ p.flag }}</span></sc-if>
+              </span>
+              <span style="display:flex;align-items:center;gap:8px;margin-top:16px;font-size:14.5px;font-weight:800;letter-spacing:.01em;color:#8a5a0c">See everything <i class="ph-bold ph-arrow-right" style="font-size:15px"></i></span>
+            </span>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isSectors }}">
+  <div data-scroll="" style="position:absolute;inset:0;overflow-y:auto;background:#f5efff;background-image:radial-gradient(62% 50% at -2% -4%,rgba(139,96,232,.5),transparent 62%),radial-gradient(54% 44% at 101% 4%,rgba(56,138,186,.4),transparent 62%),radial-gradient(66% 48% at 46% 108%,rgba(255,190,48,.44),transparent 64%),radial-gradient(40% 34% at 86% 66%,rgba(236,120,168,.22),transparent 68%)">
+    <div style="max-width:1260px;margin:0 auto;padding:84px 34px 56px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;animation:rowIn .45s ease both">
+        <sc-for list="{{ sChips }}" as="c" hint-placeholder-count="5">
+          <button onClick="{{ c.go }}" style="{{ c.style }}">{{ c.label }}<span style="{{ c.numStyle }}">{{ c.n }}</span></button>
+        </sc-for>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(288px,1fr));gap:20px;margin-top:22px">
+        <sc-for list="{{ sectorCards }}" as="m" hint-placeholder-count="0">
+          <button onClick="{{ m.open }}" style="{{ m.cardStyle }}" style-hover="transform:translateY(-8px);box-shadow:0 0 0 1px rgba(139,96,232,.42),0 3px 4px rgba(40,26,2,.06),0 44px 66px -36px rgba(107,63,212,.7)">
+            <span style="position:relative;display:block;height:172px;overflow:hidden">
+              <span style="{{ m.motifStyle }}"></span>
+              <span style="position:absolute;top:13px;left:13px;display:inline-block;white-space:nowrap;padding:6px 11px;border-radius:8px;background:rgba(28,21,51,.72);backdrop-filter:blur(10px);font-size:12px;font-weight:800;letter-spacing:.02em;color:#fff8e6">{{ m.city }}</span>
+              <sc-if value="{{ m.hasPlots }}"><span style="position:absolute;right:13px;bottom:13px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;padding:6px 12px;border-radius:999px;background:#ffc21e;box-shadow:0 2px 8px -3px rgba(120,86,10,.6);font-size:12px;font-weight:800;color:#231a04"><i class="ph-fill ph-map-pin-area" style="font-size:13px"></i>{{ m.plotText }}</span></sc-if>
+            </span>
+            <span style="display:block;padding:18px 20px 20px;text-align:left">
+              <span style="display:block;font-family:'Newsreader',serif;font-weight:500;font-size:26px;letter-spacing:-.025em;color:#1c1533;line-height:1.06">{{ m.name }}</span>
+              <span style="display:block;margin-top:5px;font-size:14px;font-weight:600;color:#6f6489">{{ m.sub }}</span>
+              <span style="display:flex;align-items:center;gap:8px;margin-top:16px;font-size:15px;font-weight:800;color:#8a5a0c">Open the layout <i class="ph-bold ph-arrow-right" style="font-size:15px"></i></span>
+            </span>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ sec }}">
+  <div style="position:absolute;inset:0;z-index:30;display:flex;background:#1d1405;background-image:radial-gradient(75% 55% at 88% -4%,rgba(255,201,60,.34),transparent 60%),radial-gradient(65% 50% at 4% 10%,rgba(151,110,235,.28),transparent 60%),radial-gradient(80% 60% at 50% 106%,rgba(31,161,110,.22),transparent 60%);animation:veil .2s ease both">
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;padding:22px 24px 22px 26px;gap:16px;min-height:0">
+
+      <div style="flex:none;display:flex;align-items:center;gap:10px">
+        <button onClick="{{ closeSec }}" style="flex:none;white-space:nowrap;display:flex;align-items:center;gap:8px;height:44px;padding:0 17px;border-radius:14px;background:rgba(255,248,230,.12);color:#fff8e6;font-size:15px;font-weight:800;transition:background .2s" style-hover="background:rgba(255,248,230,.22)"><i class="ph-bold ph-arrow-left" style="font-size:16px"></i>All sectors</button>
+        <div style="flex:0 1 auto;min-width:0;display:flex;align-items:center;gap:9px;height:44px;padding:0 17px;border-radius:14px;background:rgba(255,248,230,.09);box-shadow:inset 0 0 0 1px rgba(255,248,230,.14)">
+          <i class="ph-fill ph-map-pin-area" style="font-size:18px;color:#ffc21e;flex:none"></i>
+          <span style="min-width:0;font-size:15.5px;font-weight:800;color:#fff8e6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ sec.name }}</span>
+        </div>
+        <div style="flex:1"></div>
+        <div style="flex:none;white-space:nowrap;display:flex;align-items:center;gap:5px;padding:5px;border-radius:15px;background:rgba(255,248,230,.09);box-shadow:inset 0 0 0 1px rgba(255,248,230,.14)">
+          <sc-for list="{{ sec.dims }}" as="d" hint-placeholder-count="2"><button onClick="{{ d.go }}" style="{{ d.style }}"><i class="{{ d.icon }}" style="font-size:16px"></i>{{ d.label }}</button></sc-for>
+        </div>
+      </div>
+
+      <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center">
+        <div style="{{ sec.planStyle }}">
+          <div style="{{ sec.planArt }}"></div>
+          <sc-for list="{{ sec.pins }}" as="p" hint-placeholder-count="0">
+            <div style="{{ p.wrapStyle }}">
+              <div style="{{ p.ringStyle }}"></div>
+              <button onClick="{{ p.go }}" style="{{ p.innerStyle }}">
+                <span style="{{ p.tagStyle }}"><i class="ph-fill ph-map-pin-area" style="font-size:15px"></i>{{ p.label }}</span>
+                <span style="display:block;width:3px;height:14px;background:#ffc21e"></span>
+                <span style="display:block;width:14px;height:14px;border-radius:50%;background:#ffc21e;border:3px solid #fffdfb;margin-top:-2px"></span>
+              </button>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+
+    <aside data-scroll="" style="width:344px;flex:none;overflow-y:auto;background:rgba(255,248,230,.06);box-shadow:inset 1px 0 0 rgba(255,248,230,.14);padding:26px 22px 24px">
+      <div style="font-size:11.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#ffc93c">In this sector</div>
+      <div style="margin-top:4px;font-family:'Newsreader',serif;font-weight:500;font-size:29px;letter-spacing:-.028em;color:#fffdf7">{{ sec.countText }}</div>
+      <div style="display:flex;flex-direction:column;gap:13px;margin-top:16px">
+        <sc-for list="{{ sec.props }}" as="p" hint-placeholder-count="0">
+          <button onClick="{{ p.open }}" style="{{ p.cardStyle }}" style-hover="transform:translateY(-3px);box-shadow:inset 0 0 0 1px rgba(255,201,60,.6)">
+            <span style="{{ p.photoStyle }}"></span>
+            <span style="display:block;padding:13px 15px 15px;text-align:left">
+              <span style="display:block;font-size:17.5px;font-weight:800;letter-spacing:-.012em;color:#fffdf7;line-height:1.2">{{ p.name }}</span>
+              <span style="display:block;margin-top:5px;font-size:13.5px;font-weight:600;color:#e2cf9f">{{ p.line }}</span>
+            </span>
+          </button>
+        </sc-for>
+        <sc-if value="{{ sec.empty }}"><div style="padding:22px 14px;text-align:center;font-size:15px;color:#7d6c40;background:rgba(255,248,230,.07);border-radius:16px;box-shadow:inset 0 0 0 1px rgba(255,248,230,.14);color:#e2cf9f">No plots of ours in this sector yet.</div></sc-if>
+      </div>
+    </aside>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ pd }}">
+  <div style="position:absolute;inset:0;z-index:60;display:flex;flex-direction:column;overflow:hidden;background:#150e03;background-image:radial-gradient(70% 50% at 88% -6%,rgba(255,201,60,.3),transparent 62%),radial-gradient(60% 45% at 2% 4%,rgba(151,110,235,.26),transparent 62%),radial-gradient(80% 55% at 50% 106%,rgba(31,161,110,.2),transparent 62%);animation:veil .22s ease both">
+
+    <header style="flex:none;display:flex;align-items:center;gap:13px;padding:13px 18px 10px">
+      <button onClick="{{ pd.close }}" style="flex:none;display:flex;align-items:center;gap:9px;height:46px;padding:0 17px;border-radius:14px;background:rgba(255,248,230,.13);color:#fff8e6;font-size:15.5px;font-weight:800" style-hover="background:rgba(255,248,230,.24)"><i class="ph-bold ph-arrow-left" style="font-size:18px"></i>Back</button>
+      <div style="min-width:0;flex:1;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="font-family:'Newsreader',serif;font-weight:500;font-size:31px;letter-spacing:-.03em;color:#fffdf7;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ pd.name }}</div>
+        <span style="flex:none;padding:6px 12px;border-radius:9px;background:rgba(255,194,30,.16);color:#ffd76b;font-size:13px;font-weight:800;letter-spacing:.02em">{{ pd.typeLabel }}</span>
+        <span style="flex:none;font-size:15.5px;color:#dcc79a">{{ pd.sectorLine }}</span>
+      </div>
+      
+      
+    </header>
+
+    <div style="flex:1;min-height:0;display:flex;gap:14px;padding:0 18px 18px">
+
+      <section style="flex:1;min-width:0;position:relative;border-radius:26px;overflow:hidden;background:#0f0b03;box-shadow:0 44px 90px -36px rgba(0,0,0,.9),inset 0 0 0 1px rgba(255,248,230,.1)">
+        <div style="{{ pd.stage.imgStyle }}"></div>
+
+        <sc-if value="{{ pd.stage.hasPin }}">
+          <div style="{{ pd.stage.pinWrap }}">
+            <span style="{{ pd.stage.pinRing }}"></span>
+            <span style="{{ pd.stage.pinTag }}"><i class="ph-fill ph-map-pin" style="font-size:15px"></i>{{ pd.stage.pinLabel }}</span>
+            <span style="{{ pd.stage.pinDot }}"></span>
+          </div>
+        </sc-if>
+
+        <div style="position:absolute;top:14px;left:14px;z-index:5;display:flex;gap:5px;padding:5px;border-radius:16px;background:rgba(14,10,2,.5);backdrop-filter:blur(14px);box-shadow:inset 0 0 0 1px rgba(255,248,230,.14)">
+          <sc-for list="{{ pd.seeTabs }}" as="v" hint-placeholder-count="5">
+            <button onClick="{{ v.go }}" title="{{ v.label }}" style="{{ v.style }}"><i class="{{ v.icon }}" style="font-size:20px"></i></button>
+          </sc-for>
+        </div>
+
+        <sc-if value="{{ pd.stage.hasUrl }}">
+          <a href="{{ pd.stage.url }}" target="{{ pd.stage.target }}" rel="noopener" style="position:absolute;top:14px;right:14px;z-index:5;display:flex;align-items:center;gap:8px;height:44px;padding:0 16px;border-radius:14px;background:rgba(14,10,2,.5);backdrop-filter:blur(14px);box-shadow:inset 0 0 0 1px rgba(255,248,230,.18);color:#ffd76b;font-size:14.5px;font-weight:800;text-decoration:none" style-hover="background:rgba(255,194,30,.24)">{{ pd.stage.urlLabel }}<i class="ph-bold ph-arrow-up-right" style="font-size:15px"></i></a>
+        </sc-if>
+
+        <sc-if value="{{ pd.isPhotos }}">
+          <button onClick="{{ pd.prev }}" style="position:absolute;left:16px;top:50%;transform:translateY(-50%);width:48px;height:48px;border-radius:50%;background:rgba(255,250,238,.9);color:#241d0c;display:grid;place-items:center;z-index:4" style-hover="background:#fff"><i class="ph-bold ph-caret-left" style="font-size:23px"></i></button>
+          <button onClick="{{ pd.next }}" style="position:absolute;right:16px;top:50%;transform:translateY(-50%);width:48px;height:48px;border-radius:50%;background:rgba(255,250,238,.9);color:#241d0c;display:grid;place-items:center;z-index:4" style-hover="background:#fff"><i class="ph-bold ph-caret-right" style="font-size:23px"></i></button>
+        </sc-if>
+
+        <div style="position:absolute;left:0;right:0;bottom:0;z-index:3;padding:74px 20px 18px;background:linear-gradient(180deg,rgba(14,10,2,0),rgba(14,10,2,.9));display:flex;flex-direction:column;gap:13px">
+          <sc-if value="{{ pd.isPhotos }}">
+            <div style="display:flex;gap:8px">
+              <sc-for list="{{ pd.shots }}" as="t" hint-placeholder-count="6">
+                <button onClick="{{ t.go }}" style="{{ t.style }}"><span style="{{ t.imgStyle }}"></span></button>
+              </sc-for>
+            </div>
+          </sc-if>
+          <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px">
+            <div style="min-width:0">
+              <div style="font-size:11.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#ffd76b">{{ pd.stage.mode }}</div>
+              <div style="margin-top:3px;font-size:17.5px;font-weight:800;color:#fffdf7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ pd.stage.caption }}</div>
+            </div>
+            <div style="flex:none;font-size:14.5px;font-weight:800;color:#e2cf9f">{{ pd.stage.counter }}</div>
+          </div>
+        </div>
+      </section>
+
+      <aside style="width:404px;flex:none;display:flex;flex-direction:column;min-height:0;border-radius:26px;overflow:hidden;background:#241804;background-image:linear-gradient(168deg,#2e2007 0%,#231704 58%,#2b1e06 100%);box-shadow:inset 0 0 0 1px rgba(255,201,60,.3),0 30px 60px -34px rgba(0,0,0,.9)">
+
+        <div style="flex:none;padding:16px 18px 14px;box-shadow:inset 0 -1px 0 rgba(255,201,60,.22)">
+          <sc-if value="{{ pd.hasPrice }}">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-bottom:13px">
+              <span style="font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#a99775">Client price</span>
+              
+            </div>
+          </sc-if>
+          <div style="display:flex;gap:4px;padding:4px;border-radius:14px;background:rgba(255,201,60,.14)">
+            <sc-for list="{{ pd.modes }}" as="m" hint-placeholder-count="2">
+              <button onClick="{{ m.go }}" style="{{ m.style }}">{{ m.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+
+        <div data-scroll="" style="flex:1;min-height:0;overflow-y:auto;padding:4px 18px 22px">
+
+          <sc-if value="{{ pd.isDetails }}" hint-placeholder-val="{{ true }}">
+            <sc-for list="{{ pd.groups }}" as="g" hint-placeholder-count="3">
+              <div style="{{ g.boxStyle }}">
+                <div style="display:flex;align-items:center;gap:8px;padding-bottom:8px">
+                  <i class="{{ g.icon }}" style="{{ g.iconStyle }}"></i>
+                  <span style="{{ g.titleStyle }}">{{ g.title }}</span>
+                </div>
+                <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="5">
+                  <div style="display:flex;align-items:baseline;gap:14px;padding:9px 0;box-shadow:inset 0 -1px 0 rgba(255,201,60,.14)">
+                    <span style="flex:none;width:142px;font-size:13.5px;font-weight:700;color:#a99775">{{ r.k }}</span>
+                    <span style="flex:1;min-width:0;font-size:15px;font-weight:800;color:#fff;text-align:right;text-wrap:pretty">{{ r.v }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-for>
+
+          </sc-if>
+
+          <sc-if value="{{ pd.isIntel }}">
+            <div style="margin-top:18px;font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#e0c88a">Why this stands out</div>
+            <sc-for list="{{ pd.standout }}" as="a" hint-placeholder-count="4">
+              <div style="display:flex;align-items:flex-start;gap:11px;padding:10px 0;box-shadow:inset 0 -1px 0 rgba(255,201,60,.14)">
+                <i class="{{ a.icon }}" style="font-size:18px;color:#7be0a4;flex:none;margin-top:1px"></i>
+                <span style="font-size:15px;font-weight:700;color:#fff;line-height:1.35;text-wrap:pretty">{{ a.t }}</span>
+              </div>
+            </sc-for>
+
+            <div style="margin-top:20px;font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#e0c88a">Around the property</div>
+            <sc-for list="{{ pd.local }}" as="l" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:11px;padding:10px 0;box-shadow:inset 0 -1px 0 rgba(255,201,60,.14)">
+                <i class="{{ l.icon }}" style="font-size:17px;color:#a99775;flex:none"></i>
+                <span style="flex:1;min-width:0;font-size:14.5px;font-weight:700;color:#fffdf7">{{ l.what }}</span>
+                <span style="flex:none;font-size:14.5px;font-weight:800;color:#a99775">{{ l.how }}</span>
+              </div>
+            </sc-for>
+
+            <div style="margin-top:20px;font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#e0c88a">Major places nearby</div>
+            <sc-for list="{{ pd.near }}" as="n" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:11px;padding:10px 0;box-shadow:inset 0 -1px 0 rgba(255,201,60,.14)">
+                <i class="{{ n.icon }}" style="font-size:17px;color:#ffd76b;flex:none"></i>
+                <span style="flex:1;min-width:0;font-size:14.5px;font-weight:700;color:#fffdf7">{{ n.what }}</span>
+                <span style="flex:none;font-size:14.5px;font-weight:800;color:#7be0a4">{{ n.how }}</span>
+              </div>
+            </sc-for>
+
+            <div style="margin-top:20px;font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#e0c88a">Connectivity</div>
+            <sc-for list="{{ pd.roads }}" as="r" hint-placeholder-count="3">
+              <div style="display:flex;align-items:center;gap:11px;padding:10px 0;box-shadow:inset 0 -1px 0 rgba(255,201,60,.14)">
+                <i class="ph-fill ph-road-horizon" style="font-size:17px;color:#ffd76b;flex:none"></i>
+                <span style="flex:1;min-width:0">
+                  <span style="display:block;font-size:14.5px;font-weight:800;color:#fffdf7">{{ r.name }}</span>
+                  <span style="display:block;font-size:12.5px;font-weight:700;color:#a99775">{{ r.note }}</span>
+                </span>
+                <span style="flex:none;font-size:14.5px;font-weight:800;color:#7be0a4">{{ r.how }}</span>
+              </div>
+            </sc-for>
+
+            <div style="margin-top:20px;font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#e0c88a">Buyer considerations</div>
+            <sc-for list="{{ pd.checks }}" as="ck" hint-placeholder-count="4">
+              <div style="display:flex;align-items:flex-start;gap:11px;padding:10px 0;box-shadow:inset 0 -1px 0 rgba(255,201,60,.14)">
+                <i class="ph-bold ph-check-square-offset" style="font-size:17px;color:#ffd76b;flex:none;margin-top:2px"></i>
+                <span style="font-size:14.5px;font-weight:700;color:#e9dfc9;line-height:1.35;text-wrap:pretty">{{ ck.t }}</span>
+              </div>
+            </sc-for>
+
+            <sc-if value="{{ pd.hasFit }}">
+              <div style="margin-top:20px;font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#ffd76b">Fit for {{ pd.clientName }}</div>
+              <sc-for list="{{ pd.fit }}" as="ft" hint-placeholder-count="3">
+                <div style="display:flex;align-items:center;gap:11px;padding:10px 0;box-shadow:inset 0 -1px 0 rgba(255,201,60,.14)">
+                  <i class="ph-bold ph-check" style="font-size:17px;color:#ffd76b;flex:none"></i>
+                  <span style="flex:1;min-width:0;font-size:14.5px;font-weight:700;color:#fffdf7">{{ ft.t }}</span>
+                </div>
+              </sc-for>
+            </sc-if>
+
+            <div style="margin-top:16px;font-size:12px;font-weight:700;color:#8f8064;line-height:1.45;text-wrap:pretty">From MAPCO verified records, Earth location and road intelligence. Nothing estimated.</div>
+          </sc-if>
+        </div>
+      </aside>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ lb }}">
+  <div style="position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;background:rgba(28,18,3,.86);backdrop-filter:blur(6px);animation:veil .2s ease both">
+    <div style="flex:none;display:flex;align-items:center;gap:16px;padding:18px 22px">
+      <div style="{{ lb.iconStyle }}"><i class="{{ lb.icon }}" style="font-size:23px"></i></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:26px;font-weight:800;color:#fffdf7;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ lb.label }}</div>
+        <div style="font-size:15px;font-weight:700;color:#e2cf9f">{{ lb.sub }}</div>
+      </div>
+      <button onClick="{{ lb.pin }}" style="{{ lb.pinBtn }}"><i class="{{ lb.pinIcon }}" style="font-size:21px"></i>{{ lb.pinText }}</button>
+      <a href="{{ lb.streetUrl }}" target="_blank" rel="noopener" title="Opens Google Street View in a new tab" style="display:flex;align-items:center;justify-content:center;gap:10px;height:56px;padding:0 22px;border-radius:15px;background:#e8f0fe;color:#1a56c4;font-size:17px;font-weight:800;text-decoration:none;flex:none;box-shadow:inset 0 0 0 2px #c3d7fb" style-hover="background:#d7e5fd"><i class="ph-fill ph-person-simple-walk" style="font-size:22px"></i>Street view<i class="ph-bold ph-arrow-square-out" style="font-size:16px;opacity:.7"></i></a>
+      <button onClick="{{ closeLb }}" style="display:flex;align-items:center;gap:9px;height:56px;padding:0 20px;border-radius:15px;background:rgba(255,255,255,.14);color:#fffdf7;font-size:17px;font-weight:800;flex:none" style-hover="background:rgba(255,255,255,.24)"><i class="ph-bold ph-x" style="font-size:18px"></i>Close</button>
+    </div>
+    <div style="flex:1;min-height:0;display:flex;gap:14px;padding:0 22px 22px;animation:lbIn .26s cubic-bezier(.2,.8,.2,1) both">
+      <div style="flex:1;min-width:0;border-radius:20px;overflow:hidden;background:#231b09;position:relative">
+        <div style="{{ lb.mainStyle }}"></div>
+        <div style="position:absolute;left:0;right:0;bottom:0;padding:26px 24px 18px;background:linear-gradient(180deg,rgba(20,14,2,0),rgba(20,14,2,.82));display:flex;align-items:flex-end;justify-content:space-between;gap:16px">
+          <div style="font-size:19px;font-weight:800;color:#fffdf7">{{ lb.caption }}</div>
+          <div style="font-size:15px;font-weight:800;color:#e2cf9f;flex:none">{{ lb.counter }}</div>
+        </div>
+        <button onClick="{{ lb.prev }}" style="position:absolute;left:16px;top:50%;transform:translateY(-50%);width:58px;height:58px;border-radius:50%;background:rgba(255,250,238,.9);color:#241d0c;display:grid;place-items:center" style-hover="background:#fff"><i class="ph-bold ph-caret-left" style="font-size:24px"></i></button>
+        <button onClick="{{ lb.next }}" style="position:absolute;right:16px;top:50%;transform:translateY(-50%);width:58px;height:58px;border-radius:50%;background:rgba(255,250,238,.9);color:#241d0c;display:grid;place-items:center" style-hover="background:#fff"><i class="ph-bold ph-caret-right" style="font-size:24px"></i></button>
+      </div>
+      <div data-scroll="" style="width:326px;flex:none;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:12px;align-content:start;padding-right:2px">
+        <sc-for list="{{ lb.shots }}" as="t" hint-placeholder-count="6">
+          <button onClick="{{ t.go }}" style="{{ t.style }}">
+            <span style="{{ t.imgStyle }}"></span>
+            <span style="display:block;padding:9px 10px 11px;text-align:left;font-size:13.5px;font-weight:800;color:#241d0c;line-height:1.2">{{ t.caption }}</span>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state={ view:'masterplan', dim:'original', hl:null, zoom:1, tx:0, ty:0, dragging:false, mapsOpen:false, filterOpen:false, cat:'all', pins:[], lb:null, shot:0, vw:1440, vh:900,
+    pcity:'All', scity:'All', pd:null, pdShot:0, sec:null, secDim:'original', secSet:'A',
+    pdSee:'photos', pdKnow:'details', pdPrice:false };
+  mapName='New Chandigarh';
+  MAP_W=1302; MAP_H=962;
+
+  VIEWS=[{k:'masterplan',l:'Masterplan'},{k:'properties',l:'Properties'},{k:'sectors',l:'Sector maps'}];
+  DIMS=[{k:'original',l:'Original',i:'ph-fill ph-map-trifold'},{k:'3d',l:'3D map',i:'ph-fill ph-cube'}];
+  CATS=[
+    {k:'all',l:'Everything',i:'ph-fill ph-squares-four',c:'#a8792a',bg:'#fff3d1'},
+    {k:'plot',l:'My plots',i:'ph-fill ph-map-pin-area',c:'#a8792a',bg:'#fff3d1'},
+    {k:'landmark',l:'Landmarks',i:'ph-fill ph-buildings',c:'#6b3fd4',bg:'#efe8fb'},
+    {k:'amenity',l:'Nearby',i:'ph-fill ph-tree',c:'#146c3a',bg:'#e2f2e6'},
+    {k:'road',l:'Roads',i:'ph-fill ph-road-horizon',c:'#c2622a',bg:'#ffe6cf'},
+    {k:'project',l:'Projects',i:'ph-fill ph-city',c:'#c2185b',bg:'#ffe1e6'},
+  ];
+  CAPTIONS=['Site view','Approach road','Surroundings','Front road','Wide angle','Evening view'];
+  HLSETS=[
+    {id:'A',name:'Roads & approach',
+      roads:[[[.035,.455],[.17,.475],[.33,.515],[.47,.55]],[[.52,.16],[.6,.34],[.63,.56]]],
+      blocks:[], pins:[{x:.405,y:.325,n:'Chandigarh University'}]},
+    {id:'B',name:'Our pockets',
+      roads:[], blocks:[{x:.165,y:.395,w:.105,h:.105,n:'Eco City Zone 2'},{x:.6,y:.3,w:.13,h:.1,n:'Omaxe pocket'}], pins:[]},
+    {id:'C',name:'Landmarks',
+      roads:[], blocks:[], pins:[{x:.55,y:.44,n:'Medicity'},{x:.7,y:.48,n:'CP67 Mall'},{x:.78,y:.62,n:'Chandigarh Airport'}]},
+  ];
+  MAPS=[{k:'nc',l:'New Chandigarh',ready:true},{k:'mohali',l:'Mohali',ready:false},{k:'aerocity',l:'Aerocity',ready:false},{k:'panchkula',l:'Panchkula',ready:false},{k:'zirakpur',l:'Zirakpur',ready:false}];
+
+  PROPS=[
+    {id:'ecocity',planId:'ecocity',name:'Eco City plot',type:'plot',typeLabel:'Residential plot',unitNo:'Plot 214',project:'Eco City phase 1',block:'Block C',devAuth:'GMADA',registry:'Registry ready',green:'Faces neighbourhood park',
+      size:'500 sq yd',dims:'75 × 60 ft',front:'75 ft',depth:'60 ft',facing:'North-East',sides:'2',road:'40 ft',corner:'Park facing',
+      own:'Freehold',poss:'Immediate possession',build:'Ready to build',geo:'30.7412° N · 76.6412° E',
+      flag:'Park facing',sector:'Eco City, New Chandigarh',city:'New Chandigarh',secId:'S1',px:38,py:31,
+      appr:'RERA + GMADA approved',pending:'Encumbrance certificate',
+      adv:['Faces a 2.5 acre neighbourhood park','40 ft sector road right on the front','Zone is already 80% built and occupied'],
+      feat:['Park facing','Wide 40 ft road','Regular rectangular shape','Water & sewer laid'],
+      roads:[['Kurali–Siswan Road','1 min','Direct approach road'],['Chandigarh–Baddi Highway','7 min','Main city connection'],['PR-7 Airport Road','20 min','Airport & Mohali link']],
+      inv:{ask:'₹ 2.55 Cr',unit:'₹ 51,000 / sq yd',trend:'Sector rate up 9% over 12 months',demand:'12 plots registered in this zone last quarter',
+        soon:['Medicity phase 2 — 9 min away','Kurali road widening sanctioned']},
+      local:[['Grocery & chemist','3 min walk'],['Neighbourhood park','At the door'],['School bus stop','2 min walk']],
+      near:[['Chandigarh University','10 min','ph-fill ph-graduation-cap'],['CP67 Mall','8 min','ph-fill ph-storefront'],['PGIMER Hospital','22 min','ph-fill ph-first-aid-kit'],['Chandigarh Airport','25 min','ph-fill ph-airplane-tilt']]},
+
+    {id:'block5',planId:'block5',name:'Block 5 site',type:'plot',typeLabel:'Residential plot',unitNo:'Plot 58',project:'Zone 2 residential',block:'Block 5',devAuth:'GMADA',registry:'Registry ready',
+      size:'300 sq yd',dims:'50 × 54 ft',front:'50 ft',depth:'54 ft',facing:'East',sides:'2',road:'30 ft',corner:'Corner plot',
+      own:'Freehold',poss:'Immediate possession',build:'Ready to build',geo:'30.7286° N · 76.6731° E',
+      flag:'Corner plot',sector:'Zone 2, New Chandigarh',city:'New Chandigarh',secId:'S2',px:56,py:44,
+      appr:'GMADA approved',pending:'Sanctioned building plan',
+      adv:['Corner plot — light and air on two sides','Walking distance to Delhi Public School','Sector market already running'],
+      feat:['Corner plot','East facing','Street light & sewer','Schools within 5 min'],
+      roads:[['Zone 2 spine road','1 min','Front road'],['Kurali–Siswan Road','5 min','Sector exit'],['NH-205 Baddi Highway','9 min','Highway link']],
+      inv:{ask:'₹ 1.62 Cr',unit:'₹ 54,000 / sq yd',trend:'Corner plots carry ~6% premium here',demand:'8 resales closed in Zone 2 last quarter',
+        soon:['Community centre under construction','Sector market phase 2']},
+      local:[['Sector market','4 min'],['Chemist & clinic','5 min'],['Petrol pump','6 min']],
+      near:[['Delhi Public School','5 min','ph-fill ph-graduation-cap'],['Leisure Valley Park','7 min','ph-fill ph-tree'],['City Centre Market','9 min','ph-fill ph-storefront']]},
+
+    {id:'aero',planId:'aero',name:'Aerocity plot',type:'plot',typeLabel:'Residential plot',unitNo:'Plot 1132',project:'Aerocity',block:'Pocket D',devAuth:'GMADA',registry:'Registry ready',
+      size:'300 sq yd',dims:'50 × 54 ft',front:'50 ft',depth:'54 ft',facing:'West',sides:'1',road:'24 ft',
+      own:'Freehold',poss:'Immediate possession',build:'Ready to build',geo:'30.6522° N · 76.7891° E',
+      flag:'',sector:'Aerocity, Mohali',city:'Mohali',secId:'S3',px:44,py:62,
+      appr:'RERA + GMADA approved',pending:'Encumbrance certificate',
+      adv:['6 minutes from Chandigarh airport','GMADA developed pocket with clear title','Rental demand from airport staff'],
+      feat:['Airport belt','GMADA developed','Park in the pocket'],
+      roads:[['Airport Road (PR-7)','4 min','Main artery'],['Aerocity internal 60 ft','1 min','Pocket approach'],['Chandigarh–Ambala NH','12 min','Outstation link']],
+      inv:{ask:'₹ 1.71 Cr',unit:'₹ 57,000 / sq yd',trend:'Airport belt rate up 11% over 12 months',demand:'Highest enquiry pocket in Mohali this quarter',
+        soon:['Airport terminal expansion','Aerocity commercial belt allotment']},
+      local:[['Convenience store','5 min'],['Pocket park','2 min'],['Bus stop','6 min']],
+      near:[['Chandigarh Airport','6 min','ph-fill ph-airplane-tilt'],['ISB Mohali','12 min','ph-fill ph-graduation-cap'],['CP67 Mall','10 min','ph-fill ph-storefront']]},
+
+    {id:'sec79',planId:'sec79',name:'Sector 79 plot',type:'plot',typeLabel:'Residential plot',unitNo:'Plot 344',project:'Sector 79 residential',block:'Block B',devAuth:'GMADA',registry:'Mutation in process',
+      size:'250 sq yd',dims:'50 × 45 ft',front:'50 ft',depth:'45 ft',facing:'East',sides:'2',road:'30 ft',corner:'Corner plot',
+      own:'Freehold',poss:'Immediate possession',build:'Ready to build',geo:'30.6739° N · 76.7218° E',
+      flag:'Corner plot',sector:'Sector 79, Mohali',city:'Mohali',secId:'S4',px:63,py:52,
+      appr:'RERA approved',pending:'Mutation entry',
+      adv:['Two minutes from Airport Road','Corner plot on a 30 ft road','Established sector — construction all around'],
+      feat:['Corner plot','East facing','Ready sector','Close to Airport Road'],
+      roads:[['Airport Road','2 min','Primary connection'],['Sector 79 divider road','1 min','Front road'],['PR-7 Expressway','6 min','Fast city link']],
+      inv:{ask:'₹ 1.45 Cr',unit:'₹ 58,000 / sq yd',trend:'Sector 79 rate steady, up 5% in a year',demand:'Ready-to-build sector, low inventory',
+        soon:['Sector 79 market completion','JLPL road connector']},
+      local:[['Kirana & dairy','4 min'],['Clinic','6 min'],['Park','3 min']],
+      near:[['Airport Road','2 min','ph-fill ph-road-horizon'],['JLPL Falcon View','8 min','ph-fill ph-city'],['PGIMER Hospital','20 min','ph-fill ph-first-aid-kit']]},
+
+    {id:'sec66',planId:'jlpl',name:'Sector 66 plot',type:'plot',typeLabel:'Residential plot',unitNo:'Plot 12-B',project:'JLPL Sector 66',block:'Pocket B',devAuth:'GMADA',registry:'Registry ready',green:'Opens onto Leisure Valley',
+      size:'200 sq yd',dims:'40 × 45 ft',front:'40 ft',depth:'45 ft',facing:'South',sides:'2',road:'24 ft',corner:'Park facing',
+      own:'Freehold',poss:'Immediate possession',build:'Ready to build',geo:'30.7018° N · 76.7012° E',
+      flag:'Park facing',sector:'Sector 66, Mohali',city:'Mohali',secId:'S5',px:34,py:58,
+      appr:'GMADA approved',pending:'Encumbrance certificate',
+      adv:['Opens onto Leisure Valley park','Smallest ticket size in a premium sector','Mall and market within 7 minutes'],
+      feat:['Park facing','Entry size ticket','Central Mohali'],
+      roads:[['Sector 66 approach road','1 min','Front road'],['Airport Road','7 min','City spine'],['Chandigarh Sector 43','14 min','Chandigarh entry']],
+      inv:{ask:'₹ 1.24 Cr',unit:'₹ 62,000 / sq yd',trend:'Central Mohali rate up 7% over 12 months',demand:'Small plots resell fastest in this belt',
+        soon:['Leisure Valley phase 3','Sector 66 market upgrade']},
+      local:[['Leisure Valley Park','4 min'],['Grocery','3 min'],['Chemist','5 min']],
+      near:[['Leisure Valley Park','4 min','ph-fill ph-tree'],['CP67 Mall','7 min','ph-fill ph-storefront'],['Chandigarh University','18 min','ph-fill ph-graduation-cap']]},
+
+    {id:'omx',planId:'omaxe',name:'Omaxe kothi',type:'kothi',typeLabel:'Independent kothi',unitNo:'Kothi 27',project:'Omaxe Silver Birch',block:'Silver Birch',devAuth:'GMADA',registry:'Registry ready',
+      size:'1 kanal (500 sq yd)',built:'4,200 sq ft',beds:'5',baths:'5',floors:'Ground + 1',age:'3 years',facing:'North',road:'30 ft',park:'3 cars',furn:'Semi-furnished',
+      own:'Freehold',poss:'Immediate possession',geo:'30.7351° N · 76.6902° E',
+      flag:'Corner plot',sector:'Omaxe, New Chandigarh',city:'New Chandigarh',secId:'S2',px:68,py:36,
+      appr:'RERA + GMADA approved',pending:'Completion certificate',
+      adv:['Move-in ready — no construction wait','Corner kothi inside a gated township','Medicity and university within 15 minutes'],
+      feat:['Gated township','Modular kitchen','Power backup','Club membership'],
+      roads:[['Omaxe main boulevard','1 min','Township road'],['GMADA Expressway','3 min','Fast link'],['Chandigarh–Baddi Highway','8 min','Highway']],
+      inv:{ask:'₹ 4.35 Cr',unit:'₹ 1.04 L / sq yd',trend:'Built kothis in township up 8% over 12 months',demand:'Ready houses outsell plots 2:1 here',
+        soon:['Township club phase 2','Medicity phase 2 — 9 min']},
+      local:[['Township store','2 min'],['Club & pool','Inside township'],['School bus point','At the gate']],
+      near:[['Medicity','9 min','ph-fill ph-first-aid-kit'],['Chandigarh University','14 min','ph-fill ph-graduation-cap'],['GMADA Expressway','3 min','ph-fill ph-road-horizon']]},
+
+    {id:'flat3',planId:'aero',name:'Aerocity 3 BHK flat',type:'flat',typeLabel:'3 BHK apartment',unitNo:'Flat 704',project:'Aerocity Heights',block:'Tower C',devAuth:'GMADA',registry:'Registry ready',
+      size:'2,050 sq ft',carpet:'1,640 sq ft',beds:'3 + study',baths:'3',floorNo:'7th of 14',facing:'East',balc:'2',park:'2 covered',lift:'3 lifts · full power backup',society:'Gated · 4.2 acre society',
+      own:'Freehold',poss:'Immediate possession',geo:'30.6548° N · 76.7864° E',
+      flag:'Corner unit',sector:'Aerocity, Mohali',city:'Mohali',secId:'S3',px:47,py:66,
+      appr:'RERA registered',pending:'Society NOC',
+      adv:['Corner flat — light on three sides','Airport 8 minutes door to door','Society is fully occupied and maintained'],
+      feat:['Gated society','Club & gym','Power backup','Covered parking'],
+      roads:[['Airport Road (PR-7)','5 min','Main artery'],['Society approach 60 ft','1 min','Entry road'],['Chandigarh–Ambala NH','13 min','Outstation']],
+      inv:{ask:'₹ 1.98 Cr',unit:'₹ 9,660 / sq ft',trend:'Aerocity flat rate up 6% over 12 months',demand:'Rental yield around 3% in this society',
+        soon:['Airport terminal expansion','Commercial belt allotment']},
+      local:[['Society market','Inside gate'],['Chemist','4 min'],['Play area','Inside society']],
+      near:[['Chandigarh Airport','8 min','ph-fill ph-airplane-tilt'],['ISB Mohali','14 min','ph-fill ph-graduation-cap'],['CP67 Mall','11 min','ph-fill ph-storefront']]},
+
+    {id:'sco66',planId:'jlpl',name:'Sector 66 SCO booth',type:'commercial',typeLabel:'SCO commercial',unitNo:'SCO 41',project:'Sector 66 booth market',block:'Market row A',devAuth:'GMADA',registry:'Transfer eligible',
+      size:'150 sq yd',built:'4,500 sq ft',floors:'Ground + 2',front:'30 ft',road:'60 ft',corner:'Corner unit',use:'Retail & office permitted',park:'Common front parking',
+      own:'Freehold',poss:'Immediate possession',geo:'30.7042° N · 76.6987° E',
+      flag:'Corner unit',sector:'Sector 66, Mohali',city:'Mohali',secId:'S5',px:31,py:61,
+      appr:'GMADA approved',pending:'Fire NOC renewal',
+      adv:['Corner SCO on a 60 ft market road','Ground floor already tenanted','Sector catchment of 4,000+ homes'],
+      feat:['Corner unit','60 ft road','Retail + office use','Front parking'],
+      roads:[['Sector 66 market road','On the front','60 ft market road'],['Airport Road','7 min','City spine'],['PR-7 Expressway','9 min','Regional link']],
+      inv:{ask:'₹ 3.90 Cr',unit:'₹ 2.60 L / sq yd',trend:'Booth market rates up 10% over 12 months',demand:'Ground floor rents ₹1.1 L a month in this row',
+        soon:['Market frontage upgrade','Sector 66 residential phase 3']},
+      local:[['Bank & ATM','In the market'],['Bus stop','3 min'],['Residential catchment','Adjoining']],
+      near:[['CP67 Mall','7 min','ph-fill ph-storefront'],['Leisure Valley Park','5 min','ph-fill ph-tree'],['Airport Road','7 min','ph-fill ph-road-horizon']]},
+  ];
+  SECTORS=[
+    {id:'S1',name:'Eco City Zone 2',city:'New Chandigarh',sub:'Official layout plan'},
+    {id:'S2',name:'Zone 2 · Omaxe side',city:'New Chandigarh',sub:'Official layout plan'},
+    {id:'S3',name:'Aerocity',city:'Mohali',sub:'GMADA layout plan'},
+    {id:'S4',name:'Sector 79',city:'Mohali',sub:'GMADA layout plan'},
+    {id:'S5',name:'Sector 66',city:'Mohali',sub:'GMADA layout plan'},
+    {id:'S6',name:'Sector 28',city:'Chandigarh',sub:'Estate office layout'},
+    {id:'S7',name:'Sector 20',city:'Panchkula',sub:'HUDA layout plan'},
+    {id:'S8',name:'VIP Road belt',city:'Zirakpur',sub:'Approved layout'},
+  ];
+  PCAPS=['Site view','Approach road','Surroundings','Front road','Wide angle','Evening view'];
+
+  pshot(p,i){ return 'assets/ph-plot-'+(((p.id.length+i)%3)+1)+'.png'; }
+  motif(i,gs){
+    var P=[['#ffc93c','#976eeb','#5fa845','#e8763a','#3d8fb8'],['#5fa845','#e8763a','#3d8fb8','#ffc93c','#976eeb'],['#976eeb','#ffc93c','#e8763a','#3d8fb8','#5fa845'],['#3d8fb8','#5fa845','#d9a520','#976eeb','#e8763a']];
+    var pal=P[i%4]; var A=[24,68,112,152,38,96,132,14]; var a1=A[i%8], a2=(a1+68)%180;
+    var B=[[[6,10,20,16],[30,8,16,22],[52,14,22,12],[10,52,26,18],[44,58,30,22]],
+           [[8,14,24,20],[38,10,18,16],[62,10,20,26],[14,58,20,16],[40,62,34,20]],
+           [[10,8,18,24],[34,16,26,14],[64,20,18,18],[8,60,22,20],[48,54,28,24]],
+           [[6,16,22,18],[32,6,20,20],[58,16,24,20],[16,54,24,22],[46,60,26,18]]];
+    var boxes=B[i%4]; var g=gs||16; var L=[],S=[],P2=[],R=[];
+    L.push('linear-gradient(90deg,rgba(120,92,40,.13) 0 1px,transparent 1px '+g+'px)'); S.push(g+'px '+g+'px'); P2.push('0 0'); R.push('repeat');
+    L.push('linear-gradient(0deg,rgba(120,92,40,.13) 0 1px,transparent 1px '+g+'px)'); S.push(g+'px '+g+'px'); P2.push('0 0'); R.push('repeat');
+    L.push('linear-gradient('+a1+'deg,transparent 45%,rgba(196,186,164,.95) 45% 49.5%,transparent 49.5%)'); S.push('100% 100%'); P2.push('center'); R.push('no-repeat');
+    L.push('linear-gradient('+a2+'deg,transparent 62%,rgba(196,186,164,.9) 62% 65.5%,transparent 65.5%)'); S.push('100% 100%'); P2.push('center'); R.push('no-repeat');
+    boxes.forEach(function(bx,n){ var c=pal[n%pal.length]; L.push('linear-gradient('+c+'d9,'+c+'d9)'); S.push(bx[2]+'% '+bx[3]+'%'); P2.push(bx[0]+'% '+bx[1]+'%'); R.push('no-repeat'); });
+    return 'position:absolute;inset:0;display:block;background-color:#f8efda;background-image:'+L.join(',')+';background-size:'+S.join(',')+';background-position:'+P2.join(',')+';background-repeat:'+R.join(',');
+  }
+
+  CLIENT={ name:'Mr. Sharma', size:500, sizeText:'500 sq yd', city:'New Chandigarh', type:'plot', typeText:'residential plot', budget:2.8, budgetText:'₹ 2.80 Cr' };
+
+  num(t){ var m=(t||'').replace(/,/g,'').match(/[\d.]+/); return m?parseFloat(m[0]):null; }
+
+  groupsFor(p){
+    var G=[]; var mk=function(title,icon,pairs){ var rows=pairs.filter(function(r){ return !!r[1]; }).map(function(r){ return {k:r[0],v:r[1]}; }); if(rows.length) G.push({title:title,icon:icon,rows:rows}); };
+    mk('The property','ph-fill ph-house-line',[['Property type',p.typeLabel],['Unit',p.unitNo],['Project',p.project],['Block',p.block],['Sector',p.sector.split(',')[0]],['City',p.city],['Position',p.corner||(p.type==='plot'?'Regular plot':'')],['Facing',p.facing],['Notable',(p.feat||[]).join(' · ')]]);
+    if(p.type==='plot') mk('Size and shape','ph-fill ph-ruler',[['Plot size',p.size],['Dimensions',p.dims],['Frontage',p.front],['Depth',p.depth],['Facing',p.facing],['Open sides',p.sides],['Road width',p.road],['Position',p.corner||'Regular plot'],['Green / park',p.green]]);
+    else if(p.type==='kothi') mk('Size and build','ph-fill ph-ruler',[['Plot size',p.size],['Built-up',p.built],['Bedrooms',p.beds],['Bathrooms',p.baths],['Floors',p.floors],['Age of build',p.age],['Facing',p.facing],['Road width',p.road],['Parking',p.park],['Furnishing',p.furn]]);
+    else if(p.type==='flat') mk('Size and layout','ph-fill ph-ruler',[['Super area',p.size],['Carpet area',p.carpet],['Bedrooms',p.beds],['Bathrooms',p.baths],['Floor',p.floorNo],['Facing',p.facing],['Balconies',p.balc],['Parking',p.park],['Building',p.lift],['Society',p.society]]);
+    else mk('Size and use','ph-fill ph-ruler',[['Plot size',p.size],['Built-up',p.built],['Floors',p.floors],['Frontage',p.front],['Road width',p.road],['Position',p.corner],['Permitted use',p.use],['Parking',p.park]]);
+    mk('Ownership and status','ph-fill ph-shield-check',[['Ownership',p.own],['Approval',p.appr],['Development authority',p.devAuth],['Registry status',p.registry],['Possession',p.poss],['Ready to build',p.build],['In process',p.pending]]);
+    return G;
+  }
+
+  standoutFor(p){
+    var L=[], seen=[]; var key=function(t){ return (t||'').toLowerCase(); };
+    var adv=(p.adv||[]).map(key);
+    var clash=function(t){ var k=key(t); var w=k.match(/corner|frontage|freehold|ready to build|park|road/g)||[];
+      return adv.concat(seen).some(function(o){ return w.length&&w.every(function(x){ return o.indexOf(x)>=0; }); }); };
+    var push=function(t,i){ if(t&&!clash(t)){ seen.push(key(t)); L.push({t:t,icon:i||'ph-fill ph-check-circle'}); } };
+    if(p.corner&&/corner/i.test(p.corner)) push(p.corner+' — open on two sides','ph-fill ph-arrows-out-cardinal');
+    if(p.corner&&/park/i.test(p.corner)) push(p.corner,'ph-fill ph-tree');
+    if(p.green&&(!p.corner||!/park/i.test(p.corner))) push(p.green,'ph-fill ph-tree');
+    var rw=this.num(p.road); if(rw&&rw>=30) push(rw+' ft road in front — wide approach','ph-fill ph-road-horizon');
+    if(p.front&&p.type!=='flat') push(p.front+' frontage','ph-fill ph-ruler');
+    if(p.own&&/freehold/i.test(p.own)) push('Freehold ownership','ph-fill ph-certificate');
+    if(p.build) push(p.build+' — no development wait','ph-fill ph-hammer');
+    (p.adv||[]).forEach(function(a){ seen.push(key(a)); L.push({t:a,icon:'ph-fill ph-check-circle'}); });
+    return L.slice(0,6);
+  }
+
+  checksFor(p){
+    var common=['Verify current title and ownership papers with the registry','Confirm no authority dues are pending on the file'];
+    if(p.pending) common.push('Track the '+(p.pending.charAt(0).toLowerCase()+p.pending.slice(1))+' — currently in process');
+    if(p.type==='plot') return common.concat(['Get the plot physically demarcated before payment','Confirm the sanctioned road width in front of the plot','Check current building rules before planning construction']);
+    if(p.type==='kothi') return common.concat(['Ask for the completion certificate of the built portion','Confirm water, sewer and power connections are in the owner name','Verify the sanctioned plan matches what is built']);
+    if(p.type==='flat') return common.concat(['Confirm society maintenance dues are fully cleared','Check transfer eligibility with the society','Ask for the occupancy certificate of the tower']);
+    return common.concat(['Confirm permitted commercial use in writing','Check tenancy papers if the unit is rented','Verify parking rights with the market association']);
+  }
+
+  fitFor(p){
+    var c=this.CLIENT, L=[]; var sz=this.num(p.size), price=this.num(p.inv&&p.inv.ask);
+    if(sz&&Math.abs(sz-c.size)<1) L.push('Matches the '+c.sizeText+' requirement');
+    else if(sz&&sz>=c.size) L.push('Larger than the '+c.sizeText+' requirement');
+    if(p.city===c.city) L.push('In preferred location — '+c.city);
+    if(p.type===c.type) L.push('Property type matches — '+c.typeText);
+    if(price&&price<=c.budget) L.push('Within recorded budget of '+c.budgetText);
+    return L;
+  }
+
+  viewVals(){
+    var s=this.state; var self=this;
+    var chip=function(on){ return 'display:flex;align-items:center;gap:8px;padding:11px 16px;border-radius:11px;font-size:14px;font-weight:800;letter-spacing:.01em;white-space:nowrap;transition:all .16s;'+(on?'background:#2a1f4d;color:#ffd75e;box-shadow:0 10px 20px -12px rgba(42,31,77,.9)':'background:rgba(255,253,249,.86);color:#5c5474;box-shadow:inset 0 0 0 1px rgba(88,52,168,.16)'); };
+    var chipNum=function(on){ return 'padding:2px 7px;border-radius:6px;font-size:11.5px;font-weight:800;font-variant-numeric:tabular-nums;'+(on?'background:rgba(255,215,94,.2);color:#ffd75e':'background:rgba(88,52,168,.09);color:#7a6f96'); };
+    var pcities=['All'].concat(this.PROPS.map(function(p){return p.city;}).filter(function(v,i,a){return a.indexOf(v)===i;}));
+    var scities=['All'].concat(this.SECTORS.map(function(m){return m.city;}).filter(function(v,i,a){return a.indexOf(v)===i;}));
+    var plist=s.pcity==='All'?this.PROPS:this.PROPS.filter(function(p){return p.city===s.pcity;});
+    var slist=s.scity==='All'?this.SECTORS:this.SECTORS.filter(function(m){return m.city===s.scity;});
+
+    var out={
+      showTopBar: !s.sec && !s.pd,
+      isPlan:s.view==='masterplan', isProps:s.view==='properties', isSectors:s.view==='sectors',
+      pChips:pcities.map(function(c){ var on=s.pcity===c; return {label:c==='All'?'All properties':c,
+        n:c==='All'?self.PROPS.length:self.PROPS.filter(function(p){return p.city===c;}).length,
+        style:chip(on), numStyle:chipNum(on), go:function(){ self.setState({pcity:c}); }}; }),
+      propCards:plist.map(function(p){ return {name:p.name,size:p.size,facing:p.facing,hasFacing:!!p.facing,facingText:(p.facing||'')+' facing',sector:p.sector,shots:6,
+        hasFlag:!!p.flag, flag:p.flag,
+        photoStyle:'display:block;width:100%;height:236px;background-image:url('+self.pshot(p,0)+');background-size:cover;background-position:center;transition:transform .5s cubic-bezier(.2,.8,.2,1)',
+        cardStyle:'display:flex;flex-direction:column;overflow:hidden;border-radius:20px;background:#fffdf9;box-shadow:0 0 0 1px rgba(88,52,168,.09),0 1px 2px rgba(40,26,2,.05),0 26px 50px -38px rgba(60,40,5,.9);transition:transform .34s cubic-bezier(.2,.8,.2,1),box-shadow .34s;cursor:pointer',
+        open:function(){ self.setState({pd:p.id,pdShot:0,pdSee:'photos',pdKnow:'details',pdPrice:false}); }}; }),
+      sChips:scities.map(function(c){ var on=s.scity===c; return {label:c==='All'?'All cities':c,
+        n:c==='All'?self.SECTORS.length:self.SECTORS.filter(function(m){return m.city===c;}).length,
+        style:chip(on), numStyle:chipNum(on), go:function(){ self.setState({scity:c}); }}; }),
+      sectorCards:slist.map(function(m){ var np=self.PROPS.filter(function(p){return p.secId===m.id;}).length;
+        return {name:m.name,sub:m.sub,city:m.city,hasPlots:np>0,plotText:np===1?'1 plot of ours':np+' plots of ours',
+        motifStyle:self.motif(self.SECTORS.indexOf(m)),
+        cardStyle:'display:flex;flex-direction:column;overflow:hidden;border-radius:20px;background:#fffdf9;box-shadow:0 0 0 1px rgba(88,52,168,.09),0 1px 2px rgba(40,26,2,.05),0 26px 50px -38px rgba(60,40,5,.9);transition:transform .34s cubic-bezier(.2,.8,.2,1),box-shadow .34s;cursor:pointer',
+        open:function(){ self.setState({sec:m.id,secDim:'original',secSet:'A'}); }}; }),
+      closeSec:function(){ self.setState({sec:null}); },
+      sec:null, pd:null
+    };
+
+    if(s.sec){ var m=this.SECTORS.find(function(x){return x.id===s.sec;});
+      var inSec=this.PROPS.filter(function(p){return p.secId===s.sec;});
+      var is3=s.secDim==='3d';
+      var pill=function(on){ return 'display:flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:10px;font-size:13.5px;font-weight:800;white-space:nowrap;transition:all .15s;'+(on?'background:#ffc21e;color:#231a04;box-shadow:0 8px 16px -8px rgba(255,194,30,.9)':'background:rgba(255,248,230,.14);color:#fff8e6'); };
+      var setPill=function(on){ return 'width:34px;height:34px;border-radius:10px;font-size:14px;font-weight:800;transition:all .15s;'+(on?'background:#ffc21e;color:#231a04;box-shadow:0 8px 16px -8px rgba(255,194,30,.9)':'background:rgba(255,248,230,.14);color:#fff8e6'); };
+      out.sec={ name:m.name, empty:inSec.length===0,
+        planArt:this.motif(this.SECTORS.indexOf(m),34)+';pointer-events:none',
+        countText:inSec.length===0?'No plots here':(inSec.length===1?'1 plot of ours':inSec.length+' plots of ours'),
+        planStyle:'position:relative;flex:1 1 auto;min-width:0;width:100%;height:100%;max-width:1040px;border-radius:20px;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,248,230,.14),0 40px 80px -34px rgba(0,0,0,.85);transition:transform .5s cubic-bezier(.2,.8,.2,1);transform:'+(is3?'perspective(1500px) rotateX(42deg) rotateZ(-4deg) scale(.86)':'none'),
+        dims:[{k:'original',l:'Original',i:'ph-fill ph-map-trifold'},{k:'3d',l:'3D map',i:'ph-fill ph-cube'}].map(function(d){
+          return {label:d.l,icon:d.i,style:pill(s.secDim===d.k),go:function(){ self.setState({secDim:d.k}); }}; }),
+        pins:inSec.map(function(p){ return { label:p.name,
+          wrapStyle:'position:absolute;left:'+p.px+'%;top:'+p.py+'%;z-index:6',
+          ringStyle:'position:absolute;left:0;top:0;width:70px;height:70px;border-radius:50%;background:rgba(255,194,30,.5);animation:ringPulse 1.8s ease-out infinite',
+          innerStyle:'position:relative;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;cursor:pointer;animation:pinIn .4s cubic-bezier(.2,.9,.3,1.3) both',
+          tagStyle:'display:flex;align-items:center;gap:7px;background:#ffc21e;color:#231a04;border-radius:12px;padding:9px 14px;white-space:nowrap;font-size:15px;font-weight:800;border:2.5px solid #fffdf7;box-shadow:0 10px 22px -8px rgba(40,26,2,.7)',
+          go:function(){ self.setState({pd:p.id,pdShot:0,pdSee:'photos',pdKnow:'details',pdPrice:false}); }}; }),
+        props:inSec.map(function(p){ return {name:p.name,size:p.size,facing:p.facing,line:p.size+(p.facing?' · '+p.facing+' facing':(p.corner?' · '+p.corner:'')),
+          photoStyle:'display:block;width:100%;height:150px;background-image:url('+self.pshot(p,1)+');background-size:cover;background-position:center',
+          cardStyle:'display:block;width:100%;overflow:hidden;border-radius:16px;background:rgba(255,248,230,.09);box-shadow:inset 0 0 0 1px rgba(255,248,230,.16);transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s;cursor:pointer',
+          open:function(){ self.setState({pd:p.id,pdShot:0,pdSee:'photos',pdKnow:'details',pdPrice:false}); }}; }) };
+    }
+
+    if(s.pd){ var p=this.PROPS.find(function(x){return x.id===s.pd;});
+      if(p){
+        var mode=s.pdKnow==='intel'?'intel':'details', see=s.pdSee, idx=s.pdShot%6;
+        var seeBtn=function(on){ return 'width:44px;height:44px;border-radius:12px;display:grid;place-items:center;transition:background .18s,color .18s;'+(on?'background:#ffc21e;color:#231a04':'background:transparent;color:#e6d6ae'); };
+        var modeBtn=function(on){ return 'flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;height:42px;border-radius:11px;font-size:14.5px;font-weight:800;transition:background .18s,color .18s;'+(on?'background:#ffc21e;color:#241d0c':'background:transparent;color:#d8c294'); };
+        var rowS=function(i){ return 'display:flex;align-items:baseline;gap:14px;padding:9px 0;box-shadow:inset 0 -1px 0 rgba(255,248,230,.1)'; };
+        var setSee=function(k){ return function(){ self.setState({pdSee:k}); }; };
+        var merge=function(a,b){ Object.keys(b).forEach(function(k){ a[k]=b[k]; }); return a; };
+        var pinAt=function(x,y,label){ return {hasPin:true,
+          pinWrap:'position:absolute;left:'+x+'%;top:'+y+'%;z-index:3;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;animation:pinIn .4s cubic-bezier(.2,.9,.3,1.3) both',
+          pinRing:'position:absolute;left:50%;top:100%;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,rgba(255,194,30,.55),transparent 65%);animation:ringPulse 2.4s ease-out infinite',
+          pinTag:'display:flex;align-items:center;gap:7px;background:#ffc21e;color:#231a04;border-radius:12px;padding:9px 14px;white-space:nowrap;font-size:15px;font-weight:800;box-shadow:0 14px 26px -12px rgba(0,0,0,.7)',
+          pinDot:'width:14px;height:14px;border-radius:50%;background:#ffc21e;box-shadow:0 0 0 4px rgba(255,194,30,.35);margin-top:6px', pinLabel:label}; };
+
+        var MODEL={photos:'Photos',earth:'MAPCO Earth',sector:'Sector map',plan:'Masterplan',street:'Street view'};
+        var stage={hasPin:false,hasNote:false,hasUrl:false,target:'_self',mode:MODEL[see]||'Photos'};
+        if(see==='photos'){
+          stage=merge(stage,{ imgStyle:'position:absolute;inset:0;background-image:url('+this.pshot(p,idx)+');background-size:cover;background-position:center',
+            caption:this.PCAPS[idx]+' · '+p.name, counter:(idx+1)+' of 6' });
+        } else if(see==='earth'){
+          stage=merge(stage,{ imgStyle:'position:absolute;inset:0;background-image:url(assets/earth-sat.png);background-size:cover;background-position:50% 42%',
+            caption:'Where this property physically sits', counter:p.geo,
+            hasNote:true, noteIcon:'ph-fill ph-globe-hemisphere-east', note:'Satellite position from MAPCO Earth — the same location record used across MAPCO',
+            hasUrl:true, url:'MAPCO Earth.dc.html', urlLabel:'Open MAPCO Earth' });
+          stage=merge(stage,pinAt(p.px,p.py,p.unitNo));
+        } else if(see==='sector'){
+          stage=merge(stage,{ imgStyle:this.motif(p.px%4,30),
+            caption:'Official sector layout · '+p.sector, counter:p.unitNo,
+            hasNote:true, noteIcon:'ph-fill ph-map-pin-area', note:'Where the property sits inside the approved sector layout' });
+          stage=merge(stage,pinAt(52,46,p.unitNo));
+        } else if(see==='plan'){
+          stage=merge(stage,{ imgStyle:'position:absolute;inset:0;background-image:url(assets/newchandigarh-map.png);background-size:cover;background-position:center',
+            caption:'Area masterplan · '+p.city, counter:p.sector,
+            hasNote:true, noteIcon:'ph-fill ph-map-trifold', note:'How this sector sits inside the wider area plan' });
+          stage=merge(stage,pinAt(p.px,p.py,p.sector.split(',')[0]));
+        } else {
+          stage=merge(stage,{ imgStyle:'position:absolute;inset:0;background-image:url(assets/ph-road-'+((p.px%3)+1)+'.png);background-size:cover;background-position:center',
+            caption:'Approach road and surroundings', counter:p.road?p.road+' front road':'Front road',
+            hasNote:true, noteIcon:'ph-fill ph-person-simple-walk', note:'Real surroundings at the property coordinate on Street View',
+            hasUrl:true, url:this.street(p.sector), urlLabel:'Street View', target:'_blank' });
+        }
+
+        var fit=this.fitFor(p);
+        out.pd={ name:p.name, typeLabel:p.typeLabel, sectorLine:p.sector, approvalLine:p.appr,
+          close:function(){ self.setState({pd:null,pdPrice:false}); },
+          waUrl:'https://wa.me/?text='+encodeURIComponent(p.name+' — '+p.size+' · '+(p.facing?p.facing+' facing · ':'')+p.sector+' · '+p.appr),
+
+          seeTabs:[['photos','Photos','ph-fill ph-images'],['earth','MAPCO Earth','ph-fill ph-globe-hemisphere-east'],['sector','Sector map','ph-fill ph-map-pin-area'],['plan','Masterplan','ph-fill ph-map-trifold'],['street','Street view','ph-fill ph-person-simple-walk']]
+            .map(function(t){ return {label:t[1],icon:t[2],style:seeBtn(see===t[0]),go:setSee(t[0])}; }),
+          stage:stage, isPhotos:see==='photos',
+          prev:function(){ self.setState({pdShot:(s.pdShot+5)%6}); },
+          next:function(){ self.setState({pdShot:(s.pdShot+1)%6}); },
+          shots:[0,1,2,3,4,5].map(function(i){ return {
+            imgStyle:'display:block;width:72px;height:48px;background-image:url('+self.pshot(p,i)+');background-size:cover;background-position:center',
+            style:'display:block;overflow:hidden;border-radius:10px;transition:box-shadow .2s;box-shadow:0 0 0 '+(i===idx?'2.5px #ffc21e':'1px rgba(255,248,230,.28)'),
+            go:function(){ self.setState({pdShot:i}); }}; }),
+
+          modes:[['details','Details','ph-fill ph-list-bullets'],['intel','Intelligence','ph-fill ph-compass-rose']]
+            .map(function(t){ return {label:t[1],icon:t[2],style:modeBtn(mode===t[0]),go:function(){ self.setState({pdKnow:t[0]}); }}; }),
+          isDetails:mode==='details', isIntel:mode==='intel',
+
+          hasPrice:!!(p.inv&&p.inv.ask), priceText:p.inv?p.inv.ask:'',
+
+          groups:this.groupsFor(p).map(function(g,gi){
+            var C=[['rgba(255,201,60,.1)','rgba(255,201,60,.3)','#ffd76b'],['rgba(151,110,235,.14)','rgba(151,110,235,.34)','#c3a9ff'],['rgba(123,224,164,.11)','rgba(123,224,164,.3)','#7be0a4']][gi%3];
+            return {title:g.title, icon:g.icon,
+              boxStyle:'margin-top:14px;padding:14px 15px 6px;border-radius:18px;background:'+C[0]+';box-shadow:inset 0 0 0 1px '+C[1],
+              iconStyle:'font-size:15px;color:'+C[2],
+              titleStyle:'font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:'+C[2],
+              rows:g.rows.map(function(r,i){ return {k:r.k,v:r.v,rowStyle:rowS(i)}; })}; }),
+
+          standout:this.standoutFor(p),
+          local:(p.local||[]).map(function(n){ return {what:n[0],how:n[1],icon:'ph-fill ph-storefront'}; }),
+          near:p.near.map(function(n){ return {what:n[0],how:n[1],icon:n[2]}; }),
+          roads:(p.roads||[]).map(function(n){ return {name:n[0],how:n[1],note:n[2]}; }),
+          checks:this.checksFor(p).map(function(t){ return {t:t}; }),
+          hasFit:fit.length>0, clientName:this.CLIENT.name, fit:fit.map(function(t){ return {t:t}; }) };
+      } }
+    return out;
+  }
+
+  places=[
+    {id:'ecocity',label:'Eco City · 500 sq yd',sub:'North-East facing plot',cat:'plot',x:45,y:34},
+    {id:'block5',label:'Block 5 site',sub:'Corner plot · wide road',cat:'plot',x:37,y:47},
+    {id:'aero',label:'Aerocity · 300 sq yd',sub:'West facing plot',cat:'plot',x:63,y:73},
+    {id:'sec79',label:'Sector 79 Mohali · 250 sq yd',sub:'East facing plot',cat:'plot',x:70,y:82},
+    {id:'cu',label:'Chandigarh University',sub:'Gharuan · 10 min drive',cat:'landmark',x:70,y:40},
+    {id:'cp67',label:'CP67 Mall',sub:'Shopping & food court',cat:'landmark',x:60,y:69},
+    {id:'airport',label:'Chandigarh Airport',sub:'International terminal',cat:'landmark',x:82,y:88},
+    {id:'pgi',label:'PGIMER Hospital',sub:'Sector 12 · major hospital',cat:'landmark',x:88,y:62},
+    {id:'isb',label:'ISB Mohali',sub:'Business school campus',cat:'landmark',x:64,y:80},
+    {id:'school',label:'Delhi Public School',sub:'CBSE · 5 min away',cat:'amenity',x:46,y:41},
+    {id:'leisure',label:'Leisure Valley Park',sub:'Walking track & garden',cat:'amenity',x:51,y:63},
+    {id:'market',label:'City Centre Market',sub:'Daily needs & banks',cat:'amenity',x:57,y:52},
+    {id:'airroad',label:'Airport Road',sub:'Direct road to terminal',cat:'road',x:71,y:83},
+    {id:'pr7',label:'PR-7 Highway',sub:'Main 200 ft road',cat:'road',x:41,y:50},
+    {id:'gmada',label:'GMADA Expressway',sub:'Anandpur Sahib side',cat:'road',x:15,y:46},
+    {id:'omaxe',label:'Omaxe New Chandigarh',sub:'Gated township',cat:'project',x:35,y:39},
+    {id:'wave',label:'Wave Estate',sub:'Plots & villas',cat:'project',x:30,y:53},
+    {id:'jlpl',label:'JLPL Falcon View',sub:'High-rise apartments',cat:'project',x:66,y:75},
+    {id:'gillco',label:'Gillco Valley',sub:'Township & school',cat:'project',x:21,y:70},
+  ];
+
+  shotSrc(p,i){ const v=((p.id.length+i)%3)+1; return `assets/ph-${p.cat}-${v}.png`; }
+  cat(k){ return this.CATS.find(c=>c.k===k)||this.CATS[0]; }
+
+  componentDidMount(){
+    this._mm=(e)=>this.onMove(e); this._mu=()=>this.onUp();
+    this._rs=()=>this.setState({vw:window.innerWidth,vh:window.innerHeight});
+    this._kd=(e)=>{ if(e.key==='Escape') this.setState({mapsOpen:false,filterOpen:false,lb:null});
+      if(this.state.lb){ if(e.key==='ArrowRight') this.stepShot(1); if(e.key==='ArrowLeft') this.stepShot(-1); } };
+    window.addEventListener('mousemove',this._mm); window.addEventListener('mouseup',this._mu);
+    window.addEventListener('resize',this._rs); window.addEventListener('keydown',this._kd);
+    this._rs();
+  }
+  componentWillUnmount(){ window.removeEventListener('mousemove',this._mm); window.removeEventListener('mouseup',this._mu); window.removeEventListener('resize',this._rs); window.removeEventListener('keydown',this._kd); }
+  onDown(e){ if(e.button!==undefined&&e.button!==0)return; this._sx=e.clientX-this.state.tx; this._sy=e.clientY-this.state.ty; this.setState({dragging:true,mapsOpen:false,filterOpen:false}); }
+  onMove(e){ if(!this.state.dragging)return; this.setState({tx:e.clientX-this._sx,ty:e.clientY-this._sy}); }
+  onUp(){ if(this.state.dragging) this.setState({dragging:false}); }
+  onWheel(e){ this.zoomBy(e.deltaY<0?0.25:-0.25); }
+  zoomBy(d){ let z=Math.min(3.4,Math.max(1,Math.round((this.state.zoom+d)*100)/100)); const ns={zoom:z}; if(z<=1){ns.tx=0;ns.ty=0;} this.setState(ns); }
+  resetView(){ this.setState({zoom:1,tx:0,ty:0}); }
+  full(){ try{ if(!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }catch(e){} }
+  togglePin(id){ const cur=this.state.pins; this.setState({pins:cur.includes(id)?cur.filter(x=>x!==id):[...cur,id]}); }
+  stepShot(d){ this.setState({shot:(this.state.shot+d+6)%6}); }
+  street(label){ return 'https://www.google.com/maps?q='+encodeURIComponent(label.split(' · ')[0]+', New Chandigarh, Punjab')+'&layer=c'; }
+
+  renderVals(){
+    const s=this.state; const is3d=s.dim==='3d';
+    const ratio=this.MAP_W/this.MAP_H;
+    const railW=Math.round(Math.max(304,Math.min(520,s.vw-s.vh*ratio)));
+    const areaW=Math.max(420,s.vw-railW), areaH=s.vh;
+    const fit=Math.min(areaW/this.MAP_W,areaH/this.MAP_H);
+    const planeW=Math.round(this.MAP_W*fit), planeH=Math.round(this.MAP_H*fit);
+
+    const tilt=is3d?' scale(.8) rotateX(44deg) rotateZ(-5deg)':'';
+    const mapInnerStyle=`position:relative;width:${planeW}px;height:${planeH}px;flex:none;transform-origin:center center;transform-style:preserve-3d;transition:transform ${s.dragging?'0s':'.45s'} cubic-bezier(.2,.8,.2,1);transform:translate(${s.tx}px,${s.ty}px) scale(${s.zoom})${tilt}`;
+    const stageStyle=`position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-start;perspective:1600px;cursor:${s.dragging?'grabbing':'grab'};overflow:hidden`;
+    const upright=is3d?'rotateZ(5deg) rotateX(-44deg)':'';
+
+    const tab=(on)=>`height:38px;display:flex;align-items:center;padding:0 14px;border-radius:10px;font-size:14.5px;font-weight:800;letter-spacing:.01em;white-space:nowrap;transition:all .15s;${on?'background:#ffc21e;color:#231a04;box-shadow:0 8px 18px -8px rgba(255,194,30,.95)':'background:transparent;color:#f4e5c4'}`;
+    const viewTabs=this.VIEWS.map(v=>({label:v.l,style:tab(s.view===v.k),go:()=>this.setState({view:v.k,mapsOpen:false})}));
+    const dimTabs=this.DIMS.map(v=>({label:v.l,icon:v.i,style:`height:34px;display:flex;align-items:center;gap:6px;padding:0 11px;border-radius:9px;font-size:13px;font-weight:800;white-space:nowrap;transition:all .15s;${s.dim===v.k?'background:#ffc21e;color:#231a04;box-shadow:0 8px 16px -8px rgba(255,194,30,.9)':'background:rgba(255,248,230,.1);color:#f4e5c4'}`,go:()=>this.setState({dim:v.k})}));
+    const hlOn=s.hl?this.HLSETS.find(g=>g.id===s.hl):null;
+
+    const showPins=s.view!=='sectors';
+    const pinned=this.places.filter(p=>s.pins.includes(p.id));
+    const pins=showPins?pinned.map(p=>{ const c=this.cat(p.cat); return { label:p.label, tagIcon:c.i,
+      wrapStyle:`position:absolute;left:${p.x}%;top:${p.y}%;z-index:6;transform-style:preserve-3d`,
+      ringStyle:'position:absolute;left:0;top:0;width:70px;height:70px;border-radius:50%;background:rgba(255,194,30,.5);animation:ringPulse 1.8s ease-out infinite',
+      innerStyle:`position:relative;transform:translate(-50%,-100%) ${upright};transform-origin:bottom center;display:flex;flex-direction:column;align-items:center;cursor:pointer;animation:pinIn .4s cubic-bezier(.2,.9,.3,1.3) both`,
+      tagStyle:`display:flex;align-items:center;gap:7px;background:#ffc21e;color:#231a04;border-radius:12px;padding:9px 14px;white-space:nowrap;font-size:15px;font-weight:800;border:2.5px solid #fffdf7;box-shadow:0 10px 22px -8px rgba(40,26,2,.7)`,
+      stemStyle:'display:block;width:3px;height:14px;background:#ffc21e',
+      dotStyle:'display:block;width:14px;height:14px;border-radius:50%;background:#ffc21e;border:3px solid #fffdfb;margin-top:-2px',
+      go:()=>this.togglePin(p.id) }; }):[];
+
+    const counts={all:this.places.length};
+    for(const c of this.CATS) if(c.k!=='all') counts[c.k]=this.places.filter(p=>p.cat===c.k).length;
+    const active=this.cat(s.cat);
+    const catRows=this.CATS.map(c=>{ const on=s.cat===c.k; return { label:c.l, count:counts[c.k], icon:c.i,
+      iconWrap:`width:38px;height:38px;border-radius:11px;flex:none;display:grid;place-items:center;background:${c.bg};color:${c.c}`,
+      countStyle:`font-size:13px;font-weight:800;border-radius:999px;padding:4px 11px;${on?'background:#ffc21e;color:#231a04':'background:#f6ecd8;color:#7a6a4a'}`,
+      style:`width:100%;display:flex;align-items:center;gap:12px;padding:11px 10px;border-radius:13px;${on?'background:#fff3d1':'background:transparent'}`,
+      go:()=>this.setState({cat:c.k,filterOpen:false}) }; });
+
+    const list=s.cat==='all'?this.places:this.places.filter(p=>p.cat===s.cat);
+    const placesVm=list.map((p,i)=>{ const c=this.cat(p.cat); const on=s.pins.includes(p.id);
+      return { label:p.label, isPlot:p.cat==='plot', typeLabel:c.l, tagIcon:c.i, countText:'6 photos',
+        tagStyle:`display:inline-flex;align-items:center;gap:6px;flex:none;font-size:11.5px;font-weight:800;padding:5px 10px;border-radius:999px;background:${c.bg};color:${c.c};white-space:nowrap`,
+        photoStyle:`display:block;width:100%;height:248px;background-image:url('${this.shotSrc(p,0)}');background-size:cover;background-position:center`,
+        cardStyle:`flex:none;background:#fffdfb;border-radius:18px;overflow:hidden;${on?'animation:glowCard 2.2s ease-in-out infinite':'box-shadow:0 0 0 1px rgba(88,52,168,.14),0 14px 30px -22px rgba(42,31,77,.6)'};animation-delay:${Math.min(i,8)*0.03}s`,
+        pinIcon:on?'ph-fill ph-map-pin':'ph-fill ph-map-pin-line', pinText:on?'Pinned on map':'Pin on map',
+        pinBtn:`display:flex;align-items:center;justify-content:center;gap:7px;flex:1;height:38px;border-radius:11px;font-size:14px;font-weight:800;transition:box-shadow .25s;${on?'background:#f0a500;color:#231a04;box-shadow:0 0 0 2px #fffdfb,0 0 22px 4px rgba(255,194,30,.95)':'background:#fff3d1;color:#8a5a0c'}`,
+        streetUrl:this.street(p.label), pin:()=>this.togglePin(p.id), open:()=>this.setState({lb:p.id,shot:0}) }; });
+
+    let lb=null;
+    if(s.lb){ const p=this.places.find(x=>x.id===s.lb);
+      if(p){ const c=this.cat(p.cat); const on=s.pins.includes(p.id); const idx=s.shot%6;
+        lb={ label:p.label, sub:p.sub+' · '+c.l, icon:c.i,
+          iconStyle:`width:50px;height:50px;border-radius:14px;flex:none;display:grid;place-items:center;background:${c.bg};color:${c.c}`,
+          mainStyle:`position:absolute;inset:0;background-image:url('${this.shotSrc(p,idx)}');background-size:cover;background-position:center`,
+          caption:this.CAPTIONS[idx], counter:(idx+1)+' / 6',
+          shots:[0,1,2,3,4,5].map(i=>({ imgStyle:`display:block;width:100%;height:104px;flex:none;background-image:url('${this.shotSrc(p,i)}');background-size:cover;background-position:center`, caption:this.CAPTIONS[i], go:()=>this.setState({shot:i}),
+            style:`display:flex;flex-direction:column;border-radius:14px;overflow:hidden;background:#fffdfb;cursor:pointer;box-shadow:0 0 0 ${i===idx?'3px #ffc21e':'1.5px rgba(255,255,255,.22)'}` })),
+          prev:()=>this.stepShot(-1), next:()=>this.stepShot(1),
+          pinText:on?'Pinned on map':'Pin on map', pinIcon:on?'ph-fill ph-map-pin':'ph-fill ph-map-pin-line',
+          pinBtn:`display:flex;align-items:center;justify-content:center;gap:9px;height:56px;padding:0 22px;border-radius:15px;font-size:17px;font-weight:800;flex:none;${on?'background:#f0a500;color:#231a04;box-shadow:0 0 0 2px rgba(255,253,251,.6),0 0 24px 5px rgba(255,194,30,.95)':'background:#ffc21e;color:#231a04;box-shadow:0 8px 16px -8px rgba(255,194,30,.9)'}`,
+          streetUrl:this.street(p.label), pin:()=>this.togglePin(p.id) };
+      } }
+
+    const mapsList=this.MAPS.map(mp=>{ const on=mp.l===this.mapName; return {
+      label:mp.l, icon:mp.ready?(on?'ph-fill ph-map-trifold':'ph ph-map-trifold'):'ph ph-plus-circle', iconColor:`color:${on?'#f0a500':(mp.ready?'#6f6489':'#a79dc0')}`,
+      tag: on?'Showing':(mp.ready?'Ready':'Add map'), tagStyle:`font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;${on?'background:#ffc21e;color:#231a04':(mp.ready?'background:#f6ecd8;color:#7a6a4a':'background:#f6f2ff;color:#a79dc0')}`,
+      style:`width:100%;display:flex;align-items:center;gap:11px;padding:12px 10px;border-radius:12px;${mp.ready?'':'opacity:.65'}`,
+      go:()=>{ if(mp.ready){ this.mapName=mp.l; this.setState({mapsOpen:false,pins:[]}); } } }; });
+
+    return {
+      ...this.viewVals(),
+      mapName:this.mapName, viewTabs, dimTabs, catRows, places:placesVm, noPlaces:placesVm.length===0, lb, pins,
+      mapAreaStyle:`flex:1;min-width:0;position:relative;overflow:hidden;background:#f0e8ff;background-image:radial-gradient(58% 48% at 6% -2%,rgba(139,96,232,.56),transparent 62%),radial-gradient(52% 44% at 96% 6%,rgba(56,138,186,.44),transparent 62%),radial-gradient(60% 46% at 50% 108%,rgba(255,190,48,.4),transparent 64%)`,
+      railStyle:`width:${railW}px;flex:none;display:flex;flex-direction:column;min-height:0;background:#f5efff;background-image:linear-gradient(180deg,#faf6ff,#ede4ff);box-shadow:inset 1px 0 0 rgba(139,96,232,.18),-18px 0 50px -30px rgba(42,31,77,.6);z-index:28`,
+      stageStyle, mapInnerStyle,
+      mapImgStyle:`display:block;width:100%;height:100%;object-fit:fill;user-select:none;pointer-events:none;`,
+      nextHl:()=>{ const ids=this.HLSETS.map(g=>g.id); const at=s.hl?ids.indexOf(s.hl):-1;
+        this.setState({hl: at+1>=ids.length ? null : ids[at+1]}); },
+      hlLabel: hlOn?hlOn.id+' · '+hlOn.name:'Highlights',
+      hlTitle: hlOn?'Showing '+hlOn.name+' — tap for next':'Tap to show saved highlights',
+      hlBtnStyle:'height:34px;display:flex;align-items:center;gap:7px;padding:0 12px;border-radius:9px;font-size:13px;font-weight:800;white-space:nowrap;transition:all .2s;'+(hlOn?'background:#ffc21e;color:#231a04;box-shadow:0 0 0 2px rgba(255,248,230,.45),0 0 20px 4px rgba(255,194,30,.9)':'background:rgba(255,248,230,.16);color:#fff8e6'),
+      hlRoads: hlOn?hlOn.roads.map(p=>({pts:p.map(q=>Math.round(q[0]*1000)+','+Math.round(q[1]*1000)).join(' ')})):[],
+      hlBlocks: hlOn?hlOn.blocks.map(k=>({n:k.n,
+        style:'position:absolute;left:'+(k.x*100)+'%;top:'+(k.y*100)+'%;width:'+(k.w*100)+'%;height:'+(k.h*100)+'%;border-radius:9px;border:3px solid #ffc21e;background:rgba(255,194,30,.24);box-shadow:0 0 0 3px rgba(255,194,30,.3),0 0 40px rgba(255,194,30,.85);pointer-events:none;animation:pinIn .4s cubic-bezier(.2,.9,.3,1.3) both',
+        tagStyle:'position:absolute;left:50%;top:-13px;transform:translateX(-50%);white-space:nowrap;padding:4px 11px;border-radius:8px;background:#ffc21e;color:#231a04;font-size:12.5px;font-weight:800;border:2px solid #fffdfb'})):[],
+      hlPins: hlOn?hlOn.pins.map(k=>({n:k.n,
+        wrapStyle:'position:absolute;left:'+(k.x*100)+'%;top:'+(k.y*100)+'%;pointer-events:none',
+        ringStyle:'position:absolute;left:0;top:0;width:70px;height:70px;border-radius:50%;background:rgba(255,194,30,.5);animation:ringPulse 1.8s ease-out infinite',
+        innerStyle:'position:relative;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;animation:pinIn .4s cubic-bezier(.2,.9,.3,1.3) both',
+        tagStyle:'white-space:nowrap;padding:8px 13px;border-radius:11px;background:#ffc21e;color:#231a04;font-size:14px;font-weight:800;border:2.5px solid #fffdfb;box-shadow:0 10px 22px -8px rgba(40,26,2,.7)',
+        dotStyle:'width:13px;height:13px;border-radius:50%;background:#ffc21e;border:3px solid #fffdfb;margin-top:4px;box-shadow:0 0 16px #ffc21e'})):[],
+      onDown:(e)=>this.onDown(e), onWheel:(e)=>this.onWheel(e),
+      zoomIn:()=>this.zoomBy(0.3), zoomOut:()=>this.zoomBy(-0.3), resetView:()=>this.resetView(),
+      zoomPct:Math.round(s.zoom*100)+'%', full:()=>this.full(),
+      unusedWholeBtnStyle:`display:flex;align-items:center;gap:8px;height:44px;padding:0 16px;border-radius:12px;font-size:15px;font-weight:800;${s.zoom>1?'background:#ffc21e;color:#231a04':'background:rgba(255,248,230,.12);color:#f4e5c4'}`,
+      hasPins:pinned.length>0, pinCountText:pinned.length===1?'1 place pinned':pinned.length+' places pinned',
+      clearPins:()=>this.setState({pins:[]}),
+      closeLb:()=>this.setState({lb:null}),
+      mapsOpen:s.mapsOpen, toggleMaps:()=>this.setState({mapsOpen:!s.mapsOpen,filterOpen:false}), mapsList, mapsCaret:s.mapsOpen?'ph-bold ph-caret-up':'ph-bold ph-caret-down',
+      mapBtnStyle:'display:flex;align-items:center;gap:9px;height:40px;padding:0 14px;border-radius:12px;background:rgba(24,16,4,.24);backdrop-filter:blur(9px);transition:background .15s',
+      filterOpen:s.filterOpen, toggleFilter:()=>this.setState({filterOpen:!s.filterOpen,mapsOpen:false}),
+      filterLabel:active.l, filterIcon:active.i, filterCount:counts[s.cat], filterCaret:s.filterOpen?'ph-bold ph-caret-up':'ph-bold ph-caret-down',
+      filterCountStyle:'font-size:13px;font-weight:800;border-radius:999px;padding:4px 11px;background:#ffc21e;color:#fff;flex:none',
+      filterBtnStyle:'width:100%;display:flex;align-items:center;gap:11px;height:60px;padding:0 15px;border-radius:16px;background:#fff3d1;box-shadow:inset 0 0 0 1.5px #f6e3ab;transition:background .15s',
+    };
+  }
+}
+</script>
+</body>
+</html>

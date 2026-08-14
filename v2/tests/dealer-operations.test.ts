@@ -74,7 +74,11 @@ describe('dealer property operational readiness', () => {
   });
 });
 
-describe('operation-first Dealer Home boundary', () => {
+/* Dealer Home follows the approved design (Dealer Dashboard.dc.html lines
+   341–478): a demand screen built from the dealer's own presentation opens
+   and the private links they sent. This supersedes the operation-first Home
+   that briefly replaced it. */
+describe('approved Dealer Home boundary', () => {
   const home = source('src/apps/dealer/pages/home.ts');
 
   it('uses the active adapter and only factual dealer records', () => {
@@ -82,21 +86,27 @@ describe('operation-first Dealer Home boundary', () => {
     expect(home).not.toMatch(/mock-adapter/);
     expect(home).toContain('adapter.properties.list(');
     expect(home).toContain('adapter.clientLinks.list(');
-    expect(home).not.toContain('adapter.demandSignals');
+    expect(home).toContain('adapter.customers.list(');
+    expect(home).toContain('adapter.demandSignals.get(');
   });
 
-  it('centres the approved dealer operations', () => {
+  it('renders the approved demand sections', () => {
     for (const label of [
-      'Start Client Presentation', 'Open MAPCO Earth', 'Add Property',
-      'My Stock', 'Ready to Show', 'Needs Attention',
+      'Show the map', 'Opened while presenting', 'Link opens', 'Hottest area',
+      'Where buyers look', 'What gets opened most',
+      'Interest on the map vs plots you hold', 'Plots pulling the most attention',
     ]) expect(home).toContain(label);
   });
 
-  it('does not render the superseded buyer-analytics dashboard', () => {
-    for (const pattern of [
-      /Hottest area/i, /Buyer interests/i, /Where buyers look/i,
-      /pulling the most attention/i, /\bHOT\b/,
-    ]) expect(home).not.toMatch(pattern);
+  it('states plainly that every number is the dealer\'s own', () => {
+    expect(home).toContain('Only from your own presentations and the links you sent.');
+    expect(home).toContain('Opens are counted while you present. Nothing here comes from outside.');
+  });
+
+  it('never invents demand it cannot source', () => {
+    // No fixture arrays, no seeded interest map — every figure is derived.
+    expect(home).not.toMatch(/INTEREST\s*[:=]\s*\{/);
+    expect(home).not.toMatch(/const\s+(PROPERTIES|CLIENTS|DEALS)\s*[:=]/);
   });
 });
 
