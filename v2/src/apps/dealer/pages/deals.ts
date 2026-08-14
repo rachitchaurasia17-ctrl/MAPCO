@@ -369,7 +369,7 @@ export async function renderDeals(el: HTMLElement): Promise<void> {
             ${row('Your commission', draft.commission === undefined ? 'Not recorded' : `${formatINR(draft.commission)}${draft.commissionReceived ? ' · received' : ' · pending'}`)}
             ${row('Documents', draft.documents.length ? `${draft.documents.length} attached` : 'None')}
           </div>
-          <div role="alert" style="display:flex;gap:11px;background:#fff4e0;border:1px solid #f4cf8f;border-radius:14px;padding:14px 16px;color:#8a5a08;font-size:14px;line-height:1.5"><i class="ph-fill ph-warning" style="font-size:20px;flex:none;margin-top:1px"></i><span>This will mark the selected property as <b>Sold</b> and remove it from available inventory, Client Presentation and future Client Links.</span></div>
+          <div role="alert" style="display:flex;gap:11px;background:#fff4e0;border:1px solid #f4cf8f;border-radius:14px;padding:14px 16px;color:#8a5a08;font-size:14px;line-height:1.5"><i class="ph-fill ph-warning" style="font-size:20px;flex:none;margin-top:1px"></i><span>This will mark the selected property as <b>Sold</b> and remove it from available inventory, MAPCO Earth and future Client Links.</span></div>
           ${flowError ? `<div role="alert" style="background:#ffe1e6;border:1px solid #f3b6c2;color:#9f2446;border-radius:12px;padding:12px 15px;font-size:14px;font-weight:700">${esc(flowError)}</div>` : ''}
         </div>`;
       }

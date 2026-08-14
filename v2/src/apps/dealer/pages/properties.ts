@@ -212,7 +212,7 @@ export async function renderProperties(el: HTMLElement): Promise<void> {
       }),
       onPublishToggle: (item) => void saveProperty(
         { ...item, published: !item.published },
-        item.published ? 'Property removed from Client Presentation.' : 'Property published to Client Presentation.',
+        item.published ? 'Property removed from MAPCO Earth.' : 'Property published to MAPCO Earth.',
       ),
       onDelete: (item) => void removeProperty(item),
     });
@@ -278,7 +278,7 @@ export async function renderProperties(el: HTMLElement): Promise<void> {
     if (action === 'publish') {
       void saveProperty(
         { ...property, published: !property.published },
-        property.published ? 'Property removed from Client Presentation.' : 'Property published to Client Presentation.',
+        property.published ? 'Property removed from MAPCO Earth.' : 'Property published to MAPCO Earth.',
       );
     }
     if (action === 'sold') window.location.assign(productRoutes.recordSale(property.id));

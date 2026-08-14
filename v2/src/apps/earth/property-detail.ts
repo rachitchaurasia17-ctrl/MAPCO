@@ -13,6 +13,10 @@
 import type { Property } from './config';
 import { propertyPos } from './config';
 import { productRoutes } from '../../packages/ui/product-routes';
+import { hasGoogleConfig, loadGoogleMaps, importMapsLibrary, GOOGLE_MAPS_MAP_ID } from '../../packages/maps/google-loader';
+import { showPlan, teardownPlan, sectorMaps } from './plan-maps';
+import { RoadLayer, globalRoadLayerItems } from './road-layer';
+import { ROAD_SPECS } from './intel/road-network';
 
 const esc = (value: unknown): string => String(value ?? '').replace(
   /[&<>"']/g,
@@ -35,6 +39,9 @@ interface Group { title: string; icon: string; rows: { k: string; v: string }[] 
 let host: HTMLElement | null = null;
 let current: Property | null = null;
 const state: DetailState = { see: 'photos', mode: 'details', shot: 0 };
+
+let panorama: any = null;
+let streetViewService: any = null;
 
 function ensureHost(): HTMLElement {
   if (host && host.isConnected) return host;
@@ -142,19 +149,19 @@ function stageMarkup(p: Property): string {
     return `<div style="position:absolute;inset:0;${photo ? `background-image:url('${esc(photo)}');background-size:cover;background-position:center` : 'background:#0f0b03;display:grid;place-items:center'}">${photo ? '' : '<i class="ph-fill ph-image" style="font-size:44px;color:#4a3f22"></i>'}</div>`;
   }
   if (state.see === 'earth') {
-    const pos = propertyPos(p);
-    return `<div style="position:absolute;inset:0;background-image:url('/assets/earth-sat.png');background-size:cover;background-position:50% 42%;background-color:#0f2018"></div>
-      ${pos ? pinMarkup(50, 46, p.plotNo || p.tag) : ''}`;
+    return `<div id="pd-earth-map" style="position:absolute;inset:0;background:#0f2018"></div>`;
   }
   if (state.see === 'sector') {
-    const src = p.canonicalRecord?.mapPlacement?.mapId;
-    return `<div style="position:absolute;inset:0;background:radial-gradient(120% 120% at 40% 20%,#3a2f14,#181207);display:grid;place-items:center;color:#a99775"><div style="text-align:center"><i class="ph-fill ph-map-pin-area" style="font-size:40px;color:#ffd76b"></i><div style="margin-top:10px;font-size:15px;font-weight:700">${src ? 'Official sector layout' : 'Sector layout not linked yet'}</div></div></div>${pinMarkup(52, 46, p.plotNo || p.tag)}`;
+    return `<div id="pd-plan-host" style="position:absolute;inset:0;background:#181207"></div>`;
   }
   if (state.see === 'plan') {
-    return `<div style="position:absolute;inset:0;background-image:url('/assets/newchandigarh-map.png');background-size:cover;background-position:center;background-color:#1a130a"></div>${pinMarkup(48, 44, sector)}`;
+    return `<div id="pd-plan-host" style="position:absolute;inset:0;background:#1a130a"></div>`;
   }
   // street
-  return `<div style="position:absolute;inset:0;background:radial-gradient(120% 120% at 60% 30%,#2a2416,#120d05);display:grid;place-items:center;color:#a99775"><div style="text-align:center"><i class="ph-fill ph-person-simple-walk" style="font-size:40px;color:#ffd76b"></i><div style="margin-top:10px;font-size:15px;font-weight:700">Approach road and surroundings</div></div></div>`;
+  return `<div id="pd-sv-pano" style="position:absolute;inset:0;background:#0e1512"></div>
+    <div id="pd-sv-status" style="position:absolute;inset:0;background:radial-gradient(120% 120% at 60% 30%,#2a2416,#120d05);display:grid;place-items:center;color:#a99775;z-index:2">
+      <div style="text-align:center"><i class="ph-fill ph-person-simple-walk" style="font-size:40px;color:#ffd76b"></i><div id="pd-sv-msg" style="margin-top:10px;font-size:15px;font-weight:700">Loading Street View…</div></div>
+    </div>`;
 }
 
 function stageMeta(p: Property): { mode: string; caption: string; counter: string; url?: string; urlLabel?: string; target?: string } {
@@ -170,9 +177,149 @@ function stageMeta(p: Property): { mode: string; caption: string; counter: strin
       const url = pos
         ? `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${pos.lat},${pos.lng}`
         : `https://www.google.com/maps?q=${encodeURIComponent((p.sector || p.city) + ', Punjab')}&layer=c`;
-      return { mode: 'Street view', caption: 'Approach road and surroundings', counter: p.road ? `${p.road} front road` : 'Front road', url, urlLabel: 'Street View', target: '_blank' };
+      return { mode: 'Street view', caption: 'Approach road and surroundings', counter: p.road ? `${p.road} front road` : 'Front road', url, urlLabel: 'Open in Google Maps', target: '_blank' };
     }
   }
+}
+
+
+
+function closeStreetView(): void {
+  if (!host) return;
+  const sv = host.querySelector('#pd-sv');
+  if (sv) sv.innerHTML = '';
+  panorama = null;
+}
+
+let earthMap: any = null;
+let earthRoads: RoadLayer | null = null;
+let earthPin: any = null;
+
+async function initEarthMap(p: Property): Promise<void> {
+  const mapHost = document.getElementById('pd-earth-map');
+  if (!mapHost) return;
+
+  const pos = propertyPos(p);
+  if (!pos) {
+    mapHost.innerHTML = `<div style="position:absolute;inset:0;display:grid;place-items:center;background:#0f2018;color:#a99775"><div style="text-align:center"><i class="ph-fill ph-map-pin-area" style="font-size:40px;color:#ffd76b"></i><div style="margin-top:10px;font-size:15px;font-weight:700">Earth location not set</div></div></div>`;
+    return;
+  }
+
+  // Reuse the existing map if already created
+  if (earthMap) {
+    earthMap.setCenter(pos);
+    if (earthPin) {
+      earthPin.position = pos;
+      const el = document.createElement('div');
+      el.innerHTML = pinMarkup(0, 0, p.plotNo || p.tag);
+      const innerPin = el.firstElementChild as HTMLElement;
+      if (innerPin) {
+        innerPin.style.position = 'relative';
+        innerPin.style.left = '0';
+        innerPin.style.top = '0';
+        innerPin.style.transform = 'translate(-50%, -100%)';
+        earthPin.content = innerPin;
+      }
+    }
+    return;
+  }
+
+  await loadGoogleMaps();
+  if (!google.maps || !document.getElementById('pd-earth-map')) return;
+
+  earthMap = new google.maps.Map(mapHost, {
+    center: pos,
+    zoom: 16,
+    mapTypeId: 'satellite',
+    disableDefaultUI: true,
+    zoomControl: false,
+    mapTypeControl: false,
+    keyboardShortcuts: false,
+    mapId: GOOGLE_MAPS_MAP_ID || 'DEMO_MAP_ID'
+  });
+
+  const { AdvancedMarkerElement } = await (window as any).google.maps.importLibrary("marker");
+  
+  const el = document.createElement('div');
+  el.innerHTML = pinMarkup(0, 0, p.plotNo || p.tag);
+  const innerPin = el.firstElementChild as HTMLElement;
+  if (innerPin) {
+    innerPin.style.position = 'relative';
+    innerPin.style.left = '0';
+    innerPin.style.top = '0';
+    innerPin.style.transform = 'translate(-50%, -100%)';
+  }
+
+  earthPin = new AdvancedMarkerElement({
+    map: earthMap,
+    position: pos,
+    content: innerPin
+  });
+
+  const controls = document.createElement('div');
+  controls.style.margin = '16px';
+  controls.style.display = 'flex';
+  controls.style.alignItems = 'center';
+  controls.style.gap = '3px';
+  controls.style.padding = '4px';
+  controls.style.borderRadius = '14px';
+  controls.style.background = 'rgba(28, 23, 10, .76)';
+  controls.style.backdropFilter = 'blur(16px)';
+  (controls.style as any).webkitBackdropFilter = 'blur(16px)';
+  controls.style.border = '1px solid rgba(255, 255, 255, .15)';
+  controls.style.boxShadow = '0 16px 38px -22px rgba(0, 0, 0, .85)';
+  
+  const toolStyle = 'display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:40px;padding:0 13px;height:40px;border-radius:10px;font:800 12.5px "Hanken Grotesk",sans-serif;color:#cfc4a8;cursor:pointer;transition:all .16s ease;white-space:nowrap;user-select:none;background:transparent;border:none';
+  
+  controls.innerHTML = `
+    <button id="btn-mapco-roads" style="${toolStyle}" onmouseover="this.style.color='#fffdf5';this.style.background='rgba(255,255,255,.09)'" onmouseout="if(!this.dataset.on){this.style.color='#cfc4a8';this.style.background='transparent'}"><i class="ph-bold ph-strategy" style="font-size:16px;color:currentColor"></i>MAPCO Roads</button>
+    <button id="btn-map-type" style="${toolStyle}" onmouseover="this.style.color='#fffdf5';this.style.background='rgba(255,255,255,.09)'" onmouseout="if(!this.dataset.on){this.style.color='#cfc4a8';this.style.background='transparent'}"><i class="ph-bold ph-map-trifold" style="font-size:16px;color:currentColor"></i>Google Map</button>
+  `;
+  
+  let roadsOn = false;
+  earthRoads = new RoadLayer(earthMap, AdvancedMarkerElement);
+  
+  const btnRoads = controls.querySelector('#btn-mapco-roads') as HTMLButtonElement;
+  btnRoads.addEventListener('click', () => {
+    roadsOn = !roadsOn;
+    if (roadsOn) {
+      btnRoads.dataset.on = 'true';
+      btnRoads.style.background = 'linear-gradient(180deg, #5ceffd, #22d3ee)';
+      btnRoads.style.color = '#04121a';
+      btnRoads.style.boxShadow = '0 0 0 1px rgba(125,249,255,.5), 0 8px 20px -8px rgba(34,211,238,.9)';
+      btnRoads.innerHTML = `<i class="ph-bold ph-strategy" style="color:#04121a;font-size:16px"></i>MAPCO Roads`;
+      earthRoads?.show(globalRoadLayerItems(ROAD_SPECS), null, pos);
+    } else {
+      delete btnRoads.dataset.on;
+      btnRoads.style.background = 'transparent';
+      btnRoads.style.color = '#cfc4a8';
+      btnRoads.style.boxShadow = 'none';
+      btnRoads.innerHTML = `<i class="ph-bold ph-strategy" style="color:currentColor;font-size:16px"></i>MAPCO Roads`;
+      earthRoads?.show([], null, null);
+    }
+  });
+
+  let mapType = 'satellite';
+  const btnMapType = controls.querySelector('#btn-map-type') as HTMLButtonElement;
+  btnMapType.addEventListener('click', () => {
+    mapType = mapType === 'satellite' ? 'roadmap' : 'satellite';
+    earthMap?.setMapTypeId(mapType);
+    if (mapType === 'roadmap') {
+      btnMapType.dataset.on = 'true';
+      btnMapType.style.background = 'linear-gradient(180deg, #a983f5, #7c4ddb)';
+      btnMapType.style.color = '#fff';
+      btnMapType.style.boxShadow = '0 0 0 1px rgba(169,131,245,.45), 0 8px 20px -8px rgba(124,77,219,.9)';
+      btnMapType.innerHTML = `<i class="ph-bold ph-globe-hemisphere-west" style="color:#fff;font-size:16px"></i>Satellite`;
+    } else {
+      delete btnMapType.dataset.on;
+      btnMapType.style.background = 'transparent';
+      btnMapType.style.color = '#cfc4a8';
+      btnMapType.style.boxShadow = 'none';
+      btnMapType.innerHTML = `<i class="ph-bold ph-map-trifold" style="color:currentColor;font-size:16px"></i>Google Map`;
+    }
+  });
+
+  earthMap.controls[google.maps.ControlPosition.BOTTOM_LEFT].push(controls);
 }
 
 function render(): void {
@@ -220,15 +367,15 @@ function render(): void {
           <button data-pd="prev" style="position:absolute;left:16px;top:50%;transform:translateY(-50%);width:48px;height:48px;border-radius:50%;background:rgba(255,250,238,.9);color:#241d0c;display:grid;place-items:center;z-index:4"><i class="ph-bold ph-caret-left" style="font-size:23px"></i></button>
           <button data-pd="next" style="position:absolute;right:16px;top:50%;transform:translateY(-50%);width:48px;height:48px;border-radius:50%;background:rgba(255,250,238,.9);color:#241d0c;display:grid;place-items:center;z-index:4"><i class="ph-bold ph-caret-right" style="font-size:23px"></i></button>` : ''}
 
-        <div style="position:absolute;left:0;right:0;bottom:0;z-index:3;padding:74px 20px 18px;background:linear-gradient(180deg,rgba(14,10,2,0),rgba(14,10,2,.9));display:flex;flex-direction:column;gap:13px">
-          ${state.see === 'photos' && p.photos.length ? `<div style="display:flex;gap:8px">${p.photos.slice(0, 6).map((src, i) => `<button data-pd="shot" data-i="${i}" style="display:block;overflow:hidden;border-radius:10px;transition:box-shadow .2s;box-shadow:0 0 0 ${i === (state.shot % Math.max(1, p.photos.length)) ? '2.5px #ffc21e' : '1px rgba(255,248,230,.28)'}"><span style="display:block;width:72px;height:48px;background-image:url('${esc(src)}');background-size:cover;background-position:center"></span></button>`).join('')}</div>` : ''}
-          <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px">
+        <div style="position:absolute;left:0;right:0;bottom:0;z-index:3;padding:74px 20px 18px;background:linear-gradient(180deg,rgba(14,10,2,0),rgba(14,10,2,.9));display:flex;flex-direction:column;gap:13px;pointer-events:none">
+          ${state.see === 'photos' && p.photos.length ? `<div style="display:flex;gap:8px;pointer-events:auto">${p.photos.slice(0, 6).map((src, i) => `<button data-pd="shot" data-i="${i}" style="display:block;overflow:hidden;border-radius:10px;transition:box-shadow .2s;box-shadow:0 0 0 ${i === (state.shot % Math.max(1, p.photos.length)) ? '2.5px #ffc21e' : '1px rgba(255,248,230,.28)'}"><span style="display:block;width:72px;height:48px;background-image:url('${esc(src)}');background-size:cover;background-position:center"></span></button>`).join('')}</div>` : ''}
+          ${state.see !== 'earth' ? `<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:16px;pointer-events:auto">
             <div style="min-width:0">
               <div style="font-size:11.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#ffd76b">${esc(meta.mode)}</div>
               <div style="margin-top:3px;font-size:17.5px;font-weight:800;color:#fffdf7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(meta.caption)}</div>
             </div>
             <div style="flex:none;font-size:14.5px;font-weight:800;color:#e2cf9f">${esc(meta.counter)}</div>
-          </div>
+          </div>` : ''}
         </div>
       </section>
 
@@ -278,6 +425,114 @@ function render(): void {
   host.querySelector('[data-pd="next"]')?.addEventListener('click', () => { state.shot = (state.shot + 1) % (p.photos.length || 6); render(); });
   host.querySelectorAll<HTMLElement>('[data-pd="shot"]').forEach((el) =>
     el.addEventListener('click', () => { state.shot = Number(el.dataset.i) || 0; render(); }));
+
+  if (state.see === 'street') {
+    void initStreetView(p);
+  } else {
+    panorama = null;
+  }
+
+  if (state.see === 'earth') {
+    void initEarthMap(p);
+  } else {
+    earthMap = null;
+    earthRoads = null;
+    earthPin = null;
+  }
+
+  if (state.see === 'sector' || state.see === 'plan') {
+    let mapId = state.see === 'sector' 
+      ? (p.canonicalRecord?.mapPlacement?.mapId || p.canonicalRecord?.sectorMapId)
+      : p.canonicalRecord?.masterplanId;
+      
+    if (!mapId && state.see === 'sector') {
+      const match = sectorMaps().find((m) => m.city === p.city && m.sectorOrBlock === p.sector);
+      if (match) mapId = match.id;
+    }
+      
+    if (mapId || state.see === 'plan') {
+      void showPlan(document.getElementById('pd-plan-host')!, 'masterplan', mapId);
+    } else {
+      document.getElementById('pd-plan-host')!.innerHTML = `<div style="position:absolute;inset:0;display:grid;place-items:center;color:#a99775"><div style="text-align:center"><i class="ph-fill ph-map-pin-area" style="font-size:40px;color:#ffd76b"></i><div style="margin-top:10px;font-size:15px;font-weight:700">Sector layout not linked yet</div></div></div>`;
+    }
+  } else {
+    teardownPlan();
+  }
+}
+
+async function initStreetView(p: Property): Promise<void> {
+  const panoEl = document.getElementById('pd-sv-pano');
+  const statusEl = document.getElementById('pd-sv-status');
+  const msgEl = document.getElementById('pd-sv-msg');
+  if (!panoEl || !statusEl || !msgEl) return;
+
+  if (!hasGoogleConfig()) {
+    msgEl.textContent = 'Google Maps API key missing';
+    return;
+  }
+
+  const target = propertyPos(p);
+  if (!target) {
+    msgEl.textContent = 'Property location not set';
+    return;
+  }
+
+  try {
+    await loadGoogleMaps();
+    await importMapsLibrary('streetView');
+    
+    if (!streetViewService) {
+      streetViewService = new google.maps.StreetViewService();
+    }
+
+    let foundPano = null;
+    let foundLoc = null;
+    for (const radius of [80, 200, 500, 1200]) {
+      const resp = await streetViewService.getPanorama({ location: target, radius, source: google.maps.StreetViewSource.OUTDOOR }).catch(() => null);
+      if (resp?.data?.location?.pano) {
+        foundPano = resp.data.location.pano;
+        foundLoc = resp.data.location.latLng;
+        break;
+      }
+    }
+
+    if (!foundPano) {
+      msgEl.textContent = 'Street View is unavailable near there';
+      return;
+    }
+
+    statusEl.style.display = 'none';
+
+    let heading = 0;
+    if (foundLoc) {
+      const from = { lat: typeof foundLoc.lat === 'function' ? foundLoc.lat() : foundLoc.lat, lng: typeof foundLoc.lng === 'function' ? foundLoc.lng() : foundLoc.lng };
+      
+      const rad = Math.PI / 180;
+      const y = Math.sin((target.lng - from.lng) * rad) * Math.cos(target.lat * rad);
+      const x = Math.cos(from.lat * rad) * Math.sin(target.lat * rad)
+        - Math.sin(from.lat * rad) * Math.cos(target.lat * rad) * Math.cos((target.lng - from.lng) * rad);
+      heading = (Math.atan2(y, x) / rad + 360) % 360;
+    }
+
+    // Since we don't have the google namespace statically available before load, we cast panoEl as HTMLElement
+    // wait, google is global after loadGoogleMaps.
+    panorama = new google.maps.StreetViewPanorama(panoEl as HTMLElement, {
+      pano: foundPano,
+      visible: true,
+      addressControl: false,
+      fullscreenControl: false,
+      motionTracking: false,
+      motionTrackingControl: false,
+      panControl: true,
+      zoomControl: true,
+      enableCloseButton: false,
+      pov: { heading, pitch: 0 },
+      zoom: 0.6
+    });
+
+  } catch (err) {
+    msgEl.textContent = 'Street View is unavailable right now';
+  }
 }
 
 function onKey(event: KeyboardEvent): void {
@@ -304,6 +559,10 @@ export function openPropertyDetail(property: Property): void {
 export function close(): void {
   window.removeEventListener('keydown', onKey);
   current = null;
+  teardownPlan();
+  earthMap = null;
+  earthRoads = null;
+  earthPin = null;
   if (host) { host.remove(); host = null; }
 }
 

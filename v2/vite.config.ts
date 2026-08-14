@@ -38,7 +38,6 @@ export default defineConfig(({ mode }) => {
           developer: resolve(__dirname, 'admin/developer.html'),
           // Internal AI operations surface. Not linked from the dealer nav.
           aiConsole: resolve(__dirname, 'admin/ai-console.html'),
-          presentation: resolve(__dirname, 'app/plotmap/index.html'),
           mapPilot: resolve(__dirname, 'app/map-pilot/index.html'),
           earth: resolve(__dirname, 'app/earth/index.html'),
           client: resolve(__dirname, 'client/index.html')

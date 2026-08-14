@@ -151,13 +151,9 @@ export function earthShellHtml(): string {
           </div>
           <i class="ph-bold ph-arrow-left e-brand-back" aria-hidden="true"></i>
         </a>
-        <div class="e-tools" id="e-tools" role="toolbar" aria-label="Map tools">
-          <div class="e-tool e-tool--sv" id="e-svbtn" role="button" tabindex="0" aria-pressed="false" title="Street View">
-            <i class="ph-fill ph-person-simple-walk"></i><span class="e-tool-label">Street View</span>
-          </div>
-          <div class="e-tool e-tool--roads" id="e-roads" role="button" tabindex="0" aria-pressed="false" title="Show MAPCO roads">
-            <i class="ph-fill ph-road-horizon"></i><span class="e-tool-label">Roads</span>
-          </div>
+        <div class="e-browse" id="e-browse" role="toolbar" aria-label="Browse">
+          <button class="e-sheetbtn" id="e-open-props" type="button"><i class="ph-fill ph-squares-four"></i><span>Properties</span></button>
+          <button class="e-sheetbtn" id="e-open-sectors" type="button"><i class="ph-fill ph-map-trifold"></i><span>Sector</span></button>
         </div>
       </div>
 
@@ -170,6 +166,14 @@ export function earthShellHtml(): string {
         </div>
         <div class="e-results escroll" id="e-results" style="display:none"></div>
       </div>
+      <div class="e-tools" id="e-tools" role="toolbar" aria-label="Map tools">
+        <div class="e-tool e-tool--sv" id="e-svbtn" role="button" tabindex="0" aria-pressed="false" title="Street View">
+          <i class="ph-fill ph-person-simple-walk"></i><span class="e-tool-label">Street View</span>
+        </div>
+        <div class="e-tool e-tool--roads" id="e-roads" role="button" tabindex="0" aria-pressed="false" title="Show MAPCO roads">
+          <i class="ph-fill ph-road-horizon"></i><span class="e-tool-label">Roads</span>
+        </div>
+      </div>
     </div>
 
     <div class="e-topright">
@@ -180,13 +184,7 @@ export function earthShellHtml(): string {
   <!-- Properties / Sector browse sheets -->
   <div id="e-sheet" style="display:none"></div>
 
-  <!-- Browse openers. Deliberately their OWN layer above the browse sheet
-       (z-index 46 > sheet's 40) so Properties ⇄ Sector can be switched
-       while a sheet is open, instead of being buried under it. -->
-  <div class="e-browse" role="toolbar" aria-label="Browse">
-    <button class="e-sheetbtn" id="e-open-props" type="button"><i class="ph-fill ph-squares-four"></i><span>Properties</span></button>
-    <button class="e-sheetbtn" id="e-open-sectors" type="button"><i class="ph-fill ph-map-trifold"></i><span>Sector</span></button>
-  </div>
+  <!-- Browse openers moved to top left -->
 
   <!-- my properties -->
   <div class="e-mine">
@@ -236,15 +234,22 @@ function wireSheetButtons(): void {
 function openSheet(next: Sheet): void {
   sheet = sheet === next ? null : next;
   sheetCity = 'all';
+  if (sheet) {
+    state.selId = null; // hide sidebar if opening sheet
+  }
   closeSearch();
+  document.querySelector('.e-root')?.classList.toggle('e-root--sheet', !!sheet);
   void renderSheet();
+  renderCard();
 }
 
 /** Dismiss any open browse sheet without re-rendering the map views. */
 function closeSheets(): void {
   if (!sheet) return;
   sheet = null;
+  document.querySelector('.e-root')?.classList.remove('e-root--sheet');
   void renderSheet();
+  renderCard();
 }
 
 const chip = (label: string, count: number, on: boolean): string =>
@@ -261,13 +266,12 @@ async function renderSheet(): Promise<void> {
 
   // Bottom-right: clear of the top bar's view tabs and of the recenter
   // control, so the sheet never covers Earth's own chrome.
-  const close = `<button data-sheet-close style="position:fixed;right:18px;bottom:74px;z-index:45;display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border:none;border-radius:12px;cursor:pointer;background:#1c1533;color:#fff8e6;box-shadow:0 10px 26px -12px rgba(0,0,0,.7);font:800 14px 'Hanken Grotesk',sans-serif"><i class="ph-bold ph-x"></i>Close</button>`;
-
+  
   if (sheet === 'props') {
     const all = allProperties();
     const cities = [...new Set(all.map((p) => p.city).filter(Boolean))];
     const shown = sheetCity === 'all' ? all : all.filter((p) => p.city === sheetCity);
-    host.innerHTML = `${close}<div data-scroll style="${SHEET_WRAP}"><div style="max-width:1260px;margin:0 auto;padding:84px 34px 56px">
+    host.innerHTML = `<div data-scroll style="${SHEET_WRAP}"><div style="max-width:1260px;margin:0 auto;padding:84px 34px 56px">
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         ${chip('All', all.length, sheetCity === 'all')}
         ${cities.map((c) => chip(c, all.filter((p) => p.city === c).length, sheetCity === c)).join('')}
@@ -301,7 +305,7 @@ async function renderSheet(): Promise<void> {
     const shown = sheetCity === 'all' ? maps : maps.filter((m) => m.city === sheetCity);
     const plotsOn = (mapId: string): number =>
       allProperties().filter((p) => p.canonicalRecord?.mapPlacement?.mapId === mapId).length;
-    host.innerHTML = `${close}<div data-scroll style="${SHEET_WRAP}"><div style="max-width:1260px;margin:0 auto;padding:84px 34px 56px">
+    host.innerHTML = `<div data-scroll style="${SHEET_WRAP}"><div style="max-width:1260px;margin:0 auto;padding:84px 34px 56px">
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         ${chip('All', maps.length, sheetCity === 'all')}
         ${cities.map((c) => chip(c, maps.filter((m) => m.city === c).length, sheetCity === c)).join('')}
@@ -326,7 +330,6 @@ async function renderSheet(): Promise<void> {
     </div></div>`;
   }
 
-  host.querySelector('[data-sheet-close]')?.addEventListener('click', () => openSheet(null));
   host.querySelectorAll<HTMLElement>('[data-chip]').forEach((el) => {
     el.addEventListener('click', () => {
       sheetCity = el.dataset.chip === 'All' ? 'all' : (el.dataset.chip ?? 'all');
@@ -703,7 +706,7 @@ function setCardTab(tab: CardTab): void {
 function renderCard(): void {
   const wrap = $('e-cardwrap');
   const p = currentProp();
-  if (!p || !isLiveMapView(state.view) || state.addMode || state.svSelect) { wrap.innerHTML = ''; return; }
+  if (!p || !isLiveMapView(state.view) || state.addMode || state.svSelect || sheet) { wrap.innerHTML = ''; return; }
 
   const hero = p.photos[state.photoIdx] ?? p.photos[0] ?? null;
   const canPresent = Boolean(p.canonicalRecord?.published && !p.canonicalRecord.sold);
@@ -736,16 +739,14 @@ function renderCard(): void {
         </div>
         <div id="e-tabbody">${state.cardTab === 'details' ? detailsHtml(p) : advantageBodyHtml()}</div>
         <button class="e-primary" id="e-details">Open dealer property<span class="ph-bold ph-arrow-right" style="font-size:16px"></span></button>
-        ${canPresent ? `<button class="e-primary" id="e-present" style="margin-top:8px">Open in Client Presentation<span class="ph-bold ph-presentation-chart" style="font-size:16px"></span></button>` : ''}
         <button class="e-primary" id="e-relocate" style="margin-top:8px;background:#f0eadf;color:#392f20">Update Earth location<span class="ph-fill ph-crosshair" style="font-size:16px"></span></button>
       </div>
     </div>
-  </div>`;
+    </div>`;
 
   $('e-close').addEventListener('click', closeCard);
   $('e-share').addEventListener('click', () => void copyEarthLink(p.id));
   $('e-details').addEventListener('click', () => window.location.assign(productRoutes.properties(p.id)));
-  document.getElementById('e-present')?.addEventListener('click', () => window.location.assign(productRoutes.presentation(p.id)));
   $('e-relocate').addEventListener('click', () => startRelocate(p.id));
   $('e-tab-details').addEventListener('click', () => setCardTab('details'));
   $('e-tab-adv').addEventListener('click', () => setCardTab('advantage'));
@@ -1403,6 +1404,13 @@ function wireStaticEvents(): void {
   search.addEventListener('input', () => { if (debounce) clearTimeout(debounce); debounce = window.setTimeout(() => void onSearchInput(), 180); });
   search.addEventListener('focus', () => { void onSearchInput(); });
   $('e-clear').addEventListener('click', () => { search.value = ''; ($('e-clear')).style.display = 'none'; void onSearchInput(); search.focus(); });
+
+  $('e-brand').addEventListener('click', (e) => {
+    if (sheet) {
+      e.preventDefault();
+      closeSheets();
+    }
+  });
 
   const bindTool = (id: string, action: () => void) => {
     const tool = $(id);
