@@ -23,6 +23,5 @@ const section = HASH_SECTIONS.has(hash) ? hash : (pathMap[path] || 'areas');
 
 const app = document.getElementById('app');
 if (app) {
-  // supabase mode → login gate; mock mode → straight through.
-  void requireSession(app, () => initDealerShell(app, section));
+  initDealerShell(app, section);
 }
