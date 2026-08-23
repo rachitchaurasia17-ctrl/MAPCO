@@ -28,8 +28,7 @@ const NAV = [
   { key: 'areas', label: 'Home', icon: 'ph-house', path: productRoutes.home },
   { key: 'properties', label: 'Properties', icon: 'ph-buildings', path: productRoutes.properties() },
   { key: 'deals', label: 'Deals', icon: 'ph-handshake', path: productRoutes.deals() },
-  { key: 'clients', label: 'Customers', icon: 'ph-users-three', path: productRoutes.customers() },
-  { key: 'marketing', label: 'Marketing', icon: 'ph-megaphone-simple', path: productRoutes.marketing() }
+  { key: 'clients', label: 'Customers', icon: 'ph-users-three', path: productRoutes.customers() }
 ];
 
 /* Nav item chrome, copied from the design's navItems view-model
@@ -50,7 +49,6 @@ export const SECMETA: Record<string, {name:string, icon:string}> = {
   'deals': {name: 'Deals', icon: 'ph-fill ph-handshake'},
   'properties': {name: 'Properties', icon: 'ph-fill ph-buildings'},
   'clients': {name: 'Customers', icon: 'ph-fill ph-users-three'},
-  'marketing': {name: 'Marketing', icon: 'ph-fill ph-megaphone-simple'},
   'demand': {name: 'Demand Pipeline', icon: 'ph-fill ph-list-magnifying-glass'},
   'links': {name: 'Client Links', icon: 'ph-fill ph-paper-plane-tilt'},
   'area-intelligence': {name: 'Area Intelligence', icon: 'ph-fill ph-chart-polar'},
@@ -84,12 +82,11 @@ export function initDealerShell(container: HTMLElement, initialSection: string):
   container.innerHTML = `
 <div id="pm-dash-shell" style="display:flex;height:100vh;min-height:0;width:100%;overflow:hidden;background:#f5efff;background-image:radial-gradient(62% 50% at -2% -4%,rgba(139,96,232,.5),transparent 62%),radial-gradient(54% 44% at 101% 4%,rgba(56,138,186,.4),transparent 62%),radial-gradient(66% 48% at 46% 108%,rgba(255,190,48,.44),transparent 64%),radial-gradient(40% 34% at 86% 66%,rgba(236,120,168,.22),transparent 68%)">
 
-
   <aside id="pm-dash-sidebar" style="width:270px;flex:none;height:100%;min-height:0;overflow:hidden;background:rgba(252,250,255,.82);background-image:linear-gradient(180deg,rgba(253,251,255,.95),rgba(243,236,255,.76) 55%,rgba(236,227,255,.66));backdrop-filter:blur(16px);box-shadow:inset -1px 0 0 rgba(88,52,168,.14);display:flex;flex-direction:column;border-right:1px solid #ddd2f5">
-    <div style="display:flex;align-items:center;gap:12px;padding:26px 24px 18px">
-      <img src="/assets/mapco-logo.png" alt="MAPCO" style="width:40px;height:40px;flex:none;display:block;object-fit:contain">
-      <div style="font-weight:800;font-size:22px;letter-spacing:-.02em;color:#1f1a12">MAPCO</div>
-    </div>
+    <a href="/index.html" style="display:flex;align-items:center;gap:12px;padding:26px 24px 18px;text-decoration:none">
+      <img src="/assets/mapco-logo.png" alt="MAPCO" style="width:50px;height:50px;flex:none;display:block;object-fit:contain">
+      <div style="font-family:var(--pm-font-display);font-weight:500;font-size:26px;letter-spacing:-.02em;color:#1f1a12">MAPCO</div>
+    </a>
     <nav data-scroll style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:4px;padding:6px 16px 8px">
       ${NAV.map((n) => {
         const on = currentSection === n.key;
@@ -101,13 +98,6 @@ export function initDealerShell(container: HTMLElement, initialSection: string):
         </a>
       `}).join('')}
     </nav>
-    <div style="flex:none;padding:14px 18px 10px">
-      <div style="font-size:11px;font-weight:800;letter-spacing:.14em;color:#9a8f7c;text-transform:uppercase;padding:0 4px 9px">With a customer?</div>
-      <a href="${productRoutes.presentation()}" style="width:100%;display:flex;align-items:center;gap:13px;padding:16px 16px;border-radius:16px;background:#f0a83c;color:#3a2410;text-align:left;text-decoration:none;box-shadow:0 10px 26px -12px rgba(0,0,0,.6);animation:omGlow 3.4s ease-in-out infinite" onmouseover="this.style.background='#ffb84a'" onmouseout="this.style.background='#f0a83c'">
-        <i class="ph-fill ph-projector-screen-chart" style="font-size:26px"></i>
-        <span style="display:block"><span style="display:block;font-size:15.5px;font-weight:800;letter-spacing:-.01em">Show Map to Customer</span><span style="display:block;font-size:12.5px;font-weight:700;color:#8a5a12">Opens the full-screen map</span></span>
-      </a>
-    </div>
     <div style="position:relative;flex:none;display:flex;align-items:center;gap:12px;padding:12px 20px 16px;border-top:1px solid #ddd2f5">
       <div data-dealer-initials style="width:40px;height:40px;border-radius:50%;background:#f0a83c;color:#3a2410;display:grid;place-items:center;font-weight:800;font-size:15px;flex:none">${esc(initials)}</div>
       <div style="min-width:0;flex:1"><div data-dealer-account-name style="font-size:14.5px;font-weight:700;color:#1f1a12;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(accountName)}</div><div style="font-size:12.5px;color:#9a8f7c;font-weight:600">${esc(businessName)}</div></div>
@@ -140,15 +130,6 @@ export function initDealerShell(container: HTMLElement, initialSection: string):
 
   const fsHost = container.querySelector<HTMLElement>('#pm-dash-fs');
   if (fsHost) mountFullscreenButton(fsHost, { variant: 'bar' });
-
-  // Subtle Back on dealer subpages → Dealer Home (in-shell, preserves fullscreen).
-  const backHost = container.querySelector<HTMLElement>('#pm-dash-back');
-  if (backHost && currentSection !== 'areas') {
-    mountBackButton(backHost, {
-      variant: 'bar', label: 'Back to home',
-      onBack: () => { window.history.pushState({}, '', productRoutes.home); initDealerShell(container, 'areas'); return true; },
-    });
-  }
 
   const content = container.querySelector<HTMLElement>('#pm-dash-content')!;
   

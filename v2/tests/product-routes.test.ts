@@ -24,4 +24,9 @@ describe('property-ID product handoffs', () => {
     expect(requestedPropertyId('?property=%20')).toBeNull();
     expect(requestedAction('?record=1&property=property-7', 'record')).toBe(true);
   });
+
+  it('keeps the retired Presentation handoff on the canonical Earth route', () => {
+    expect(productRoutes.presentation('p-7')).toBe(productRoutes.earth('p-7'));
+    expect(productRoutes.presentation()).toBe('/app/earth/index.html');
+  });
 });

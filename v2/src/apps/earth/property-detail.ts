@@ -17,6 +17,11 @@ import { hasGoogleConfig, loadGoogleMaps, importMapsLibrary, GOOGLE_MAPS_MAP_ID 
 import { showPlan, teardownPlan, sectorMaps } from './plan-maps';
 import { RoadLayer, globalRoadLayerItems } from './road-layer';
 import { ROAD_SPECS } from './intel/road-network';
+import { fetchPropertyIntelligence, fetchRoute, type IntelClientResult } from './intel/property-intelligence-client';
+import { decodePolyline } from '../../packages/property-intelligence';
+import type { IntelligencePlace, PropertyIntelligenceViewModel } from '../../packages/property-intelligence';
+
+export type { IntelligencePlace, PropertyIntelligenceViewModel };
 
 const esc = (value: unknown): string => String(value ?? '').replace(
   /[&<>"']/g,
@@ -25,20 +30,96 @@ const esc = (value: unknown): string => String(value ?? '').replace(
 
 const PCAPS = ['Site view', 'Approach road', 'Surroundings', 'Front road', 'Wide angle', 'Evening view'];
 
-type SeeTab = 'photos' | 'earth' | 'sector' | 'plan' | 'street';
+type SeeTab = 'photos' | 'earth' | 'sector' | 'plan' | 'street' | 'route';
 type Mode = 'details' | 'intel';
+type IntelMode = 'dayToDay' | 'cityReach';
 
 interface DetailState {
   see: SeeTab;
   mode: Mode;
   shot: number;
+  intelMode: IntelMode;
+  intelRouteId: string | null;
+  savedSeeBeforeRoute: SeeTab | null;
+}
+
+/* Property Intelligence is loaded lazily the first time the dealer opens the
+   Intelligence tab, then held per property for the life of the panel. The
+   server (dev middleware / edge function) returns instantly on a cache hit. */
+type IntelStatus = 'idle' | 'loading' | 'ready' | 'unavailable' | 'error';
+interface IntelLoad {
+  status: IntelStatus;
+  vm: IntelClientResult | null;
+  propertyId: string | null;
+  reason?: string;
+}
+let intel: IntelLoad = { status: 'idle', vm: null, propertyId: null };
+let intelSeq = 0;
+
+/** The loaded view-model, but only if it belongs to the open property. */
+function currentVM(): IntelClientResult | null {
+  return current && intel.propertyId === current.id ? intel.vm : null;
+}
+
+function getIntelPlace(id: string | null): IntelligencePlace | undefined {
+  if (!id) return undefined;
+  const vm = currentVM();
+  if (!vm) return undefined;
+  return vm.dayToDay.find((p) => p.id === id) || vm.cityReach.find((p) => p.id === id);
+}
+
+async function ensureIntelLoaded(p: Property, opts: { refresh?: boolean } = {}): Promise<void> {
+  if (!opts.refresh && intel.propertyId === p.id && intel.status !== 'idle') return;
+  const pos = propertyPos(p);
+  // Canonical location ONLY. No coordinate is ever inferred from sector,
+  // address, masterplan or map centre — without it, Intelligence is unavailable.
+  if (!pos) {
+    intel = { status: 'unavailable', vm: null, propertyId: p.id, reason: 'location_not_set' };
+    render();
+    return;
+  }
+  const seq = ++intelSeq;
+  intel = { status: 'loading', vm: intel.propertyId === p.id ? intel.vm : null, propertyId: p.id };
+  render();
+  try {
+    const vm = await fetchPropertyIntelligence(
+      p.id,
+      { latitude: pos.lat, longitude: pos.lng },
+      p.canonicalRecord?.location?.updatedAt,
+      { refresh: opts.refresh },
+    );
+    if (seq !== intelSeq || current?.id !== p.id) return;
+    intel = {
+      status: vm.status === 'ready' ? 'ready' : 'unavailable',
+      vm, propertyId: p.id, reason: vm.reason,
+    };
+    render();
+  } catch {
+    if (seq !== intelSeq || current?.id !== p.id) return;
+    intel = { status: 'error', vm: intel.vm, propertyId: p.id, reason: 'network' };
+    render();
+  }
+}
+
+function setIntelRoute(id: string | null) {
+  if (id) {
+    if (!state.intelRouteId) state.savedSeeBeforeRoute = state.see;
+    state.intelRouteId = id;
+    state.see = 'route';
+  } else {
+    state.intelRouteId = null;
+    if (state.savedSeeBeforeRoute) {
+      state.see = state.savedSeeBeforeRoute;
+      state.savedSeeBeforeRoute = null;
+    }
+  }
 }
 
 interface Group { title: string; icon: string; rows: { k: string; v: string }[] }
 
 let host: HTMLElement | null = null;
 let current: Property | null = null;
-const state: DetailState = { see: 'photos', mode: 'details', shot: 0 };
+const state: DetailState = { see: 'photos', mode: 'details', shot: 0, intelMode: 'dayToDay', intelRouteId: null, savedSeeBeforeRoute: null };
 
 let panorama: any = null;
 let streetViewService: any = null;
@@ -90,11 +171,6 @@ function groupsFor(p: Property): Group[] {
       ['Facing', p.facing],
       ['Road width', p.road],
       ['Position', record?.position],
-    ]),
-    mk('Ownership and status', 'ph-fill ph-shield-check', [
-      ['Ownership', p.ownership],
-      ['Approval', p.approval || record?.approvals?.join(', ')],
-      ['Possession', p.possession],
     ]),
   ];
   return groups.filter((g): g is Group => g !== null);
@@ -157,6 +233,11 @@ function stageMarkup(p: Property): string {
   if (state.see === 'plan') {
     return `<div id="pd-plan-host" style="position:absolute;inset:0;background:#1a130a"></div>`;
   }
+  if (state.see === 'route') {
+    // Real route drawn onto the Earth/Map surface by initRouteView().
+    return `<div id="pd-earth-map" style="position:absolute;inset:0;background:#0f2018"></div>
+      <div id="pd-route-status" style="position:absolute;left:50%;top:16px;transform:translateX(-50%);z-index:6;display:none;align-items:center;gap:8px;height:38px;padding:0 15px;border-radius:12px;background:rgba(14,10,2,.62);backdrop-filter:blur(12px);box-shadow:inset 0 0 0 1px rgba(255,248,230,.16);color:#ffd76b;font-size:13.5px;font-weight:800"><i class="ph-fill ph-spinner-gap" style="font-size:16px"></i><span id="pd-route-status-text">Tracing route…</span></div>`;
+  }
   // street
   return `<div id="pd-sv-pano" style="position:absolute;inset:0;background:#0e1512"></div>
     <div id="pd-sv-status" style="position:absolute;inset:0;background:radial-gradient(120% 120% at 60% 30%,#2a2416,#120d05);display:grid;place-items:center;color:#a99775;z-index:2">
@@ -172,6 +253,14 @@ function stageMeta(p: Property): { mode: string; caption: string; counter: strin
     case 'earth': return { mode: 'MAPCO Earth', caption: 'Where this property physically sits', counter: `${p.sector}`, url: productRoutes.earth(p.id), urlLabel: 'Open MAPCO Earth', target: '_self' };
     case 'sector': return { mode: 'Sector map', caption: `Official sector layout · ${p.sector}`, counter: p.plotNo || p.tag };
     case 'plan': return { mode: 'Masterplan', caption: `Area masterplan · ${p.city}`, counter: sector };
+    case 'route': {
+      const place = getIntelPlace(state.intelRouteId);
+      return {
+        mode: 'Route',
+        caption: place?.name || 'Route',
+        counter: place ? `${place.distanceLabel}${place.durationLabel ? ` · ${place.durationLabel}` : ''}` : '',
+      };
+    }
     default: {
       const pos = propertyPos(p);
       const url = pos
@@ -194,6 +283,22 @@ function closeStreetView(): void {
 let earthMap: any = null;
 let earthRoads: RoadLayer | null = null;
 let earthPin: any = null;
+let mapEl: HTMLElement | null = null;
+let routePolyline: any = null;
+let routeDestMarker: any = null;
+let routeSeq = 0;
+
+/** The single persistent map container. It is created once and MOVED between
+ *  the Earth and Route stage placeholders with appendChild, so render()'s
+ *  wholesale innerHTML rebuilds never destroy the live Google map. */
+function mapContainer(): HTMLElement {
+  if (!mapEl) {
+    mapEl = document.createElement('div');
+    mapEl.style.position = 'absolute';
+    mapEl.style.inset = '0';
+  }
+  return mapEl;
+}
 
 async function initEarthMap(p: Property): Promise<void> {
   const mapHost = document.getElementById('pd-earth-map');
@@ -203,6 +308,14 @@ async function initEarthMap(p: Property): Promise<void> {
   if (!pos) {
     mapHost.innerHTML = `<div style="position:absolute;inset:0;display:grid;place-items:center;background:#0f2018;color:#a99775"><div style="text-align:center"><i class="ph-fill ph-map-pin-area" style="font-size:40px;color:#ffd76b"></i><div style="margin-top:10px;font-size:15px;font-weight:700">Earth location not set</div></div></div>`;
     return;
+  }
+
+  // Mount (or re-mount) the persistent map container into the current stage.
+  const container = mapContainer();
+  if (container.parentElement !== mapHost) {
+    mapHost.innerHTML = '';
+    mapHost.appendChild(container);
+    if (earthMap) google.maps.event.trigger(earthMap, 'resize');
   }
 
   // Reuse the existing map if already created
@@ -225,9 +338,9 @@ async function initEarthMap(p: Property): Promise<void> {
   }
 
   await loadGoogleMaps();
-  if (!google.maps || !document.getElementById('pd-earth-map')) return;
+  if (!google.maps || container.parentElement !== document.getElementById('pd-earth-map')) return;
 
-  earthMap = new google.maps.Map(mapHost, {
+  earthMap = new google.maps.Map(container, {
     center: pos,
     zoom: 16,
     mapTypeId: 'satellite',
@@ -257,17 +370,21 @@ async function initEarthMap(p: Property): Promise<void> {
   });
 
   const controls = document.createElement('div');
-  controls.style.margin = '16px';
+  controls.style.position = 'absolute';
+  controls.style.left = '18px';
+  controls.style.bottom = '18px';
+  controls.style.zIndex = '10';
   controls.style.display = 'flex';
   controls.style.alignItems = 'center';
   controls.style.gap = '3px';
   controls.style.padding = '4px';
-  controls.style.borderRadius = '14px';
-  controls.style.background = 'rgba(28, 23, 10, .76)';
+  controls.style.borderRadius = '15px';
+  controls.style.background = 'rgba(20, 26, 22, .82)';
   controls.style.backdropFilter = 'blur(16px)';
   (controls.style as any).webkitBackdropFilter = 'blur(16px)';
-  controls.style.border = '1px solid rgba(255, 255, 255, .15)';
-  controls.style.boxShadow = '0 16px 38px -22px rgba(0, 0, 0, .85)';
+  controls.style.border = '1px solid rgba(255, 255, 255, .14)';
+  controls.style.boxShadow = '0 16px 40px -22px rgba(0, 0, 0, .85)';
+  controls.style.animation = 'eRise .6s cubic-bezier(.2,.8,.2,1) both';
   
   const toolStyle = 'display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:40px;padding:0 13px;height:40px;border-radius:10px;font:800 12.5px "Hanken Grotesk",sans-serif;color:#cfc4a8;cursor:pointer;transition:all .16s ease;white-space:nowrap;user-select:none;background:transparent;border:none';
   
@@ -319,7 +436,197 @@ async function initEarthMap(p: Property): Promise<void> {
     }
   });
 
-  earthMap.controls[google.maps.ControlPosition.BOTTOM_LEFT].push(controls);
+  mapHost.appendChild(controls);
+}
+
+function destPinMarkup(label: string): string {
+  return `<div style="transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;pointer-events:none">
+    <span style="display:flex;align-items:center;gap:6px;background:#7be0a4;color:#06251a;border-radius:11px;padding:7px 12px;white-space:nowrap;font-size:13.5px;font-weight:800;box-shadow:0 12px 24px -12px rgba(0,0,0,.7)"><i class="ph-fill ph-flag-checkered" style="font-size:14px"></i>${esc(label)}</span>
+    <span style="width:12px;height:12px;border-radius:50%;background:#7be0a4;box-shadow:0 0 0 4px rgba(123,224,164,.35);margin-top:5px"></span>
+  </div>`;
+}
+
+function clearRoute(): void {
+  if (routePolyline) { routePolyline.setMap(null); routePolyline = null; }
+  if (routeDestMarker) { routeDestMarker.map = null; routeDestMarker = null; }
+}
+
+function setRouteStatus(text: string | null): void {
+  const el = document.getElementById('pd-route-status');
+  if (!el) return;
+  el.style.display = text ? 'flex' : 'none';
+  const label = document.getElementById('pd-route-status-text');
+  if (label && text) label.textContent = text;
+}
+
+/** Draw the real Google route to the selected destination onto the map. Only
+ *  one route is ever active — a new selection clears the previous one. */
+async function initRouteView(p: Property): Promise<void> {
+  const place = getIntelPlace(state.intelRouteId);
+  const origin = propertyPos(p);
+  if (!place || !origin) return;
+  const seq = ++routeSeq;
+  setRouteStatus('Tracing route…');
+  await initEarthMap(p); // ensures the persistent map + property pin, mounted here
+  if (seq !== routeSeq || !earthMap) return;
+
+  let line: Awaited<ReturnType<typeof fetchRoute>>;
+  try {
+    line = await fetchRoute({ latitude: origin.lat, longitude: origin.lng }, place.routeTarget);
+  } catch {
+    line = { ok: false };
+  }
+  if (seq !== routeSeq || !earthMap) return;
+
+  clearRoute();
+  if (!line.ok || !line.encodedPolyline) {
+    setRouteStatus('Route unavailable');
+    return;
+  }
+  setRouteStatus(null);
+
+  const path = decodePolyline(line.encodedPolyline).map((pt) => ({ lat: pt.latitude, lng: pt.longitude }));
+  routePolyline = new google.maps.Polyline({
+    path, map: earthMap, strokeColor: '#ffc21e', strokeOpacity: 0.95, strokeWeight: 5, zIndex: 20,
+  });
+  try {
+    const { AdvancedMarkerElement } = await (window as any).google.maps.importLibrary('marker');
+    if (seq !== routeSeq || !earthMap) return;
+    const el = document.createElement('div');
+    el.innerHTML = destPinMarkup(place.name);
+    routeDestMarker = new AdvancedMarkerElement({
+      map: earthMap,
+      position: { lat: place.latitude, lng: place.longitude },
+      content: el.firstElementChild as HTMLElement,
+    });
+  } catch { /* destination marker is optional */ }
+
+  const bounds = new google.maps.LatLngBounds();
+  bounds.extend({ lat: origin.lat, lng: origin.lng });
+  path.forEach((pt) => bounds.extend(pt));
+  bounds.extend({ lat: place.latitude, lng: place.longitude });
+  earthMap.fitBounds(bounds, 90);
+}
+
+function intelRowMarkup(place: IntelligencePlace): string {
+  const isSelected = state.intelRouteId === place.id;
+  
+  const coreIcon = place.icon.replace(/ph-(fill|bold|light|thin) /, '');
+  const placePhotos: Record<string, string> = {
+    'ph-tree': 'https://images.unsplash.com/photo-1542273917363-3b1817f69a5d?q=80&w=600',
+    'ph-shopping-cart': 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?q=80&w=600',
+    'ph-barbell': 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=600',
+    'ph-graduation-cap': 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=600',
+    'ph-airplane-tilt': 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=600',
+    'ph-train': 'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?q=80&w=600',
+    'ph-buildings': 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=600',
+    'ph-hospital': 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?q=80&w=600',
+    'ph-bus': 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=600'
+  };
+  const photo = placePhotos[coreIcon] || 'https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=600';
+  
+  const border = isSelected ? '1px solid #ffc21e' : '1px solid rgba(255,201,60,.15)';
+  const ring = isSelected ? 'box-shadow: 0 0 0 4px rgba(255,194,30,.2)' : 'box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2)';
+  
+  return `<div data-pd="intel-row" data-id="${place.id}" style="position:relative;height:240px;border-radius:18px;overflow:hidden;cursor:pointer;border:${border};${ring};transition:all .2s;background:#151006;margin-bottom:12px" onmouseover="if('${state.intelRouteId}'!=='${place.id}') this.style.border='1px solid rgba(255,201,60,.4)'" onmouseout="if('${state.intelRouteId}'!=='${place.id}') this.style.border='${border}'">
+      
+      <div style="position:absolute;inset:0;background:url('${photo}') center/cover;opacity:${isSelected ? '1' : '0.8'};transition:opacity .2s"></div>
+      <div style="position:absolute;inset:0;background:linear-gradient(to right, rgba(15,11,3,0.95) 15%, rgba(15,11,3,0.6) 60%, rgba(15,11,3,0.1) 100%)"></div>
+      
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:16px">
+        
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="display:flex;align-items:center;gap:6px;padding:8px 16px;background:#ffc21e;color:#151006;border-radius:12px;font-size:18px;font-weight:900;box-shadow:0 0 16px rgba(255,194,30,0.6), 0 4px 12px rgba(0,0,0,0.5);letter-spacing:0.02em">
+            <i class="ph-bold ph-person-simple-walk" style="font-size:22px"></i>${esc(place.distanceLabel)}
+          </div>
+          ${(place as any).durationLabel ? `<div style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fffdf7;border-radius:10px;font-size:14px;font-weight:700;border:1px solid rgba(255,255,255,0.15)"><i class="ph-bold ph-clock" style="font-size:16px"></i>${esc((place as any).durationLabel)}</div>` : ''}
+        </div>
+        
+        <div style="display:flex;align-items:center;gap:10px;width:90%">
+          <div style="flex:none;width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.15);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.3)">
+            <i class="${esc(place.icon)}" style="font-size:18px;color:#fffdf7"></i>
+          </div>
+          <h3 style="margin:0;font-size:17px;font-weight:700;color:#fffdf7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 4px rgba(0,0,0,0.8)">${esc(place.name)}</h3>
+        </div>
+        
+      </div>
+      
+      ${isSelected ? `<div style="position:absolute;inset:0;background:linear-gradient(90deg, rgba(255,201,60,0.2), transparent);pointer-events:none"></div>` : ''}
+    </div>`;
+}
+
+function intelInfoMarkup(icon: string, title: string, body: string): string {
+  return `<div style="margin-top:22px;padding:26px 20px;display:flex;flex-direction:column;align-items:center;text-align:center;color:#a99775">
+    <i class="${icon}" style="font-size:34px;color:#ffd76b;opacity:.9"></i>
+    <div style="margin-top:12px;font-size:15.5px;font-weight:800;color:#f4ead0">${esc(title)}</div>
+    <div style="margin-top:6px;font-size:13.5px;font-weight:600;line-height:1.5;max-width:290px">${esc(body)}</div>
+  </div>`;
+}
+
+function intelUnavailableMarkup(reason?: string): string {
+  switch (reason) {
+    case 'location_not_set':
+      return intelInfoMarkup('ph-fill ph-map-pin-area', 'Location not set',
+        "Set this property's exact location on MAPCO Earth to unlock Property Intelligence.");
+    case 'insufficient_results':
+      return intelInfoMarkup('ph-fill ph-binoculars', 'Not enough nearby anchors',
+        'This area is sparse — MAPCO could not verify enough genuine destinations to show.');
+    case 'server_not_configured':
+      return intelInfoMarkup('ph-fill ph-plugs', 'Not configured',
+        'Property Intelligence is not configured on this server yet.');
+    case 'busy':
+      return intelInfoMarkup('ph-fill ph-hourglass-medium', 'MAPCO is busy',
+        'The intelligence service is rate-limited right now. Try Refresh in a moment.');
+    default:
+      return intelInfoMarkup('ph-fill ph-warning-circle', 'Unavailable right now',
+        "Property Intelligence couldn't be loaded. Try Refresh in a moment.");
+  }
+}
+
+function intelLoadingMarkup(): string {
+  const row = `<div style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:14px;box-shadow:inset 0 -1px 0 rgba(255,201,60,.08)">
+      <span style="width:20px;height:20px;border-radius:6px;background:rgba(255,201,60,.14)"></span>
+      <span style="flex:1;height:13px;border-radius:6px;background:rgba(255,201,60,.12)"></span>
+      <span style="width:52px;height:13px;border-radius:6px;background:rgba(123,224,164,.16)"></span>
+    </div>`;
+  return `<div style="margin-top:12px;display:flex;flex-direction:column;gap:4px;opacity:.75;animation:pdVeil .3s ease both">${row.repeat(6)}
+    <div style="margin-top:14px;display:flex;align-items:center;justify-content:center;gap:8px;color:#ffd76b;font-size:13px;font-weight:800"><i class="ph-fill ph-spinner-gap" style="font-size:15px"></i>Reading the neighbourhood…</div>
+  </div>`;
+}
+
+function intelPanelMarkup(): string {
+  const vm = currentVM();
+  const list = state.intelMode === 'dayToDay' ? (vm?.dayToDay ?? []) : (vm?.cityReach ?? []);
+  const loading = intel.status === 'loading';
+  
+  const tabBtn = (on: boolean, icon: string, label: string) => `
+    <button data-pd="intel-mode" data-imode="${label === 'Day to Day' ? 'dayToDay' : 'cityReach'}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;height:34px;border-radius:999px;font-size:13.5px;font-weight:700;transition:all .2s;${
+      on 
+        ? 'background:rgba(255,255,255,.08);color:#fffdf7;box-shadow:0 2px 4px rgba(0,0,0,.15);border:1px solid rgba(255,255,255,.1)' 
+        : 'background:transparent;color:#a99775;border:1px solid transparent'
+    }" onmouseover="if(!${on}) this.style.background='rgba(255,255,255,.04)';this.style.color='#e9dfc9'" onmouseout="if(!${on}) this.style.background='transparent';this.style.color='#a99775'">
+      <i class="${icon}" style="font-size:16px"></i> ${label}
+    </button>`;
+
+  const toggle = `
+    <div style="display:flex;align-items:center;gap:8px;margin-top:14px">
+      <div style="flex:1;display:flex;gap:4px;padding:4px;border-radius:999px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)">
+        ${tabBtn(state.intelMode === 'dayToDay', 'ph-bold ph-calendar-blank', 'Day to Day')}
+        ${tabBtn(state.intelMode === 'cityReach', 'ph-bold ph-map-trifold', 'City Reach')}
+      </div>
+    </div>`;
+
+  let body: string;
+  if (intel.status === 'unavailable' && list.length === 0) {
+    body = intelUnavailableMarkup(intel.reason ?? vm?.reason);
+  } else if (intel.status === 'error' && list.length === 0) {
+    body = intelUnavailableMarkup('error');
+  } else if (loading && list.length === 0) {
+    body = intelLoadingMarkup();
+  } else {
+    body = `<div style="margin-top:12px;display:flex;flex-direction:column;gap:4px;${loading ? 'opacity:.55' : ''}">${list.map(intelRowMarkup).join('')}</div>`;
+  }
+  return toggle + body;
 }
 
 function render(): void {
@@ -334,9 +641,9 @@ function render(): void {
     ['street', 'Street view', 'ph-fill ph-person-simple-walk'],
   ];
   const groupColors = [
-    ['rgba(255,201,60,.1)', 'rgba(255,201,60,.3)', '#ffd76b'],
-    ['rgba(151,110,235,.14)', 'rgba(151,110,235,.34)', '#c3a9ff'],
-    ['rgba(123,224,164,.11)', 'rgba(123,224,164,.3)', '#7be0a4'],
+    ['rgba(123,224,164,.11)', 'rgba(123,224,164,.3)', '#7be0a4'], // green
+    ['rgba(151,110,235,.14)', 'rgba(151,110,235,.34)', '#c3a9ff'], // purple
+    ['rgba(255,201,60,.1)', 'rgba(255,201,60,.3)', '#ffd76b'], // yellow
   ];
   const landmarks = p.canonicalRecord?.landmarks ?? [];
 
@@ -358,7 +665,7 @@ function render(): void {
         ${stageMarkup(p)}
 
         <div style="position:absolute;top:14px;left:14px;z-index:5;display:flex;gap:5px;padding:5px;border-radius:16px;background:rgba(14,10,2,.5);backdrop-filter:blur(14px);box-shadow:inset 0 0 0 1px rgba(255,248,230,.14)">
-          ${SEE.map(([k, label, icon]) => `<button data-pd="see" data-see="${k}" title="${label}" style="${seeBtn(state.see === k)}"><i class="${icon}" style="font-size:20px"></i></button>`).join('')}
+          ${SEE.map(([k, label, icon]) => `<button data-pd="see" data-see="${k}" title="${label}" style="${seeBtn(state.see === k || (state.see === 'route' && state.savedSeeBeforeRoute === k))}"><i class="${icon}" style="font-size:20px"></i></button>`).join('')}
         </div>
 
         ${meta.url ? `<a href="${esc(meta.url)}" target="${meta.target}" rel="noopener" style="position:absolute;top:14px;right:14px;z-index:5;display:flex;align-items:center;gap:8px;height:44px;padding:0 16px;border-radius:14px;background:rgba(14,10,2,.5);backdrop-filter:blur(14px);box-shadow:inset 0 0 0 1px rgba(255,248,230,.18);color:#ffd76b;font-size:14.5px;font-weight:800;text-decoration:none">${esc(meta.urlLabel ?? '')}<i class="ph-bold ph-arrow-up-right" style="font-size:15px"></i></a>` : ''}
@@ -381,10 +688,7 @@ function render(): void {
 
       <aside style="width:404px;flex:none;display:flex;flex-direction:column;min-height:0;border-radius:26px;overflow:hidden;background:#241804;background-image:linear-gradient(168deg,#2e2007 0%,#231704 58%,#2b1e06 100%);box-shadow:inset 0 0 0 1px rgba(255,201,60,.3),0 30px 60px -34px rgba(0,0,0,.9)">
         <div style="flex:none;padding:16px 18px 14px;box-shadow:inset 0 -1px 0 rgba(255,201,60,.22)">
-          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-bottom:13px">
-            <span style="font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#a99775">Client price</span>
-          </div>
-          <div style="display:flex;gap:4px;padding:4px;border-radius:14px;background:rgba(255,201,60,.14)">
+          <div style="display:flex;gap:4px;padding:4px;border-radius:14px;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)">
             <button data-pd="mode" data-mode="details" style="${modeBtn(state.mode === 'details')}">Details</button>
             <button data-pd="mode" data-mode="intel" style="${modeBtn(state.mode === 'intel')}">Intelligence</button>
           </div>
@@ -400,17 +704,7 @@ function render(): void {
               </div>
               ${g.rows.map((r) => `<div style="display:flex;align-items:baseline;gap:14px;padding:9px 0;${rowShadow}"><span style="flex:none;width:142px;font-size:13.5px;font-weight:700;color:#a99775">${esc(r.k)}</span><span style="flex:1;min-width:0;font-size:15px;font-weight:800;color:#fff;text-align:right;text-wrap:pretty">${esc(r.v)}</span></div>`).join('')}
             </div>`;
-          }).join('') : `
-            ${standoutFor(p).length ? `<div style="margin-top:18px;font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#e0c88a">Why this stands out</div>
-            ${standoutFor(p).map((a) => `<div style="display:flex;align-items:flex-start;gap:11px;padding:10px 0;${rowShadow}"><i class="${a.icon}" style="font-size:18px;color:#7be0a4;flex:none;margin-top:1px"></i><span style="font-size:15px;font-weight:700;color:#fff;line-height:1.35;text-wrap:pretty">${esc(a.t)}</span></div>`).join('')}` : ''}
-
-            ${landmarks.length ? `<div style="margin-top:20px;font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#e0c88a">Major places nearby</div>
-            ${landmarks.map((l) => `<div style="display:flex;align-items:center;gap:11px;padding:10px 0;${rowShadow}"><i class="${esc(l.icon)}" style="font-size:17px;color:#ffd76b;flex:none"></i><span style="flex:1;min-width:0;font-size:14.5px;font-weight:700;color:#fffdf7">${esc(l.name)}</span><span style="flex:none;font-size:14.5px;font-weight:800;color:#7be0a4">${esc(l.distance)}</span></div>`).join('')}` : ''}
-
-            <div style="margin-top:20px;font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#e0c88a">Buyer considerations</div>
-            ${checksFor(p).map((t) => `<div style="display:flex;align-items:flex-start;gap:11px;padding:10px 0;${rowShadow}"><i class="ph-bold ph-check-square-offset" style="font-size:17px;color:#ffd76b;flex:none;margin-top:2px"></i><span style="font-size:14.5px;font-weight:700;color:#e9dfc9;line-height:1.35;text-wrap:pretty">${esc(t)}</span></div>`).join('')}
-
-            <div style="margin-top:16px;font-size:12px;font-weight:700;color:#8f8064;line-height:1.45;text-wrap:pretty">From MAPCO verified records, Earth location and road intelligence. Nothing estimated.</div>`}
+          }).join('') : intelPanelMarkup()}
         </div>
       </aside>
     </div>
@@ -418,9 +712,41 @@ function render(): void {
 
   host.querySelector('[data-pd="close"]')?.addEventListener('click', close);
   host.querySelectorAll<HTMLElement>('[data-pd="see"]').forEach((el) =>
-    el.addEventListener('click', () => { state.see = el.dataset.see as SeeTab; render(); }));
+    el.addEventListener('click', () => {
+      // Explicitly choosing a stage clears any active route focus and lands
+      // on the chosen stage (not the pre-route saved one).
+      state.intelRouteId = null;
+      state.savedSeeBeforeRoute = null;
+      state.see = el.dataset.see as SeeTab;
+      render();
+    }));
   host.querySelectorAll<HTMLElement>('[data-pd="mode"]').forEach((el) =>
-    el.addEventListener('click', () => { state.mode = el.dataset.mode as Mode; render(); }));
+    el.addEventListener('click', () => {
+      const newMode = el.dataset.mode as Mode;
+      if (newMode !== state.mode) {
+        state.mode = newMode;
+        if (newMode === 'details') setIntelRoute(null);
+      }
+      render();
+      if (newMode === 'intel') void ensureIntelLoaded(p);
+    }));
+  host.querySelectorAll<HTMLElement>('[data-pd="intel-mode"]').forEach((el) =>
+    el.addEventListener('click', () => { 
+      const newMode = el.dataset.imode as IntelMode;
+      if (newMode !== state.intelMode) {
+        state.intelMode = newMode;
+        setIntelRoute(null);
+      }
+      render(); 
+    }));
+  host.querySelectorAll<HTMLElement>('[data-pd="intel-row"]').forEach((el) =>
+    el.addEventListener('click', () => {
+      setIntelRoute(el.dataset.id as string);
+      render();
+    }));
+  host.querySelector('[data-pd="intel-refresh"]')?.addEventListener('click', () => {
+    void ensureIntelLoaded(p, { refresh: true });
+  });
   host.querySelector('[data-pd="prev"]')?.addEventListener('click', () => { state.shot = (state.shot + (p.photos.length || 6) - 1) % (p.photos.length || 6); render(); });
   host.querySelector('[data-pd="next"]')?.addEventListener('click', () => { state.shot = (state.shot + 1) % (p.photos.length || 6); render(); });
   host.querySelectorAll<HTMLElement>('[data-pd="shot"]').forEach((el) =>
@@ -434,10 +760,11 @@ function render(): void {
 
   if (state.see === 'earth') {
     void initEarthMap(p);
+  } else if (state.see === 'route') {
+    void initRouteView(p);
   } else {
-    earthMap = null;
-    earthRoads = null;
-    earthPin = null;
+    // Keep the map instance alive for reuse; only drop the drawn route.
+    clearRoute();
   }
 
   if (state.see === 'sector' || state.see === 'plan') {
@@ -550,6 +877,10 @@ export function openPropertyDetail(property: Property): void {
   state.see = 'photos';
   state.mode = 'details';
   state.shot = 0;
+  state.intelMode = 'dayToDay';
+  state.intelRouteId = null;
+  state.savedSeeBeforeRoute = null;
+  intel = { status: 'idle', vm: null, propertyId: null };
   ensureHost();
   window.addEventListener('keydown', onKey);
   render();
@@ -560,9 +891,12 @@ export function close(): void {
   window.removeEventListener('keydown', onKey);
   current = null;
   teardownPlan();
+  clearRoute();
   earthMap = null;
   earthRoads = null;
   earthPin = null;
+  mapEl = null;
+  intel = { status: 'idle', vm: null, propertyId: null };
   if (host) { host.remove(); host = null; }
 }
 

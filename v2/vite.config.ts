@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from 'vite';
 import { resolve } from 'path';
+import { propertyIntelligenceDevPlugin } from './vite-plugins/property-intelligence-dev';
 
 export default defineConfig(({ mode }) => {
   // Google Maps keys may live in v2/.env(.local) OR the repo-root .env.local.
@@ -11,6 +12,7 @@ export default defineConfig(({ mode }) => {
   const merged = { ...rootEnv, ...localEnv };
 
   return {
+    plugins: [propertyIntelligenceDevPlugin()],
     define: {
       'import.meta.env.VITE_GOOGLE_MAPS_API_KEY': JSON.stringify(process.env.VITE_GOOGLE_MAPS_API_KEY || merged.VITE_GOOGLE_MAPS_API_KEY || ''),
       'import.meta.env.VITE_GOOGLE_MAPS_MAP_ID': JSON.stringify(process.env.VITE_GOOGLE_MAPS_MAP_ID || merged.VITE_GOOGLE_MAPS_MAP_ID || ''),
@@ -35,6 +37,7 @@ export default defineConfig(({ mode }) => {
           dealerDeals: resolve(__dirname, 'admin/deals.html'),
           dealerMapStudio: resolve(__dirname, 'admin/map-studio.html'),
           dealerMarketing: resolve(__dirname, 'admin/marketing.html'),
+          dealerOps: resolve(__dirname, 'admin/ops.html'),
           developer: resolve(__dirname, 'admin/developer.html'),
           // Internal AI operations surface. Not linked from the dealer nav.
           aiConsole: resolve(__dirname, 'admin/ai-console.html'),

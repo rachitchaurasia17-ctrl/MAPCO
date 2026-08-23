@@ -10,7 +10,7 @@ const ENTRY_HTML = [
   'admin/owner.html', 'admin/deals.html', 'admin/properties.html', 'admin/clients.html',
   'admin/area-intelligence.html', 'admin/property-insights.html', 'admin/team.html',
   'admin/map-studio.html', 'admin/developer.html',
-  'app/plotmap/index.html', 'client/index.html',
+  'app/earth/index.html', 'client/index.html',
 ];
 
 describe('Route entry points', () => {
@@ -68,22 +68,10 @@ describe('Audited adapter and accessibility boundaries', () => {
     }
   });
 
-  it('drives the presentation from the real catalog and places pins only from stored coordinates', () => {
-    const source = readFileSync(join(root, 'src/apps/presentation/main.ts'), 'utf8');
-    // Catalog-driven map list; no invented pin coordinates.
-    expect(source).toContain('adapter.presentation.listMaps');
-    expect(source).not.toContain('PIN_COORDS');
-    // The old New Chandigarh placeholder raster must never be referenced again.
-    expect(source).not.toContain('newchandigarh-map.png');
-    // Pins come only from a property's real stored placement.
-    expect(source).toContain('prop.mapPlacement');
-  });
-
-  it('keeps presentation highlights and pins on the canonical raster transform', () => {
-    const source = readFileSync(join(root, 'src/apps/presentation/main.ts'), 'utf8');
-    expect(source).toContain('const sharedTransform = cssMapTransform(t)');
-    expect(source).toContain('highlightLayer.style.transform = sharedTransform');
-    expect(source).toContain('pinLayer.style.transform = sharedTransform');
+  it('keeps the retired Presentation route consolidated into MAPCO Earth', () => {
+    const routes = readFileSync(join(root, 'src/packages/ui/product-routes.ts'), 'utf8');
+    expect(routes).not.toContain('/app/plotmap/index.html');
+    expect(routes.match(/withProperty\('\/app\/earth\/index\.html'/g)).toHaveLength(2);
   });
 
   it('gives the activation modal dialog semantics and Escape handling', () => {

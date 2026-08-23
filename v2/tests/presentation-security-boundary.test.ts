@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { adapter } from '../src/packages/data/adapter';
+import { productRoutes } from '../src/packages/ui/product-routes';
 
 const projection = readFileSync(new URL('../../supabase/migrations/20260814000200_presentation_safe_properties.sql', import.meta.url), 'utf8');
 const viewerPolicy = readFileSync(new URL('../../supabase/migrations/20260814000400_viewer_presentation_only.sql', import.meta.url), 'utf8');
@@ -8,7 +9,6 @@ const broker = readFileSync(new URL('../../supabase/functions/presentation-prope
 const canonicalLocation = readFileSync(new URL('../../supabase/migrations/20260811000100_canonical_property_location.sql', import.meta.url), 'utf8');
 const fixtureCleanup = readFileSync(new URL('../../supabase/migrations/20260814000300_remove_fixture_earth_locations.sql', import.meta.url), 'utf8');
 const safeMaps = readFileSync(new URL('../../supabase/migrations/20260814000500_presentation_safe_maps.sql', import.meta.url), 'utf8');
-const presentationSource = readFileSync(new URL('../src/apps/presentation/main.ts', import.meta.url), 'utf8');
 
 describe('Client Presentation security boundary', () => {
   it('projects only client-facing property fields through an authenticated dealer-derived RPC', () => {
@@ -57,16 +57,13 @@ describe('Client Presentation security boundary', () => {
     expect(viewerPolicy).toContain('create or replace function public.plotmap_predictive_summaries');
   });
 
-  it('uses explicit published map and overlay projections on the presentation surface', () => {
+  it('retains safe published map projections while Presentation routes through Earth', () => {
     expect(safeMaps).toContain('public.plotmap_presentation_maps');
     expect(safeMaps).toContain("m.status = 'published'");
     expect(safeMaps).toContain('m.client_visible = true');
     expect(safeMaps).toContain("o.status = 'published'");
     expect(safeMaps).toContain('o.client_visible = true');
-    expect(presentationSource).toContain('adapter.presentation.listMaps(');
-    expect(presentationSource).toContain('adapter.presentation.getMap(');
-    expect(presentationSource).not.toContain('adapter.maps.listRegistry(');
-    expect(presentationSource).not.toContain('adapter.maps.get(');
+    expect(productRoutes.presentation('property-7')).toBe(productRoutes.earth('property-7'));
   });
 
   it('allowlists and caps every nested map and highlight-set JSON field', () => {

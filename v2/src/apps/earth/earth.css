@@ -194,8 +194,8 @@
 .e-card {
   position: absolute; top: 74px; right: 18px; z-index: 45; width: 400px; max-width: calc(100vw - 36px);
   max-height: calc(100% - 100px); border-radius: 22px; display: flex; flex-direction: column; overflow: hidden;
-  background: rgba(255, 250, 240, .98); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
-  border: 1px solid rgba(221, 210, 245, .9); box-shadow: 0 30px 70px -30px rgba(30, 28, 22, .7);
+  background: #241804; background-image: linear-gradient(168deg, #2e2007 0%, #231704 58%, #2b1e06 100%);
+  border: 1px solid rgba(255, 201, 60, .2); box-shadow: 0 30px 70px -30px rgba(0, 0, 0, .9);
   animation: eRightIn .34s cubic-bezier(.2, .8, .2, 1) both;
 }
 .e-card-scroll { flex: 1; min-height: 0; overflow-y: auto; }
@@ -208,7 +208,7 @@
 .e-hero-next { position: absolute; top: 50%; right: 14px; transform: translateY(-50%); width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #ffc93c; color: #241d0c; cursor: pointer; box-shadow: 0 10px 22px -8px rgba(0,0,0,.75); transition: transform .16s; }
 .e-hero-next:hover { transform: translateY(-50%) scale(1.09); }
 .e-hero-cap { position: absolute; left: 18px; right: 18px; bottom: 15px; }
-.e-hero-tag { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 9px; background: #ffc93c; color: #241d0c; font-weight: 800; font-size: 12.5px; margin-bottom: 9px; }
+.e-hero-tag { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 12px; background: #ffc21e; color: #151006; font-weight: 900; font-size: 16px; letter-spacing: 0.02em; margin-bottom: 12px; box-shadow: 0 0 16px rgba(255,194,30,0.6), 0 4px 12px rgba(0,0,0,0.5); }
 .e-hero-title { font-family: 'Newsreader', serif; font-size: 30px; font-weight: 500; letter-spacing: -.015em; color: #fff; line-height: 1.02; text-shadow: 0 2px 18px rgba(0,0,0,.5); }
 .e-hero-loc { display: flex; align-items: center; gap: 6px; color: rgba(255,251,240,.92); font-size: 14.5px; font-weight: 600; margin-top: 5px; text-shadow: 0 1px 10px rgba(0,0,0,.6); }
 
@@ -218,16 +218,16 @@
 .e-thumb.on { border-color: #ffc93c; opacity: 1; box-shadow: 0 5px 14px -7px rgba(0,0,0,.55); }
 
 .e-card-body { padding: 14px 20px 20px; }
-.e-price-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid #ece3fa; }
-.e-price-eyebrow { font-size: 10.5px; font-weight: 800; letter-spacing: .14em; color: #a8792a; text-transform: uppercase; }
-.e-price { font-family: 'Newsreader', serif; font-size: 32px; font-weight: 600; letter-spacing: -.02em; color: #241f1c; line-height: 1; margin-top: 5px; font-variant-numeric: tabular-nums; }
-.e-ppu { font-size: 15px; font-weight: 800; color: #3a332c; font-variant-numeric: tabular-nums; }
+.e-price-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid rgba(255, 201, 60, .22); }
+.e-price-eyebrow { font-size: 11px; font-weight: 800; letter-spacing: .18em; color: #a99775; text-transform: uppercase; }
+.e-price { font-family: 'Newsreader', serif; font-size: 32px; font-weight: 600; letter-spacing: -.02em; color: #fffdf7; line-height: 1; margin-top: 5px; font-variant-numeric: tabular-nums; }
+.e-ppu { font-size: 15px; font-weight: 800; color: #dcc79a; font-variant-numeric: tabular-nums; }
 .e-ppu-sub { font-size: 11.5px; font-weight: 600; color: #8d8271; margin-top: 1px; }
 
 .e-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 15px; }
-.e-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 11px; border-radius: 9px; background: #f4efff; border: 1px solid #e4dbf7; color: #5b4a7a; font-weight: 700; font-size: 12.5px; }
+.e-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 9px; background: rgba(255, 194, 30, .16); color: #ffd76b; font-weight: 800; font-size: 13px; letter-spacing: .02em; }
 
-.e-specs { margin-top: 18px; border: 1px solid #e9e0f6; border-radius: 15px; overflow: hidden; background: #fdfbff; }
+.e-specs { display: none; }
 .e-spec { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 11px 14px; }
 .e-spec:not(:last-child) { border-bottom: 1px solid #efe8fb; }
 .e-spec:nth-child(even) { background: #faf7ff; }
@@ -435,16 +435,15 @@
   box-shadow: 0 16px 40px -22px rgba(30,28,22,.85); animation: eRise .2s ease both; max-width: calc(100vw - 40px); text-align: center;
 }
 
-/* ── DETAILS | LOCATION ADVANTAGE segmented control ────────────── */
-.e-seg { display: flex; gap: 5px; padding: 5px; border-radius: 14px; background: #f1ebfb; border: 1px solid #e4dbf7; margin-bottom: 16px; }
+.e-seg { display: flex; padding: 4px; border-radius: 14px; background: rgba(255,201,60,.14); margin-bottom: 16px; }
 .e-seg-btn {
-  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 40px; border: 0; border-radius: 10px;
-  background: transparent; color: #6b6156; font: 800 13.5px 'Hanken Grotesk', sans-serif; cursor: pointer; transition: all .16s; white-space: nowrap;
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 38px; border: 0; border-radius: 11px;
+  background: transparent; color: #d8c294; font: 800 14px 'Hanken Grotesk', sans-serif; cursor: pointer; transition: all .18s; white-space: nowrap;
 }
-.e-seg-btn i { font-size: 16px; }
-.e-seg-btn:hover { color: #241f1c; }
-.e-seg-btn.on { background: #fffaf0; color: #241f1c; box-shadow: 0 6px 16px -10px rgba(40,30,10,.5); }
-.e-seg-btn.on i { color: #8a5a0c; }
+.e-seg-btn i { font-size: 16px; transition: color .18s; }
+.e-seg-btn:hover { color: #fff; }
+.e-seg-btn.on { background: #ffc21e; color: #241d0c; }
+.e-seg-btn.on i { color: #241d0c; }
 
 /* ── Location Advantage list ───────────────────────────────────── */
 .e-adv-head { font-size: 10.5px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: #a8792a; margin-bottom: 10px; }
@@ -498,17 +497,16 @@
 .e-adv-empty > span { font-size: 26px; color: #b39a63; flex: none; }
 .e-adv-empty b { color: #241f1c; font-size: 14px; }
 
-/* ── Location Advantage context sub-tabs (Around sector | Nearby | Regional) ── */
-.e-lactx { display: flex; gap: 6px; margin-bottom: 14px; }
+.e-lactx { display: flex; padding: 4px; border-radius: 999px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); margin-bottom: 20px; box-shadow: inset 0 2px 4px rgba(0,0,0,.2); }
 .e-lactx-btn {
-  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 34px; padding: 0 8px;
-  border: 1.5px solid #e4dbf7; border-radius: 11px; background: #fff; color: #6b6156;
-  font: 800 12.5px 'Hanken Grotesk', sans-serif; cursor: pointer; transition: all .15s; white-space: nowrap;
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 36px; padding: 0 8px;
+  border: 0; border-radius: 999px; background: transparent; color: #d8c294;
+  font: 800 13px 'Hanken Grotesk', sans-serif; cursor: pointer; transition: all .15s; white-space: nowrap;
 }
-.e-lactx-btn:hover { border-color: #f6d98d; color: #241f1c; }
-.e-lactx-btn.on { background: #241f1c; border-color: #241f1c; color: #fff; }
-.e-lactx-n { display: inline-flex; align-items: center; justify-content: center; min-width: 17px; height: 17px; padding: 0 5px; border-radius: 6px; background: rgba(0,0,0,.08); color: inherit; font-size: 11px; font-weight: 800; }
-.e-lactx-btn.on .e-lactx-n { background: rgba(255,255,255,.22); }
+.e-lactx-btn:hover { color: #fff; }
+.e-lactx-btn.on { background: #ffc21e; color: #241d0c; box-shadow: 0 4px 12px -4px rgba(255,194,30,0.5); }
+.e-lactx-n { display: inline-flex; align-items: center; justify-content: center; min-width: 17px; height: 17px; padding: 0 5px; border-radius: 6px; background: rgba(0,0,0,.15); color: inherit; font-size: 11px; font-weight: 800; transition: background .15s; }
+.e-lactx-btn.on .e-lactx-n { background: rgba(0,0,0,.15); }
 
 /* active-row clear affordance */
 .e-adv-go.on { background: #ffc93c; color: #241d0c; }

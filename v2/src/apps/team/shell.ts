@@ -40,7 +40,7 @@ export function initTeamShell(container: HTMLElement, initialSection: string) {
 <div id="pm-ws-shell" style="position:fixed;inset:0;display:flex;flex-direction:column;background:#e7ddfb;background-image:radial-gradient(64% 52% at -2% -4%,rgba(123,78,224,.62),transparent 64%),radial-gradient(54% 44% at 101% 4%,rgba(56,138,186,.36),transparent 62%),radial-gradient(66% 48% at 46% 108%,rgba(255,190,48,.4),transparent 64%),radial-gradient(120% 120% at 55% 45%,rgba(139,96,232,.16),transparent 70%);font-family:'Hanken Grotesk',sans-serif;color:#241f1c">
   <div id="pm-ws-header" style="display:flex;align-items:center;gap:18px;padding:12px 22px;background:#fffaf0;background-image:linear-gradient(90deg,#fff6dd,#fffaf0 40%,#f6f0ff);border-bottom:1px solid #ddd2f5;box-shadow:0 1px 0 rgba(255,255,255,.7) inset,0 8px 22px -20px rgba(60,44,12,.9);z-index:40;flex:none">
     <a href="/admin/owner.html" style="display:flex;align-items:center;gap:10px;color:inherit;flex:none;text-decoration:none">
-      <img src="/assets/mapco-logo.png" alt="MAPCO" style="width:42px;height:42px;display:block;flex:none;object-fit:contain">
+      <img src="/assets/mapco-logo.png" alt="MAPCO" style="width:52px;height:52px;display:block;flex:none;object-fit:contain">
       <span style="font-family:'Newsreader',serif;font-weight:600;font-size:20px;letter-spacing:-.01em">MAPCO</span>
     </a>
     <div style="display:flex;align-items:center;gap:4px;padding:4px;border-radius:14px;background:#f0eaff">

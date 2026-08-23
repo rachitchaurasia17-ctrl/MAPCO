@@ -36,7 +36,7 @@ import { showPlan, teardownPlan, resizePlan, loadPlanCatalog, sectorMaps } from 
 import { openPropertyDetail } from './property-detail';
 import {
   analyseLocation, intentOf, roadAdvantagesFor,
-  type Advantage, type LocationIntel, type Section,
+  type Advantage, type LocationIntel,
 } from './location-advantage';
 import {
   computeRoute, formatDistance, formatDuration, isRoutesApiDisabled, type RouteLeg,
@@ -49,6 +49,9 @@ import {
   globalRoadLayerItems,
   resolveRoadLayerMode,
 } from './road-layer';
+import { EARTH_VIEW_MODES, earthShellHtml, type EarthView } from './shell';
+
+export { EARTH_VIEW_MODES, earthShellHtml } from './shell';
 
 /* Load Phosphor icons (self-hosted, matches the rest of MAPCO). */
 ['/assets/phosphor/regular/style.css', '/assets/phosphor/fill/style.css', '/assets/phosphor/bold/style.css']
@@ -57,11 +60,12 @@ import {
     link.rel = 'stylesheet'; link.href = href; document.head.appendChild(link);
   });
 
-type View = 'earth' | 'map' | 'masterplan' | '3d';
+type View = EarthView;
 /** Earth and Map are the SAME Google map instance, different basemap. */
 const isLiveMapView = (v: View) => v === 'earth' || v === 'map';
 type AddMode = null | 'place' | 'relocate';
 type CardTab = 'details' | 'advantage';
+type IntelMode = 'dayToDay' | 'cityReach';
 
 const KMETA: Record<PlaceKind, { icon: string; bed: string; fg: string }> = {
   plot: { icon: 'ph-fill ph-map-pin', bed: '#fff3d1', fg: '#8a5a0c' },
@@ -83,7 +87,7 @@ interface State {
   svSelect: boolean;      // universal Street View pick mode
   activeAdvId: string | null;
   laLoading: boolean;     // Location Advantage discovery in flight
-  laContext: Section;     // which of the three contexts is shown
+  laContext: IntelMode;   // buyer-facing grouping for location advantages
   roadsOn: boolean;       // global Roads layer
   /** Sector/masterplan sheet chosen from the Sector picker; null = default. */
   planMapId: string | null;
@@ -94,7 +98,7 @@ const state: State = {
   view: 'earth', selId: null, photoIdx: 0, cardTab: 'details',
   panelOpen: false, searchOpen: false,
   addMode: null, relocateFor: null, svSelect: false, activeAdvId: null, laLoading: false,
-  laContext: 'around', roadsOn: false, planMapId: null, sectorOpen: false,
+  laContext: 'dayToDay', roadsOn: false, planMapId: null, sectorOpen: false,
 };
 const requestedProperty = requestedPropertyId(window.location.search);
 
@@ -123,91 +127,6 @@ const routeCache = new Map<string, RouteLeg>(); // advId → computed route (per
 /* ── DOM refs ──────────────────────────────────────────────────── */
 const $ = (id: string) => document.getElementById(id)!;
 let toastTimer: number | undefined;
-
-/* ═══════════════════════════════════════════════════════════════
-   SHELL
-   ═══════════════════════════════════════════════════════════════ */
-export function earthShellHtml(): string {
-  return `
-<div class="e-root">
-  <div class="e-map" id="e-map"></div>
-  <div class="e-vignette"></div>
-
-  <div class="e-status" id="e-status"><div class="e-status-inner" id="e-status-inner"></div></div>
-
-  <!-- masterplan / 3d overlay -->
-  <div id="e-plan" style="display:none"></div>
-
-  <!-- top bar -->
-  <div class="e-top">
-    <div class="e-top-left">
-      <div class="e-brandrow">
-        <!-- The brand IS the way back. No separate back control. -->
-        <a class="e-brand e-glass" id="e-brand" href="${productRoutes.home}" aria-label="Back to MAPCO">
-          <img class="e-brand-logo" src="/assets/mapco-logo.png" alt="" width="30" height="30"/>
-          <div class="e-brand-text">
-            <div class="e-brand-name">MAPCO</div>
-            <div class="e-brand-sub">EARTH</div>
-          </div>
-          <i class="ph-bold ph-arrow-left e-brand-back" aria-hidden="true"></i>
-        </a>
-        <div class="e-browse" id="e-browse" role="toolbar" aria-label="Browse">
-          <button class="e-sheetbtn" id="e-open-props" type="button"><i class="ph-fill ph-squares-four"></i><span>Properties</span></button>
-          <button class="e-sheetbtn" id="e-open-sectors" type="button"><i class="ph-fill ph-map-trifold"></i><span>Sector</span></button>
-        </div>
-      </div>
-
-      <div class="e-searchwrap">
-        <div class="e-searchbox">
-          <i class="ph ph-magnifying-glass" style="font-size:16px;color:#8d8271"></i>
-          <input id="e-search" type="text" autocomplete="off" spellcheck="false"
-                 placeholder="Search plot, sector, project or place…" aria-label="Search MAPCO Earth"/>
-          <i class="ph ph-x e-clear" id="e-clear" style="display:none" title="Clear"></i>
-        </div>
-        <div class="e-results escroll" id="e-results" style="display:none"></div>
-      </div>
-      <div class="e-tools" id="e-tools" role="toolbar" aria-label="Map tools">
-        <div class="e-tool e-tool--sv" id="e-svbtn" role="button" tabindex="0" aria-pressed="false" title="Street View">
-          <i class="ph-fill ph-person-simple-walk"></i><span class="e-tool-label">Street View</span>
-        </div>
-        <div class="e-tool e-tool--roads" id="e-roads" role="button" tabindex="0" aria-pressed="false" title="Show MAPCO roads">
-          <i class="ph-fill ph-road-horizon"></i><span class="e-tool-label">Roads</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="e-topright">
-      <div class="e-views" id="e-views"></div>
-    </div>
-  </div>
-
-  <!-- Properties / Sector browse sheets -->
-  <div id="e-sheet" style="display:none"></div>
-
-  <!-- Browse openers moved to top left -->
-
-  <!-- my properties -->
-  <div class="e-mine">
-    <div id="e-minepanel" style="display:none"></div>
-    <div class="e-mine-btn" id="e-minebtn">
-      <i class="ph-fill ph-stack-simple" style="font-size:19px;color:#ffc93c"></i>My properties
-      <span class="e-count" id="e-minecount">0</span>
-    </div>
-  </div>
-
-  <!-- controls — deliberately minimal: pinch/wheel handles zoom -->
-  <div class="e-controls">
-    <div class="e-ctl e-ctl--light" id="e-recenter" title="Reset view"><i class="ph-fill ph-crosshair" style="font-size:20px"></i></div>
-  </div>
-
-  <div id="e-cardwrap"></div>
-  <div id="e-pickhint"></div>
-  <div id="e-addhint"></div>
-  <div id="e-addbar"></div>
-  <div id="e-sv"></div>
-  <div id="e-toastwrap"></div>
-</div>`;
-}
 
 function renderShell(container: HTMLElement): void {
   container.innerHTML = earthShellHtml();
@@ -257,7 +176,7 @@ const chip = (label: string, count: number, on: boolean): string =>
     on ? 'background:#1c1533;color:#fff8e6' : 'background:rgba(255,253,249,.86);color:#4a4160;box-shadow:inset 0 0 0 1px rgba(139,96,232,.22)'
   }">${escapeHtml(label)}<span style="font-variant-numeric:tabular-nums;font-size:12.5px;${on ? 'color:#c8b9f5' : 'color:#8a7fae'}">${count}</span></button>`;
 
-const SHEET_WRAP = 'position:absolute;inset:0;overflow-y:auto;z-index:40;background:#f5efff;background-image:radial-gradient(62% 50% at -2% -4%,rgba(139,96,232,.5),transparent 62%),radial-gradient(54% 44% at 101% 4%,rgba(56,138,186,.4),transparent 62%),radial-gradient(66% 48% at 46% 108%,rgba(255,190,48,.44),transparent 64%),radial-gradient(40% 34% at 86% 66%,rgba(236,120,168,.22),transparent 68%)';
+const SHEET_WRAP = 'position:absolute;inset:0;overflow-y:auto;z-index:40;background:#ede4f7;background-image:radial-gradient(62% 50% at -2% -4%,rgba(139,96,232,.65),transparent 62%),radial-gradient(54% 44% at 101% 4%,rgba(56,138,186,.6),transparent 62%),radial-gradient(66% 48% at 46% 108%,rgba(255,190,48,.55),transparent 64%),radial-gradient(40% 34% at 86% 66%,rgba(236,120,168,.45),transparent 68%)';
 
 async function renderSheet(): Promise<void> {
   const host = $('e-sheet');
@@ -465,12 +384,6 @@ function renderPlaceMarkers(): void {
 /* ═══════════════════════════════════════════════════════════════
    VIEW TOGGLE (Earth / Masterplan / 3D)
    ═══════════════════════════════════════════════════════════════ */
-export const EARTH_VIEW_MODES: { k: View; label: string; icon: string }[] = [
-  { k: 'earth', label: 'Earth', icon: 'ph-fill ph-globe-hemisphere-east' },
-  { k: 'map', label: 'Map', icon: 'ph-fill ph-map-pin-area' },
-  { k: 'masterplan', label: 'Masterplan', icon: 'ph-fill ph-map-trifold' },
-  { k: '3d', label: '3D', icon: 'ph-fill ph-cube' },
-];
 function renderViews(): void {
   $('e-views').innerHTML = EARTH_VIEW_MODES.map((v) =>
     `<div class="e-view ${v.k === state.view ? 'on' : ''}" data-view="${v.k}"><span class="${v.icon} i" style="font-size:16px"></span><span>${v.label}</span></div>`,
@@ -722,15 +635,17 @@ function renderCard(): void {
           <span class="e-hero-btn gold" id="e-share" title="Share"><span class="ph-fill ph-share-network"></span></span>
           <span class="e-hero-btn" id="e-close" title="Close"><span class="ph ph-x"></span></span>
         </div>
-        ${p.photos.length > 1 ? `<div class="e-hero-next" id="e-next" title="Next photo"><span class="ph-bold ph-caret-right" style="font-size:21px"></span></div>` : ''}
-        <div class="e-hero-cap">
+        ${p.photos.length > 1 ? `
+        <button id="e-next" title="Next photo" style="position:absolute;bottom:16px;right:16px;width:72px;height:52px;border-radius:10px;border:2px solid rgba(255,255,255,0.9);background:url('${escapeHtml(p.photos[(state.photoIdx + 1) % p.photos.length])}') center/cover;box-shadow:0 6px 16px rgba(0,0,0,0.6);cursor:pointer;padding:0;overflow:hidden;transition:transform .15s;z-index:10" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+           <div style="position:absolute;inset:0;background:rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center"><i class="ph-bold ph-arrows-clockwise" style="color:#fff;font-size:22px;text-shadow:0 2px 4px rgba(0,0,0,0.8)"></i></div>
+        </button>
+        ` : ''}
+        <div class="e-hero-cap" style="${p.photos.length > 1 ? 'right: 104px;' : ''}">
           <div class="e-hero-tag"><span class="ph-fill ph-map-pin"></span>${escapeHtml(p.tag)}</div>
           <div class="e-hero-title">${escapeHtml(p.plotNo)}</div>
           <div class="e-hero-loc"><span class="ph-fill ph-map-pin-area" style="font-size:16px"></span>${escapeHtml(p.sector)} · ${escapeHtml(p.city)}</div>
         </div>
       </div>
-      ${p.photos.length > 1 ? `<div class="e-thumbs">${p.photos.map((src, i) =>
-        `<button class="e-thumb ${i === state.photoIdx ? 'on' : ''}" data-i="${i}" aria-label="Photo ${i + 1}"><img src="${escapeHtml(src)}" alt="" loading="lazy" decoding="async" style="display:block;width:100%;height:100%;object-fit:cover"></button>`).join('')}</div>` : ''}
 
       <div class="e-card-body">
         <div class="e-seg" role="tablist">
@@ -738,8 +653,10 @@ function renderCard(): void {
           <button class="e-seg-btn ${state.cardTab === 'advantage' ? 'on' : ''}" id="e-tab-adv" role="tab"><i class="ph-fill ph-map-trifold"></i>Location advantage</button>
         </div>
         <div id="e-tabbody">${state.cardTab === 'details' ? detailsHtml(p) : advantageBodyHtml()}</div>
-        <button class="e-primary" id="e-details">Open dealer property<span class="ph-bold ph-arrow-right" style="font-size:16px"></span></button>
-        <button class="e-primary" id="e-relocate" style="margin-top:8px;background:#f0eadf;color:#392f20">Update Earth location<span class="ph-fill ph-crosshair" style="font-size:16px"></span></button>
+        <div style="display:flex;gap:8px;margin-top:18px">
+          <button class="e-primary" id="e-details" style="flex:1;margin-top:0">Open dealer property<span class="ph-bold ph-arrow-right" style="font-size:16px"></span></button>
+          <button class="e-primary" id="e-relocate" style="flex:none;width:52px;margin-top:0;background:#fff;color:#392f20" title="Update Earth location"><span class="ph-fill ph-crosshair" style="font-size:20px"></span></button>
+        </div>
       </div>
     </div>
     </div>`;
@@ -768,18 +685,48 @@ async function copyEarthLink(id: string): Promise<void> {
 }
 
 function detailsHtml(p: Property): string {
-  const specs: { k: string; v: string; icon: string }[] = [
-    { k: 'Plot size', v: p.size, icon: 'ph-fill ph-ruler' },
-    { k: 'Dimensions', v: p.dims, icon: 'ph-fill ph-frame-corners' },
-    { k: 'Facing', v: p.facing, icon: 'ph-fill ph-compass' },
-    { k: 'Road width', v: p.road, icon: 'ph-fill ph-road-horizon' },
-    { k: 'Plot type', v: p.type, icon: 'ph-fill ph-house-line' },
-    { k: 'Approval', v: p.approval, icon: 'ph-fill ph-certificate' },
-    { k: 'Ownership', v: p.ownership, icon: 'ph-fill ph-scroll' },
-    { k: 'Possession', v: p.possession, icon: 'ph-fill ph-key' },
+  const groups = [
+    {
+      title: 'The property',
+      icon: 'ph-fill ph-house-line',
+      rows: [
+        { k: 'Property type', v: p.type },
+        { k: 'Plot / unit', v: p.plotNo && p.plotNo !== p.type ? p.plotNo : undefined },
+        { k: 'Sector', v: p.sector?.split(',')[0]?.trim() },
+        { k: 'City', v: p.city },
+        { k: 'Position', v: p.road || p.canonicalRecord?.position },
+        { k: 'Facing', v: p.facing },
+      ].filter(r => r.v)
+    },
+    {
+      title: 'Size and shape',
+      icon: 'ph-fill ph-ruler',
+      rows: [
+        { k: 'Plot size', v: p.size },
+        { k: 'Dimensions', v: p.dims },
+        { k: 'Facing', v: p.facing },
+        { k: 'Road width', v: p.road },
+        { k: 'Position', v: p.road || p.canonicalRecord?.position },
+      ].filter(r => r.v)
+    }
+  ].filter(g => g.rows.length > 0);
+
+  const groupColors: [string, string, string][] = [
+    ['rgba(31,161,110,.12)', 'rgba(31,161,110,.25)', '#62d2a2'], // green
+    ['rgba(151,110,235,.12)', 'rgba(151,110,235,.25)', '#b9a6ee'], // purple
+    ['rgba(255,201,60,.12)', 'rgba(255,201,60,.25)', '#ffc21e'], // yellow
   ];
-  return `<div class="e-specs">${specs.filter((s) => s.v.trim().length > 0).map((s) =>
-    `<div class="e-spec"><div class="e-spec-k"><span class="${s.icon}" style="font-size:16px;color:#b39a63"></span>${s.k}</div><div class="e-spec-v">${escapeHtml(s.v)}</div></div>`).join('')}</div>`;
+
+  return groups.map((g, gi) => {
+    const c = groupColors[gi % 3]!;
+    return `<div style="margin-top:14px;padding:14px 15px 6px;border-radius:18px;background:${c[0]};box-shadow:inset 0 0 0 1px ${c[1]}">
+      <div style="display:flex;align-items:center;gap:8px;padding-bottom:8px">
+        <i class="${g.icon}" style="font-size:15px;color:${c[2]}"></i>
+        <span style="font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:${c[2]}">${escapeHtml(g.title)}</span>
+      </div>
+      ${g.rows.map((r) => `<div style="display:flex;align-items:baseline;gap:14px;padding:9px 0;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)"><span style="flex:none;width:142px;font-size:13.5px;font-weight:700;color:#a99775">${escapeHtml(r.k)}</span><span style="flex:1;min-width:0;font-size:15px;font-weight:800;color:#fff;text-align:right;text-wrap:pretty">${escapeHtml(String(r.v))}</span></div>`).join('')}
+    </div>`;
+  }).join('');
 }
 
 /* ── Location Advantage — card body ────────────────────────────── */
@@ -795,38 +742,68 @@ function advHasRoute(a: Advantage): boolean {
   return a.kind === 'poi' && a.section === 'nearby';
 }
 function advItemHtml(a: Advantage): string {
-  const active = a.id === state.activeAdvId;
-  const right = active
-    ? `<span class="e-adv-go on" title="Clear from map"><i class="ph-bold ph-x"></i></span>`
-    : advHasRoute(a)
-      ? `<span class="e-adv-go" title="Show route"><i class="ph-fill ph-path"></i></span>`
-      : a.kind === 'road'
-        ? `<span class="e-adv-go" title="Highlight this road"><i class="ph-fill ph-road-horizon"></i></span>`
-        : `<span class="e-adv-go" title="Show on map"><i class="ph-fill ph-map-pin"></i></span>`;
-  return `
-    <div class="e-adv e-adv--${a.section} ${active ? 'on' : ''}" data-id="${escapeHtml(a.id)}">
-      <div class="e-adv-ic" style="background:${a.color}1f;color:${a.color}"><span class="${a.icon}"></span></div>
-      <div style="min-width:0;flex:1">
-        <div class="e-adv-name">${escapeHtml(a.name)}</div>
-        <div class="e-adv-meta">${advMeta(a)}</div>
+  const isSelected = a.id === state.activeAdvId;
+  
+  const coreIcon = a.icon.replace(/ph-(fill|bold|light|thin) /, '');
+  const placePhotos: Record<string, string> = {
+    'ph-tree': 'https://images.unsplash.com/photo-1542273917363-3b1817f69a5d?q=80&w=600',
+    'ph-shopping-cart': 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?q=80&w=600',
+    'ph-barbell': 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=600',
+    'ph-graduation-cap': 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=600',
+    'ph-airplane-tilt': 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=600',
+    'ph-train': 'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?q=80&w=600',
+    'ph-buildings': 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=600',
+    'ph-hospital': 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?q=80&w=600',
+    'ph-bus': 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=600',
+    'ph-coffee': 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?q=80&w=600',
+    'ph-road-horizon': 'https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=600'
+  };
+  const photo = placePhotos[coreIcon] || 'https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=600';
+  
+  const border = isSelected ? '1px solid #ffc21e' : '1px solid rgba(255,201,60,.15)';
+  const ring = isSelected ? 'box-shadow: 0 0 0 4px rgba(255,194,30,.2)' : 'box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2)';
+  const distLabel = advMeta(a);
+  
+  return `<div class="e-adv e-adv--${a.section} ${isSelected ? 'on' : ''}" data-id="${escapeHtml(a.id)}" style="position:relative;height:240px;border-radius:18px;overflow:hidden;cursor:pointer;border:${border};${ring};transition:all .2s;background:#151006;margin-bottom:12px;padding:0" onmouseover="if('${state.activeAdvId}'!=='${a.id}') this.style.border='1px solid rgba(255,201,60,.4)'" onmouseout="if('${state.activeAdvId}'!=='${a.id}') this.style.border='${border}'">
+      
+      <div style="position:absolute;inset:0;background:url('${photo}') center/cover;opacity:${isSelected ? '1' : '0.8'};transition:opacity .2s"></div>
+      <div style="position:absolute;inset:0;background:linear-gradient(to right, rgba(15,11,3,0.95) 15%, rgba(15,11,3,0.6) 60%, rgba(15,11,3,0.1) 100%)"></div>
+      
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:16px">
+        
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="display:flex;align-items:center;gap:6px;padding:8px 16px;background:#ffc21e;color:#151006;border-radius:12px;font-size:18px;font-weight:900;box-shadow:0 0 16px rgba(255,194,30,0.6), 0 4px 12px rgba(0,0,0,0.5);letter-spacing:0.02em">
+            <i class="ph-bold ph-person-simple-walk" style="font-size:22px"></i>${escapeHtml(distLabel)}
+          </div>
+        </div>
+        
+        <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+          <div style="display:flex;align-items:center;gap:10px;width:90%">
+            <div style="flex:none;width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.15);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.3)">
+              <i class="${escapeHtml(a.icon)}" style="font-size:18px;color:#fffdf7"></i>
+            </div>
+            <h3 style="margin:0;font-size:17px;font-weight:700;color:#fffdf7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 4px rgba(0,0,0,0.8)">${escapeHtml(a.name)}</h3>
+          </div>
+        </div>
+        
       </div>
-      ${right}
+      
+      ${isSelected ? `<div style="position:absolute;inset:0;background:linear-gradient(90deg, rgba(255,201,60,0.2), transparent);pointer-events:none"></div>` : ''}
     </div>`;
 }
 
-const LA_TABS: { key: Section; label: string }[] = [
-  { key: 'around', label: 'Around sector' },
-  { key: 'nearby', label: 'Nearby' },
-  { key: 'roads', label: 'Roads' },
+const LA_TABS: { key: IntelMode; label: string; icon: string }[] = [
+  { key: 'dayToDay', label: 'Day to Day', icon: 'ph-bold ph-calendar-blank' },
+  { key: 'cityReach', label: 'City Reach', icon: 'ph-bold ph-buildings' }
 ];
-function sectionItems(s: Section): Advantage[] {
+function sectionItems(m: IntelMode): Advantage[] {
   if (!currentIntel) return [];
-  return s === 'around' ? currentIntel.around : s === 'nearby' ? currentIntel.nearby : currentIntel.roads;
+  return m === 'dayToDay' ? currentIntel.around : [...currentIntel.nearby, ...currentIntel.roads];
 }
 function laTabsHtml(): string {
   return `<div class="e-lactx">${LA_TABS.map((t) => {
     const n = sectionItems(t.key).length;
-    return `<button class="e-lactx-btn ${state.laContext === t.key ? 'on' : ''}" data-ctx="${t.key}">${t.label}${n ? `<span class="e-lactx-n">${n}</span>` : ''}</button>`;
+    return `<button class="e-lactx-btn ${state.laContext === t.key ? 'on' : ''}" data-ctx="${t.key}"><i class="${t.icon}" style="font-size:16px"></i>${t.label}${n ? `<span class="e-lactx-n" style="margin-left:4px">${n}</span>` : ''}</button>`;
   }).join('')}</div>`;
 }
 function advantageBodyHtml(): string {
@@ -838,22 +815,20 @@ function advantageBodyHtml(): string {
   const items = sectionItems(state.laContext);
   currentAdvantages = items;
   if (!items.length) {
-    const msg = state.laContext === 'around'
-      ? 'Nothing strong enough to highlight right around here — try Nearby.'
-      : state.laContext === 'nearby'
-        ? 'No major destinations within range — try Roads.'
-        : 'No major connecting roads mapped near this location yet.';
+    const msg = state.laContext === 'dayToDay'
+      ? 'Nothing strong enough to highlight right around here — try City Reach.'
+      : 'No major destinations or roads mapped near this location yet.';
     return `${tabs}<div class="e-adv-empty"><span class="ph-fill ph-compass-tool"></span>
       <div><b>Nothing to highlight here</b><div>${msg}</div></div></div>`;
   }
-  const hint = state.laContext === 'roads'
-    ? `<div class="e-adv-hint"><span class="ph-fill ph-info"></span>All connecting roads are shown together — tap one to focus it.</div>`
-    : '';
-  return `${tabs}${hint}<div class="e-adv-list">${items.map(advItemHtml).join('')}</div>`;
+  return `${tabs}<div class="e-adv-list">${items.map(advItemHtml).join('')}</div>`;
 }
 function wireAdvList(): void {
   document.querySelectorAll<HTMLElement>('#e-tabbody .e-lactx-btn').forEach((el) => {
-    el.addEventListener('click', () => setLaContext(el.dataset.ctx as Section));
+    el.addEventListener('click', () => {
+      const context = el.dataset.ctx;
+      if (context === 'dayToDay' || context === 'cityReach') setLaContext(context);
+    });
   });
   document.querySelectorAll<HTMLElement>('#e-tabbody .e-adv').forEach((el) => {
     el.addEventListener('click', () => {
@@ -863,13 +838,13 @@ function wireAdvList(): void {
   });
 }
 /** Switch context: clean the map, reset selection, show the new list. */
-function setLaContext(ctx: Section): void {
+function setLaContext(ctx: IntelMode): void {
   if (state.laContext === ctx) return;
   state.laContext = ctx;
   clearActiveContext();
   const p = currentProp();
   const origin = p ? geographicOriginForProperty(p) : null;
-  if (ctx === 'roads' && currentIntel) {
+  if (ctx === 'cityReach' && currentIntel) {
     state.roadsOn = true;
     currentRoadNetwork = currentIntel.roads;
     currentRoadPropertyId = p?.id ?? null;
@@ -917,7 +892,7 @@ async function laActivate(): Promise<void> {
     currentRoadNetwork = currentIntel.roads;
     currentRoadPropertyId = forId;
     state.laLoading = false;
-    if (state.laContext === 'roads') {
+    if (state.laContext === 'cityReach') {
       state.roadsOn = true;
       drawRoadNetwork(currentRoadNetwork, null);
       renderControls();
@@ -938,7 +913,7 @@ function laDeactivate(): void {
   currentRoadNetwork = [];
   currentRoadPropertyId = null;
   state.laLoading = false;
-  state.laContext = 'around';
+  state.laContext = 'dayToDay';
   clearRoadOverlay();
   renderControls();
 }
@@ -1158,10 +1133,6 @@ function toggleRoadsLayer(): void {
   state.roadsOn = !state.roadsOn;
   state.activeAdvId = null;
   syncRoadLayerForContext();
-  if (!state.roadsOn && p && state.cardTab === 'advantage' && state.laContext === 'roads') {
-    state.laContext = 'around';
-    renderCardTabBody();
-  }
   renderControls();
 }
 

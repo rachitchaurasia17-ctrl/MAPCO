@@ -1,16 +1,17 @@
 // @vitest-environment jsdom
 import { describe, expect, it } from 'vitest';
-import { EARTH_VIEW_MODES, earthShellHtml } from '../src/apps/earth/main';
+import { EARTH_VIEW_MODES, earthShellHtml } from '../src/apps/earth/shell';
 
 describe('MAPCO Earth toolbar composition', () => {
-  it('places Street View and Roads beside MAPCO Earth in the top-left', () => {
+  it('keeps Street View and Roads with the bottom-left property controls', () => {
     const host = document.createElement('div');
     host.innerHTML = earthShellHtml();
     const brandRow = host.querySelector('.e-top-left .e-brandrow');
-    const tools = brandRow?.querySelector('#e-tools');
+    const tools = host.querySelector('.e-mine #e-tools');
 
     expect(brandRow?.firstElementChild?.id).toBe('e-brand');
-    expect(brandRow?.firstElementChild?.getAttribute('href')).toBe('/admin/owner.html');
+    expect(brandRow?.firstElementChild?.getAttribute('href')).toBe('/index.html');
+    expect(brandRow?.querySelector('#e-tools')).toBeNull();
     expect(tools).not.toBeNull();
     expect(Array.from(tools?.children ?? []).map((child) => child.id)).toEqual(['e-svbtn', 'e-roads']);
     expect(tools?.querySelector('#e-svbtn')?.getAttribute('aria-pressed')).toBe('false');

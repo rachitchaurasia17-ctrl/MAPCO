@@ -1,6 +1,7 @@
 import { adapter } from '../../../packages/data/adapter';
 import { AddPropertyFlow } from '../../../packages/ui/shared-modals';
 import { openPropertyDrawer } from '../../../packages/ui/property-detail';
+import { productRoutes } from '../../../packages/ui/product-routes';
 import type { Property, PropertyType, WantType, Facing } from '../../../packages/data/types';
 
 const esc = (value: unknown) => String(value ?? '')
@@ -44,7 +45,7 @@ export async function renderTeamProperties(el: HTMLElement, openAddInitially = f
   const openDrawer = (property: Property) => {
     drawerDispose?.();
     drawerDispose = openPropertyDrawer(property, {
-      onShowMap: (p) => window.location.assign(`/app/plotmap/index.html?property=${encodeURIComponent(p.id)}`),
+      onShowMap: (p) => window.location.assign(productRoutes.earth(p.id)),
       onSendLink: () => window.location.assign('/admin/owner.html#links'),
       onEdit: (p) => { selectedId = p.id; render(); },
       onPublishToggle: (p) => { const found = properties.find((x) => x.id === p.id); if (found) found.published = !found.published; render(); },

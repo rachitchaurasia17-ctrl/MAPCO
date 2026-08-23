@@ -25,7 +25,8 @@ export const productRoutes = {
   deals: (dealId?: string | null) => withContext('/admin/deals.html', 'deal', dealId),
   /** Marketing is its own screen in the current design, not a dashboard section. */
   marketing: () => '/admin/marketing.html',
-  presentation: (propertyId?: string | null) => withProperty('/app/plotmap/index.html', propertyId),
+  /** Client Presentation was intentionally consolidated into MAPCO Earth. */
+  presentation: (propertyId?: string | null) => withProperty('/app/earth/index.html', propertyId),
   earth: (propertyId?: string | null) => withProperty('/app/earth/index.html', propertyId),
   privateLink: (propertyId?: string | null) => {
     const base = withProperty('/admin/owner.html', propertyId);

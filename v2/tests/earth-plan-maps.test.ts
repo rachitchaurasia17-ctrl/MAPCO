@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { earthShellHtml } from '../src/apps/earth/main';
+import { earthShellHtml } from '../src/apps/earth/shell';
 
 const v2Root = join(__dirname, '..');
 const source = (path: string): string => readFileSync(join(v2Root, path), 'utf8');
@@ -98,19 +98,17 @@ describe('Earth browse sheets stay client-safe', () => {
     expect(btn).toMatch(/pointer-events:\s*auto/);
   });
 
-  /* Regression: at z-index 35 inside `.e-mine`, an open browse sheet
-     (z-index 40) buried the openers, so Properties could not be switched
-     to Sector without closing first. */
-  it('keeps the openers above the browse sheet in their own layer', () => {
+  it('keeps the browse controls in the top chrome above the sheet', () => {
     const host = document.createElement('div');
     host.innerHTML = earthShellHtml();
     const browse = host.querySelector('.e-browse');
     expect(browse).not.toBeNull();
     expect(browse!.querySelector('#e-open-props')).not.toBeNull();
     expect(host.querySelector('.e-mine #e-open-props')).toBeNull();
+    expect(host.querySelector('.e-top .e-browse')).not.toBeNull();
 
     const css = source('src/apps/earth/earth.css');
-    const rule = css.slice(css.indexOf('.e-browse {'), css.indexOf('.e-sheetbtn {'));
+    const rule = css.slice(css.indexOf('.e-top {'), css.indexOf('.e-top-left'));
     const z = Number(rule.match(/z-index:\s*(\d+)/)?.[1]);
     expect(z).toBeGreaterThan(40);
   });

@@ -7,6 +7,7 @@
    returns a disposer. Never used on the client-facing routes.
    ═══════════════════════════════════════════════════════════════ */
 import { formatINR, streetViewUrl } from './utils';
+import { productRoutes } from './product-routes';
 import { adapter } from '../data/adapter';
 import type { Property, ClientLink, PropertyType } from '../data/types';
 
@@ -247,7 +248,7 @@ export function openPropertyDrawer(property: Property, opts: PropertyDrawerOptio
       case 'menu': menuOpen = !menuOpen; render(); break;
       case 'nearby': nearbyOpen = !nearbyOpen; render(); break;
       case 'edit': dispose(); opts.onEdit?.(property); break;
-      case 'show-map': if (opts.onShowMap) { dispose(); opts.onShowMap(property); } else { window.location.assign(`/app/plotmap/index.html?property=${encodeURIComponent(property.id)}`); } break;
+      case 'show-map': if (opts.onShowMap) { dispose(); opts.onShowMap(property); } else { window.location.assign(productRoutes.earth(property.id)); } break;
       case 'send-link': dispose(); opts.onSendLink?.(property); break;
       case 'publish': menuOpen = false; dispose(); opts.onPublishToggle?.(property); break;
       case 'delete': menuOpen = false; dispose(); opts.onDelete?.(property); break;

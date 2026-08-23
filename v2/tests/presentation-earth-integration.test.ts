@@ -2,8 +2,8 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { adapter } from '../src/packages/data/adapter';
 import { allProperties, locationSource } from '../src/apps/earth/config';
+import { productRoutes } from '../src/packages/ui/product-routes';
 
-const presentationSource = readFileSync(new URL('../src/apps/presentation/main.ts', import.meta.url), 'utf8');
 const earthSource = readFileSync(new URL('../src/apps/earth/main.ts', import.meta.url), 'utf8');
 const earthConfigSource = readFileSync(new URL('../src/apps/earth/config.ts', import.meta.url), 'utf8');
 
@@ -23,20 +23,12 @@ describe('Presentation and MAPCO Earth product handoff', () => {
     expect(allProperties().map((property) => property.id).sort()).toEqual(expected.sort());
   });
 
-  it('uses dynamic property filters, real media, and adapter-resolved ID deep links', () => {
-    expect(presentationSource).toContain('data-act="property-city"');
-    expect(presentationSource).toContain('requestedPropertyId(window.location.search)');
-    expect(presentationSource).toContain('adapter.presentation.getProperty(requestedProperty');
-    expect(presentationSource).toContain('adapter.presentation.listProperties(');
-    expect(presentationSource).not.toContain('adapter.properties.list(');
-    expect(presentationSource).not.toContain('adapter.properties.get(');
-    expect(presentationSource).toContain('productRoutes.earth(property.id)');
-    expect(presentationSource).toContain('No property photo');
-    expect(presentationSource).not.toContain('PROPERTY_NAMES');
-    expect(presentationSource).not.toContain('CAPTIONS');
-    expect(presentationSource).not.toContain('SECTORS');
-    expect(presentationSource).not.toContain('property.location ?? property.loc');
-    expect(presentationSource).not.toContain('propertyLocationPoint');
+  it('uses Earth as the single property-ID presentation handoff', () => {
+    expect(productRoutes.presentation('property-7')).toBe(productRoutes.earth('property-7'));
+    expect(earthSource).toContain('requestedPropertyId(window.location.search)');
+    expect(earthSource).toContain('locationSource.resolve(requestedProperty)');
+    expect(earthSource).toContain('data-prop=');
+    expect(earthSource).toContain('openPropertyDetail(property)');
   });
 
   it('never appends fixtures, fabricates media, or auto-writes demo coordinates', () => {
@@ -47,7 +39,7 @@ describe('Presentation and MAPCO Earth product handoff', () => {
     expect(earthConfigSource).not.toContain('source: \'migrated\'');
     expect(earthSource).toContain('locationSource.resolve(requestedProperty)');
     expect(earthSource).toContain('productRoutes.properties(p.id)');
-    expect(earthSource).toContain('productRoutes.presentation(p.id)');
+    expect(productRoutes.presentation('property-7')).toBe(productRoutes.earth('property-7'));
     expect(earthSource).toContain('navigator.clipboard.writeText');
     expect(earthSource).not.toContain('createPropertyAt');
   });
