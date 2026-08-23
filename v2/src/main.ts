@@ -92,7 +92,7 @@ function initLanding(container: HTMLElement) {
 
     <div class="pm-land-cards" style="display:flex;gap:clamp(12px,1.4vw,20px);width:100%;max-width:1160px;flex:0 1 auto;min-height:0">
 
-      <a href="/admin/owner.html" class="pm-land-card-1" style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;border-radius:clamp(18px,2.4vh,26px);background:#fffaf0;border:1px solid #f2dca6;box-shadow:0 2px 3px rgba(40,30,10,.04),0 30px 56px -38px rgba(120,86,10,.8);color:inherit;text-decoration:none;transition:transform .38s cubic-bezier(.2,.8,.2,1),box-shadow .38s ease,border-color .3s ease;animation:lRise .95s cubic-bezier(.2,.8,.2,1) both;animation-delay:.2s">
+      <a href="/admin/owner.html" class="pm-land-card-1" style="flex:1;min-height:clamp(220px,32vh,280px);min-width:0;display:flex;flex-direction:column;overflow:hidden;border-radius:clamp(18px,2.4vh,26px);background:#fffaf0;border:1px solid #f2dca6;box-shadow:0 2px 3px rgba(40,30,10,.04),0 30px 56px -38px rgba(120,86,10,.8);color:inherit;text-decoration:none;transition:transform .38s cubic-bezier(.2,.8,.2,1),box-shadow .38s ease,border-color .3s ease;animation:lRise .95s cubic-bezier(.2,.8,.2,1) both;animation-delay:.2s">
         <div style="position:relative;flex:none;height:clamp(84px,13vh,120px);background:#ffc93c;background-image:radial-gradient(120% 130% at 12% 8%,#ffe28a,#f7b21f 62%,#e79a0c);overflow:hidden">
           <div style="position:absolute;inset:0;background:repeating-linear-gradient(58deg,rgba(255,255,255,.24) 0 2px,transparent 2px 26px)"></div>
           <div style="position:absolute;right:-18px;bottom:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.24)"></div>
@@ -106,7 +106,7 @@ function initLanding(container: HTMLElement) {
         </div>
       </a>
 
-      <a href="/app/earth/index.html" class="pm-land-card-2" style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;border-radius:clamp(18px,2.4vh,26px);background:#fffaf0;border:1px solid #c9e4d5;box-shadow:0 2px 3px rgba(40,30,10,.04),0 30px 56px -38px rgba(20,60,42,.8);color:inherit;text-decoration:none;transition:transform .38s cubic-bezier(.2,.8,.2,1),box-shadow .38s ease,border-color .3s ease;animation:lRise .95s cubic-bezier(.2,.8,.2,1) both;animation-delay:.28s">
+      <a href="/app/earth/index.html" class="pm-land-card-2" style="flex:1;min-height:clamp(220px,32vh,280px);min-width:0;display:flex;flex-direction:column;overflow:hidden;border-radius:clamp(18px,2.4vh,26px);background:#fffaf0;border:1px solid #c9e4d5;box-shadow:0 2px 3px rgba(40,30,10,.04),0 30px 56px -38px rgba(20,60,42,.8);color:inherit;text-decoration:none;transition:transform .38s cubic-bezier(.2,.8,.2,1),box-shadow .38s ease,border-color .3s ease;animation:lRise .95s cubic-bezier(.2,.8,.2,1) both;animation-delay:.28s">
         <div style="position:relative;flex:none;height:clamp(84px,13vh,120px);background:#1f4d3a;background-image:radial-gradient(120% 130% at 88% 6%,#37876a,#1f4d3a 58%,#143528);overflow:hidden">
           <div style="position:absolute;inset:0;background:repeating-linear-gradient(122deg,rgba(255,255,255,.12) 0 2px,transparent 2px 26px)"></div>
           <div style="position:absolute;left:-24px;bottom:-34px;width:130px;height:130px;border-radius:50%;background:rgba(122,224,164,.22)"></div>
@@ -120,7 +120,7 @@ function initLanding(container: HTMLElement) {
         </div>
       </a>
 
-      <a href="/admin/marketing.html" class="pm-land-card-3" style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;border-radius:clamp(18px,2.4vh,26px);background:#fffaf0;border:1px solid #ded1f4;box-shadow:0 2px 3px rgba(40,30,10,.04),0 30px 56px -38px rgba(70,40,150,.7);color:inherit;text-decoration:none;transition:transform .38s cubic-bezier(.2,.8,.2,1),box-shadow .38s ease,border-color .3s ease;animation:lRise .95s cubic-bezier(.2,.8,.2,1) both;animation-delay:.36s">
+      <a href="/admin/marketing.html" class="pm-land-card-3" style="flex:1;min-height:clamp(220px,32vh,280px);min-width:0;display:flex;flex-direction:column;overflow:hidden;border-radius:clamp(18px,2.4vh,26px);background:#fffaf0;border:1px solid #ded1f4;box-shadow:0 2px 3px rgba(40,30,10,.04),0 30px 56px -38px rgba(70,40,150,.7);color:inherit;text-decoration:none;transition:transform .38s cubic-bezier(.2,.8,.2,1),box-shadow .38s ease,border-color .3s ease;animation:lRise .95s cubic-bezier(.2,.8,.2,1) both;animation-delay:.36s">
         <div style="position:relative;flex:none;height:clamp(84px,13vh,120px);background:#5b32c4;background-image:radial-gradient(120% 130% at 18% 4%,#a983f5,#6a3ed6 58%,#4a26a8);overflow:hidden">
           <div style="position:absolute;inset:0;background:repeating-linear-gradient(58deg,rgba(255,255,255,.14) 0 2px,transparent 2px 26px)"></div>
           <div style="position:absolute;right:-20px;top:-34px;width:126px;height:126px;border-radius:50%;background:rgba(255,255,255,.16)"></div>
