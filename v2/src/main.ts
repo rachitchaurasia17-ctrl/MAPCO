@@ -106,17 +106,17 @@ function initLanding(container: HTMLElement) {
         </div>
       </a>
 
-      <a href="/app/earth/index.html" class="pm-land-card-2" style="flex:1;min-height:clamp(220px,32vh,280px);min-width:0;display:flex;flex-direction:column;overflow:hidden;border-radius:clamp(18px,2.4vh,26px);background:#fffaf0;border:1px solid #c9e4d5;box-shadow:0 2px 3px rgba(40,30,10,.04),0 30px 56px -38px rgba(20,60,42,.8);color:inherit;text-decoration:none;transition:transform .38s cubic-bezier(.2,.8,.2,1),box-shadow .38s ease,border-color .3s ease;animation:lRise .95s cubic-bezier(.2,.8,.2,1) both;animation-delay:.28s">
-        <div style="position:relative;flex:none;height:clamp(84px,13vh,120px);background:#1f4d3a;background-image:radial-gradient(120% 130% at 88% 6%,#37876a,#1f4d3a 58%,#143528);overflow:hidden">
+      <a href="/app/earth/index.html" class="pm-land-card-2" style="flex:1;min-height:clamp(220px,32vh,280px);min-width:0;display:flex;flex-direction:column;overflow:hidden;border-radius:clamp(18px,2.4vh,26px);background:#fffaf0;border:1px solid #c9e4d5;box-shadow:0 2px 3px rgba(40,30,10,.04),0 30px 56px -38px rgba(18,161,80,.4);color:inherit;text-decoration:none;transition:transform .38s cubic-bezier(.2,.8,.2,1),box-shadow .38s ease,border-color .3s ease;animation:lRise .95s cubic-bezier(.2,.8,.2,1) both;animation-delay:.28s">
+        <div style="position:relative;flex:none;height:clamp(84px,13vh,120px);background:#12a150;background-image:radial-gradient(120% 130% at 88% 6%,#22bf55,#12a150 58%,#0d7a3c);overflow:hidden">
           <div style="position:absolute;inset:0;background:repeating-linear-gradient(122deg,rgba(255,255,255,.12) 0 2px,transparent 2px 26px)"></div>
-          <div style="position:absolute;left:-24px;bottom:-34px;width:130px;height:130px;border-radius:50%;background:rgba(122,224,164,.22)"></div>
+          <div style="position:absolute;left:-24px;bottom:-34px;width:130px;height:130px;border-radius:50%;background:rgba(255,255,255,.15)"></div>
           <div style="position:absolute;left:clamp(16px,2vw,22px);top:50%;transform:translateY(-50%);width:clamp(42px,6vh,54px);height:clamp(42px,6vh,54px);border-radius:16px;background:#ffc93c;color:#1a2f24;display:grid;place-items:center;box-shadow:0 14px 26px -14px rgba(0,0,0,.6)"><i class="ph-fill ph-globe-hemisphere-west" style="font-size:clamp(21px,3vh,27px)"></i></div>
           <div style="position:absolute;right:clamp(16px,2vw,22px);top:clamp(10px,1.4vh,14px);font-family:var(--pm-font-display);font-size:clamp(20px,3vh,27px);color:rgba(217,245,227,.5)">02</div>
         </div>
         <div style="padding:clamp(14px,2.2vh,22px) clamp(16px,2vw,24px) clamp(16px,2.4vh,24px);display:flex;flex-direction:column;flex:1;min-height:0">
-          <div style="font-size:clamp(10px,1.3vh,11.5px);font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#12704a">The Real World</div>
-          <div style="margin-top:6px;font-family:var(--pm-font-display);font-weight:600;font-size:clamp(26px,4vh,36px);line-height:1.05;letter-spacing:-.01em;color:#241f1c">MAPCO <span style="color:#12704a">EARTH</span></div>
-          <div style="display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:clamp(12px,1.8vh,20px);font-size:clamp(14px,1.8vh,15.5px);font-weight:800;color:#12704a">Open the map <i class="ph-bold ph-arrow-right" style="font-size:15px;animation:lSlide 2.6s ease-in-out infinite;animation-delay:.3s"></i></div>
+          <div style="font-size:clamp(10px,1.3vh,11.5px);font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#12a150">The Real World</div>
+          <div style="margin-top:6px;font-family:var(--pm-font-display);font-weight:600;font-size:clamp(26px,4vh,36px);line-height:1.05;letter-spacing:-.01em;color:#241f1c">MAPCO <span style="color:#12a150">EARTH</span></div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:clamp(12px,1.8vh,20px);font-size:clamp(14px,1.8vh,15.5px);font-weight:800;color:#12a150">Open the map <i class="ph-bold ph-arrow-right" style="font-size:15px;animation:lSlide 2.6s ease-in-out infinite;animation-delay:.3s"></i></div>
         </div>
       </a>
 
