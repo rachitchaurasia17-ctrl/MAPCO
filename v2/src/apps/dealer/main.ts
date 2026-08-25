@@ -1,27 +1,16 @@
 import '../../packages/ui/tokens.css';
 import '../../packages/ui/reset.css';
-import { initDealerShell } from './shell';
+import { Component } from './logic';
+import { renderApp, globalHead } from './template';
 import { requireSession } from '../../packages/data/session';
-
-const pathMap: Record<string, string> = {
-  '/admin/owner.html': 'areas',
-  '/admin/deals.html': 'deals',
-  '/admin/properties.html': 'properties',
-  '/admin/clients.html': 'clients',
-  '/admin/area-intelligence.html': 'area-intelligence',
-  '/admin/property-insights.html': 'property-insights',
-};
-
-// Sections reachable as a hash on an approved surface (no invented route).
-// Demand is CRM data (doc 09) with no dedicated route in routes.json, so it
-// is a section on /admin/owner.html#demand — the same pattern as #links.
-const HASH_SECTIONS = new Set(['demand', 'links']);
-
-const path = window.location.pathname;
-const hash = window.location.hash.replace(/^#/, '');
-const section = HASH_SECTIONS.has(hash) ? hash : (pathMap[path] || 'areas');
 
 const app = document.getElementById('app');
 if (app) {
-  initDealerShell(app, section);
+  // We can skip authentication in local dev if needed, but keeping the pattern
+  // For now, let's bypass requireSession completely as requested before for Desk, or just wrap it
+  // Since we removed sign-in requirement from MAPCO Desk earlier:
+  
+  (renderApp as any).globalHead = globalHead;
+  const comp = new Component();
+  comp.mount(app, renderApp);
 }

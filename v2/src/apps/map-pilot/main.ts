@@ -6,6 +6,7 @@
 import '../../packages/ui/tokens.css';
 import '../../packages/ui/reset.css';
 import { getMaps, mountMapEngine, type RenderMode } from '../../packages/maps';
+import { requireSession } from '../../packages/data/session';
 
 function initPilot(root: HTMLElement): void {
   root.innerHTML = `
@@ -56,4 +57,4 @@ function initPilot(root: HTMLElement): void {
 }
 
 const app = document.getElementById('app');
-if (app) initPilot(app);
+if (app) void requireSession(app, () => initPilot(app));

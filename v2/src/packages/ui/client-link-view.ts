@@ -17,6 +17,23 @@ function esc(s: string): string {
   return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
 }
 
+/** Client payload media is dealer-controlled stored data. Keep it to browser
+ * media schemes and normalize it before it reaches an HTML attribute/CSSOM. */
+function safeMediaUrl(raw?: string): string {
+  const value = String(raw ?? '').trim();
+  if (!value || value.length > 4096 || /[\u0000-\u001f\u007f]/.test(value)) return '';
+  try {
+    const base = typeof document !== 'undefined' ? document.baseURI : 'https://mapco.invalid/';
+    const url = new URL(value, base);
+    if (!['https:', 'http:', 'blob:'].includes(url.protocol)) return '';
+    if (url.protocol === 'http:' && !['localhost', '127.0.0.1', '::1'].includes(url.hostname)) return '';
+    if (url.username || url.password) return '';
+    return url.href;
+  } catch {
+    return '';
+  }
+}
+
 const digits = (s?: string) => (s || '').replace(/[^0-9]/g, '');
 function waNumber(raw?: string): string {
   const d = digits(raw);
@@ -91,7 +108,7 @@ export function renderClientLinkView(
     mapResizeObserver = null;
     const p = properties[activeIndex] || properties[0];
     if (!p) { container.innerHTML = '<div style="min-height:100vh;display:grid;place-items:center;background:#0f0a18;color:#9a8aad;font-family:system-ui">Nothing shared on this link.</div>'; return; }
-    const photos = p.photos && p.photos.length ? p.photos : [];
+    const photos = (p.photos ?? []).map(safeMediaUrl).filter(Boolean);
     activeShot = Math.min(activeShot, Math.max(0, photos.length - 1));
     const heroUrl = photos[activeShot] || '';
     const priceLabel = p.price !== undefined ? formatINR(p.price) : 'Price on call';
@@ -117,7 +134,7 @@ export function renderClientLinkView(
           <div id="pm-cl-wave" style="flex:1;display:flex;align-items:center;gap:3px;height:34px">${Array.from({ length: 26 }).map((_, i) => `<span style="flex:1;background:rgba(255,255,255,.34);border-radius:2px;height:${9 + ((i * 11) % 20)}px"></span>`).join('')}</div>
           <span id="pm-cl-time" style="font-size:14px;font-weight:800;color:#fff6e0;flex:none">0:${String(payload.voiceNote.seconds).padStart(2, '0')}</span>
         </div>
-        <audio id="pm-cl-audio" preload="none"${payload.voiceNote.url ? ` src="${esc(payload.voiceNote.url)}"` : ''}></audio>
+        <audio id="pm-cl-audio" preload="none"${safeMediaUrl(payload.voiceNote.url) ? ` src="${esc(safeMediaUrl(payload.voiceNote.url))}"` : ''}></audio>
       </div>` : '';
 
     const whyHtml = p.landmarks.length ? `
@@ -152,7 +169,7 @@ export function renderClientLinkView(
     const mapMode = activeMap ? activeModeByMap.get(activeMap.id) || 'original' : 'original';
     const hasThreeD = Boolean(activeMap?.assets?.threeD?.path);
     const safeMode = mapMode === 'threeD' && hasThreeD ? 'threeD' : 'original';
-    const raster = safeMode === 'threeD' ? activeMap?.assets?.threeD?.path || '' : activeMap?.assets?.original?.path || activeMap?.raster || '';
+    const raster = safeMediaUrl(safeMode === 'threeD' ? activeMap?.assets?.threeD?.path || '' : activeMap?.assets?.original?.path || activeMap?.raster || '');
     const activeDims = safeMode === 'threeD' ? activeMap?.dims?.threeD : activeMap?.dims?.original;
     const pin = safeMode === 'original' && p.placement?.mapId === activeMap?.id ? p.placement : null;
     const mapsHtml = activeMapItem && raster ? `
@@ -169,7 +186,11 @@ export function renderClientLinkView(
 
     const moreHtml = multi ? `
       <div style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#9d8bc7;margin-top:24px">More plots for you</div>
-      <div style="display:flex;flex-direction:column;gap:10px;margin-top:11px">${properties.map((o, i) => i === activeIndex ? '' : `<button class="pm-cl-go" data-go="${i}" style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:16px;background:rgba(255,255,255,.05);border:none;cursor:pointer;text-align:left"><span style="width:60px;height:60px;border-radius:12px;flex:none;background:${o.photos[0] ? `url('${esc(o.photos[0])}') center/cover` : '#241a33'}"></span><span style="flex:1;min-width:0"><span style="display:block;font-size:15px;font-weight:800;color:#fffdf7">${esc(o.area)}</span><span style="display:block;font-size:12.5px;color:#b9a8dd">${esc(o.size)} · ${esc(o.facing)} facing</span></span><i class="ph-bold ph-caret-right" style="color:#9d8bc7;flex:none"></i></button>`).join('')}</div>` : '';
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:11px">${properties.map((o, i) => {
+        if (i === activeIndex) return '';
+        const thumbnail = safeMediaUrl(o.photos[0]);
+        return `<button class="pm-cl-go" data-go="${i}" style="display:flex;align-items:center;gap:12px;padding:10px;border-radius:16px;background:rgba(255,255,255,.05);border:none;cursor:pointer;text-align:left"><span style="width:60px;height:60px;border-radius:12px;flex:none;background:#241a33;overflow:hidden">${thumbnail ? `<img src="${esc(thumbnail)}" alt="" style="display:block;width:100%;height:100%;object-fit:cover">` : ''}</span><span style="flex:1;min-width:0"><span style="display:block;font-size:15px;font-weight:800;color:#fffdf7">${esc(o.area)}</span><span style="display:block;font-size:12.5px;color:#b9a8dd">${esc(o.size)} · ${esc(o.facing)} facing</span></span><i class="ph-bold ph-caret-right" style="color:#9d8bc7;flex:none"></i></button>`;
+      }).join('')}</div>` : '';
 
     const callHtml = telNum
       ? `<a data-client-event="call_clicked" href="tel:${esc(telNum)}" style="display:flex;align-items:center;justify-content:center;gap:9px;height:54px;border-radius:15px;background:#12a150;color:#fff;font-size:16px;font-weight:800;text-decoration:none"><i class="ph-fill ph-phone" style="font-size:20px"></i>Call ${esc(dealerFirst)}</a>`
@@ -183,7 +204,7 @@ export function renderClientLinkView(
       ${properties.map((o, i) => `<button class="pm-cl-go" data-go="${i}" style="flex:none;padding:8px 14px;border-radius:999px;font-size:13px;font-weight:800;border:none;cursor:pointer;white-space:nowrap;${i === activeIndex ? 'background:#ffc93c;color:#241d0c' : 'background:rgba(255,255,255,.09);color:#c9b6ef'}">${esc(o.area)}</button>`).join('')}
     </div>` : ''}
     <div style="position:relative;height:320px;flex:none">
-      <div id="pm-cl-hero" style="position:absolute;inset:0;${heroUrl ? `background:url('${esc(heroUrl)}') center/cover` : 'background:#241a33;display:grid;place-items:center;color:#6b5a90'}">${heroUrl ? '' : '<i class="ph-fill ph-image" style="font-size:44px"></i>'}</div>
+      <div id="pm-cl-hero" style="position:absolute;inset:0;background:#241a33;display:grid;place-items:center;color:#6b5a90;overflow:hidden">${heroUrl ? `<img data-client-hero-image src="${esc(heroUrl)}" alt="" style="display:block;width:100%;height:100%;object-fit:cover">` : '<i class="ph-fill ph-image" style="font-size:44px"></i>'}</div>
       <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,10,24,.66) 0%,rgba(15,10,24,.05) 34%,rgba(20,13,32,.96) 100%)"></div>
       <div style="position:absolute;top:16px;left:16px;right:16px;display:flex;align-items:center;gap:11px">
         <div style="width:40px;height:40px;border-radius:50%;background:#ffc93c;color:#241d0c;display:grid;place-items:center;font-size:14px;font-weight:800;flex:none">${esc((dealer.charAt(0) || 'M').toUpperCase())}</div>
@@ -224,11 +245,14 @@ export function renderClientLinkView(
     const hero = container.querySelector<HTMLElement>('#pm-cl-hero');
     const time = container.querySelector<HTMLElement>('#pm-cl-time');
     const p = properties[activeIndex] || properties[0];
-    const photos = p?.photos ?? [];
+    // Keep navigation on the same normalized list used to paint the initial
+    // hero. A hostile later photo must never re-enter via Next/Previous.
+    const photos = (p?.photos ?? []).map(safeMediaUrl).filter(Boolean);
 
     const refreshHero = () => {
       const url = photos[activeShot] || '';
-      if (hero) hero.style.background = url ? `url('${url}') center/cover` : '#241a33';
+      const heroImage = hero?.querySelector<HTMLImageElement>('[data-client-hero-image]');
+      if (heroImage && url) heroImage.src = url;
       const segsBox = container.querySelector('#pm-cl-segs');
       if (segsBox) segsBox.querySelectorAll('span').forEach((s, i) => { (s as HTMLElement).style.background = i === activeShot ? '#ffc93c' : 'rgba(255,255,255,.28)'; });
       const counter = container.querySelector('div[style*="Photo"]');
@@ -283,7 +307,9 @@ export function renderClientLinkView(
         const next = await opts.refreshVoiceNote().catch(() => null);
         refreshing = false;
         if (!next) { play.title = 'Voice note is temporarily unavailable.'; return; }
-        audio.src = next;
+        const safeNext = safeMediaUrl(next);
+        if (!safeNext) { play.title = 'Voice note is temporarily unavailable.'; return; }
+        audio.src = safeNext;
         audio.load();
         await audio.play().catch(() => { play.title = 'Voice note refreshed. Tap Play again.'; });
       };
@@ -335,17 +361,20 @@ export function positionContainedPin(
 
 /** Open a map raster full-screen (landscape) with the plot pin, for the buyer. */
 function openMapFullscreen(raster: string, pinx?: string, piny?: string, label = 'Map', width = 0, height = 0): void {
-  if (!raster) return;
+  const safeRaster = safeMediaUrl(raster);
+  if (!safeRaster) return;
   const ov = document.createElement('div');
   ov.style.cssText = 'position:fixed;inset:0;z-index:200;background:#0b0714;display:flex;align-items:center;justify-content:center;animation:pmdveil .18s ease both';
   const px = Number(pinx), py = Number(piny);
   const hasPin = Number.isFinite(px) && Number.isFinite(py) && pinx !== '' && piny !== '';
+  // The shell is static markup. Dealer-controlled URL/label values are assigned
+  // via DOM properties/textContent below and are never interpreted as HTML.
   ov.innerHTML = `
     <div style="position:relative;width:100%;height:100%">
-      <img data-map-image src="${raster.replace(/"/g, '&quot;')}" alt="${label}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain">
+      <img data-map-image alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain">
       ${hasPin ? `<span data-map-pin style="position:absolute;left:0;top:0;transform:translate(-50%,-100%)">${luxuryPin(46)}</span>` : ''}
       <button data-x style="position:absolute;top:16px;right:16px;width:46px;height:46px;border-radius:14px;background:rgba(255,248,230,.16);color:#fff8e6;display:grid;place-items:center;border:none;cursor:pointer"><i class="ph-bold ph-x" style="font-size:20px"></i></button>
-      <div style="position:absolute;top:18px;left:18px;padding:7px 14px;border-radius:999px;background:rgba(20,13,32,.7);color:#fff6e0;font-size:13px;font-weight:800">${label}</div>
+      <div data-map-label style="position:absolute;top:18px;left:18px;padding:7px 14px;border-radius:999px;background:rgba(20,13,32,.7);color:#fff6e0;font-size:13px;font-weight:800"></div>
       <div style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);padding:8px 16px;border-radius:999px;background:rgba(20,13,32,.7);color:#c9b6ef;font-size:12.5px;font-weight:700">Rotate your phone for a bigger view</div>
     </div>`;
   let resize: ResizeObserver | null = null;
@@ -361,8 +390,14 @@ function openMapFullscreen(raster: string, pinx?: string, piny?: string, label =
   document.body.appendChild(ov);
   document.addEventListener('keydown', onKey);
   const image = ov.querySelector<HTMLImageElement>('[data-map-image]');
+  const mapLabel = ov.querySelector<HTMLElement>('[data-map-label]');
   const pin = ov.querySelector<HTMLElement>('[data-map-pin]');
   const stage = image?.parentElement;
+  if (image) {
+    image.src = safeRaster;
+    image.alt = String(label).slice(0, 256);
+  }
+  if (mapLabel) mapLabel.textContent = String(label).slice(0, 256);
   if (image && pin && stage) {
     const position = () => positionContainedPin(stage, image, pin, px, py, width, height);
     if (image.complete) position(); else image.addEventListener('load', position, { once: true });

@@ -9,6 +9,7 @@
 
 import type {
   Property, PropertyLocationInput, Client, Deal, ClientLink, MapData, DemandSignal,
+  Seller, PropertySeller, SellerWithProperties, PropertyDocument,
 } from './types';
 import {
   PROPERTIES, CLIENTS, DEALS, CLIENT_LINKS, DEMAND_SIGNALS, persistMock,
@@ -18,6 +19,8 @@ import {
   type Scenario, type Result, type Page, type PageParams, type QueryOptions,
   type AuthRepository, type ActivationState, type AccountState,
   type PropertyRepository, type CustomerRepository, type DealRepository, type RecordSaleInput,
+  type SellerRepository, type SaveSellerInput, type AssignPropertySellerInput,
+  type PropertyDocumentRepository, type UploadPropertyDocumentInput,
   type DemandRepository, type DemandRecord, type DemandDraft, type DemandMatch,
   type MapRepository, type PresentationRepository, type PresentationState, type PresentationProperty,
   type PresentationEventsRepository, type PresentationEvent,
@@ -42,20 +45,32 @@ import {
   propertyLocationPoint,
 } from './property-location';
 import { normalizeCompletedDeal } from './deal-normalization';
+import { canonicalPropertyLifecycle, propertyLifecycleValidationError } from './property-lifecycle';
+import {
+  PROPERTY_DOCUMENT_BUCKET,
+  propertyDocumentObjectPath,
+  validatePropertyDocument,
+} from './property-documents';
 
 /* ── helpers ─────────────────────────────────────────────────── */
 
 const DEFAULT_LIMIT = 12;
 const MAX_LIMIT = 50;
 const MOCK_PROPERTY_PHOTOS = new Map<string, string>();
+const MOCK_PROPERTY_DOCUMENT_OBJECTS = new Map<string, string>();
+const MOCK_SELLERS: Seller[] = [];
+const MOCK_PROPERTY_SELLERS: PropertySeller[] = [];
+const MOCK_PROPERTY_DOCUMENTS: PropertyDocument[] = [];
+let mockSequence = 0;
+const mockId = (prefix: string): string => `${prefix}-${Date.now()}-${++mockSequence}`;
 
 function hydrateMockProperty(property: Property): Property {
   const privatePhotos = normalizePropertyPhotoStorage(property.photoStorage, property.id)
     .flatMap((ref) => MOCK_PROPERTY_PHOTOS.get(ref.path) ?? []);
-  return normalizePropertyLocationOnRead({
+  return canonicalPropertyLifecycle(normalizePropertyLocationOnRead({
     ...property,
     photos: [...(property.photos ?? []), ...privatePhotos],
-  });
+  }));
 }
 
 /** Reject a call if its AbortSignal already fired. */
@@ -157,6 +172,8 @@ class MockPropertyRepository implements PropertyRepository {
     const a = aborted<Property>(opts); if (a) return a;
     const locationError = propertyLocationValidationError(property.location);
     if (locationError) return err('validation', locationError);
+    const lifecycleError = propertyLifecycleValidationError(property);
+    if (lifecycleError) return err('validation', lifecycleError);
     const id = property.id || `prop-${Date.now()}`;
     const row = persistentPropertyPayload({ ...property, id });
     const i = PROPERTIES.findIndex((p) => p.id === id);
@@ -222,6 +239,108 @@ class MockCustomerRepository implements CustomerRepository {
   }
 }
 
+class MockSellerRepository implements SellerRepository {
+  async list(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<Seller>>> {
+    const a = aborted<Page<Seller>>(opts); if (a) return a;
+    return ok(paginate(MOCK_SELLERS, params, (seller, query) =>
+      `${seller.name} ${seller.primaryPhone} ${seller.city ?? ''}`.toLowerCase().includes(query)));
+  }
+  async get(id: string, opts?: QueryOptions): Promise<Result<Seller>> {
+    const a = aborted<Seller>(opts); if (a) return a;
+    const seller = MOCK_SELLERS.find((row) => row.id === id);
+    return seller ? ok({ ...seller }) : err('not_found', 'Seller not found');
+  }
+  async getWithProperties(id: string, opts?: QueryOptions): Promise<Result<SellerWithProperties>> {
+    const seller = await this.get(id, opts);
+    if (!seller.ok) return seller;
+    const properties = MOCK_PROPERTY_SELLERS.filter((row) => row.sellerId === id).flatMap((relationship) => {
+      const property = PROPERTIES.find((row) => row.id === relationship.propertyId);
+      return property ? [{ property: hydrateMockProperty(property), relationship: { ...relationship } }] : [];
+    });
+    return ok({ seller: seller.value, properties });
+  }
+  async getForProperty(propertyId: string, opts?: QueryOptions) {
+    const a = aborted<readonly { seller: Seller; relationship: PropertySeller }[]>(opts); if (a) return a;
+    return ok(MOCK_PROPERTY_SELLERS.filter((row) => row.propertyId === propertyId).flatMap((relationship) => {
+      const seller = MOCK_SELLERS.find((row) => row.id === relationship.sellerId);
+      return seller ? [{ seller: { ...seller }, relationship: { ...relationship } }] : [];
+    }));
+  }
+  async save(input: SaveSellerInput, opts?: QueryOptions): Promise<Result<Seller>> {
+    const a = aborted<Seller>(opts); if (a) return a;
+    if (!input.name.trim() || !input.primaryPhone.trim()) return err('validation', 'Seller name and primary phone are required');
+    const now = new Date().toISOString();
+    const row: Seller = { ...input, id: input.id || mockId('seller'), updatedAt: now };
+    const index = MOCK_SELLERS.findIndex((seller) => seller.id === row.id);
+    if (index >= 0) row.createdAt = MOCK_SELLERS[index]!.createdAt;
+    else row.createdAt = now;
+    if (index >= 0) MOCK_SELLERS[index] = row; else MOCK_SELLERS.unshift(row);
+    return ok({ ...row });
+  }
+  async assignToProperty(input: AssignPropertySellerInput, opts?: QueryOptions): Promise<Result<PropertySeller>> {
+    const a = aborted<PropertySeller>(opts); if (a) return a;
+    if (!PROPERTIES.some((property) => property.id === input.propertyId)) return err('not_found', 'Property not found');
+    if (!MOCK_SELLERS.some((seller) => seller.id === input.sellerId)) return err('not_found', 'Seller not found');
+    if (input.askingPrice !== undefined && input.askingPrice <= 0) return err('validation', 'Asking price must be positive');
+    if (input.isPrimary) {
+      for (const row of MOCK_PROPERTY_SELLERS) if (row.propertyId === input.propertyId) row.isPrimary = false;
+    }
+    const row: PropertySeller = { ...input, id: input.id || mockId('property-seller') };
+    const index = MOCK_PROPERTY_SELLERS.findIndex((item) =>
+      item.propertyId === input.propertyId && item.sellerId === input.sellerId);
+    if (index >= 0) MOCK_PROPERTY_SELLERS[index] = row; else MOCK_PROPERTY_SELLERS.push(row);
+    return ok({ ...row });
+  }
+  async removeFromProperty(propertyId: string, sellerId: string, opts?: QueryOptions): Promise<Result<void>> {
+    const a = aborted<void>(opts); if (a) return a;
+    const index = MOCK_PROPERTY_SELLERS.findIndex((row) => row.propertyId === propertyId && row.sellerId === sellerId);
+    if (index < 0) return err('not_found', 'Seller relationship not found');
+    MOCK_PROPERTY_SELLERS.splice(index, 1);
+    return ok(undefined);
+  }
+}
+
+class MockPropertyDocumentRepository implements PropertyDocumentRepository {
+  async listForProperty(propertyId: string, opts?: QueryOptions) {
+    const a = aborted<readonly PropertyDocument[]>(opts); if (a) return a;
+    return ok(MOCK_PROPERTY_DOCUMENTS.filter((row) => row.propertyId === propertyId).map((row) => ({ ...row })));
+  }
+  async get(id: string, opts?: QueryOptions): Promise<Result<PropertyDocument>> {
+    const a = aborted<PropertyDocument>(opts); if (a) return a;
+    const document = MOCK_PROPERTY_DOCUMENTS.find((row) => row.id === id);
+    return document ? ok({ ...document }) : err('not_found', 'Property document not found');
+  }
+  async upload(input: UploadPropertyDocumentInput, file: File, opts?: QueryOptions): Promise<Result<PropertyDocument>> {
+    const a = aborted<PropertyDocument>(opts); if (a) return a;
+    if (!PROPERTIES.some((property) => property.id === input.propertyId)) return err('not_found', 'Property not found');
+    if (!input.title.trim()) return err('validation', 'Document title is required');
+    const validation = validatePropertyDocument(file);
+    if (validation) return err('validation', validation);
+    const id = mockId('property-document');
+    const path = propertyDocumentObjectPath('mock-dealer', input.propertyId, id, file.type);
+    MOCK_PROPERTY_DOCUMENT_OBJECTS.set(path, URL.createObjectURL(file));
+    const now = new Date().toISOString();
+    const document: PropertyDocument = {
+      id, propertyId: input.propertyId, title: input.title.trim(), type: input.type,
+      storage: { bucket: PROPERTY_DOCUMENT_BUCKET, path }, mimeType: file.type, sizeBytes: file.size,
+      visibility: input.visibility ?? 'private', safety: input.safety ?? 'private',
+      metadata: input.metadata, createdAt: now, updatedAt: now,
+    };
+    MOCK_PROPERTY_DOCUMENTS.unshift(document);
+    return ok({ ...document });
+  }
+  async remove(id: string, opts?: QueryOptions): Promise<Result<void>> {
+    const a = aborted<void>(opts); if (a) return a;
+    const index = MOCK_PROPERTY_DOCUMENTS.findIndex((row) => row.id === id);
+    if (index < 0) return err('not_found', 'Property document not found');
+    const [document] = MOCK_PROPERTY_DOCUMENTS.splice(index, 1);
+    const url = document && MOCK_PROPERTY_DOCUMENT_OBJECTS.get(document.storage.path);
+    if (url) URL.revokeObjectURL(url);
+    if (document) MOCK_PROPERTY_DOCUMENT_OBJECTS.delete(document.storage.path);
+    return ok(undefined);
+  }
+}
+
 class MockDealRepository implements DealRepository {
   async list(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<Deal>>> {
     const a = aborted<Page<Deal>>(opts); if (a) return a;
@@ -251,7 +370,16 @@ class MockDealRepository implements DealRepository {
 
     const prop = PROPERTIES.find((p) => p.id === input.propertyId);
     if (!prop) return err('not_found', 'That property is no longer available');
-    if (prop.sold) return err('conflict', 'That property is already marked sold');
+    if (prop.sold || prop.lifecycle === 'sold') {
+      const existing = DEALS.flatMap((payload) => {
+        const deal = normalizeCompletedDeal(String(payload.id ?? ''), payload as unknown as Record<string, unknown>);
+        return deal ? [deal] : [];
+      }).find((deal) => deal.propId === prop.id);
+      const sameBuyer = existing && (existing.buyerId === input.buyerId
+        || (!input.buyerId && existing.buyer === input.newBuyer?.name));
+      if (existing && sameBuyer && existing.soldPrice === input.soldPrice && existing.soldDate === input.saleDate) return ok(existing);
+      return err('conflict', 'That property is already marked sold');
+    }
     if (!(input.soldPrice > 0)) return err('validation', 'Enter a final sold price');
     if (!input.saleDate) return err('validation', 'Enter the sale date');
 
@@ -260,19 +388,26 @@ class MockDealRepository implements DealRepository {
     if (!buyer) {
       if (!input.newBuyer?.name) return err('validation', 'Choose or add a buyer');
       buyer = {
-        id: `client-${Date.now()}`, name: input.newBuyer.name, phone: input.newBuyer.phone || '',
-        city: input.newBuyer.city || prop.city, want: prop.want, budget: '', budgetMax: input.soldPrice,
+        id: mockId('client'), name: input.newBuyer.name, phone: input.newBuyer.phone || '',
+        city: input.newBuyer.city || '', want: '', budget: '', budgetMax: 0,
         status: 'active', seen: '', note: '', viewed: [], interest: [], purchased: [],
+        profileCompleteness: 'needs-attention', missingFields: [
+          ...(!input.newBuyer.city ? ['city'] : []), 'requirements', 'budget',
+        ],
       };
       CLIENTS.unshift(buyer);
     }
 
+    const primarySeller = MOCK_SELLERS.find((seller) => seller.id ===
+      MOCK_PROPERTY_SELLERS.find((row) => row.propertyId === prop.id && row.isPrimary)?.sellerId);
     const deal: Deal = {
-      id: `deal-${Date.now()}`,
+      id: mockId('deal'),
       propId: prop.id, prop: `${prop.area} ${prop.type.toLowerCase().includes('plot') ? 'plot' : 'site'}`,
       propSub: `${prop.size} · ${prop.facing}`, city: prop.city, sector: prop.sector || prop.loc,
       buyerId: buyer.id, buyer: buyer.name,
-      seller: input.seller || '', sellerPhone: input.sellerPhone,
+      seller: input.seller || primarySeller?.name || '',
+      sellerId: primarySeller?.id,
+      sellerPhone: input.sellerPhone || primarySeller?.primaryPhone,
       soldPrice: input.soldPrice, brokerage: input.brokerage ?? 0, commission: input.commission ?? 0,
       commissionReceived: input.commissionReceived ?? false,
       paymentReceived: input.paymentReceived ?? 0,
@@ -299,6 +434,8 @@ class MockDealRepository implements DealRepository {
     // create the deal, and append to the buyer's purchased history.
     prop.sold = true;
     prop.published = false;
+    prop.lifecycle = 'sold';
+    prop.sale = { finalPrice: input.soldPrice, soldAt: input.saleDate, buyerId: buyer.id, dealId: deal.id };
     DEALS.unshift(deal);
     buyer.purchased = [...(buyer.purchased ?? []), prop.id];
     persistMock();
@@ -726,6 +863,8 @@ export class MockDataAdapterV2 implements DataAdapterV2 {
   readonly auth = new MockAuthRepository();
   readonly ai = new MockAiRepository();
   readonly properties = new MockPropertyRepository();
+  readonly sellers = new MockSellerRepository();
+  readonly propertyDocuments = new MockPropertyDocumentRepository();
   readonly customers = new MockCustomerRepository();
   readonly deals = new MockDealRepository();
   readonly demand = new MockDemandRepository();

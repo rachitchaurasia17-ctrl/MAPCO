@@ -128,7 +128,9 @@ describe('AbortSignal support', () => {
 
 describe('Client-safe projection (security invariant)', () => {
   const forbidden = ['phone', 'commission', 'note', 'notes', 'sold', 'published',
-    'views', 'owner', 'sellerPhone', 'internalStatus', 'team'];
+    'views', 'owner', 'seller', 'sellerId', 'sellerPhone', 'internalStatus', 'lifecycle', 'clientVisible',
+    'primaryPhone', 'alternatePhone', 'askingPrice', 'siteVisitInstructions', 'availability',
+    'sale', 'documents', 'documentStatus', 'storage', 'visibility', 'safety', 'metadata', 'team'];
 
   it('never copies forbidden fields into the buyer payload', () => {
     const safe = toClientSafeProperty(PROPERTIES[0]!, { price: true, location: true });

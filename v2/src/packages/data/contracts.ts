@@ -18,6 +18,8 @@
 
 import type {
   Property, PropertyLocationInput, Client, Deal, ClientLink, MapData, DemandSignal,
+  Seller, PropertySeller, SellerWithProperties, PropertyDocument, PropertyDocumentType,
+  PropertyDocumentVisibility, PropertyDocumentSafety,
 } from './types';
 
 /* ───────────────────────────────────────────────────────────────
@@ -202,6 +204,42 @@ export interface CustomerRepository {
   get(id: string, opts?: QueryOptions): Promise<Result<Client>>;
   /** Create or update a customer (dealer-scoped). */
   save(client: Client, opts?: QueryOptions): Promise<Result<Client>>;
+}
+
+export interface SaveSellerInput extends Omit<Seller, 'id' | 'createdAt' | 'updatedAt'> {
+  id?: string;
+}
+
+export interface AssignPropertySellerInput extends Omit<PropertySeller, 'id'> {
+  id?: string;
+}
+
+/** Dealer-private reusable sellers and their canonical property relationships. */
+export interface SellerRepository {
+  list(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<Seller>>>;
+  get(id: string, opts?: QueryOptions): Promise<Result<Seller>>;
+  getWithProperties(id: string, opts?: QueryOptions): Promise<Result<SellerWithProperties>>;
+  getForProperty(propertyId: string, opts?: QueryOptions): Promise<Result<readonly { seller: Seller; relationship: PropertySeller }[]>>;
+  save(input: SaveSellerInput, opts?: QueryOptions): Promise<Result<Seller>>;
+  assignToProperty(input: AssignPropertySellerInput, opts?: QueryOptions): Promise<Result<PropertySeller>>;
+  removeFromProperty(propertyId: string, sellerId: string, opts?: QueryOptions): Promise<Result<void>>;
+}
+
+export interface UploadPropertyDocumentInput {
+  propertyId: string;
+  title: string;
+  type: PropertyDocumentType;
+  visibility?: PropertyDocumentVisibility;
+  safety?: PropertyDocumentSafety;
+  metadata?: Readonly<Record<string, string>>;
+}
+
+/** Documents remain private records even when the property becomes sold. */
+export interface PropertyDocumentRepository {
+  listForProperty(propertyId: string, opts?: QueryOptions): Promise<Result<readonly PropertyDocument[]>>;
+  get(id: string, opts?: QueryOptions): Promise<Result<PropertyDocument>>;
+  upload(input: UploadPropertyDocumentInput, file: File, opts?: QueryOptions): Promise<Result<PropertyDocument>>;
+  remove(id: string, opts?: QueryOptions): Promise<Result<void>>;
 }
 
 /**
@@ -464,7 +502,10 @@ export interface ClientSafePayload {
  */
 export type ForbiddenClientKey =
   | 'phone' | 'commission' | 'note' | 'notes' | 'sold' | 'published'
-  | 'views' | 'owner' | 'sellerPhone' | 'internalStatus' | 'team';
+  | 'views' | 'owner' | 'seller' | 'sellerId' | 'sellerPhone' | 'internalStatus'
+  | 'primaryPhone' | 'alternatePhone' | 'askingPrice' | 'siteVisitInstructions' | 'availability'
+  | 'lifecycle' | 'clientVisible' | 'sale' | 'documents' | 'documentStatus' | 'storage'
+  | 'visibility' | 'safety' | 'metadata' | 'team';
 type _AssertNoForbidden = Extract<keyof ClientSafeProperty, ForbiddenClientKey>;
 /** Must be `never`. Enforced in tests/type-guard below. */
 export const _clientSafeHasNoForbiddenKeys: _AssertNoForbidden extends never ? true : never = true;
@@ -568,6 +609,8 @@ export interface DataAdapterV2 {
    */
   readonly ai: import('../ai/contracts').AiRepository;
   readonly properties: PropertyRepository;
+  readonly sellers: SellerRepository;
+  readonly propertyDocuments: PropertyDocumentRepository;
   readonly customers: CustomerRepository;
   readonly deals: DealRepository;
   readonly demand: DemandRepository;

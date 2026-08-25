@@ -1,5 +1,6 @@
 import type { Property, PropertyPhotoStorageRef } from './types';
 import { normalizePropertyLocation } from './property-location';
+import { canonicalPropertyLifecycle } from './property-lifecycle';
 
 export const PROPERTY_PHOTO_BUCKET = 'property-photos';
 export const PROPERTY_PHOTO_MAX_BYTES = 5 * 1024 * 1024;
@@ -41,7 +42,7 @@ export function persistentPropertyPayload(property: Property): Property {
   };
   if (location) persistent.location = location;
   else delete persistent.location;
-  return persistent;
+  return canonicalPropertyLifecycle(persistent);
 }
 
 export function propertyPhotoSelections(property: Property): string[] {

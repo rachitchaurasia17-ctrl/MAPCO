@@ -34,7 +34,11 @@ const MAX_EVENTS = 500;
 
 const sessionId = 'sess-' + Math.floor(performance.now()).toString(36) + '-' + (globalThis.crypto?.randomUUID?.().slice(0, 8) ?? 'x');
 
-let events: MeterEvent[] = load();
+// Do not hydrate dealer-private usage data while this module is being loaded.
+// Earth calls `rehydrateUsageMeter` only after its protected-route boundary has
+// validated the current user and cleared any previous user's private caches.
+let events: MeterEvent[] = [];
+let hydrated = false;
 
 function load(): MeterEvent[] {
   try {
@@ -43,11 +47,33 @@ function load(): MeterEvent[] {
   } catch { return []; }
 }
 function persist(): void {
+  if (!hydrated) return;
   try { localStorage.setItem(KEY, JSON.stringify(events.slice(-MAX_EVENTS))); } catch { /* non-fatal */ }
+}
+
+/**
+ * Reset all module/window state, then hydrate the cache belonging to the
+ * already-validated browser identity. Calling this again is intentionally a
+ * hard identity boundary: no event from the prior in-memory owner survives.
+ */
+export function rehydrateUsageMeter(): void {
+  events = [];
+  hydrated = false;
+  if (typeof window !== 'undefined') {
+    delete (window as unknown as Record<string, unknown>).__mapcoUsage;
+  }
+  events = load();
+  hydrated = true;
+  if (typeof window !== 'undefined') {
+    (window as unknown as Record<string, unknown>).__mapcoUsage = getUsage;
+  }
 }
 
 /** Record billable Google usage. `n` defaults to 1 unit. */
 export function meter(sku: Sku, n = 1, extra: Omit<MeterEvent, 'sku' | 'n' | 'at'> = {}): void {
+  // A Google call should not occur before the route is authenticated, but fail
+  // closed if a future call site regresses and reaches the meter too early.
+  if (!hydrated) return;
   events.push({ sku, n, at: Date.now(), ...extra });
   if (events.length > MAX_EVENTS) events = events.slice(-MAX_EVENTS);
   persist();
@@ -76,8 +102,3 @@ export function getUsage(): UsageSummary {
 }
 
 export function resetUsage(): void { events = []; persist(); }
-
-/** Dev affordance: `window.__mapcoUsage()` in the console. */
-if (typeof window !== 'undefined') {
-  (window as unknown as Record<string, unknown>).__mapcoUsage = getUsage;
-}

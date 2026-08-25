@@ -19,10 +19,12 @@
 import { adapter } from '../../packages/data/adapter';
 import { requireSession } from '../../packages/data/session';
 import { formatMicroUsd, type AiArtifactKind, type AiStatus } from '../../packages/ai';
+import { SingleFlight } from '../../packages/security/single-flight';
 
 const ARTIFACT_KINDS: readonly AiArtifactKind[] = [
   'intelligence_snapshot', 'signal_set', 'weekly_report', 'marketing_suggestion',
 ];
+const decisionFlights = new SingleFlight();
 
 const esc = (value: unknown): string =>
   String(value ?? '').replace(/[&<>"']/g, (char) =>
@@ -178,13 +180,22 @@ async function render(host: HTMLElement): Promise<void> {
   });
 
   host.addEventListener('click', async (event) => {
-    const button = (event.target as HTMLElement).closest<HTMLElement>('[data-ai-decide]');
+    const button = (event.target as HTMLElement).closest<HTMLButtonElement>('[data-ai-decide]');
     if (!button) return;
     const id = button.dataset.aiId ?? '';
     const decision = button.dataset.aiDecide === 'approve' ? 'approve' : 'reject';
-    const result = await adapter.ai.decideAction(id, decision);
-    if (result.ok) void render(host);
-    else button.textContent = result.error.message;
+    await decisionFlights.run(`decision:${id}`, async () => {
+      const controls = [...host.querySelectorAll<HTMLButtonElement>('[data-ai-id]')]
+        .filter((control) => control.dataset.aiId === id);
+      controls.forEach((control) => { control.disabled = true; control.setAttribute('aria-busy', 'true'); });
+      try {
+        const result = await adapter.ai.decideAction(id, decision);
+        if (result.ok) void render(host);
+        else button.textContent = result.error.message;
+      } finally {
+        controls.forEach((control) => { control.disabled = false; control.removeAttribute('aria-busy'); });
+      }
+    });
   });
 }
 

@@ -356,7 +356,7 @@ export class AddPropertyFlow {
       price,
       photos: [this.coverPhoto, ...this.galleryPhotos]
         .filter((photo): photo is PendingPropertyPhoto => !!photo).map((photo) => photo.previewUrl),
-      published, sold: false, views: 0,
+      published, sold: false, lifecycle: published ? 'on-sale' : 'draft', views: 0,
       ...(pair ? { sectorMapId: pair.sector.id } : {}),
       ...(pair?.masterplan ? { masterplanId: pair.masterplan.id } : {}),
       ...(mapPlacement ? { mapPlacement } : {}),
@@ -418,6 +418,7 @@ export class AddPropertyFlow {
       photos: [],
       photoStorage: uploaded,
       published,
+      lifecycle: published ? 'on-sale' : 'draft',
       mapPlacement: draft.mapPlacement,
       sectorMapId: draft.sectorMapId,
       masterplanId: draft.masterplanId,

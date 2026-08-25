@@ -1,12 +1,16 @@
-/* MAPCO Marketing — weekly pack preparation engine (public API).
+/* MAPCO Marketing — public domain API.
 
-   The preparation engine is provider-neutral and deterministic. Today
+   Monthly periods are the canonical entitlement boundary. The retained
+   weekly exports below are legacy production-pack compatibility only while
+   existing history and Ops screens migrate. The preparation engine is
+   provider-neutral and deterministic. Today
    the "creative provider" is a human operator in consumer ChatGPT; a
    future API provider plugs in behind the same brief/pack contracts
    without changing planning, facts, templates, history or export. */
 
 export * from './types';
 export * from './dealer-feed';
+export * from './monthly';
 export {
   TEMPLATES, allTemplates, getTemplate, templatesFor,
   templateAssetUrl, templateFileName,

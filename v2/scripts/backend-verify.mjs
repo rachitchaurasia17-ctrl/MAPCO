@@ -1,11 +1,12 @@
 /* ═══════════════════════════════════════════════════════════════
    MAPCO V2 — backend verification (dev only, service-role)
    ---------------------------------------------------------------
-   Reads secrets from the gitignored supabase/.env. Creates demo
+   Reads secrets from the gitignored supabase/.env. Creates durable demo
    users + profiles, then verifies: login, data loading, dealer-A/
    dealer-B isolation, account states, storage signed URLs.
    Prints only PASS/FAIL — never keys, tokens, or passwords.
-   Run:  node v2/scripts/backend-verify.mjs
+   Remote run requires an out-of-band RESETTABLE_DEV:<project-ref>
+   acknowledgement. Never point this fixture bootstrap at production.
    ═══════════════════════════════════════════════════════════════ */
 import { readFileSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
@@ -19,6 +20,20 @@ const env = Object.fromEntries(
 );
 const URL = env.SUPABASE_URL, SERVICE = env.SUPABASE_SERVICE_ROLE_KEY, ANON = env.SUPABASE_ANON_KEY, PW = env.DEMO_PASSWORD;
 if (!URL || !SERVICE || !ANON || !PW) { console.error('missing env'); process.exit(1); }
+
+let target;
+try { target = new globalThis.URL(URL); } catch { console.error('invalid Supabase URL'); process.exit(2); }
+const localTarget = ['127.0.0.1', 'localhost', '::1'].includes(target.hostname);
+if (!localTarget) {
+  const ref = String(process.env.MAPCO_BACKEND_VERIFY_PROJECT_REF || '').trim();
+  const confirm = String(process.env.MAPCO_BACKEND_VERIFY_CONFIRM || '');
+  if (!/^[a-z0-9]{8,32}$/i.test(ref)
+      || target.hostname !== `${ref}.supabase.co`
+      || confirm !== `RESETTABLE_DEV:${ref}`) {
+    console.error('remote run refused: explicitly acknowledge the exact resettable development project');
+    process.exit(2);
+  }
+}
 
 const admin = createClient(URL, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
@@ -324,7 +339,8 @@ async function main() {
   }
 
   console.log(`\n=== RESULT: ${pass} passed, ${fail} failed ===`);
-  await Promise.all(USERS.map(() => 0));
+  // The named demo users/dealers are intentional reusable development
+  // fixtures. The safety latch above prevents accidental production creation.
   process.exit(fail ? 1 : 0);
 }
 

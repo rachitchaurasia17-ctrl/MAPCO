@@ -4,11 +4,13 @@
    substituted for a rejected or unavailable MAPCO-DEV request. */
 import { activeDataMode } from '../data/adapter';
 import { getSupabase } from '../data/supabase/client';
+import type { MarketingCreativeType, MarketingUsage } from './monthly';
 
 export type MarketingChannel = 'instagram' | 'facebook_page' | 'google_business' | 'whatsapp_business';
 
 export interface DealerCreative {
   readonly id: string;
+  readonly creativeType: MarketingCreativeType;
   readonly slotRef: string;
   readonly localDate: string;
   readonly status: 'ready' | 'posted';
@@ -19,7 +21,9 @@ export interface DealerCreative {
   readonly displayUrl: string;
   readonly mime?: string;
   readonly approvedAt?: string;
-  readonly publicationStates: readonly { channel: string; status: string }[];
+  readonly readyAt?: string;
+  readonly durationSeconds?: number;
+  readonly publicationStates: readonly { channel: string; status: string; publishedAt?: string }[];
 }
 
 export interface MarketingPerformanceRow {
@@ -39,6 +43,7 @@ export interface MarketingConnection {
 
 export interface DealerMarketingFeed {
   readonly dealerId: string;
+  readonly usage?: MarketingUsage;
   readonly creatives: readonly DealerCreative[];
   readonly performance: readonly MarketingPerformanceRow[];
   readonly connections: readonly MarketingConnection[];
@@ -63,14 +68,18 @@ export async function loadDealerMarketingFeed(): Promise<DealerMarketingFeed> {
     const displayUrl = text(asset.displayUrl);
     if (!text(row.id) || !displayUrl) return null;
     return {
-      id: text(row.id), slotRef: text(row.slotRef), localDate: text(row.localDate),
+      id: text(row.id), creativeType: text(row.creativeType) === 'reel' ? 'reel' : 'post',
+      slotRef: text(row.slotRef), localDate: text(row.localDate),
       status: text(row.status) === 'posted' ? 'posted' : 'ready', propertyId: text(row.propertyId),
       propertyLabel: text(row.propertyLabel) || text(row.propertyId), caption: text(row.caption) || undefined,
       channels: list(row.channels).map(text).filter((channel): channel is MarketingChannel =>
         channel === 'instagram' || channel === 'facebook_page' || channel === 'google_business' || channel === 'whatsapp_business'),
       displayUrl, mime: text(asset.mime) || undefined, approvedAt: text(row.approvedAt) || undefined,
+      readyAt: text(row.readyAt) || undefined,
+      durationSeconds: typeof asset.durationSeconds === 'number' ? asset.durationSeconds : undefined,
       publicationStates: list(row.publicationStates).map((state) => ({
         channel: text(record(state).channel), status: text(record(state).status),
+        publishedAt: text(record(state).publishedAt) || undefined,
       })).filter((state) => state.channel && state.status),
     };
   }).filter((creative): creative is DealerCreative => creative !== null);
@@ -88,5 +97,18 @@ export async function loadDealerMarketingFeed(): Promise<DealerMarketingFeed> {
     return { provider: text(row.provider) as MarketingChannel, displayName: text(row.displayName) || undefined,
       status: text(row.status), connectedAt: text(row.connectedAt) || undefined };
   }).filter((connection) => connection.provider);
-  return { dealerId: text(envelope.dealerId), creatives, performance, connections };
+  const usageRow = record(envelope.usage);
+  const usage = typeof usageRow.postsEntitled === 'number' && typeof usageRow.reelsEntitled === 'number'
+    ? {
+      postsEntitled: usageRow.postsEntitled,
+      postsUsed: Number(usageRow.postsUsed) || 0,
+      postsRemaining: Number(usageRow.postsRemaining) || 0,
+      reelsEntitled: usageRow.reelsEntitled,
+      reelsUsed: Number(usageRow.reelsUsed) || 0,
+      reelsRemaining: Number(usageRow.reelsRemaining) || 0,
+      periodStart: text(usageRow.periodStart),
+      periodEnd: text(usageRow.periodEnd),
+    } satisfies MarketingUsage
+    : undefined;
+  return { dealerId: text(envelope.dealerId), ...(usage ? { usage } : {}), creatives, performance, connections };
 }

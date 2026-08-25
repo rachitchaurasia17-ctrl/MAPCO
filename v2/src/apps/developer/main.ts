@@ -2,14 +2,12 @@
    MAPCO V2 — Developer Control
    Platform admin page (shell chrome + placeholder content)
    ═══════════════════════════════════════════════════════════════ */
-import { getProfile } from '../../packages/auth/auth';
+import '../../packages/ui/tokens.css';
+import '../../packages/ui/reset.css';
+import { hasPlatformAdminAccess, requireSession } from '../../packages/data/session';
 
-function initDeveloperControl(container: HTMLElement) {
-  const profile = getProfile();
-
-  // Mock Session Check
-  if (!profile.isPlatformAdmin) {
-    container.innerHTML = `
+function renderAccessDenied(container: HTMLElement): void {
+  container.innerHTML = `
       <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;background:#f5efff;background-image:var(--pm-bloom);font-family:var(--pm-font-sans)">
         <i class="ph-fill ph-lock-key" style="font-size:48px;color:#c2185b;margin-bottom:16px"></i>
         <h1 style="font-size:24px;font-weight:800;color:#1f1a12">Access Denied</h1>
@@ -17,18 +15,9 @@ function initDeveloperControl(container: HTMLElement) {
         <a href="/" style="margin-top:24px;padding:10px 20px;background:#5b32c4;color:#fff;border-radius:12px;text-decoration:none;font-weight:700" onmouseenter="this.style.background='#4a26a8'" onmouseleave="this.style.background='#5b32c4'">Return to Home</a>
       </div>
     `;
-    return;
-  }
+}
 
-  // Include reset + tokens globally
-  const head = document.head;
-  if (!head.querySelector('#pm-styles')) {
-    const style = document.createElement('style');
-    style.id = 'pm-styles';
-    style.innerHTML = `@import '/src/packages/ui/reset.css'; @import '/src/packages/ui/tokens.css';`;
-    head.appendChild(style);
-  }
-
+function initDeveloperControl(container: HTMLElement): void {
   container.innerHTML = `
 <style>
   .pm-dev{display:flex;flex-direction:column;height:100vh;min-height:0;width:100%;overflow:hidden;background:#f5efff;background-image:var(--pm-bloom);background-attachment:fixed}
@@ -114,5 +103,11 @@ function initDeveloperControl(container: HTMLElement) {
 
 const app = document.getElementById('app');
 if (app) {
-  initDeveloperControl(app);
+  void requireSession(app, async () => {
+    if (!await hasPlatformAdminAccess()) {
+      renderAccessDenied(app);
+      return;
+    }
+    initDeveloperControl(app);
+  });
 }

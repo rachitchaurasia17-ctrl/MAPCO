@@ -19,6 +19,30 @@ import type { Dimensions } from './registry';
 import { CostAwareLruCache } from '../performance';
 
 const SVGNS = 'http://www.w3.org/2000/svg';
+const MAX_PATH_DATA_LENGTH = 250_000;
+const MAX_ITEM_ID_LENGTH = 256;
+const SVG_PATH_DATA_RE = /^[\sMmZzLlHhVvCcSsQqTtAaEe0-9+.,-]+$/;
+
+function svgElement<K extends keyof SVGElementTagNameMap>(
+  tag: K,
+  attrs: Record<string, string | number> = {},
+): SVGElementTagNameMap[K] {
+  const node = document.createElementNS(SVGNS, tag);
+  for (const [name, value] of Object.entries(attrs)) node.setAttribute(name, String(value));
+  return node;
+}
+
+/** Path data is the only authored SVG attribute copied into the live document.
+ * Keep it inside the SVG path grammar and bounded before setAttribute sees it. */
+function safePathData(value: string): string | null {
+  const path = value.trim();
+  if (!path || path.length > MAX_PATH_DATA_LENGTH || !SVG_PATH_DATA_RE.test(path)) return null;
+  return path;
+}
+
+function safeItemId(value: string): string {
+  return value.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, MAX_ITEM_ID_LENGTH);
+}
 
 export type ItemKind = 'road' | 'block';
 
@@ -92,7 +116,8 @@ function cleanLabel(id: string): string {
 /** Convert a <polygon>/<polyline> points attr to a path `d` (so everything
  *  is a uniform path for the renderer). */
 function pointsToPath(points: string, close: boolean): string {
-  const nums = points.trim().split(/[\s,]+/).map(Number).filter((n) => !Number.isNaN(n));
+  if (points.length > MAX_PATH_DATA_LENGTH) return '';
+  const nums = points.trim().split(/[\s,]+/).map(Number).filter(Number.isFinite);
   let d = '';
   for (let i = 0; i + 1 < nums.length; i += 2) d += (i === 0 ? 'M' : 'L') + nums[i] + ' ' + nums[i + 1];
   return d + (close ? 'Z' : '');
@@ -114,15 +139,16 @@ function parseSvgResource(text: string): ParsedSvgResource | null {
   const items: HighlightItem[] = [];
   const seen = new Set<string>();
   authored.querySelectorAll<SVGElement>('path[d], polygon[points], polyline[points]').forEach((shape) => {
-    const id = shape.getAttribute('id') || '';
+    const id = safeItemId(shape.getAttribute('id') || '');
     let groupId = '';
     for (let p = shape.parentElement; p; p = p.parentElement) {
-      const gid = p.getAttribute?.('id');
+      const gid = safeItemId(p.getAttribute?.('id') || '');
       if (gid && !CONTAINER_RE.test(gid)) { groupId = gid; break; }
     }
     if (SKIP_RE.test(id) || SKIP_RE.test(groupId) || EXCLUDE_RE.test(id) || EXCLUDE_RE.test(groupId)) return;
     const tag = shape.tagName.toLowerCase();
-    const d = tag === 'path' ? (shape.getAttribute('d') || '') : pointsToPath(shape.getAttribute('points') || '', tag === 'polygon');
+    const rawPath = tag === 'path' ? (shape.getAttribute('d') || '') : pointsToPath(shape.getAttribute('points') || '', tag === 'polygon');
+    const d = safePathData(rawPath);
     if (!d) return;
     const isRoad = ROAD_RE.test(groupId) || ROAD_RE.test(id) || tag === 'polyline'
       || (tag === 'path' && !/z\s*$/i.test(d.trim()));
@@ -176,41 +202,7 @@ export async function loadSvgOverlay(
 ): Promise<SvgHighlightHandle | null> {
   const parsed = await parsedSvg(src, opts);
   if (!parsed) return null;
-  // A detached empty source keeps the legacy extraction loop inert; the
-  // immutable parsed item blueprint below is reused without another parse.
-
-  // ── extract items from the authored geometry ──────────────────
-  // A shape's kind: 'road' if it (or an ancestor group) is a road group OR the
-  // shape is an unclosed path; otherwise 'block' (extrudable sector/zone/block).
   const items: HighlightItem[] = [...parsed.items];
-  const seen = new Set<string>();
-  const shapeEls: SVGElement[] = [];
-  shapeEls.forEach((shape) => {
-    const id = shape.getAttribute('id') || '';
-    // an ancestor <g id> gives context (roads vs sectors)
-    let groupId = '';
-    for (let p = shape.parentElement; p; p = p.parentElement) {
-      const gid = p.getAttribute?.('id');
-      if (gid && !CONTAINER_RE.test(gid)) { groupId = gid; break; }
-    }
-    if (SKIP_RE.test(id) || SKIP_RE.test(groupId)) return;
-    // Skip whole-zone / full-map / alignment-guide shapes so a click never
-    // highlights an entire zone unnecessarily (item 4). Named blocks remain.
-    if (EXCLUDE_RE.test(id) || EXCLUDE_RE.test(groupId)) return;
-    const tag = shape.tagName.toLowerCase();
-    let d = '';
-    if (tag === 'path') d = shape.getAttribute('d') || '';
-    else d = pointsToPath(shape.getAttribute('points') || '', tag === 'polygon');
-    if (!d) return;
-    const isRoad = ROAD_RE.test(groupId) || ROAD_RE.test(id) || (tag === 'polyline') ||
-      (tag === 'path' && !/z\s*$/i.test(d.trim())); // open path → road-like
-    // Prefer the shape id; fall back to a stable synthetic id.
-    const key = id || `${groupId || tag}-${items.length}`;
-    if (seen.has(key)) return;
-    seen.add(key);
-    const labelBase = id && !GENERIC_ID_RE.test(id.trim()) ? id : (groupId ? `${cleanLabel(groupId)} ${items.length + 1}` : `Shape ${items.length + 1}`);
-    items.push({ id: key, kind: isRoad ? 'road' : 'block', label: cleanLabel(labelBase), d });
-  });
 
   // ── build the render target ───────────────────────────────────
   const el = document.createElementNS(SVGNS, 'svg');
@@ -225,22 +217,27 @@ export async function loadSvgOverlay(
   const s = viewBox.h / 1036;
   const lift = Math.max(12, Math.round(18 * s));
 
-  el.innerHTML = `
-    <defs>
-      <linearGradient id="pmgrad0" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbd38d" stop-opacity=".55"/><stop offset="1" stop-color="#F59E0B" stop-opacity=".78"/></linearGradient>
-    </defs>
-    <g data-dim style="pointer-events:none"></g>
-    <g data-under style="pointer-events:none"></g>
-    <g data-mid style="pointer-events:none"></g>
-    <g data-top style="pointer-events:none"></g>
-    <g data-labels style="pointer-events:none"></g>
-    <g data-hits></g>`;
-  const dimG = el.querySelector('[data-dim]') as SVGGElement;
-  const underG = el.querySelector('[data-under]') as SVGGElement;
-  const midG = el.querySelector('[data-mid]') as SVGGElement;
-  const topG = el.querySelector('[data-top]') as SVGGElement;
-  const labelsG = el.querySelector('[data-labels]') as SVGGElement;
-  const hitsG = el.querySelector('[data-hits]') as SVGGElement;
+  // Build the live SVG with DOM APIs. Authored identifiers/path data are never
+  // re-parsed as markup, so quotes in an uploaded SVG cannot become attributes.
+  const defs = svgElement('defs');
+  const gradient = svgElement('linearGradient', { id: 'pmgrad0', x1: 0, y1: 0, x2: 0, y2: 1 });
+  gradient.append(
+    svgElement('stop', { offset: 0, 'stop-color': '#fbd38d', 'stop-opacity': '.55' }),
+    svgElement('stop', { offset: 1, 'stop-color': '#F59E0B', 'stop-opacity': '.78' }),
+  );
+  defs.append(gradient);
+  const layer = (name: string, pointerEvents = 'none') => {
+    const group = svgElement('g', { [`data-${name}`]: '' });
+    group.style.pointerEvents = pointerEvents;
+    return group;
+  };
+  const dimG = layer('dim');
+  const underG = layer('under');
+  const midG = layer('mid');
+  const topG = layer('top');
+  const labelsG = layer('labels');
+  const hitsG = layer('hits', 'auto');
+  el.append(defs, dimG, underG, midG, topG, labelsG, hitsG);
 
   const byId = new Map(items.map((it) => [it.id, it]));
   const selected = new Set<string>();
@@ -252,26 +249,31 @@ export async function loadSvgOverlay(
   const fs = Math.max(11, Math.round(viewBox.h / 60));
 
   function renderLabels(): void {
-    let txt = '';
+    const labels: SVGTextElement[] = [];
+    const hitShapes = Array.from(hitsG.querySelectorAll<SVGGraphicsElement>('[data-hit]'));
     for (const [id, name] of Object.entries(labelMap)) {
       if (!name) continue;
-      const shape = el.querySelector(`[data-hit="${id.replace(/["\\]/g, '\\$&')}"]`) as SVGGraphicsElement | null
-        ?? el.querySelector(`[id="${id.replace(/["\\]/g, '\\$&')}"]`) as SVGGraphicsElement | null;
+      const shape = hitShapes.find((candidate) => candidate.getAttribute('data-hit') === id) ?? null;
       if (!shape || typeof shape.getBBox !== 'function') continue;
       let b; try { b = shape.getBBox(); } catch { continue; }
       if (!b.width || !b.height) continue;
       const cx = b.x + b.width / 2, cy = b.y + b.height / 2;
-      const safe = name.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]!));
-      txt += `<text x="${cx.toFixed(1)}" y="${cy.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" style="font-family:'Hanken Grotesk',system-ui,sans-serif;font-weight:800;font-size:${fs}px;fill:#fffdf7;paint-order:stroke;stroke:#1a1206;stroke-width:${(fs / 4).toFixed(1)}px;stroke-linejoin:round">${safe}</text>`;
+      const text = svgElement('text', {
+        x: cx.toFixed(1),
+        y: cy.toFixed(1),
+        'text-anchor': 'middle',
+        'dominant-baseline': 'middle',
+      });
+      text.style.cssText = `font-family:'Hanken Grotesk',system-ui,sans-serif;font-weight:800;font-size:${fs}px;fill:#fffdf7;paint-order:stroke;stroke:#1a1206;stroke-width:${(fs / 4).toFixed(1)}px;stroke-linejoin:round`;
+      text.textContent = String(name).slice(0, 256);
+      labels.push(text);
     }
-    labelsG.innerHTML = txt;
+    labelsG.replaceChildren(...labels);
   }
 
   function renderHighlights(): void {
-    let maskCuts = '';
-    let under = '';
-    let mid = '';
-    let top = '';
+    const mid: SVGPathElement[] = [];
+    const top: SVGPathElement[] = [];
     let blockIdx = 0;   // each block gets a distinct bright colour
     let roadIdx = 0;
 
@@ -285,8 +287,15 @@ export async function loadSvgOverlay(
       const d = it.d;
       if (it.kind === 'road') {
         const rc = ROAD_PALETTE[roadIdx++ % ROAD_PALETTE.length];
-        mid += `<path d="${d}" fill="none" stroke="${rgba(rc, .85)}" stroke-width="${11 * s}" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 0 ${7 * s}px ${rgba(rc, .9)})"/>`;
-        mid += `<path d="${d}" fill="none" stroke="rgba(240,255,255,.98)" stroke-width="${3.2 * s}" stroke-linecap="round" stroke-linejoin="round"/>`;
+        const glow = svgElement('path', {
+          d, fill: 'none', stroke: rgba(rc, .85), 'stroke-width': 11 * s,
+          'stroke-linecap': 'round', 'stroke-linejoin': 'round',
+        });
+        glow.style.filter = `drop-shadow(0 0 ${7 * s}px ${rgba(rc, .9)})`;
+        mid.push(glow, svgElement('path', {
+          d, fill: 'none', stroke: 'rgba(240,255,255,.98)', 'stroke-width': 3.2 * s,
+          'stroke-linecap': 'round', 'stroke-linejoin': 'round',
+        }));
       } else {
         const col = BLOCK_PALETTE[blockIdx++ % BLOCK_PALETTE.length];
         const topFace = lighten(col, 0.30);
@@ -294,42 +303,62 @@ export async function loadSvgOverlay(
         // 3 cheap extrusion steps (was 6) — no blurred ground shadow.
         for (let k = 0; k <= 3; k++) {
           const t = k / 3;
-          mid += `<path d="${d}" fill="${darken(col, 0.58 - 0.42 * t)}" transform="translate(0,${(-lift * t).toFixed(1)})"/>`;
+          mid.push(svgElement('path', {
+            d,
+            fill: darken(col, 0.58 - 0.42 * t),
+            transform: `translate(0,${(-lift * t).toFixed(1)})`,
+          }));
         }
-        top += `<path d="${d}" fill="${topFace}" transform="translate(0,${-lift})" style="filter:drop-shadow(0 ${3 * s}px ${3 * s}px rgba(10,6,20,.35))"/>`;
-        top += `<path d="${d}" fill="none" stroke="${topEdge}" stroke-width="${2.4 * s}" stroke-linejoin="round" vector-effect="non-scaling-stroke" transform="translate(0,${-lift})" style="filter:drop-shadow(0 0 ${5 * s}px ${rgba(col, .85)})"/>`;
+        const face = svgElement('path', { d, fill: topFace, transform: `translate(0,${-lift})` });
+        face.style.filter = `drop-shadow(0 ${3 * s}px ${3 * s}px rgba(10,6,20,.35))`;
+        const edge = svgElement('path', {
+          d, fill: 'none', stroke: topEdge, 'stroke-width': 2.4 * s,
+          'stroke-linejoin': 'round', 'vector-effect': 'non-scaling-stroke', transform: `translate(0,${-lift})`,
+        });
+        edge.style.filter = `drop-shadow(0 0 ${5 * s}px ${rgba(col, .85)})`;
+        top.push(face, edge);
       }
     }
 
-    // No dimming: the base map stays at full brightness. Highlighted roads/blocks
-    // simply glow and extrude on top (maskCuts kept only so the code path is clear).
-    void maskCuts;
-    dimG.innerHTML = '';
-    underG.innerHTML = under;
-    midG.innerHTML = mid;
-    topG.innerHTML = top;
+    // No dimming: the base map stays at full brightness. Highlights layer on top.
+    dimG.replaceChildren();
+    underG.replaceChildren();
+    midG.replaceChildren(...mid);
+    topG.replaceChildren(...top);
   }
 
   function renderHits(): void {
-    if (!interactive) { hitsG.innerHTML = ''; return; }
+    if (!interactive) { hitsG.replaceChildren(); renderLabels(); return; }
     // Roads are thin, blocks are large areas. A generous, transparent road
     // stroke sits ON TOP so roads are easy to hit; blocks fill everything else.
     // The winner is still confirmed geometrically in onHitClick (ROAD-priority):
     // if the pointer is on/near a road stroke the road wins, otherwise the block.
-    let blockHits = '';
-    let roadHits = '';
+    const blockHits: SVGPathElement[] = [];
+    const roadHits: SVGPathElement[] = [];
     for (const it of items) {
       if (it.kind === 'road') {
-        roadHits += `<path d="${it.d}" fill="none" stroke="rgba(0,0,0,0)" stroke-width="${36 * s}" stroke-linecap="round" stroke-linejoin="round" style="cursor:pointer;pointer-events:stroke" data-hit="${it.id}"/>`;
+        const path = svgElement('path', {
+          d: it.d, fill: 'none', stroke: 'rgba(0,0,0,0)', 'stroke-width': 36 * s,
+          'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'data-hit': it.id,
+        });
+        path.style.cssText = 'cursor:pointer;pointer-events:stroke';
+        roadHits.push(path);
       } else {
         // shift the hit up by the lift so it covers the extruded top face
-        blockHits += `<path d="${it.d}" fill="rgba(0,0,0,0)" transform="translate(0,${-lift})" style="cursor:pointer;pointer-events:fill" data-hit="${it.id}"/>`;
-        blockHits += `<path d="${it.d}" fill="rgba(0,0,0,0)" style="cursor:pointer;pointer-events:fill" data-hit="${it.id}"/>`;
+        for (const transform of [`translate(0,${-lift})`, '']) {
+          const path = svgElement('path', {
+            d: it.d, fill: 'rgba(0,0,0,0)', 'data-hit': it.id,
+            ...(transform ? { transform } : {}),
+          });
+          path.style.cssText = 'cursor:pointer;pointer-events:fill';
+          blockHits.push(path);
+        }
       }
     }
     // Blocks first, roads LAST → road strokes paint on top and win the tap.
-    hitsG.innerHTML = blockHits + roadHits;
+    hitsG.replaceChildren(...blockHits, ...roadHits);
     hitsG.style.pointerEvents = 'auto';
+    renderLabels();
   }
 
   /** Resolve which shape a tap selects. ROADS take priority: if the pointer is

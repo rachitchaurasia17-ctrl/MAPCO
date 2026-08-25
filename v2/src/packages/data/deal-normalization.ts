@@ -82,6 +82,7 @@ export function normalizeCompletedDeal(id: string, payload: UnknownRecord): Deal
   const nestedSeller = record(payload.seller);
   const seller = text(payload, 'seller') || (nestedSeller ? text(nestedSeller, 'name') : '');
   const sellerPhone = text(payload, 'sellerPhone') || (nestedSeller ? text(nestedSeller, 'phone') : '');
+  const sellerId = text(payload, 'sellerId');
 
   return {
     id,
@@ -93,6 +94,7 @@ export function normalizeCompletedDeal(id: string, payload: UnknownRecord): Deal
     buyerId: text(payload, 'buyerId', 'clientId'),
     buyer: text(payload, 'buyer', 'client'),
     seller,
+    ...(sellerId ? { sellerId } : {}),
     ...(sellerPhone ? { sellerPhone } : {}),
     soldPrice: amount(payload, 'soldPrice', 'value'),
     brokerage: amount(payload, 'brokerage'),

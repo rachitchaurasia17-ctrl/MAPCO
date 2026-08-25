@@ -22,9 +22,12 @@ import {
 /** An approved creative ready to enter the publishing pipeline. */
 export interface ApprovedCreativeInput {
   readonly dealerId: string;
-  readonly weekId: string;
+  /** Canonical monthly period. `weekId` is accepted for legacy history. */
+  readonly periodId?: string;
+  readonly weekId?: string;
   readonly slotRef: string;
   readonly creativeAssetId: string;
+  readonly creativeType?: 'post' | 'reel';
   /** Only 'approved' | 'ready' may produce schedules. */
   readonly slotStatus: string;
   readonly localDate: string;
@@ -48,7 +51,8 @@ export interface ScheduleDecision {
 const APPROVED_STATUSES = ['approved', 'ready'];
 
 /** The action a channel uses for a still-image creative. */
-export function defaultActionFor(channel: ChannelId): PublishAction {
+export function defaultActionFor(channel: ChannelId, creativeType: 'post' | 'reel' = 'post'): PublishAction {
+  if (creativeType === 'reel' && (channel === 'instagram' || channel === 'facebook_page')) return 'reel';
   switch (channel) {
     case 'google_business': return 'local_post';
     case 'whatsapp_business': return 'status_broadcast';
@@ -81,7 +85,7 @@ export function planPublications(
     const capability = context.capabilities.find((c) => c.channel === channel);
     const connection = context.connections.find(
       (c) => c.channel === channel && c.dealerId === creative.dealerId);
-    const action = defaultActionFor(channel);
+    const action = defaultActionFor(channel, creative.creativeType);
 
     if (!setting.enabled) {
       decisions.push({ channel, created: false, reason: 'Channel is switched off for this dealer.' });
@@ -107,7 +111,12 @@ export function planPublications(
       continue;
     }
 
-    const key = publicationKey(creative.dealerId, creative.slotRef, channel, creative.weekId);
+    const productionPeriodId = creative.periodId ?? creative.weekId;
+    if (!productionPeriodId) {
+      decisions.push({ channel, created: false, reason: 'No production period is attached to this creative.' });
+      continue;
+    }
+    const key = publicationKey(creative.dealerId, creative.slotRef, channel, productionPeriodId);
     // Invariant 2: never create a second schedule for the same identity.
     if (context.existing.some((e) => e.idempotencyKey === key)) {
       decisions.push({ channel, created: false, reason: 'Already scheduled.' });

@@ -13,31 +13,76 @@ import { publishResourceInvalidation } from '../performance';
 
 export interface DealerSession { email: string; userId: string; }
 
+const PRIVATE_CACHE_OWNER_KEY = 'mapco.security.privateCacheOwner.v1';
+const PRIVATE_CACHE_PREFIXES = ['mapco.earth.', 'mapco.marketing.', 'mapco.ops.'];
+
+/** Remove dealer-sensitive browser caches without touching Supabase's own
+ * session keys or harmless UI preferences. */
+export function clearPrivateBrowserState(): void {
+  try {
+    for (const key of Object.keys(localStorage)) {
+      if (key === PRIVATE_CACHE_OWNER_KEY
+          || PRIVATE_CACHE_PREFIXES.some((prefix) => key.startsWith(prefix))) {
+        localStorage.removeItem(key);
+      }
+    }
+    sessionStorage.removeItem('token');
+    localStorage.removeItem('token');
+    delete (window as Window & { __mapcoUsage?: unknown }).__mapcoUsage;
+  } catch {
+    // Private mode/storage denial must not prevent authentication or logout.
+  }
+}
+
+function bindPrivateBrowserState(userId: string): void {
+  try {
+    const previous = localStorage.getItem(PRIVATE_CACHE_OWNER_KEY);
+    // `null` also clears pre-Phase-1 unowned caches on the first validated load.
+    if (previous !== userId) clearPrivateBrowserState();
+    localStorage.setItem(PRIVATE_CACHE_OWNER_KEY, userId);
+  } catch { /* storage is optional */ }
+}
+
+/**
+ * Return the current identity only after Supabase Auth has verified the access
+ * token with its `/user` endpoint. A value found in browser storage is never
+ * sufficient to cross a protected-route boundary.
+ */
 export async function getSession(): Promise<DealerSession | null> {
-  const c = await getSupabase();
-  if (!c) return null;
-  const { data } = await c.auth.getSession();
-  const s = data.session;
-  return s ? { email: s.user.email ?? '', userId: s.user.id } : null;
+  try {
+    const c = await getSupabase();
+    if (!c) return null;
+    const { data, error } = await c.auth.getUser();
+    if (error || !data.user) return null;
+    bindPrivateBrowserState(data.user.id);
+    return { email: data.user.email ?? '', userId: data.user.id };
+  } catch {
+    // Network, configuration, and malformed-session failures all deny access.
+    return null;
+  }
 }
 
 export async function signIn(email: string, password: string): Promise<{ ok: boolean; error?: string }> {
   const c = await getSupabase();
   if (!c) return { ok: false, error: 'Backend not configured' };
   const { error } = await c.auth.signInWithPassword({ email: email.trim(), password });
-  if (!error) publishResourceInvalidation({ entity: 'dealer-session', id: 'signed-in' });
+  if (!error) {
+    clearPrivateBrowserState();
+    publishResourceInvalidation({ entity: 'dealer-session', id: 'signed-in' });
+  }
   return error ? { ok: false, error: error.message } : { ok: true };
 }
 
 export async function signOut(): Promise<void> {
   const c = await getSupabase();
+  clearPrivateBrowserState();
   publishResourceInvalidation({ entity: 'dealer-session', id: 'signed-out' });
   if (c) await c.auth.signOut();
   location.reload();
 }
 
 /** Renders a login card into `mount`. Calls onReady() when signed in. */
-function renderLogin(mount: HTMLElement, onReady: () => void): void {
+function renderLogin(mount: HTMLElement, onReady: () => void | Promise<void>): void {
   mount.innerHTML = `
 <div style="position:fixed;inset:0;display:grid;place-items:center;padding:24px;background:#e7ddfb;background-image:radial-gradient(64% 52% at -2% -4%,rgba(123,78,224,.5),transparent 64%),radial-gradient(72% 62% at 100% 100%,rgba(255,201,60,.32),transparent 64%);font-family:var(--pm-font-ui)">
   <div style="width:100%;max-width:400px;background:#fffaf0;border:1px solid #ecdca6;border-radius:24px;padding:32px 30px;box-shadow:0 30px 60px -24px rgba(40,30,10,.4)">
@@ -60,51 +105,67 @@ function renderLogin(mount: HTMLElement, onReady: () => void): void {
   const form = mount.querySelector<HTMLFormElement>('#pm-login')!;
   const errEl = mount.querySelector<HTMLElement>('#pm-login-err')!;
   const btn = mount.querySelector<HTMLButtonElement>('#pm-login-btn')!;
+  let submitting = false;
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (submitting) return;
+    submitting = true;
     const email = (mount.querySelector<HTMLInputElement>('#pm-email')!).value;
     const password = (mount.querySelector<HTMLInputElement>('#pm-pass')!).value;
     errEl.style.display = 'none';
     btn.disabled = true; btn.textContent = 'Signing in…';
-    const res = await signIn(email, password);
-    // Reload so data calls run on a clean page load where the session is simply
-    // read from storage — the same pattern the (working) presentation uses.
-    // Calling adapter methods in the same tick as signIn/getSession deadlocks
-    // supabase-js's auth lock and leaves dealer pages stuck on "Loading…".
+    const res = await signIn(email, password).catch(() => ({ ok: false, error: 'Sign in failed' }));
+    // Reload so every data adapter starts with the newly persisted session.
     if (res.ok) { location.reload(); return; }
     errEl.textContent = res.error ?? 'Sign in failed'; errEl.style.display = 'block';
+    submitting = false;
     btn.disabled = false; btn.textContent = 'Sign in';
   });
   mount.querySelector<HTMLInputElement>('#pm-email')!.focus();
 }
 
-/** supabase-js persists the session under sb-<ref>-auth-token. Read it directly
- *  (no getSession() auth call) so the gate never touches the auth lock. */
-function persistedSessionValid(): boolean {
+/** Server-authoritative platform-admin check. Never trusts profile/UI flags. */
+export async function hasPlatformAdminAccess(): Promise<boolean> {
   try {
-    const env = (import.meta as { env?: Record<string, string | undefined> }).env ?? {};
-    const ref = (env.VITE_SUPABASE_URL ?? '').match(/https:\/\/([a-z0-9-]+)\.supabase\.co/)?.[1];
-    if (!ref) return false;
-    const raw = localStorage.getItem(`sb-${ref}-auth-token`);
-    if (!raw) return false;
-    const s = JSON.parse(raw);
-    return !!s?.access_token && (!s.expires_at || s.expires_at * 1000 > Date.now() + 5000);
-  } catch { return false; }
+    if (activeDataMode() === 'mock') return false;
+    const c = await getSupabase();
+    if (!c) return false;
+    const { data, error } = await c.rpc('plotmap_is_platform_admin');
+    return !error && data === true;
+  } catch {
+    return false;
+  }
 }
 
 /** Gate protected routes: in supabase mode, require a session first.
  *  Visiting any dealer route with ?signout signs out and shows the login. */
-export async function requireSession(mount: HTMLElement, onReady: () => void): Promise<void> {
-  if (activeDataMode() === 'mock') { onReady(); return; }
+export async function requireSession(mount: HTMLElement, onReady: () => void | Promise<void>): Promise<void> {
+  if (activeDataMode() === 'mock') { await onReady(); return; }
   if (new URLSearchParams(location.search).has('signout')) {
     const c = await getSupabase();
-    if (c) await c.auth.signOut();
+    clearPrivateBrowserState();
+    if (c) await c.auth.signOut({ scope: 'local' }).catch(() => undefined);
     history.replaceState(null, '', location.pathname);
     renderLogin(mount, onReady);
     return;
   }
-  // Gate on the persisted token only — do NOT call getSession() here; it would
-  // poison supabase-js's auth lock and hang the page's first data calls.
-  if (persistedSessionValid()) { onReady(); return; }
-  renderLogin(mount, onReady);
+  const session = await getSession();
+  if (!session) {
+    renderLogin(mount, onReady);
+    return;
+  }
+
+  // If another tab signs out, immediately put this protected surface back
+  // behind the gate. Database RLS remains the final authorization boundary.
+  const c = await getSupabase();
+  const subscription = c?.auth.onAuthStateChange((event) => {
+    if (event === 'SIGNED_OUT') {
+      clearPrivateBrowserState();
+      renderLogin(mount, onReady);
+    }
+  }).data.subscription;
+  if (subscription) {
+    window.addEventListener('pagehide', () => subscription.unsubscribe(), { once: true });
+  }
+  await onReady();
 }

@@ -198,6 +198,7 @@ export interface CanonicalCreative {
   readonly assetId: string;
   readonly dealerId: string;
   readonly slotRef: string;
+  readonly creativeType?: 'post' | 'reel';
   readonly bucket: string;
   readonly path: string;
   readonly mime: string;
@@ -355,5 +356,5 @@ export function backoffSeconds(attempt: number): number {
 
 /** Deterministic idempotency identity for one (dealer, slot, channel). */
 export const publicationKey = (
-  dealerId: string, slotRef: string, channel: ChannelId, weekId: string,
-): string => `${dealerId}::${weekId}::${slotRef}::${channel}`;
+  dealerId: string, slotRef: string, channel: ChannelId, productionPeriodId: string,
+): string => `${dealerId}::${productionPeriodId}::${slotRef}::${channel}`;

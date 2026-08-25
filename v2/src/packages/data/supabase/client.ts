@@ -60,13 +60,6 @@ export async function getSupabase(): Promise<SupabaseClient | null> {
       createClient(env.url, env.anonKey, {
         auth: {
           persistSession: true, autoRefreshToken: true, detectSessionInUrl: false,
-          // Bypass the navigator.locks coordinator. Its Web-Locks default can
-          // deadlock in a single-page app when several data calls fire while the
-          // auth token is being read (symptom: .from()/.rpc() hang forever with
-          // NO network request and NO error — dealer pages stuck on "Loading…").
-          // We only ever run one client instance, so cross-tab lock coordination
-          // is unnecessary; run the callback directly.
-          lock: async <R>(_name: string, _acquireTimeout: number, fn: () => Promise<R>): Promise<R> => fn(),
         },
         global: { headers: { 'x-mapco-client': 'v2-web' } },
       }),

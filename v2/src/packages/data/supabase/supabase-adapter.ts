@@ -16,6 +16,8 @@ import {
   type DataAdapterV2,
   type AuthRepository, type ActivationState, type AccountState,
   type PropertyRepository, type CustomerRepository, type DealRepository, type RecordSaleInput,
+  type SellerRepository, type SaveSellerInput, type AssignPropertySellerInput,
+  type PropertyDocumentRepository, type UploadPropertyDocumentInput,
   type DemandRepository, type DemandRecord, type DemandDraft, type DemandMatch,
   type MapRepository, type PresentationRepository, type PresentationState, type PresentationProperty,
   type PresentationEventsRepository, type PresentationEvent,
@@ -34,6 +36,10 @@ import type {
   ClientLink,
   MapData,
   DemandSignal,
+  Seller,
+  PropertySeller,
+  SellerWithProperties,
+  PropertyDocument,
 } from '../types';
 import {
   PROPERTY_PHOTO_BUCKET,
@@ -50,6 +56,12 @@ import {
   propertyLocationValidationError,
 } from '../property-location';
 import { SupabaseAiRepository } from './ai-repository';
+import { canonicalPropertyLifecycle, propertyLifecycleValidationError } from '../property-lifecycle';
+import {
+  PROPERTY_DOCUMENT_BUCKET,
+  propertyDocumentObjectPath,
+  validatePropertyDocument,
+} from '../property-documents';
 
 const DEFAULT_LIMIT = 12;
 const MAX_LIMIT = 50;
@@ -77,6 +89,19 @@ async function client(): Promise<SupabaseClient> {
   const c = await getSupabase();
   if (!c) throw new Error('Supabase not configured (VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY)');
   return c;
+}
+
+async function currentDealerId(c: SupabaseClient): Promise<Result<string>> {
+  const { data: auth, error: authError } = await c.auth.getUser();
+  if (authError || !auth.user) return err('unauthorized', 'Not signed in');
+  let dealerId = String(auth.user.app_metadata?.plotmap_dealer_id ?? auth.user.app_metadata?.dealer_id ?? '').trim();
+  if (!dealerId) {
+    const { data: profile, error: profileError } = await c.from('profiles')
+      .select('dealer_id').eq('id', auth.user.id).maybeSingle();
+    if (profileError) return toErr(profileError);
+    dealerId = String((profile as { dealer_id?: string } | null)?.dealer_id ?? '').trim();
+  }
+  return dealerId ? ok(dealerId) : err('forbidden', 'Dealer membership is unavailable');
 }
 
 /* ── generic crm_records read helpers ─────────────────────────── */
@@ -166,7 +191,7 @@ class SupaProperties implements PropertyRepository {
       } catch { /* keep property data usable with a clean no-photo state */ }
     }
     return normalized.map(({ property, refs }) => ({
-      ...normalizePropertyLocationOnRead(property),
+      ...canonicalPropertyLifecycle(normalizePropertyLocationOnRead(property)),
       photos: [
         ...(property.photos ?? []).filter(isPersistentExternalPhoto),
         ...refs.flatMap((ref) => signed.get(ref.path) ?? []),
@@ -188,6 +213,8 @@ class SupaProperties implements PropertyRepository {
   async save(property: Property, o?: QueryOptions): Promise<Result<Property>> {
     const locationError = propertyLocationValidationError(property.location);
     if (locationError) return err('validation', locationError);
+    const lifecycleError = propertyLifecycleValidationError(property);
+    if (lifecycleError) return err('validation', lifecycleError);
     const id = property.id || `prop-${Date.now()}`;
     const canonical = persistentPropertyPayload({ ...property, id });
     const result = await crmUpsert<Property>('properties', id, canonical, o);
@@ -245,6 +272,196 @@ class SupaCustomers implements CustomerRepository {
   save(client: Client, o?: QueryOptions) {
     const id = client.id || `client-${Date.now()}`;
     return crmUpsert<Client>('clients', id, { ...client, id }, o);
+  }
+}
+
+interface SellerRow {
+  id: string; name: string; primary_phone: string; alternate_phone: string | null;
+  seller_type: Seller['type']; city: string | null; note: string | null;
+  created_at: string; updated_at: string;
+}
+interface PropertySellerRow {
+  id: string; property_id: string; seller_id: string; asking_price: number | string | null;
+  relationship: PropertySeller['relationship']; availability: PropertySeller['availability'];
+  last_confirmed_at: string | null; site_visit_instructions: string | null;
+  note: string | null; document_status: string | null; is_primary: boolean;
+}
+interface PropertyDocumentRow {
+  id: string; property_id: string; title: string; document_type: PropertyDocument['type'];
+  storage_bucket: 'property-documents'; storage_path: string; mime_type: string; size_bytes: number;
+  visibility: PropertyDocument['visibility']; safety: PropertyDocument['safety'];
+  metadata: Record<string, string> | null; created_at: string; updated_at: string;
+}
+
+const mapSeller = (row: SellerRow): Seller => ({
+  id: row.id, name: row.name, primaryPhone: row.primary_phone,
+  alternatePhone: row.alternate_phone ?? undefined, type: row.seller_type,
+  city: row.city ?? undefined, note: row.note ?? undefined,
+  createdAt: row.created_at, updatedAt: row.updated_at,
+});
+const mapPropertySeller = (row: PropertySellerRow): PropertySeller => ({
+  id: row.id, propertyId: row.property_id, sellerId: row.seller_id,
+  askingPrice: row.asking_price == null ? undefined : Number(row.asking_price), relationship: row.relationship,
+  availability: row.availability, lastConfirmedAt: row.last_confirmed_at ?? undefined,
+  siteVisitInstructions: row.site_visit_instructions ?? undefined, note: row.note ?? undefined,
+  documentStatus: row.document_status ?? undefined, isPrimary: row.is_primary,
+});
+const mapPropertyDocument = (row: PropertyDocumentRow): PropertyDocument => ({
+  id: row.id, propertyId: row.property_id, title: row.title, type: row.document_type,
+  storage: { bucket: row.storage_bucket, path: row.storage_path }, mimeType: row.mime_type,
+  sizeBytes: row.size_bytes, visibility: row.visibility, safety: row.safety,
+  metadata: row.metadata ?? undefined, createdAt: row.created_at, updatedAt: row.updated_at,
+});
+
+class SupaSellers implements SellerRepository {
+  async list(p?: PageParams, o?: QueryOptions): Promise<Result<Page<Seller>>> {
+    const a = aborted<Page<Seller>>(o); if (a) return a;
+    try {
+      const c = await client();
+      const limit = Math.min(p?.limit ?? DEFAULT_LIMIT, MAX_LIMIT);
+      const offset = p?.cursor ? parseInt(p.cursor, 10) || 0 : 0;
+      let query = c.from('desk_sellers').select('*', { count: 'estimated' }).order('updated_at', { ascending: false });
+      const search = p?.query?.trim().replace(/[,()%]/g, ' ');
+      if (search) query = query.or(`name.ilike.%${search}%,primary_phone.ilike.%${search}%,city.ilike.%${search}%`);
+      const { data, error, count } = await query.range(offset, offset + limit);
+      if (error) return toErr(error);
+      const rows = (data ?? []) as SellerRow[];
+      return ok({ items: rows.slice(0, limit).map(mapSeller), nextCursor: rows.length > limit ? String(offset + limit) : null, total: count ?? undefined });
+    } catch (error) { return toErr(error); }
+  }
+  async get(id: string, o?: QueryOptions): Promise<Result<Seller>> {
+    const a = aborted<Seller>(o); if (a) return a;
+    try {
+      const c = await client();
+      const { data, error } = await c.from('desk_sellers').select('*').eq('id', id).maybeSingle();
+      if (error) return toErr(error);
+      return data ? ok(mapSeller(data as SellerRow)) : err('not_found', 'Seller not found');
+    } catch (error) { return toErr(error); }
+  }
+  async getForProperty(propertyId: string, o?: QueryOptions) {
+    const a = aborted<readonly { seller: Seller; relationship: PropertySeller }[]>(o); if (a) return a;
+    try {
+      const c = await client();
+      const { data: relations, error } = await c.from('desk_property_sellers').select('*')
+        .eq('property_id', propertyId).order('is_primary', { ascending: false });
+      if (error) return toErr(error);
+      const output: { seller: Seller; relationship: PropertySeller }[] = [];
+      for (const relation of (relations ?? []) as PropertySellerRow[]) {
+        const seller = await this.get(relation.seller_id, o);
+        if (seller.ok) output.push({ seller: seller.value, relationship: mapPropertySeller(relation) });
+      }
+      return ok(output);
+    } catch (error) { return toErr(error); }
+  }
+  async getWithProperties(id: string, o?: QueryOptions): Promise<Result<SellerWithProperties>> {
+    const seller = await this.get(id, o); if (!seller.ok) return seller;
+    try {
+      const c = await client();
+      const { data, error } = await c.from('desk_property_sellers').select('*').eq('seller_id', id);
+      if (error) return toErr(error);
+      const properties: { property: Property; relationship: PropertySeller }[] = [];
+      const repo = new SupaProperties();
+      for (const relation of (data ?? []) as PropertySellerRow[]) {
+        const property = await repo.get(relation.property_id, o);
+        if (property.ok) properties.push({ property: property.value, relationship: mapPropertySeller(relation) });
+      }
+      return ok({ seller: seller.value, properties });
+    } catch (error) { return toErr(error); }
+  }
+  async save(input: SaveSellerInput, o?: QueryOptions): Promise<Result<Seller>> {
+    const a = aborted<Seller>(o); if (a) return a;
+    if (!input.name.trim() || !input.primaryPhone.trim()) return err('validation', 'Seller name and primary phone are required');
+    try {
+      const c = await client();
+      const dealer = await currentDealerId(c); if (!dealer.ok) return dealer;
+      const id = input.id || `seller-${cryptoId()}`;
+      const { data, error } = await c.from('desk_sellers').upsert({
+        id, dealer_id: dealer.value, name: input.name.trim(), primary_phone: input.primaryPhone.trim(),
+        alternate_phone: input.alternatePhone?.trim() || null, seller_type: input.type,
+        city: input.city?.trim() || null, note: input.note?.trim() || null,
+      }).select('*').single();
+      return error ? toErr(error) : ok(mapSeller(data as SellerRow));
+    } catch (error) { return toErr(error); }
+  }
+  async assignToProperty(input: AssignPropertySellerInput, o?: QueryOptions): Promise<Result<PropertySeller>> {
+    const a = aborted<PropertySeller>(o); if (a) return a;
+    if (input.askingPrice !== undefined && input.askingPrice <= 0) return err('validation', 'Asking price must be positive');
+    try {
+      const c = await client();
+      const { data, error } = await c.rpc('plotmap_assign_property_seller', { p_payload: input });
+      if (error) return toErr(error);
+      const envelope = data as { ok?: boolean; reason?: string; relationship?: PropertySellerRow };
+      return envelope.ok && envelope.relationship ? ok(mapPropertySeller(envelope.relationship))
+        : err(envelope.reason === 'not_found' ? 'not_found' : 'validation', envelope.reason ?? 'Could not assign seller');
+    } catch (error) { return toErr(error); }
+  }
+  async removeFromProperty(propertyId: string, sellerId: string, o?: QueryOptions): Promise<Result<void>> {
+    const a = aborted<void>(o); if (a) return a;
+    try {
+      const c = await client();
+      const { error, count } = await c.from('desk_property_sellers').delete({ count: 'exact' })
+        .eq('property_id', propertyId).eq('seller_id', sellerId);
+      if (error) return toErr(error);
+      return count ? ok(undefined) : err('not_found', 'Seller relationship not found');
+    } catch (error) { return toErr(error); }
+  }
+}
+
+class SupaPropertyDocuments implements PropertyDocumentRepository {
+  async listForProperty(propertyId: string, o?: QueryOptions) {
+    const a = aborted<readonly PropertyDocument[]>(o); if (a) return a;
+    try {
+      const c = await client();
+      const { data, error } = await c.from('desk_property_documents').select('*')
+        .eq('property_id', propertyId).order('created_at', { ascending: false });
+      return error ? toErr(error) : ok(((data ?? []) as PropertyDocumentRow[]).map(mapPropertyDocument));
+    } catch (error) { return toErr(error); }
+  }
+  async get(id: string, o?: QueryOptions): Promise<Result<PropertyDocument>> {
+    const a = aborted<PropertyDocument>(o); if (a) return a;
+    try {
+      const c = await client();
+      const { data, error } = await c.from('desk_property_documents').select('*').eq('id', id).maybeSingle();
+      if (error) return toErr(error);
+      return data ? ok(mapPropertyDocument(data as PropertyDocumentRow)) : err('not_found', 'Property document not found');
+    } catch (error) { return toErr(error); }
+  }
+  async upload(input: UploadPropertyDocumentInput, file: File, o?: QueryOptions): Promise<Result<PropertyDocument>> {
+    const a = aborted<PropertyDocument>(o); if (a) return a;
+    if (!input.title.trim()) return err('validation', 'Document title is required');
+    const validation = validatePropertyDocument(file); if (validation) return err('validation', validation);
+    try {
+      const c = await client();
+      const dealer = await currentDealerId(c); if (!dealer.ok) return dealer;
+      const id = `property-document-${cryptoId()}`;
+      const path = propertyDocumentObjectPath(dealer.value, input.propertyId, id, file.type);
+      const uploaded = await c.storage.from(PROPERTY_DOCUMENT_BUCKET).upload(path, file, {
+        cacheControl: '3600', contentType: file.type, upsert: false,
+      });
+      if (uploaded.error) return toErr(uploaded.error);
+      const { data, error } = await c.from('desk_property_documents').insert({
+        id, dealer_id: dealer.value, property_id: input.propertyId, title: input.title.trim(),
+        document_type: input.type, storage_bucket: PROPERTY_DOCUMENT_BUCKET, storage_path: path,
+        mime_type: file.type, size_bytes: file.size, visibility: input.visibility ?? 'private',
+        safety: input.safety ?? 'private', metadata: input.metadata ?? {},
+      }).select('*').single();
+      if (error) {
+        await c.storage.from(PROPERTY_DOCUMENT_BUCKET).remove([path]);
+        return toErr(error);
+      }
+      return ok(mapPropertyDocument(data as PropertyDocumentRow));
+    } catch (error) { return toErr(error); }
+  }
+  async remove(id: string, o?: QueryOptions): Promise<Result<void>> {
+    const a = aborted<void>(o); if (a) return a;
+    const existing = await this.get(id, o); if (!existing.ok) return existing;
+    try {
+      const c = await client();
+      const { error } = await c.from('desk_property_documents').delete().eq('id', id);
+      if (error) return toErr(error);
+      await c.storage.from(PROPERTY_DOCUMENT_BUCKET).remove([existing.value.storage.path]);
+      return ok(undefined);
+    } catch (error) { return toErr(error); }
   }
 }
 
@@ -892,16 +1109,8 @@ class SupaMedia implements MediaRepository {
     if (validation) return err('validation', validation);
     try {
       const c = await client();
-      const { data: auth, error: authError } = await c.auth.getUser();
-      if (authError || !auth.user) return err('unauthorized', 'Not signed in');
-      let dealerId = String(auth.user.app_metadata?.plotmap_dealer_id ?? auth.user.app_metadata?.dealer_id ?? '').trim();
-      if (!dealerId) {
-        const { data: profile, error: profileError } = await c.from('profiles')
-          .select('dealer_id').eq('id', auth.user.id).maybeSingle();
-        if (profileError) return toErr(profileError);
-        dealerId = String((profile as { dealer_id?: string } | null)?.dealer_id ?? '').trim();
-      }
-      if (!dealerId) return err('forbidden', 'Dealer membership is unavailable');
+      const dealer = await currentDealerId(c); if (!dealer.ok) return dealer;
+      const dealerId = dealer.value;
       const objectId = cryptoId();
       const path = propertyPhotoObjectPath(dealerId, propertyId, objectId, file.type);
       const { error } = await c.storage.from(PROPERTY_PHOTO_BUCKET).upload(path, file, {
@@ -970,6 +1179,8 @@ export class SupabaseDataAdapter implements DataAdapterV2 {
   readonly auth = new SupaAuth();
   readonly ai = new SupabaseAiRepository();
   readonly properties = new SupaProperties();
+  readonly sellers = new SupaSellers();
+  readonly propertyDocuments = new SupaPropertyDocuments();
   readonly customers = new SupaCustomers();
   readonly deals = new SupaDeals();
   readonly demand = new SupaDemand();

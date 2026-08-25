@@ -43,13 +43,15 @@ import {
 } from './routes';
 import { MAPCO_ANCHORS } from './intel/geo-data';
 import { ROAD_SPECS } from './intel/road-network';
-import { meter } from './intel/meter';
+import { meter, rehydrateUsageMeter } from './intel/meter';
 import {
   RoadLayer,
   globalRoadLayerItems,
   resolveRoadLayerMode,
 } from './road-layer';
 import { EARTH_VIEW_MODES, earthShellHtml, type EarthView } from './shell';
+import { requireSession } from '../../packages/data/session';
+import { SingleFlight } from '../../packages/security/single-flight';
 
 export { EARTH_VIEW_MODES, earthShellHtml } from './shell';
 
@@ -127,6 +129,53 @@ const routeCache = new Map<string, RouteLeg>(); // advId → computed route (per
 /* ── DOM refs ──────────────────────────────────────────────────── */
 const $ = (id: string) => document.getElementById(id)!;
 let toastTimer: number | undefined;
+const earthLocationFlights = new SingleFlight();
+let nextAddFlowId = 0;
+let activeAddFlowId: number | null = null;
+const pendingAddFlowIds = new Set<number>();
+
+/** The real Earth-location mutation boundary, exported for deferred-network tests. */
+export function saveEarthLocationOnce<T>(
+  propertyId: string,
+  write: () => Promise<T>,
+  setPending: (pending: boolean) => void = () => undefined,
+): Promise<{ started: boolean; value?: T }> {
+  return earthLocationFlights.run(`earth-location:${propertyId}`, async () => {
+    setPending(true);
+    try {
+      return await write();
+    } finally {
+      setPending(false);
+    }
+  });
+}
+
+interface EarthLocationFlow<T> {
+  propertyId: string;
+  write: () => Promise<T>;
+  isCurrent: () => boolean;
+  setPending: (pending: boolean) => void;
+  onSaved: (value: T) => void;
+  onError: (error: unknown) => void;
+}
+
+/** Apply save results only while the exact add-flow context is still current. */
+export async function commitEarthLocationFlow<T>(flow: EarthLocationFlow<T>): Promise<{
+  started: boolean;
+  applied: boolean;
+}> {
+  try {
+    const result = await saveEarthLocationOnce(flow.propertyId, flow.write, (pending) => {
+      if (flow.isCurrent()) flow.setPending(pending);
+    });
+    if (!result.started || !flow.isCurrent()) return { started: result.started, applied: false };
+    flow.onSaved(result.value as T);
+    return { started: true, applied: true };
+  } catch (error) {
+    if (flow.isCurrent()) flow.onError(error);
+    return { started: true, applied: false };
+  }
+}
 
 function renderShell(container: HTMLElement): void {
   container.innerHTML = earthShellHtml();
@@ -1196,6 +1245,7 @@ function startRelocate(id: string): void {
   if (!property) return;
   laDeactivate();
   state.addMode = 'relocate'; state.relocateFor = id; state.selId = null; state.panelOpen = false;
+  activeAddFlowId = ++nextAddFlowId;
   closeSearch();
   dropAddPin(geographicOriginForProperty(property) ?? map.getCenter());
   renderCard(); renderMinePanel(); renderControls(); renderAddUI();
@@ -1204,7 +1254,8 @@ function startRelocate(id: string): void {
 function startAdd(mode: Exclude<AddMode, null | 'relocate'>): void {
   if (!mapReady) { showToast('Map still loading…'); return; }
   laDeactivate();
-  state.addMode = mode; state.selId = null; state.panelOpen = false;
+  state.addMode = mode; state.relocateFor = null; state.selId = null; state.panelOpen = false;
+  activeAddFlowId = ++nextAddFlowId;
   closeSearch();
   dropAddPin(map.getCenter());
   renderCard(); renderMinePanel(); renderControls(); renderAddUI();
@@ -1228,8 +1279,11 @@ function renderAddUI(): void {
     <button class="e-add-skip" id="e-addcancel">Cancel</button>
     <button class="e-add-confirm ${isPlace ? 'violet' : ''}" id="e-addconfirm"><span class="ph-bold ph-check"></span>${isPlace ? 'Save place' : 'Save location'}</button>
   </div>`;
-  $('e-addcancel').addEventListener('click', cancelAdd);
-  $('e-addconfirm').addEventListener('click', () => void confirmAdd());
+  const renderedFlowId = activeAddFlowId;
+  $('e-addcancel').addEventListener('click', () => cancelAdd(renderedFlowId));
+  $('e-addconfirm').addEventListener('click', () => {
+    if (activeAddFlowId === renderedFlowId) void confirmAdd();
+  });
   const nameInput = document.getElementById('e-placename') as HTMLInputElement | null;
   if (nameInput) nameInput.focus();
 }
@@ -1241,7 +1295,11 @@ function onMapClick(e: any): void {
 
 async function confirmAdd(): Promise<void> {
   if (!addMarker) return;
-  const pos = addMarker.position;
+  const marker = addMarker;
+  const flowId = activeAddFlowId;
+  const confirmButton = document.getElementById('e-addconfirm') as HTMLButtonElement | null;
+  const cancelButton = document.getElementById('e-addcancel') as HTMLButtonElement | null;
+  const pos = marker.position;
   const latLng: LatLng = { lat: typeof pos.lat === 'function' ? pos.lat() : pos.lat, lng: typeof pos.lng === 'function' ? pos.lng() : pos.lng };
   if (state.addMode === 'place') {
     const nameInput = document.getElementById('e-placename') as HTMLInputElement | null;
@@ -1250,16 +1308,43 @@ async function confirmAdd(): Promise<void> {
   }
   const propertyId = state.relocateFor;
   if (!propertyId) { finishAdd(); return; }
-  try {
-    const record = await locationSource.set(propertyId, latLng);
-    finishAdd(); renderPropMarkers(); renderMineButton(); selectProperty(record.id); showToast('Earth location updated');
-  } catch (error) {
-    showToast(error instanceof Error ? error.message : 'Could not update the Earth location');
-  }
+  const isCurrent = () => activeAddFlowId === flowId
+    && state.addMode === 'relocate'
+    && state.relocateFor === propertyId
+    && addMarker === marker;
+  await commitEarthLocationFlow({
+    propertyId,
+    write: async () => {
+      if (flowId !== null) pendingAddFlowIds.add(flowId);
+      try {
+        return await locationSource.set(propertyId, latLng);
+      } finally {
+        if (flowId !== null) pendingAddFlowIds.delete(flowId);
+      }
+    },
+    isCurrent,
+    setPending: (pending) => {
+      for (const button of [confirmButton, cancelButton]) {
+        if (!button) continue;
+        button.disabled = pending;
+        if (pending) button.setAttribute('aria-busy', 'true');
+        else button.removeAttribute('aria-busy');
+      }
+    },
+    onSaved: (record) => {
+      finishAdd(); renderPropMarkers(); renderMineButton(); selectProperty(record.id); showToast('Earth location updated');
+    },
+    onError: (error) => showToast(error instanceof Error ? error.message : 'Could not update the Earth location'),
+  });
 }
-function cancelAdd(): void { finishAdd(); showToast('Cancelled'); }
+function cancelAdd(flowId: number | null): void {
+  if (activeAddFlowId !== flowId) return;
+  if (flowId !== null && pendingAddFlowIds.has(flowId)) return;
+  finishAdd(); showToast('Cancelled');
+}
 function finishAdd(): void {
   clearAddPin();
+  activeAddFlowId = null;
   state.addMode = null; state.relocateFor = null;
   renderControls(); renderAddUI(); renderMinePanel();
 }
@@ -1409,7 +1494,7 @@ function wireStaticEvents(): void {
     if (e.key !== 'Escape') return;
     if (panorama) { closeStreetView(); return; }
     if (state.svSelect) { exitSvSelect(); return; }
-    if (state.addMode) { cancelAdd(); return; }
+    if (state.addMode) { cancelAdd(activeAddFlowId); return; }
     if (state.selId) { closeCard(); return; }
     closeSearch();
   });
@@ -1445,9 +1530,12 @@ function hideStatus(): void { $('e-status').style.display = 'none'; }
    ═══════════════════════════════════════════════════════════════ */
 const appEl = document.getElementById('app');
 if (appEl) {
-  renderShell(appEl);
-  renderControls();
-  void (async () => {
+  void requireSession(appEl, async () => {
+    // `requireSession` has validated/bound the identity and purged any previous
+    // dealer's private cache before Earth is allowed to rehydrate its meter.
+    rehydrateUsageMeter();
+    renderShell(appEl);
+    renderControls();
     const mapLoad = ensureMap();
     try {
       await locationSource.load();
@@ -1463,5 +1551,5 @@ if (appEl) {
       await mapLoad;
       showToast(error instanceof Error ? error.message : 'Could not load properties');
     }
-  })();
+  });
 }

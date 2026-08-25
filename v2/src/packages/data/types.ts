@@ -9,6 +9,21 @@ export type Facing = 'East' | 'West' | 'North' | 'South' | 'North-East' | 'North
 export type LinkStatus = 'active' | 'revoked' | 'expired';
 export type PriceVisibility = 'hidden' | 'shown';
 export type LocationVisibility = 'area' | 'exact' | 'hidden';
+export type PropertyLifecycle = 'draft' | 'on-sale' | 'sold' | 'archived';
+
+export type SellerType = 'individual' | 'builder' | 'broker' | 'company';
+export type SellerRelationship = 'owner' | 'co-owner' | 'builder' | 'authorized-seller';
+export type SellerAvailability = 'available' | 'unconfirmed' | 'unavailable';
+export type PropertyDocumentType =
+  | 'registry'
+  | 'allotment-letter'
+  | 'possession-letter'
+  | 'rera-certificate'
+  | 'gmada-approval'
+  | 'site-plan'
+  | 'other';
+export type PropertyDocumentVisibility = 'private' | 'dealer-team' | 'approved-for-sharing';
+export type PropertyDocumentSafety = 'private' | 'sensitive' | 'verified-shareable';
 
 export type PropertyLocationSource =
   | 'dealer-selected'
@@ -57,6 +72,12 @@ export interface Property {
   photoStorage?: PropertyPhotoStorageRef[];
   published: boolean;
   sold: boolean;
+  /** Internal availability gate retained for existing presentation/link SQL. */
+  clientVisible?: boolean;
+  /** Canonical state. Optional only while legacy rows are normalized on read. */
+  lifecycle?: PropertyLifecycle;
+  /** Immutable completed-sale association written by the atomic sale command. */
+  sale?: { finalPrice: number; soldAt: string; buyerId: string; dealId: string };
   views: number;
   masterplanId?: string;
   sectorMapId?: string;
@@ -65,6 +86,55 @@ export interface Property {
   location?: PropertyLocation;
   /** Private owner details — dealer-only, never projected into a client link. */
   owner?: { name: string; phone: string; priceConfirmedAt?: string };
+}
+
+/** Reusable dealer-private seller; never projected into buyer-facing payloads. */
+export interface Seller {
+  id: string;
+  name: string;
+  primaryPhone: string;
+  alternatePhone?: string;
+  type: SellerType;
+  city?: string;
+  note?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/** Private facts about one seller's relationship to one canonical property. */
+export interface PropertySeller {
+  id: string;
+  propertyId: string;
+  sellerId: string;
+  askingPrice?: number;
+  relationship: SellerRelationship;
+  availability: SellerAvailability;
+  lastConfirmedAt?: string;
+  siteVisitInstructions?: string;
+  note?: string;
+  documentStatus?: string;
+  isPrimary: boolean;
+}
+
+export interface SellerWithProperties {
+  seller: Seller;
+  properties: readonly { property: Property; relationship: PropertySeller }[];
+}
+
+/** Canonical metadata for a private property document stored in Storage. */
+export interface PropertyDocument {
+  id: string;
+  propertyId: string;
+  title: string;
+  type: PropertyDocumentType;
+  storage: { bucket: 'property-documents'; path: string };
+  mimeType: string;
+  sizeBytes: number;
+  visibility: PropertyDocumentVisibility;
+  safety: PropertyDocumentSafety;
+  metadata?: Readonly<Record<string, string>>;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Client {
@@ -87,6 +157,9 @@ export interface Client {
   linkedPropertyId?: string;
   /** property ids this buyer has completed a purchase on (Purchased Properties). */
   purchased?: string[];
+  /** Minimal sale-created buyers remain truthful until the dealer completes them. */
+  profileCompleteness?: 'complete' | 'needs-attention';
+  missingFields?: string[];
 }
 
 export interface DealDocument { name: string; kind?: string; url?: string; }
@@ -126,6 +199,7 @@ export interface Deal {
   buyerId: string;
   buyer: string;           // buyer / client name
   seller: string;          // private seller name
+  sellerId?: string;       // reusable private seller relation, when available
   sellerPhone?: string;
   // money
   soldPrice: number;       // final sold price

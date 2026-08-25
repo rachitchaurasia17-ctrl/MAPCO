@@ -1,4 +1,5 @@
 import { propertyLocationPoint } from '../../packages/data/property-location';
+import { propertyLifecycle } from '../../packages/data/property-lifecycle';
 import type { Property } from '../../packages/data/types';
 
 export type PropertyAttentionReason =
@@ -23,6 +24,7 @@ export interface PropertyOperationalState {
  * independent: neither one can stand in for the other.
  */
 export function propertyOperationalState(property: Property): PropertyOperationalState {
+  const lifecycle = propertyLifecycle(property);
   const displayPhotos = property.photos ?? [];
   const storedPhotos = property.photoStorage ?? [];
   const photoCount = Math.max(displayPhotos.length, storedPhotos.length);
@@ -31,18 +33,18 @@ export function propertyOperationalState(property: Property): PropertyOperationa
   const attentionReasons: PropertyAttentionReason[] = [];
 
   if (photoCount === 0) attentionReasons.push('photo');
-  if (!property.published) attentionReasons.push('published');
+  if (lifecycle === 'draft') attentionReasons.push('published');
   if (!hasMapPlacement) attentionReasons.push('map-placement');
   if (!hasEarthLocation) attentionReasons.push('earth-location');
 
   return {
     photoCount,
     hasDisplayPhoto: displayPhotos.length > 0,
-    isPublished: property.published,
+    isPublished: lifecycle === 'on-sale',
     hasMapPlacement,
     hasEarthLocation,
     attentionReasons,
-    readyToShow: !property.sold && attentionReasons.length === 0,
+    readyToShow: lifecycle === 'on-sale' && attentionReasons.length === 0,
   };
 }
 
