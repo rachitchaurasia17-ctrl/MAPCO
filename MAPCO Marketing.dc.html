@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&amp;family=Hanken+Grotesk:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%}
+  body{background:#fff4de;color:#241833;font-family:'Hanken Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow:hidden}
+  a{color:#7a2fe0;text-decoration:none}
+  a:hover{color:#5a18c0}
+  ::selection{background:#ffd24d;color:#241833}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  textarea{font-family:inherit}
+  [data-scroll]::-webkit-scrollbar{width:11px;height:11px}
+  [data-scroll]::-webkit-scrollbar-thumb{background:rgba(122,47,224,.3);border-radius:9px;border:3px solid transparent;background-clip:content-box}
+  [data-scroll]::-webkit-scrollbar-track{background:transparent}
+  @keyframes omRise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+  @keyframes omPop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
+  @keyframes omSpin{to{transform:rotate(360deg)}}
+  @keyframes omCheck{0%{opacity:0;transform:scale(.4)}60%{opacity:1;transform:scale(1.14)}100%{opacity:1;transform:scale(1)}}
+  @keyframes omDraw{from{stroke-dashoffset:1100}to{stroke-dashoffset:0}}
+  @keyframes omSlideX{from{opacity:0;transform:translateX(24px) scale(.985)}to{opacity:1;transform:none}}
+  @keyframes flA{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(6vw,-4vh) scale(1.14)}}
+  @keyframes flB{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-5vw,5vh) scale(1.18)}}
+  @keyframes flC{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(4vw,6vh) scale(1.1)}}
+  @keyframes flD{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-6vw,-5vh) scale(1.12)}}
+  @keyframes flE{0%,100%{transform:translate(-50%,-50%) rotate(0deg)}50%{transform:translate(-46%,-54%) rotate(8deg)}}
+  @keyframes drift1{0%,100%{transform:translate(0,0)}50%{transform:translate(2vw,3vh)}}
+  @keyframes rot{to{transform:translate(-50%,-50%) rotate(360deg)}}
+  @keyframes omZoom{from{transform:scale(1)}to{transform:scale(1.12)}}
+  @keyframes omProg{from{width:0%}to{width:100%}}
+  @keyframes omPulse{0%,100%{opacity:.5}50%{opacity:1}}
+</style>
+</helmet>
+
+<div style="position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none">
+  <div style="position:absolute;left:50%;top:50%;width:130vw;height:130vw;transform:translate(-50%,-50%);background:conic-gradient(from 0deg,rgba(255,203,69,.14),rgba(122,47,224,.13),rgba(34,191,85,.13),rgba(224,71,58,.14),rgba(255,203,69,.14));filter:blur(48px);opacity:.7;animation:rot 120s linear infinite"></div>
+  <div style="position:absolute;width:56vw;height:56vw;left:-14vw;top:-18vw;border-radius:50%;background:radial-gradient(circle at 42% 42%,#ffe07a,#ffb000 52%,transparent 72%);filter:blur(30px);opacity:.58;animation:flA 22s ease-in-out infinite"></div>
+  <div style="position:absolute;width:52vw;height:52vw;left:-12vw;bottom:-20vw;border-radius:50%;background:radial-gradient(circle at 50% 45%,#8cf0ad,#22bf55 52%,transparent 72%);filter:blur(32px);opacity:.5;animation:flB 26s ease-in-out infinite"></div>
+  <div style="position:absolute;width:60vw;height:60vw;right:-20vw;top:-6vw;border-radius:50%;background:radial-gradient(circle at 55% 50%,#cba3ff,#7a2fe0 52%,transparent 72%);filter:blur(34px);opacity:.44;animation:flC 24s ease-in-out infinite"></div>
+  <div style="position:absolute;width:42vw;height:42vw;right:4vw;bottom:-18vw;border-radius:50%;background:radial-gradient(circle at 50% 50%,#ffb0a8,#ff6b5c 55%,transparent 72%);filter:blur(30px);opacity:.42;animation:flD 20s ease-in-out infinite"></div>
+  <div style="position:absolute;left:50%;top:50%;width:34vw;height:34vw;border-radius:46% 54% 60% 40%/52% 44% 56% 48%;background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.55),transparent 70%);filter:blur(20px);animation:flE 28s ease-in-out infinite"></div>
+  <svg viewBox="0 0 1440 900" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;opacity:.18;animation:drift1 30s ease-in-out infinite">
+    <path d="M-40 230 C 260 130 420 350 720 250 S 1180 110 1500 240" fill="none" stroke="#7a2fe0" stroke-width="2.5"></path>
+    <path d="M-40 500 C 300 420 560 600 880 520 S 1260 460 1500 560" fill="none" stroke="#1e9e45" stroke-width="2"></path>
+    <path d="M-40 660 C 320 580 520 780 860 680 S 1240 580 1500 700" fill="none" stroke="#e0473a" stroke-width="2.5"></path>
+    <path d="M120 60 C 380 -20 520 220 780 120" fill="none" stroke="#e89a00" stroke-width="2" stroke-dasharray="2 12" stroke-linecap="round"></path>
+  </svg>
+  <div style="position:absolute;inset:0;background-image:radial-gradient(rgba(28,20,48,.06) 1px,transparent 1.4px);background-size:24px 24px;opacity:.55"></div>
+  <div style="position:absolute;inset:0;background:radial-gradient(125% 100% at 50% 24%,transparent 52%,rgba(60,30,90,.16))"></div>
+</div>
+
+<div style="position:relative;z-index:1;height:100vh;display:flex;flex-direction:column;overflow:hidden">
+
+  <header style="flex:none;padding:14px 32px;display:flex;align-items:center;gap:22px">
+    <a href="./Dealer Dashboard.dc.html" style="display:flex;align-items:center;gap:12px;flex:none;text-decoration:none" style-hover="opacity:.82">
+      <img src="assets/mapco-logo.png" alt="MAPCO" style="height:36px;width:auto;display:block;filter:drop-shadow(0 7px 12px rgba(90,40,150,.3))">
+      <div style="line-height:1"><div style="font-size:20px;font-weight:800;letter-spacing:-.01em;color:#241833">MAPCO</div><div style="font-size:9.5px;font-weight:800;letter-spacing:.42em;color:#7a2fe0;margin-top:2px">MARKETING</div></div>
+    </a>
+
+    <nav style="display:flex;align-items:center;gap:3px;margin:0 auto;background:rgba(255,255,255,.55);border:1px solid rgba(122,47,224,.16);border-radius:17px;padding:5px;box-shadow:0 14px 32px -22px rgba(60,30,90,.6);backdrop-filter:blur(8px)">
+      <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3">
+        <button onClick="{{ t.go }}" style="{{ t.style }}">
+          <i class="{{ t.icon }}" style="font-size:17px"></i>
+          <span>{{ t.label }}</span>
+        </button>
+      </sc-for>
+    </nav>
+
+    <div style="display:flex;align-items:center;gap:14px;flex:none">
+      <div style="display:flex;align-items:center;gap:7px">
+        <sc-for list="{{ navAccounts }}" as="a" hint-placeholder-count="4">
+          <span style="{{ a.style }}"><i class="{{ a.icon }}" style="font-size:16px;color:{{ a.color }}"></i></span>
+        </sc-for>
+      </div>
+      <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#7a2fe0,#22bf55);color:#fff;display:grid;place-items:center;font-weight:800;font-size:13px;flex:none;box-shadow:0 8px 18px -8px rgba(90,40,150,.6)">RC</div>
+    </div>
+  </header>
+
+  <div data-scroll="" style="{{ contentStyle }}">
+
+  <sc-if value="{{ isToday }}" hint-placeholder-val="{{ true }}">
+  <div style="flex:1;min-height:0;display:flex;flex-direction:column;padding:0 32px 16px">
+
+    <div style="flex:none;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 2px 10px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="width:9px;height:9px;border-radius:50%;background:#e0473a;box-shadow:0 0 0 4px rgba(224,71,58,.18)"></span>
+        <div style="font-size:12.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#7a2fe0">Wednesday · 19 August — 2 posts ready</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;flex:none">
+        <sc-for list="{{ postTabs }}" as="pt" hint-placeholder-count="2">
+          <button onClick="{{ pt.go }}" style="{{ pt.style }}">
+            <span style="{{ pt.dotStyle }}"></span>
+            <div style="text-align:left;line-height:1.05"><div style="font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.75">Post {{ pt.num }}</div><div style="font-size:13.5px;font-weight:800">{{ pt.name }}</div></div>
+            <sc-if value="{{ pt.live }}"><i class="ph-fill ph-check-circle" style="font-size:15px;color:#22c55e"></i></sc-if>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+
+    <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center;gap:14px">
+      <button onClick="{{ goPrev }}" title="Previous post" style="width:52px;height:52px;flex:none;border-radius:50%;background:rgba(255,255,255,.8);color:#7a2fe0;display:grid;place-items:center;box-shadow:0 14px 28px -14px rgba(90,40,150,.6);border:1px solid rgba(122,47,224,.18)" style-hover="background:#fff;transform:scale(1.06)"><i class="ph-bold ph-caret-left" style="font-size:22px"></i></button>
+
+      <div style="{{ active.wrapStyle }}">
+        <div style="{{ active.creativeStyle }}" style-hover="transform:translateY(-4px);box-shadow:0 54px 90px -34px rgba(40,15,70,.75)">
+          <sc-if value="{{ active.split }}" hint-placeholder-val="{{ true }}">
+            <div style="{{ active.photoStyle }}"></div>
+            <div style="position:absolute;left:0;right:0;bottom:0;height:55%;background:linear-gradient(155deg,#221a3e,#14101f);border-top-left-radius:26cqw;box-shadow:0 -30px 50px -30px rgba(0,0,0,.6);display:flex;flex-direction:column;justify-content:center;padding:2% 9% 9%;color:#fff">
+              <div style="font-size:3.1cqw;font-weight:800;letter-spacing:.24em;text-transform:uppercase;color:#ffcb45">{{ active.eyebrow }}</div>
+              <div style="white-space:nowrap;font-family:'Newsreader',serif;font-weight:500;font-size:9.6cqw;line-height:1;letter-spacing:-.01em;margin-top:1.5%">{{ active.line1 }}</div>
+              <div style="white-space:nowrap;font-family:'Newsreader',serif;font-weight:500;font-size:9.6cqw;line-height:1;letter-spacing:-.01em">{{ active.line2 }}</div>
+              <div style="font-size:3.1cqw;font-weight:700;letter-spacing:.05em;color:#e0d6f0;margin-top:3.5%">{{ active.factA }}</div>
+              <div style="font-size:3.1cqw;font-weight:700;letter-spacing:.05em;color:#e0d6f0;margin-top:1%">{{ active.factB }}</div>
+              <div style="display:flex;gap:2%;margin-top:6%">
+                <sc-for list="{{ active.features }}" as="f" hint-placeholder-count="4">
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;min-width:0"><i class="{{ f.icon }}" style="font-size:5.2cqw;color:#ffcb45"></i><span style="font-size:2.2cqw;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#d4ad55;text-align:center;line-height:1.15">{{ f.label }}</span></div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="position:absolute;left:0;right:0;bottom:0;padding:1.6% 0;text-align:center;background:linear-gradient(90deg,#c8892a,#ffcb45);color:#241010;font-size:3cqw;font-weight:800;letter-spacing:.18em">{{ active.tagline }}</div>
+          </sc-if>
+
+          <sc-if value="{{ active.overlay }}">
+            <div style="{{ active.photoStyle }}"></div>
+            <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(16,12,28,.96) 6%,rgba(16,12,28,.82) 46%,rgba(16,12,28,.12) 78%)"></div>
+            <div style="position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column;padding:0 8% 8%;color:#fff">
+              <div style="font-family:'Newsreader',serif;font-weight:500;font-size:7.4cqw;letter-spacing:.02em;line-height:1">{{ active.line1 }}</div>
+              <div style="font-size:3.1cqw;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#e0d6f0;margin-top:1.6%">{{ active.eyebrow }}</div>
+              <div style="font-family:'Newsreader',serif;font-weight:600;font-size:13cqw;line-height:.96;letter-spacing:-.01em;color:#ffcb45;margin-top:1.4%">{{ active.line2 }}</div>
+              <div style="font-size:3.1cqw;font-weight:700;letter-spacing:.05em;color:#ece4f5;margin-top:3.4%">{{ active.factA }}</div>
+              <div style="font-size:3.1cqw;font-weight:700;letter-spacing:.05em;color:#ece4f5;margin-top:1%">{{ active.factB }}</div>
+              <div style="display:flex;gap:2%;margin-top:6%">
+                <sc-for list="{{ active.features }}" as="f" hint-placeholder-count="4">
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;min-width:0"><i class="{{ f.icon }}" style="font-size:5.2cqw;color:#ffcb45"></i><span style="font-size:2.2cqw;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#d4ad55;text-align:center;line-height:1.15">{{ f.label }}</span></div>
+                </sc-for>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;margin-top:6%"><span style="width:7%;height:1.5px;background:#c8892a"></span><span style="font-size:3cqw;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#ffcb45">{{ active.tagline }}</span></div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ active.isPosted }}">
+            <div style="position:absolute;top:0;right:0;z-index:5;display:inline-flex;align-items:center;gap:8px;padding:11px 18px 11px 15px;border-bottom-left-radius:18px;background:rgba(34,197,94,.96);color:#fff;font-size:14px;font-weight:800;animation:omPop .3s cubic-bezier(.2,.8,.2,1) both"><i class="ph-fill ph-check-circle" style="font-size:17px"></i>Live now</div>
+          </sc-if>
+          <sc-if value="{{ active.isSkipped }}">
+            <div style="position:absolute;inset:0;z-index:6;background:rgba(16,12,28,.72);backdrop-filter:blur(2px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#fff"><i class="ph ph-moon-stars" style="font-size:40px;opacity:.85"></i><div style="font-size:20px;font-weight:800">Skipped for today</div><button onClick="{{ active.unskip }}" style="padding:12px 22px;border-radius:12px;background:rgba(255,255,255,.16);color:#fff;font-size:15px;font-weight:800" style-hover="background:rgba(255,255,255,.28)">Bring it back</button></div>
+          </sc-if>
+        </div>
+      </div>
+
+      <button onClick="{{ goNext }}" title="Next post" style="width:52px;height:52px;flex:none;border-radius:50%;background:rgba(255,255,255,.8);color:#7a2fe0;display:grid;place-items:center;box-shadow:0 14px 28px -14px rgba(90,40,150,.6);border:1px solid rgba(122,47,224,.18)" style-hover="background:#fff;transform:scale(1.06)"><i class="ph-bold ph-caret-right" style="font-size:22px"></i></button>
+    </div>
+
+    <div style="flex:none;max-width:1120px;width:100%;margin:12px auto 0;border-radius:20px;background:linear-gradient(120deg,rgba(255,240,196,.82),rgba(236,219,255,.82) 55%,rgba(214,251,227,.82));border:1px solid rgba(255,255,255,.7);padding:13px 18px;box-shadow:0 26px 54px -28px rgba(40,15,70,.55);backdrop-filter:blur(10px)">
+
+      <sc-if value="{{ timeOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;align-items:center;gap:9px;padding:2px 2px 13px;overflow-x:auto;animation:omRise .22s ease both">
+        <span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#7a2fe0;flex:none">When?</span>
+        <sc-for list="{{ timeOptions }}" as="o" hint-placeholder-count="7">
+          <button onClick="{{ o.pick }}" style="{{ o.style }}">{{ o.label }}</button>
+        </sc-for>
+      </div>
+      </sc-if>
+
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <sc-if value="{{ barReady }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ toggleTime }}" style="{{ timeChipStyle }}" style-hover="background:#fff;box-shadow:0 12px 24px -12px rgba(90,40,150,.5)"><i class="ph-fill ph-clock" style="font-size:17px;color:#e0473a"></i><span style="font-size:9.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#a8571e">Goes out</span><span style="font-size:14px;font-weight:800;color:#1c1430">{{ activeTime }}</span><i class="ph-bold ph-caret-down" style="font-size:12px;color:#8a7862"></i></button>
+
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;min-width:0">
+          <sc-for list="{{ active.channels }}" as="c" hint-placeholder-count="4">
+            <button onClick="{{ c.toggle }}" title="{{ c.name }}" style="{{ c.style }}"><i class="{{ c.icon }}" style="font-size:22px;color:{{ c.iconColor }}"></i><sc-if value="{{ c.on }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-4px;right:-4px;width:17px;height:17px;border-radius:50%;background:#22c55e;border:2px solid #fff;display:grid;place-items:center"><i class="ph-bold ph-check" style="font-size:10px;color:#fff"></i></span></sc-if></button>
+          </sc-for>
+        </div>
+
+        <div style="flex:1"></div>
+        <button onClick="{{ active.skip }}" style="display:inline-flex;align-items:center;gap:6px;padding:10px 14px;border-radius:11px;color:#8a7862;font-size:13px;font-weight:700;flex:none" style-hover="background:rgba(122,47,224,.08);color:#5a18c0"><i class="ph ph-moon" style="font-size:15px"></i>Not today</button>
+        <button onClick="{{ publishActive }}" style="{{ publishBtnStyle }}" style-hover="transform:translateY(-2px);box-shadow:0 26px 46px -14px rgba(224,71,58,.7)" style-active="transform:translateY(0) scale(.99)"><i class="ph-fill ph-paper-plane-right" style="font-size:22px"></i>{{ publishLabel }}</button>
+        </sc-if>
+
+        <sc-if value="{{ barPublishing }}">
+        <div style="font-size:16px;font-weight:800;color:#1c1430;flex:none">Sending…</div>
+        <div style="display:flex;align-items:center;gap:10px;flex:1;flex-wrap:wrap">
+          <sc-for list="{{ progressChannels }}" as="c" hint-placeholder-count="4">
+            <div style="{{ c.style }}">
+              <sc-if value="{{ c.done }}" hint-placeholder-val="{{ true }}"><i class="ph-fill ph-check-circle" style="font-size:18px;color:#22c55e;animation:omCheck .4s cubic-bezier(.2,.8,.2,1) both"></i></sc-if>
+              <sc-if value="{{ c.active }}"><i class="ph-bold ph-spinner-gap" style="font-size:17px;color:#7a2fe0;animation:omSpin .8s linear infinite"></i></sc-if>
+              <sc-if value="{{ c.pending }}"><i class="{{ c.icon }}" style="font-size:16px;color:#b8a68e"></i></sc-if>
+              <span style="font-size:13px;font-weight:800;color:{{ c.textColor }}">{{ c.name }}</span>
+            </div>
+          </sc-for>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ barPosted }}">
+        <span style="width:46px;height:46px;flex:none;border-radius:14px;background:rgba(34,197,94,.18);display:grid;place-items:center"><i class="ph-fill ph-check-circle" style="font-size:26px;color:#16a34a;animation:omCheck .5s cubic-bezier(.2,.8,.2,1) both"></i></span>
+        <div style="flex:1;min-width:180px"><div style="font-size:16px;font-weight:800;color:#1c1430">This post is live.</div><div style="font-size:12.5px;color:#8a5a2e;margin-top:1px">{{ postedLine }}</div></div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <sc-for list="{{ postedChannels }}" as="c" hint-placeholder-count="3">
+            <span style="display:inline-flex;align-items:center;gap:6px;padding:9px 13px;border-radius:11px;background:rgba(34,197,94,.14);color:#177a42;font-size:13px;font-weight:800"><i class="{{ c.icon }}" style="font-size:15px;color:{{ c.color }}"></i>{{ c.name }}</span>
+          </sc-for>
+        </div>
+        </sc-if>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isReels }}">
+  <div style="flex:1;min-height:0;display:flex;flex-direction:column;padding:0 32px 16px">
+
+    <div style="flex:none;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 2px 10px">
+      <div style="display:flex;align-items:center;gap:10px;min-width:0">
+        <span style="width:9px;height:9px;border-radius:50%;background:#7a2fe0;box-shadow:0 0 0 4px rgba(122,47,224,.18);flex:none"></span>
+        
+        <div style="display:flex;align-items:center;gap:8px;margin-left:6px;min-width:0">
+          <sc-for list="{{ reelTabs }}" as="rt" hint-placeholder-count="3">
+            <button onClick="{{ rt.go }}" style="{{ rt.style }}">
+              <span style="{{ rt.dotStyle }}"></span>
+              <div style="text-align:left;line-height:1.05"><div style="font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.75">{{ rt.stage }}</div><div style="font-size:13.5px;font-weight:800">{{ rt.name }}</div></div>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;flex:none">
+        
+        <button onClick="{{ openUpload }}" style="{{ uploadBtnStyle }}" style-hover="transform:translateY(-1px)"><i class="ph-bold ph-plus" style="font-size:16px"></i>Upload Video</button>
+      </div>
+    </div>
+
+    <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center;gap:14px">
+      <button onClick="{{ reelPrev }}" title="Previous reel" style="width:52px;height:52px;flex:none;border-radius:50%;background:rgba(255,255,255,.8);color:#7a2fe0;display:grid;place-items:center;box-shadow:0 14px 28px -14px rgba(90,40,150,.6);border:1px solid rgba(122,47,224,.18)" style-hover="background:#fff;transform:scale(1.06)"><i class="ph-bold ph-caret-left" style="font-size:22px"></i></button>
+
+      <div style="height:100%;min-width:0;display:flex;flex-direction:column;align-items:center;animation:omSlideX .3s cubic-bezier(.2,.8,.2,1) both">
+        <div style="flex:1;min-height:0;aspect-ratio:9/16;position:relative;border-radius:26px;overflow:hidden;background:#14101f;box-shadow:0 44px 84px -34px rgba(40,15,70,.75)">
+          <div style="{{ reel.photoStyle }}"></div>
+          <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(12,9,22,.9) 4%,rgba(12,9,22,.12) 42%,rgba(12,9,22,.45))"></div>
+
+          <sc-if value="{{ reel.isReady }}" hint-placeholder-val="{{ true }}">
+            <div style="position:absolute;top:14px;left:14px;right:14px;z-index:3;display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+              <sc-if value="{{ reel.showStatus }}" hint-placeholder-val="{{ true }}"><span style="{{ reel.statusPill }}">{{ reel.eyebrow }}</span></sc-if>
+              <span style="margin-left:auto;flex:none;padding:6px 11px;border-radius:9px;background:rgba(12,9,22,.62);color:#fff;font-size:11.5px;font-weight:800;letter-spacing:.06em;backdrop-filter:blur(6px)">{{ reel.dur }}</span>
+            </div>
+            <button onClick="{{ reel.togglePlay }}" style="{{ reel.playStyle }}" style-hover="transform:translate(-50%,-50%) scale(1.07)"><i class="{{ reel.playIcon }}" style="font-size:30px;color:#1c1430;margin-left:{{ reel.playNudge }}"></i></button>
+            <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 16px 18px;color:#fff">
+              <div style="font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#ffcb45">{{ reel.loc }}</div>
+              <div style="font-family:'Newsreader',serif;font-weight:500;font-size:21px;line-height:1.1;margin-top:2px;text-wrap:pretty">{{ reel.title }}</div>
+              <div style="font-size:11.5px;font-weight:700;color:#e0d6f0;margin-top:4px">{{ reel.sub }}</div>
+              <div style="height:4px;border-radius:3px;background:rgba(255,255,255,.24);margin-top:14px;overflow:hidden"><div style="{{ reel.barStyle }}"></div></div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ reel.isPending }}">
+            <div style="position:absolute;inset:0;background:rgba(14,10,26,.74);backdrop-filter:blur(7px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:30px;text-align:center;color:#fff">
+              <span style="width:64px;height:64px;border-radius:50%;background:rgba(255,203,69,.18);display:grid;place-items:center"><i class="{{ reel.stageIcon }}" style="font-size:30px;color:#ffcb45"></i></span>
+              <div style="font-size:11px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#ffcb45">{{ reel.loc }}</div>
+              <div style="font-family:'Newsreader',serif;font-weight:500;font-size:24px;line-height:1.2;text-wrap:pretty">{{ reel.pendingLine }}</div>
+              <div style="font-size:13px;font-weight:700;color:#c9bcdf">{{ reel.sub }}</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ reel.isSkipped }}">
+            <div style="position:absolute;inset:0;z-index:6;background:rgba(16,12,28,.76);backdrop-filter:blur(3px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#fff;padding:24px;text-align:center"><i class="ph ph-moon-stars" style="font-size:40px;opacity:.85"></i><div style="font-size:19px;font-weight:800">Not posting today</div><div style="font-size:12.5px;color:#c9bcdf;max-width:200px">The reel stays saved in your Library.</div><button onClick="{{ active.unskip }}" style="padding:12px 22px;border-radius:12px;background:rgba(255,255,255,.16);color:#fff;font-size:15px;font-weight:800" style-hover="background:rgba(255,255,255,.28)">Bring it back</button></div>
+          </sc-if>
+
+          <sc-if value="{{ reel.isPosted }}">
+            <div style="position:absolute;top:0;left:0;z-index:5;display:inline-flex;align-items:center;gap:8px;padding:11px 16px 11px 14px;border-bottom-right-radius:18px;background:rgba(34,197,94,.96);color:#fff;font-size:13.5px;font-weight:800;animation:omPop .3s cubic-bezier(.2,.8,.2,1) both"><i class="ph-fill ph-check-circle" style="font-size:16px"></i>Live now</div>
+          </sc-if>
+        </div>
+      </div>
+
+      <button onClick="{{ reelNext }}" title="Next reel" style="width:52px;height:52px;flex:none;border-radius:50%;background:rgba(255,255,255,.8);color:#7a2fe0;display:grid;place-items:center;box-shadow:0 14px 28px -14px rgba(90,40,150,.6);border:1px solid rgba(122,47,224,.18)" style-hover="background:#fff;transform:scale(1.06)"><i class="ph-bold ph-caret-right" style="font-size:22px"></i></button>
+    </div>
+
+    <div style="flex:none;max-width:1120px;width:100%;margin:12px auto 0;border-radius:20px;background:linear-gradient(120deg,rgba(255,240,196,.82),rgba(236,219,255,.82) 55%,rgba(214,251,227,.82));border:1px solid rgba(255,255,255,.7);padding:13px 18px;box-shadow:0 26px 54px -28px rgba(40,15,70,.55);backdrop-filter:blur(10px)">
+
+      <sc-if value="{{ reelPending }}">
+      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <span style="width:46px;height:46px;flex:none;border-radius:14px;background:rgba(122,47,224,.14);display:grid;place-items:center"><i class="{{ reel.stageIcon }}" style="font-size:24px;color:#7a2fe0"></i></span>
+        <div style="flex:1;min-width:200px"><div style="font-size:16px;font-weight:800;color:#1c1430">{{ reel.pendingLine }}</div><div style="font-size:12.5px;color:#8a5a2e;margin-top:1px">Publishing options appear here once MAPCO marks it ready.</div></div>
+        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
+          <sc-for list="{{ reel.steps }}" as="st" hint-placeholder-count="3">
+            <span style="{{ st.style }}"><i class="{{ st.icon }}" style="font-size:14px"></i>{{ st.label }}</span>
+          </sc-for>
+        </div>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ reelPublishable }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <sc-if value="{{ timeOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;align-items:center;gap:9px;padding:2px 2px 13px;overflow-x:auto;animation:omRise .22s ease both">
+          <span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#7a2fe0;flex:none">When?</span>
+          <sc-for list="{{ timeOptions }}" as="o" hint-placeholder-count="7">
+            <button onClick="{{ o.pick }}" style="{{ o.style }}">{{ o.label }}</button>
+          </sc-for>
+        </div>
+        </sc-if>
+
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+          <sc-if value="{{ barReady }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ toggleTime }}" style="{{ timeChipStyle }}" style-hover="background:#fff;box-shadow:0 12px 24px -12px rgba(90,40,150,.5)"><i class="ph-fill ph-clock" style="font-size:17px;color:#e0473a"></i><span style="font-size:9.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#a8571e">Goes out</span><span style="font-size:14px;font-weight:800;color:#1c1430">{{ activeTime }}</span><i class="ph-bold ph-caret-down" style="font-size:12px;color:#8a7862"></i></button>
+
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;min-width:0">
+            <sc-for list="{{ active.channels }}" as="c" hint-placeholder-count="2">
+              <button onClick="{{ c.toggle }}" title="{{ c.name }}" style="{{ c.style }}"><i class="{{ c.icon }}" style="font-size:22px;color:{{ c.iconColor }}"></i><sc-if value="{{ c.on }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-4px;right:-4px;width:17px;height:17px;border-radius:50%;background:#22c55e;border:2px solid #fff;display:grid;place-items:center"><i class="ph-bold ph-check" style="font-size:10px;color:#fff"></i></span></sc-if></button>
+            </sc-for>
+            <span style="font-size:11.5px;font-weight:700;color:#8a7862;max-width:150px;line-height:1.2">Reels post to Instagram &amp; Facebook</span>
+          </div>
+
+          <div style="flex:1"></div>
+          <button onClick="{{ active.skip }}" style="display:inline-flex;align-items:center;gap:6px;padding:10px 14px;border-radius:11px;color:#8a7862;font-size:13px;font-weight:700;flex:none" style-hover="background:rgba(122,47,224,.08);color:#5a18c0"><i class="ph ph-moon" style="font-size:15px"></i>Not today</button>
+          <button onClick="{{ publishActive }}" style="{{ publishBtnStyle }}" style-hover="transform:translateY(-2px);box-shadow:0 26px 46px -14px rgba(224,71,58,.7)" style-active="transform:translateY(0) scale(.99)"><i class="ph-fill ph-paper-plane-right" style="font-size:22px"></i>{{ publishLabel }}</button>
+          </sc-if>
+
+          <sc-if value="{{ barPublishing }}">
+          <div style="font-size:16px;font-weight:800;color:#1c1430;flex:none">Sending…</div>
+          <div style="display:flex;align-items:center;gap:10px;flex:1;flex-wrap:wrap">
+            <sc-for list="{{ progressChannels }}" as="c" hint-placeholder-count="2">
+              <div style="{{ c.style }}">
+                <sc-if value="{{ c.done }}" hint-placeholder-val="{{ true }}"><i class="ph-fill ph-check-circle" style="font-size:18px;color:#22c55e;animation:omCheck .4s cubic-bezier(.2,.8,.2,1) both"></i></sc-if>
+                <sc-if value="{{ c.active }}"><i class="ph-bold ph-spinner-gap" style="font-size:17px;color:#7a2fe0;animation:omSpin .8s linear infinite"></i></sc-if>
+                <sc-if value="{{ c.pending }}"><i class="{{ c.icon }}" style="font-size:16px;color:#b8a68e"></i></sc-if>
+                <span style="font-size:13px;font-weight:800;color:{{ c.textColor }}">{{ c.name }}</span>
+              </div>
+            </sc-for>
+          </div>
+          </sc-if>
+
+          <sc-if value="{{ barPosted }}">
+          <span style="width:46px;height:46px;flex:none;border-radius:14px;background:rgba(34,197,94,.18);display:grid;place-items:center"><i class="ph-fill ph-check-circle" style="font-size:26px;color:#16a34a;animation:omCheck .5s cubic-bezier(.2,.8,.2,1) both"></i></span>
+          <div style="flex:1;min-width:180px"><div style="font-size:16px;font-weight:800;color:#1c1430">This reel is live.</div><div style="font-size:12.5px;color:#8a5a2e;margin-top:1px">{{ postedLine }}</div></div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <sc-for list="{{ postedChannels }}" as="c" hint-placeholder-count="2">
+              <span style="display:inline-flex;align-items:center;gap:6px;padding:9px 13px;border-radius:11px;background:rgba(34,197,94,.14);color:#177a42;font-size:13px;font-weight:800"><i class="{{ c.icon }}" style="font-size:15px;color:{{ c.color }}"></i>{{ c.name }}</span>
+            </sc-for>
+          </div>
+          </sc-if>
+        </div>
+      </div>
+      </sc-if>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isLibrary }}">
+  <div style="{{ libWrapStyle }}">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;animation:omRise .5s cubic-bezier(.2,.8,.2,1) both">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <div style="font-size:12px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#7a2fe0">The archive</div>
+        <div style="display:flex;align-items:center;gap:3px;background:rgba(255,255,255,.58);border:1px solid rgba(122,47,224,.16);border-radius:13px;padding:4px;box-shadow:0 12px 26px -20px rgba(60,30,90,.6)">
+          <sc-for list="{{ kindTabs }}" as="kt" hint-placeholder-count="3">
+            <button onClick="{{ kt.go }}" style="{{ kt.style }}"><i class="{{ kt.icon }}" style="font-size:14px"></i>{{ kt.label }}</button>
+          </sc-for>
+        </div>
+        <span style="width:5px;height:5px;border-radius:50%;background:#c8a24e"></span>
+        <div style="font-size:14px;font-weight:800;color:#5a3a1c">{{ libCount }}</div>
+        <sc-if value="{{ activeFilter }}">
+          <span style="display:inline-flex;align-items:center;gap:7px;padding:6px 8px 6px 13px;border-radius:11px;background:#1c1430;color:#ffcb45;font-size:12.5px;font-weight:800">{{ filterLabel }}<button onClick="{{ clearFilter }}" style="width:20px;height:20px;border-radius:7px;background:rgba(255,255,255,.16);color:#fff;display:grid;place-items:center" style-hover="background:rgba(255,255,255,.3)"><i class="ph-bold ph-x" style="font-size:11px"></i></button></span>
+        </sc-if>
+      </div>
+      <button onClick="{{ openLibFilter }}" style="{{ libFilterBtnStyle }}" style-hover="background:#fff;box-shadow:0 12px 26px -14px rgba(90,40,150,.5)"><i class="ph-fill ph-funnel" style="font-size:16px;color:#7a2fe0"></i>Filter by property<i class="ph-bold ph-caret-down" style="font-size:12px;color:#8a7862"></i></button>
+    </div>
+
+    <sc-for list="{{ libGroups }}" as="g" hint-placeholder-count="3">
+      <div style="{{ g.wrapStyle }}">
+        <sc-if value="{{ g.showHeader }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:15px">
+          <div style="font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#1c1430">{{ g.label }}</div>
+          <div style="font-size:12.5px;font-weight:800;color:#a8571e">{{ g.date }}</div>
+          <div style="flex:1;height:2px;border-radius:2px;background:linear-gradient(90deg,rgba(122,47,224,.32),transparent)"></div>
+          <div style="font-size:12px;font-weight:800;color:#7a6a55">{{ g.count }}</div>
+        </div>
+        </sc-if>
+        <sc-if value="{{ g.hasReels }}">
+        <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:26px;margin:0 auto 8px;max-width:calc(max((100vh - 310px) * 9 / 16, 250px) * 2 + 30px)">
+          <sc-for list="{{ g.reels }}" as="r" hint-placeholder-count="2">
+            <div style="width:max(calc((100vh - 310px) * 9 / 16), 250px);animation:omRise .4s cubic-bezier(.2,.8,.2,1) both">
+              <div style="{{ r.mediaStyle }}">
+                <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(12,9,22,.88) 2%,rgba(12,9,22,.05) 40%,rgba(12,9,22,.4))"></div>
+                <span style="{{ r.statusStyle }}"><i class="{{ r.statusIcon }}" style="font-size:12px"></i>{{ r.statusLabel }}</span>
+                <span style="position:absolute;top:14px;right:14px;width:36px;height:36px;border-radius:11px;background:#fff;display:grid;place-items:center;z-index:2;box-shadow:0 6px 14px -6px rgba(0,0,0,.4)"><i class="{{ r.chanIcon }}" style="font-size:16px;color:{{ r.chanColor }}"></i></span>
+                <button onClick="{{ r.play }}" title="Play reel" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:78px;height:78px;border-radius:50%;background:rgba(255,255,255,.92);display:grid;place-items:center;box-shadow:0 18px 38px -14px rgba(0,0,0,.7);transition:transform .18s" style-hover="transform:translate(-50%,-50%) scale(1.07)"><i class="ph-fill ph-play" style="font-size:31px;color:#1c1430;margin-left:4px"></i></button>
+                <div style="position:absolute;left:0;right:0;bottom:0;padding:20px 22px 22px;color:#fff;display:flex;align-items:flex-end;gap:10px">
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#ffcb45">{{ r.loc }}</div>
+                    <div style="font-family:'Newsreader',serif;font-weight:500;font-size:27px;line-height:1.05;margin-top:3px;text-wrap:pretty">{{ r.title }}</div>
+                  </div>
+                  <span style="flex:none;padding:6px 11px;border-radius:9px;background:rgba(12,9,22,.66);color:#fff;font-size:12px;font-weight:800;backdrop-filter:blur(6px)">{{ r.dur }}</span>
+                </div>
+              </div>
+              <div style="border-radius:0 0 24px 24px;background:rgba(255,255,255,.66);border:1px solid rgba(122,47,224,.16);border-top:none;padding:11px 14px 13px;box-shadow:0 22px 44px -34px rgba(40,15,70,.6)">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+                  <span style="display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:800;color:#8a5a2e"><i class="ph-fill ph-calendar-blank" style="font-size:13px;color:#c8892a"></i>{{ r.when }}</span>
+                  <button onClick="{{ r.reuse }}" style="display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:9px;background:rgba(122,47,224,.14);color:#5a18c0;font-size:12px;font-weight:800" style-hover="background:rgba(122,47,224,.24)"><i class="ph-bold ph-arrow-clockwise" style="font-size:12px"></i>Reuse</button>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
+                  <sc-for list="{{ r.stats }}" as="st" hint-placeholder-count="3">
+                    <div style="flex:1;min-width:0;border-radius:11px;background:rgba(255,255,255,.72);border:1px solid {{ st.bd }};padding:9px 4px;text-align:center"><div style="display:flex;align-items:center;justify-content:center;gap:5px"><i class="{{ st.icon }}" style="font-size:14px;color:{{ st.fg }}"></i><span style="font-size:16px;font-weight:800;color:#1c1430">{{ st.value }}</span></div><div style="font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#7a6a55;margin-top:2px">{{ st.label }}</div></div>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        </sc-if>
+
+        <sc-if value="{{ g.hasPosts }}" hint-placeholder-val="{{ true }}">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px">
+          <sc-for list="{{ g.posts }}" as="a" hint-placeholder-count="2">
+            <div style="{{ a.cardStyle }}">
+              <div style="{{ a.photoStyle }}">
+                <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(16,12,28,.82),transparent 58%)"></div>
+                <span style="{{ a.chipStyle }}"><i class="{{ a.chanIcon }}" style="font-size:16px;color:{{ a.chanColor }}"></i></span>
+                <span style="{{ a.statusStyle }}"><i class="{{ a.statusIcon }}" style="font-size:12px"></i>{{ a.statusLabel }}</span>
+                <div style="position:absolute;left:0;right:0;bottom:0;padding:18px 20px;color:#fff">
+                  <div style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#ffcb45">{{ a.loc }}</div>
+                  <div style="font-family:'Newsreader',serif;font-weight:500;font-size:27px;line-height:1.05;margin-top:3px">{{ a.title }}</div>
+                </div>
+              </div>
+              <div style="padding:16px 18px 17px">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:800;color:#8a5a2e"><i class="ph-fill ph-calendar-blank" style="font-size:14px;color:#c8892a"></i>{{ a.when }}</span><button onClick="{{ a.reuse }}" style="display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:10px;background:rgba(122,47,224,.14);color:#5a18c0;font-size:12.5px;font-weight:800" style-hover="background:rgba(122,47,224,.24)"><i class="ph-bold ph-arrow-clockwise" style="font-size:13px"></i>Reuse</button></div>
+                <div style="display:flex;align-items:center;gap:9px;margin-top:14px">
+                  <sc-for list="{{ a.stats }}" as="st" hint-placeholder-count="3">
+                    <div style="flex:1;min-width:0;border-radius:13px;background:{{ st.bg }};padding:12px 6px;text-align:center;border:1px solid {{ st.bd }}"><div style="display:flex;align-items:center;justify-content:center;gap:5px"><i class="{{ st.icon }}" style="font-size:15px;color:{{ st.fg }}"></i><span style="font-size:18px;font-weight:800;color:#1c1430">{{ st.value }}</span></div><div style="font-size:9.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#7a6a55;margin-top:3px">{{ st.label }}</div></div>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        </sc-if>
+      </div>
+    </sc-for>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isPerf }}">
+  <div style="max-width:1200px;margin:0 auto;padding:16px 34px 56px;width:100%">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;animation:omRise .5s cubic-bezier(.2,.8,.2,1) both">
+      <div style="display:flex;align-items:center;gap:12px"><div style="font-size:12px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#7a2fe0">Performance</div><span style="width:5px;height:5px;border-radius:50%;background:#c8a24e"></span><div style="font-size:14px;font-weight:800;color:#5a3a1c">Last 30 days</div></div>
+      <div style="display:flex;align-items:center;gap:8px;padding:11px 15px;border-radius:13px;background:rgba(255,255,255,.6);border:1px solid rgba(122,47,224,.14);font-size:12.5px;font-weight:800;color:#7a6a55"><i class="ph ph-link" style="font-size:15px;color:#7a2fe0"></i>Pulled from your connected accounts</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:20px">
+      <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+        <div style="{{ k.cardStyle }}">
+          <div style="display:flex;align-items:center;justify-content:space-between"><span style="width:38px;height:38px;border-radius:12px;background:{{ k.bg }};color:{{ k.fg }};display:grid;place-items:center"><i class="{{ k.icon }}" style="font-size:20px"></i></span><span style="font-size:12px;font-weight:800;color:#16a34a">{{ k.delta }}</span></div>
+          <div style="font-family:'Newsreader',serif;font-size:42px;font-weight:500;color:#1c1430;line-height:1;margin-top:14px">{{ k.value }}</div>
+          <div style="font-size:12.5px;font-weight:700;color:#5a4a38;margin-top:4px">{{ k.label }}</div>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1.55fr 1fr;gap:16px;margin-top:16px">
+      <div style="border-radius:24px;background:linear-gradient(160deg,#251b40,#151020);border:1px solid rgba(122,47,224,.4);padding:22px 24px;box-shadow:0 28px 58px -32px rgba(20,10,40,.8);position:relative;overflow:hidden">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px"><div><div style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#ffcb45">Reach over 30 days</div><div style="font-size:16px;font-weight:800;color:#fff;margin-top:4px">8,400 people · up 38% this month</div></div><div style="display:flex;align-items:center;gap:7px;font-size:12px;font-weight:800;color:#ffd873"><span style="width:14px;height:5px;border-radius:3px;background:linear-gradient(90deg,#ffd24d,#ff6b5c)"></span>Daily reach</div></div>
+        <div style="margin-top:12px" data-om-raster="">{{ reachChart }}</div>
+      </div>
+
+      <div style="border-radius:24px;background:linear-gradient(150deg,#ecdbff,#d3b8fa);border:1px solid rgba(122,47,224,.28);padding:22px 24px;display:flex;flex-direction:column;box-shadow:0 24px 50px -34px rgba(90,40,150,.5)">
+        <div style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#5a18c0">Reach by channel</div>
+        <div style="display:flex;align-items:center;gap:22px;margin-top:14px;flex:1">
+          <div data-om-raster="" style="flex:none">{{ donut }}</div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:14px">
+            <sc-for list="{{ perfChannels }}" as="c" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;gap:11px"><span style="width:14px;height:14px;border-radius:5px;background:{{ c.color }};flex:none;box-shadow:0 3px 8px -3px {{ c.color }}"></span><span style="flex:1;font-size:14.5px;font-weight:800;color:#2a1e3d">{{ c.name }}</span><span style="font-size:13px;font-weight:700;color:#7a6a8e">{{ c.reach }}</span><span style="font-size:15px;font-weight:800;color:#1c1430;min-width:38px;text-align:right">{{ c.pct }}</span></div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:16px">
+      <div style="border-radius:22px;overflow:hidden;background:linear-gradient(150deg,#fff0c4,#ffd873);border:1px solid rgba(230,150,0,.35);box-shadow:0 24px 50px -34px rgba(230,150,0,.5)">
+        <div style="{{ topPropStyle }}"><div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(16,12,28,.85),transparent 60%)"></div><div style="position:absolute;left:16px;right:16px;bottom:14px;color:#fff"><div style="font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#ffcb45">Most-viewed property</div><div style="font-family:'Newsreader',serif;font-size:23px;font-weight:500;margin-top:2px">{{ topPropTitle }}</div></div></div>
+        <div style="padding:16px 18px;font-size:13.5px;font-weight:600;color:#6a4a1e;line-height:1.45">{{ topPropLine }}</div>
+      </div>
+
+      <div style="border-radius:22px;background:linear-gradient(150deg,#dbfbe3,#8ce9a8);border:1px solid rgba(30,158,69,.3);padding:22px 24px;box-shadow:0 24px 50px -34px rgba(30,158,69,.5)">
+        <div style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#166534">Engagement · from the platforms</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 10px;margin-top:16px">
+          <sc-for list="{{ engagement }}" as="e" hint-placeholder-count="4">
+            <div style="display:flex;align-items:center;gap:10px"><span style="width:38px;height:38px;flex:none;border-radius:12px;background:{{ e.bg }};color:{{ e.fg }};display:grid;place-items:center"><i class="{{ e.icon }}" style="font-size:18px"></i></span><div><div style="font-size:20px;font-weight:800;color:#1c1430;line-height:1">{{ e.value }}</div><div style="font-size:11px;font-weight:700;color:#3a4d38">{{ e.label }}</div></div></div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="border-radius:22px;background:linear-gradient(150deg,#ffe3de,#ffb9b0);border:1px solid rgba(224,71,58,.3);padding:22px 24px;box-shadow:0 24px 50px -34px rgba(224,71,58,.5);display:flex;flex-direction:column">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#c0402e">Follower growth</div><div style="font-size:13px;font-weight:800;color:#16a34a">{{ followerTotal }}</div></div>
+        <div style="display:flex;flex-direction:column;gap:16px;margin-top:18px;flex:1;justify-content:center">
+          <sc-for list="{{ followerRows }}" as="r" hint-placeholder-count="2">
+            <div>
+              <div style="display:flex;align-items:center;gap:9px;margin-bottom:7px"><i class="{{ r.icon }}" style="font-size:18px;color:{{ r.color }}"></i><span style="flex:1;font-size:13.5px;font-weight:800;color:#2a1e3d">{{ r.name }}</span><span style="font-size:15px;font-weight:800;color:#1c1430">{{ r.val }}</span></div>
+              <div style="height:9px;border-radius:6px;background:rgba(255,255,255,.55);overflow:hidden"><div style="{{ r.barStyle }}"></div></div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="font-size:11.5px;font-weight:700;color:#8a4a42;margin-top:14px">Net new followers across Instagram &amp; Facebook this month.</div>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  </div>
+
+  <sc-if value="{{ picker }}">
+  <div onClick="{{ closePicker }}" style="position:fixed;inset:0;z-index:80;background:rgba(24,16,40,.5);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:32px;animation:omRise .2s ease both">
+    <div onClick="{{ stop }}" style="width:min(680px,100%);max-height:82vh;overflow-y:auto;border-radius:24px;background:linear-gradient(160deg,#fff6ec,#fdeefb);border:1px solid rgba(122,47,224,.18);box-shadow:0 40px 80px -30px rgba(24,16,40,.6);padding:26px 28px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <div><div style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#7a2fe0">Filter by property</div><div style="font-size:21px;font-weight:800;color:#1c1430;margin-top:2px">Show posts for one property</div></div>
+        <button onClick="{{ closePicker }}" style="width:38px;height:38px;border-radius:11px;background:rgba(122,47,224,.1);color:#6a5b48;display:grid;place-items:center" style-hover="background:rgba(122,47,224,.2)"><i class="ph-bold ph-x" style="font-size:18px"></i></button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px">
+        <sc-for list="{{ pickerItems }}" as="i" hint-placeholder-count="6">
+          <button onClick="{{ i.choose }}" style="{{ i.style }}" style-hover="border-color:#7a2fe0;transform:translateY(-2px)">
+            <div style="{{ i.photoStyle }}"><sc-if value="{{ i.isAll }}"><i class="ph-fill ph-squares-four" style="font-size:22px;color:#fff"></i></sc-if></div>
+            <div style="flex:1;min-width:0;text-align:left"><div style="font-size:14px;font-weight:800;color:#1c1430;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ i.title }}</div><div style="font-size:12px;color:#8a7862">{{ i.sub }}</div></div>
+            <sc-if value="{{ i.current }}"><span style="padding:4px 8px;border-radius:7px;background:rgba(230,173,69,.25);color:#a8571e;font-size:10px;font-weight:800;flex:none">CURRENT</span></sc-if>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ uploadOpen }}">
+  <div onClick="{{ closeUpload }}" style="position:fixed;inset:0;z-index:85;background:rgba(24,16,40,.5);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:32px;animation:omRise .2s ease both">
+    <div onClick="{{ stop }}" style="width:min(560px,100%);max-height:86vh;overflow-y:auto;border-radius:24px;background:linear-gradient(160deg,#fff6ec,#fdeefb);border:1px solid rgba(122,47,224,.18);box-shadow:0 40px 80px -30px rgba(24,16,40,.6);padding:26px 28px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+        <div><div style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#7a2fe0">{{ stepLabel }} · {{ quotaLabel }}</div><div style="font-size:22px;font-weight:800;color:#1c1430;margin-top:3px">{{ stepTitle }}</div><div style="font-size:13px;font-weight:600;color:#8a7862;margin-top:4px;max-width:400px">{{ stepSub }}</div></div>
+        <button onClick="{{ closeUpload }}" style="width:38px;height:38px;flex:none;border-radius:11px;background:rgba(122,47,224,.1);color:#6a5b48;display:grid;place-items:center" style-hover="background:rgba(122,47,224,.2)"><i class="ph-bold ph-x" style="font-size:18px"></i></button>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:8px;margin-top:18px">
+        <span style="{{ dot1Style }}"></span>
+        <span style="{{ dot2Style }}"></span>
+      </div>
+
+      <sc-if value="{{ isStep1 }}" hint-placeholder-val="{{ true }}">
+      <div style="margin-top:18px;animation:omRise .22s ease both">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+          <sc-for list="{{ upProps }}" as="p" hint-placeholder-count="6">
+            <button onClick="{{ p.pick }}" style="{{ p.style }}" style-hover="border-color:#7a2fe0">
+              <div style="{{ p.photoStyle }}"></div>
+              <div style="flex:1;min-width:0;text-align:left"><div style="font-size:13.5px;font-weight:800;color:#1c1430;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.title }}</div><div style="font-size:11.5px;color:#8a7862;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.sub }}</div></div>
+              <sc-if value="{{ p.on }}"><i class="ph-fill ph-check-circle" style="font-size:18px;color:#22c55e;flex:none"></i></sc-if>
+            </button>
+          </sc-for>
+        </div>
+        <button onClick="{{ nextStep }}" style="{{ nextStyle }}" style-hover="transform:translateY(-2px)">Continue<i class="ph-bold ph-arrow-right" style="font-size:18px"></i></button>
+      </div>
+      </sc-if>
+
+      <sc-if value="{{ isStep2 }}">
+      <div style="margin-top:18px;animation:omRise .22s ease both">
+        <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.7);border:1px solid rgba(122,47,224,.14)">
+          <div style="{{ chosenPhotoStyle }}"></div>
+          <div style="flex:1;min-width:0"><div style="font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#a8571e">Property</div><div style="font-size:14px;font-weight:800;color:#1c1430">{{ chosenTitle }}</div></div>
+          <button onClick="{{ backStep }}" style="padding:7px 12px;border-radius:9px;background:rgba(122,47,224,.12);color:#5a18c0;font-size:12px;font-weight:800" style-hover="background:rgba(122,47,224,.22)">Change</button>
+        </div>
+
+        <button onClick="{{ chooseFile }}" style="{{ fileBtnStyle }}" style-hover="border-color:#7a2fe0;background:rgba(255,255,255,.92)">
+          <span style="width:44px;height:44px;flex:none;border-radius:13px;background:rgba(122,47,224,.12);display:grid;place-items:center"><i class="{{ fileIcon }}" style="font-size:22px;color:#7a2fe0"></i></span>
+          <div style="text-align:left"><div style="font-size:14.5px;font-weight:800;color:#1c1430">{{ fileTitle }}</div><div style="font-size:12px;color:#8a7862;margin-top:1px">{{ fileSub }}</div></div>
+        </button>
+
+        <div style="margin-top:18px">
+          <div style="font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#a8571e">Note for the MAPCO team <span style="font-weight:700;letter-spacing:0;text-transform:none;color:#a99a86">· optional</span></div>
+          <textarea onInput="{{ setNote }}" placeholder="Anything we should know? e.g. show the park side first." style="width:100%;margin-top:10px;min-height:64px;resize:vertical;padding:13px 15px;border-radius:14px;border:1.5px solid rgba(122,47,224,.16);background:rgba(255,255,255,.8);font-size:14px;font-weight:600;color:#1c1430;outline:none"></textarea>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;margin-top:20px">
+          <button onClick="{{ backStep }}" style="display:inline-flex;align-items:center;gap:7px;padding:16px 18px;border-radius:16px;background:rgba(122,47,224,.1);color:#5a18c0;font-size:15px;font-weight:800;flex:none" style-hover="background:rgba(122,47,224,.2)"><i class="ph-bold ph-arrow-left" style="font-size:17px"></i>Back</button>
+          <button onClick="{{ submitUpload }}" style="{{ submitStyle }}" style-hover="transform:translateY(-2px)"><i class="ph-fill ph-paper-plane-right" style="font-size:20px"></i>Submit video</button>
+        </div>
+      </div>
+      </sc-if>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ toast }}">
+  <div style="position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:90;display:flex;align-items:center;gap:11px;padding:15px 22px;border-radius:15px;background:#1c1430;color:#f3ecff;font-size:14.5px;font-weight:700;box-shadow:0 24px 48px -18px rgba(28,15,56,.85);animation:omRise .26s ease both"><i class="ph-fill ph-check-circle" style="font-size:20px;color:#ffcb45"></i>{{ toast }}</div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;dealerName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Chaurasia Properties&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Marketing&quot;},&quot;startLive&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Marketing&quot;}}">
+class Component extends DCLogic {
+  CH = {
+    ig:{name:'Instagram',icon:'ph-fill ph-instagram-logo',c:'#E1306C'},
+    fb:{name:'Facebook',icon:'ph-fill ph-facebook-logo',c:'#1877F2'},
+    gbp:{name:'Google',icon:'ph-fill ph-google-logo',c:'#EA4335'},
+    wa:{name:'WhatsApp',icon:'ph-fill ph-whatsapp-logo',c:'#25D366'}
+  };
+  PROPS = [
+    {code:'S88214',title:'Sector 88 · Plot 214',sub:'Mohali · 250 sq yd',photo:'assets/mkt-prop-3.webp'},
+    {code:'AER908',title:'Aerocity · Plot 908',sub:'300 sq yd · corner',photo:'assets/mkt-prop-2.jpg'},
+    {code:'S7861',title:'Sector 78 · Plot 61',sub:'Mohali · 150 sq yd',photo:'assets/mkt-prop-4.jpg'},
+    {code:'S89142',title:'Sector 89 · Plot 142',sub:'Mohali · 200 sq yd',photo:'assets/mkt-prop-4.jpg'},
+    {code:'NC12',title:'New Chandigarh · Villa 12',sub:'500 sq yd villa plot',photo:'assets/mkt-prop-1.jpg'},
+    {code:'AER77',title:'Aerocity · Plot 77',sub:'240 sq yd',photo:'assets/mkt-prop-3.webp'}
+  ];
+  TODAY = [
+    {id:'a',num:'01',accent:'#7a2fe0',layout:'split',propName:'Plot 214',
+     photo:'assets/mkt-prop-3.webp',eyebrow:'Premium Plot',line1:'SECTOR 88',line2:'PLOT 214',
+     factA:'250 SQ YD · PARK FACING',factB:'30 FT ROAD · GMADA APPROVED',tagline:'READY TO REGISTER',
+     features:[{icon:'ph-fill ph-map-pin',label:'Prime Location'},{icon:'ph-fill ph-road-horizon',label:'Wide Roads'},{icon:'ph-fill ph-tree',label:'Park Facing'},{icon:'ph-fill ph-seal-check',label:'Clear Title'}]},
+    {id:'b',num:'02',accent:'#e0473a',layout:'overlay',propName:'Plot 908',
+     photo:'assets/mkt-prop-2.jpg',eyebrow:'Premium Corner Plot',line1:'AEROCITY',line2:'PLOT 908',
+     factA:'300 SQ YD · 40 FT ROAD',factB:'NEAR AIRPORT ROAD',tagline:'Limited Inventory',
+     features:[{icon:'ph-fill ph-corners-out',label:'Corner Plot'},{icon:'ph-fill ph-road-horizon',label:'40 ft Road'},{icon:'ph-fill ph-trend-up',label:'High Demand'},{icon:'ph-fill ph-chart-line-up',label:'Great Investment'}]}
+  ];
+  TIMES = ['Now','8:00 AM','10:00 AM','12:00 PM','2:00 PM','4:00 PM','6:00 PM','8:00 PM'];
+  GRAD = ['linear-gradient(155deg,#fff0c4,#ffd873)','linear-gradient(155deg,#dbfbe3,#8ce9a8)','linear-gradient(155deg,#ecdbff,#c6a3f5)','linear-gradient(155deg,#ffe3de,#ffb3a8)'];
+  BORD = ['rgba(230,150,0,.4)','rgba(30,158,69,.36)','rgba(122,47,224,.34)','rgba(224,71,58,.34)'];
+
+  state = {
+    section:'today',
+    activePost:'a',
+    status:{a:'ready',b:'ready',r1:'ready',r2:'ready'},
+    sel:{a:{ig:true,fb:true,gbp:true,wa:false},b:{ig:true,fb:true,gbp:false,wa:true},r1:{ig:true,fb:true},r2:{ig:true,fb:false}},
+    times:{a:'6:40 AM',b:'6:41 AM',r1:'7:10 PM',r2:'6:15 PM'},
+    timeOpen:false,
+    phase:'ready', pubPost:null, chStep:0, postedChans:{},
+    picker:null, libProp:'all', libKind:'all', toast:'',
+    reels:[
+      {id:'r1',pi:0,prod:'ready',dur:'0:28',sub:'Edited by MAPCO · delivered Tuesday'},
+      {id:'r2',pi:1,prod:'ready',dur:'0:34',sub:'Edited by MAPCO · delivered Monday'},
+      {id:'r3',pi:2,prod:'editing',dur:'',sub:'Submitted yesterday'}
+    ],
+    reelIdx:0, playing:false, used:3,
+    upload:false, upStep:1, upPi:null, upFile:'', upNote:''
+  };
+
+  curId(){ const s=this.state; if(s.section!=='reels') return s.activePost; const r=s.reels[Math.min(s.reelIdx,s.reels.length-1)]; return r?r.id:'r1'; }
+  chanKeys(){ return this.state.section==='reels'?['ig','fb']:['ig','fb','gbp','wa']; }
+  cycleReel(d){ this.setState(s=>({reelIdx:(s.reelIdx+d+s.reels.length)%s.reels.length,playing:false,timeOpen:false})); }
+  submitUpload(){
+    const s=this.state;
+    if(s.upPi===null){ this.say('Pick a property first.'); return; }
+    if(!s.upFile){ this.say('Choose a video to upload.'); return; }
+    const id='r'+(s.reels.length+1);
+    this.setState(st=>({
+      reels:[...st.reels,{id,pi:st.upPi,prod:'received',dur:'',sub:'Submitted just now'}],
+      used:Math.min(4,st.used+1), reelIdx:st.reels.length,
+      upload:false, upStep:1, upPi:null, upFile:'', upNote:'', playing:false
+    }));
+    this.say('Video received. MAPCO will start editing.');
+  }
+
+  componentDidMount(){ if(this.props?.startLive){ this.setState({status:{a:'posted',b:'posted'},postedChans:{a:['ig','fb','gbp'],b:['ig','wa']}}); } }
+  componentWillUnmount(){ clearTimeout(this._t); clearTimeout(this._pt); }
+
+  say(t){ clearTimeout(this._t); this.setState({toast:t}); this._t=setTimeout(()=>this.setState({toast:''}),2600); }
+  thumb(src,size,radius){ return `width:${size}px;height:${size}px;flex:none;border-radius:${radius}px;background-image:url("${src}");background-size:cover;background-position:center;background-color:#e6ddce`; }
+
+  toggleChannel(pid,c){ this.setState(s=>{ const cur=s.sel[pid]||{}; return {sel:{...s.sel,[pid]:{...cur,[c]:!cur[c]}}}; }); }
+  switchPost(id){ this.setState({activePost:id,timeOpen:false}); }
+  cyclePost(){ const next=this.state.activePost==='a'?'b':'a'; this.setState({activePost:next,timeOpen:false}); }
+
+  publishActive(){
+    const id=this.curId();
+    const isReel=this.state.section==='reels';
+    if(this.state.phase!=='ready') return;
+    if((this.state.status[id]||'ready')!=='ready'){ this.say(isReel?'This reel is already live.':'This post is already live.'); return; }
+    const sel=this.state.sel[id]||{}, order=this.chanKeys();
+    const chans=order.filter(c=>sel[c]);
+    if(!chans.length){ this.say('Turn on at least one channel first.'); return; }
+    this.setState({phase:'publishing',pubPost:id,chStep:0,timeOpen:false});
+    this._curChans=chans;
+    const tick=()=>{
+      this.setState(s=>({chStep:s.chStep+1}));
+      if(this.state.chStep>=chans.length){
+        this.setState(s=>({phase:'ready',pubPost:null,status:{...s.status,[id]:'posted'},postedChans:{...s.postedChans,[id]:chans}}));
+        this.say(isReel?'Done. Your reel is out.':'Done. This post is out.');
+      } else this._pt=setTimeout(tick,600);
+    };
+    this._pt=setTimeout(tick,480);
+  }
+
+  reachChartSvg(){
+    const data=[210,240,190,260,300,280,340,320,380,360,300,410,430,390,460,440,510,480,540,520,590,560,620,600,660,640,700,680,740,760];
+    const W=580,H=246,padX=12,padTop=34,padBot=38, min=150,max=800;
+    const x=i=>padX+i*(W-2*padX)/(data.length-1);
+    const y=v=>H-padBot-(v-min)/(max-min)*(H-padTop-padBot);
+    let line='M'+x(0).toFixed(1)+' '+y(data[0]).toFixed(1);
+    data.forEach((v,i)=>{ if(i) line+=' L'+x(i).toFixed(1)+' '+y(v).toFixed(1); });
+    const area=line+` L${x(data.length-1).toFixed(1)} ${H-padBot} L${x(0).toFixed(1)} ${H-padBot} Z`;
+    const grid=[0,1,2,3].map(i=>{ const gy=(padTop+i*(H-padTop-padBot)/3).toFixed(1); return `<line x1="${padX}" y1="${gy}" x2="${W-padX}" y2="${gy}" stroke="rgba(255,255,255,.09)" stroke-width="1"/>`; }).join('');
+    const labelIdx=[0,7,14,21,29], labels=['21 Jul','28 Jul','4 Aug','11 Aug','19 Aug'];
+    const xlabels=labelIdx.map((li,k)=>`<text x="${x(li).toFixed(1)}" y="${H-14}" text-anchor="${k===0?'start':(k===labelIdx.length-1?'end':'middle')}" font-family="Hanken Grotesk,sans-serif" font-size="11" font-weight="700" fill="rgba(255,255,255,.5)">${labels[k]}</text>`).join('');
+    const ai=16, ax=x(ai), ay=y(data[ai]);
+    const anno=`<line x1="${ax.toFixed(1)}" y1="${(padTop+2).toFixed(1)}" x2="${ax.toFixed(1)}" y2="${ay.toFixed(1)}" stroke="rgba(255,203,69,.5)" stroke-width="1.3" stroke-dasharray="3 4"/>`+
+      `<rect x="${(ax-72).toFixed(1)}" y="${(padTop-16).toFixed(1)}" width="144" height="20" rx="10" fill="rgba(255,203,69,.16)" stroke="rgba(255,203,69,.4)" stroke-width="1"/>`+
+      `<text x="${ax.toFixed(1)}" y="${(padTop-2).toFixed(1)}" text-anchor="middle" font-family="Hanken Grotesk,sans-serif" font-size="10.5" font-weight="800" fill="#ffe08a">6 Aug · reels launched</text>`+
+      `<circle cx="${ax.toFixed(1)}" cy="${ay.toFixed(1)}" r="4.5" fill="#ffcb45" stroke="#151020" stroke-width="2"/>`;
+    const ex=x(data.length-1), ey=y(data[data.length-1]);
+    const endLabel=`<text x="${(ex-6).toFixed(1)}" y="${(ey-12).toFixed(1)}" text-anchor="end" font-family="Newsreader,serif" font-size="17" font-weight="600" fill="#fff">760</text>`;
+    return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block"><defs>`+
+      `<linearGradient id="rln" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffd24d"/><stop offset=".5" stop-color="#ff9a4d"/><stop offset="1" stop-color="#ff6b5c"/></linearGradient>`+
+      `<linearGradient id="rfl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff8a4d" stop-opacity=".38"/><stop offset="1" stop-color="#ff6b5c" stop-opacity="0"/></linearGradient></defs>`+
+      grid+
+      `<path d="${area}" fill="url(#rfl)"/>`+
+      `<path d="${line}" fill="none" stroke="url(#rln)" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1100" style="animation:omDraw 1.3s cubic-bezier(.4,0,.2,1) both"/>`+
+      anno+xlabels+endLabel+
+      `<circle cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="6" fill="#ffd24d" stroke="#151020" stroke-width="2.5"/></svg>`;
+  }
+  donutSvg(){
+    const segs=[{c:'#E1306C',v:52},{c:'#1877F2',v:31},{c:'#EA4335',v:11},{c:'#25D366',v:6}];
+    const R=64,SW=26,C=84,circ=2*Math.PI*R, gap=9; let off=0;
+    const rings=segs.map(s=>{ const len=circ*s.v/100; const draw=Math.max(len-gap,3); const el=`<circle cx="${C}" cy="${C}" r="${R}" fill="none" stroke="${s.c}" stroke-width="${SW}" stroke-dasharray="${draw.toFixed(1)} ${(circ-draw).toFixed(1)}" stroke-dashoffset="${(-off).toFixed(1)}" transform="rotate(-90 ${C} ${C})" stroke-linecap="round"/>`; off+=len; return el; }).join('');
+    return `<svg viewBox="0 0 168 168" style="width:172px;height:172px;display:block">${rings}<text x="84" y="80" text-anchor="middle" font-family="Newsreader,serif" font-size="34" font-weight="500" fill="#1c1430">8.4k</text><text x="84" y="100" text-anchor="middle" font-family="Hanken Grotesk,sans-serif" font-size="10.5" font-weight="800" fill="#7a6a8e" letter-spacing="1">TOTAL REACH</text></svg>`;
+  }
+
+  renderVals(){
+    const s=this.state, CH=this.CH, P=this.PROPS;
+
+    const TABS=[
+      {key:'today',label:'Today',icon:'ph-sun-horizon'},
+      {key:'reels',label:'Reels',icon:'ph-film-reel'},
+      {key:'library',label:'Library',icon:'ph-cards-three'},
+      {key:'performance',label:'Performance',icon:'ph-chart-bar'}
+    ];
+    const tabs=TABS.map(t=>{ const on=s.section===t.key; return {
+      label:t.label, icon:(on?'ph-fill ':'ph ')+t.icon,
+      style:`display:flex;align-items:center;gap:8px;padding:10px 20px;border-radius:13px;font-size:14.5px;font-weight:800;transition:all .16s;${on?'background:#1c1430;color:#ffcb45;box-shadow:0 10px 22px -12px rgba(28,20,48,.7)':'color:#5a3a1c;background:transparent'}`,
+      go:()=>this.setState({section:t.key})
+    };});
+
+    const navAccounts=[
+      {icon:CH.ig.icon,color:'#fff',grad:'linear-gradient(45deg,#f9ce34,#ee2a7b 45%,#6228d7)'},
+      {icon:CH.fb.icon,color:'#1877F2'},{icon:CH.gbp.icon,color:'#EA4335'},{icon:CH.wa.icon,color:'#25D366'}
+    ].map(a=>({ icon:a.icon, color:a.color,
+      style:`width:30px;height:30px;border-radius:9px;display:grid;place-items:center;${a.grad?'background:'+a.grad:'background:#fff'};box-shadow:0 5px 12px -6px rgba(40,15,70,.5);border:1.5px solid rgba(255,255,255,.85)` }));
+
+    // ---- TODAY / REELS (shared creative + publishing bar) ----
+    const isReels=s.section==='reels';
+    const cid=this.curId(), keys=this.chanKeys();
+    const buildChannels=(id)=> keys.map(k=>{ const c=CH[k], on=!!(s.sel[id]||{})[k]; return {
+      name:c.name, icon:c.icon, on, iconColor: on?c.c:'#b7a58f',
+      style:`position:relative;width:52px;height:52px;flex:none;border-radius:15px;display:grid;place-items:center;transition:all .15s;${on?'background:#fff;box-shadow:0 10px 20px -8px '+c.c+'aa':'background:rgba(255,255,255,.45);opacity:.6'}`,
+      toggle:()=>this.toggleChannel(id,k)
+    };});
+    const at=this.TODAY.find(t=>t.id===s.activePost)||this.TODAY[0];
+    const curSt=s.status[cid]||'ready', posted=curSt==='posted', skipped=curSt==='skipped';
+    const shared={
+      channels:buildChannels(cid),
+      skip:()=>{ this.setState(st2=>({status:{...st2.status,[cid]:'skipped'}})); this.say(isReels?'Skipped. The reel stays in your Library.':'Skipped. MAPCO will bring another property.'); },
+      unskip:()=>this.setState(st2=>({status:{...st2.status,[cid]:'ready'}}))
+    };
+    const active=isReels?shared:{
+      wrapStyle:'position:relative;height:100%;flex:1;min-width:0;display:flex;align-items:center;justify-content:center;animation:omSlideX .3s cubic-bezier(.2,.8,.2,1) both',
+      creativeStyle:'position:relative;height:100%;width:auto;aspect-ratio:4/5;max-width:100%;container-type:inline-size;border-radius:22px;overflow:hidden;background:#14101f;transition:transform .22s,box-shadow .22s;box-shadow:0 44px 84px -34px rgba(40,15,70,.7)',
+      split:at.layout==='split', overlay:at.layout==='overlay',
+      photoStyle:at.layout==='split'
+        ? `position:absolute;left:0;right:0;top:0;height:50%;background-image:url("${at.photo}");background-size:cover;background-position:center`
+        : `position:absolute;inset:0;background-image:url("${at.photo}");background-size:cover;background-position:center`,
+      eyebrow:at.eyebrow, line1:at.line1, line2:at.line2, factA:at.factA, factB:at.factB, tagline:at.tagline, features:at.features,
+      isPosted:posted, isSkipped:skipped, ...shared
+    };
+    const postTabs=this.TODAY.map(t=>{ const on=s.activePost===t.id, live=s.status[t.id]==='posted'; return {
+      num:t.num, name:t.propName, live,
+      dotStyle:`width:11px;height:11px;border-radius:50%;flex:none;background:${t.accent};${on?'box-shadow:0 0 0 4px '+t.accent+'44':''}`,
+      style:`display:flex;align-items:center;gap:9px;padding:8px 14px;border-radius:14px;transition:all .16s;${on?'background:#fff;box-shadow:0 12px 26px -14px rgba(90,40,150,.55);border:1px solid rgba(122,47,224,.2)':'background:rgba(255,255,255,.4);border:1px solid transparent;opacity:.72'}`,
+      go:()=>this.switchPost(t.id)
+    };});
+
+    const phase=s.phase;
+    const barPublishing = phase==='publishing' && s.pubPost===cid;
+    const barPosted = posted && !barPublishing;
+    const barReady = !barPublishing && !barPosted;
+    const selChans=keys.filter(c=>(s.sel[cid]||{})[c]);
+    const chList = barPublishing ? (this._curChans||[]) : selChans;
+    const progressChannels=chList.map((k,i)=>{ const done=i<s.chStep, act=i===s.chStep; return {
+      name:CH[k].name, icon:CH[k].icon, done, active:act, pending:!done&&!act,
+      textColor: done?'#177a42':(act?'#1c1430':'#b8a68e'),
+      style:`display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:11px;background:${done?'rgba(34,197,94,.14)':(act?'rgba(122,47,224,.12)':'rgba(122,47,224,.05)')};transition:background .3s`
+    };});
+    const postedChannels=(s.postedChans[cid]||selChans).map(k=>({name:CH[k].name,icon:CH[k].icon,color:CH[k].c}));
+
+    const timeOptions=this.TIMES.map(o=>{ const on=s.times[cid]===o; return {
+      label:o,
+      style:`flex:none;padding:9px 15px;border-radius:11px;font-size:13px;font-weight:800;transition:all .14s;${on?'background:#1c1430;color:#ffcb45':'background:rgba(255,255,255,.7);border:1px solid rgba(122,47,224,.16);color:#4a3d33'}`,
+      pick:()=>{ this.setState(st2=>({times:{...st2.times,[cid]:o},timeOpen:false})); this.say(o==='Now'?'Set to post now.':'Scheduled for '+o+'.'); }
+    };});
+
+    // ---- REELS ----
+    const STAGE={received:{label:'Received',icon:'ph-fill ph-tray-arrow-down',line:'We have your video'},editing:{label:'In editing',icon:'ph-fill ph-scissors',line:'Your video is being edited'},ready:{label:'Ready',icon:'ph-fill ph-check-circle',line:'Your reel is ready'}};
+    const cr=s.reels[Math.min(s.reelIdx,s.reels.length-1)]||s.reels[0];
+    const crp=P[cr.pi]||P[0];
+    const crReady=cr.prod==='ready';
+    const reel={
+      eyebrow: crReady?(posted?'Live':(skipped?'Saved':'Ready to post')):STAGE[cr.prod].line,
+      showStatus:crReady&&!posted&&!skipped,
+      statusPill:'display:inline-flex;align-items:center;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:6px 11px;border-radius:10px;background:rgba(255,255,255,.92);color:#5a18c0;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;box-shadow:0 8px 18px -10px rgba(0,0,0,.6)',
+      photoStyle:`position:absolute;inset:0;background-image:url("${crp.photo}");background-size:cover;background-position:center;${s.playing&&crReady?'animation:omZoom 9s ease-in-out infinite alternate':''}`,
+      isReady:crReady&&!skipped, isPending:!crReady, isSkipped:crReady&&skipped, isPosted:crReady&&posted&&!skipped,
+      playing:s.playing,
+      playIcon:s.playing?'ph-fill ph-pause':'ph-fill ph-play',
+      playNudge:s.playing?'0':'4px',
+      playStyle:`position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:76px;height:76px;border-radius:50%;background:rgba(255,255,255,${s.playing?'.72':'.92'});display:grid;place-items:center;box-shadow:0 18px 38px -14px rgba(0,0,0,.7);transition:transform .18s,background .18s`,
+      barStyle:`height:100%;border-radius:3px;background:linear-gradient(90deg,#ffd24d,#ff6b5c);${s.playing?'animation:omProg 22s linear forwards':'width:0%'}`,
+      togglePlay:()=>this.setState(st2=>({playing:!st2.playing})),
+      dur:cr.dur||'—', loc:crp.sub.split(' · ')[0], title:crp.title, sub:cr.sub,
+      pendingLine:STAGE[cr.prod].line, stageIcon:STAGE[cr.prod].icon,
+      caption:crReady?(crp.sub+' · vertical reel · '+cr.dur):'MAPCO is producing this reel — nothing for you to do.',
+      steps:['received','editing','ready'].map(k=>{ const order=['received','editing','ready'], ai=order.indexOf(cr.prod), i=order.indexOf(k), done=i<ai, on=i===ai; return {
+        label:STAGE[k].label, icon:done?'ph-fill ph-check':(on?STAGE[k].icon:'ph ph-circle'),
+        style:`display:inline-flex;align-items:center;gap:6px;padding:8px 13px;border-radius:11px;font-size:12.5px;font-weight:800;${on?'background:#1c1430;color:#ffcb45':(done?'background:rgba(34,197,94,.16);color:#177a42':'background:rgba(255,255,255,.5);color:#a99a86')}`
+      };})
+    };
+    const reelTabs=s.reels.map((r,i)=>{ const on=i===Math.min(s.reelIdx,s.reels.length-1), rp=P[r.pi]||P[0], live=s.status[r.id]==='posted'; return {
+      name:rp.title.split(' · ')[1]||rp.title, stage:r.prod==='ready'?(live?'Live':'Ready'):STAGE[r.prod].label,
+      dotStyle:`width:11px;height:11px;border-radius:50%;flex:none;background:${r.prod==='ready'?(live?'#22c55e':'#7a2fe0'):'#e6ad45'};${on?'box-shadow:0 0 0 4px '+(r.prod==='ready'?(live?'rgba(34,197,94,.28)':'rgba(122,47,224,.28)'):'rgba(230,173,69,.3)'):''}`,
+      style:`display:flex;align-items:center;gap:9px;padding:8px 13px;border-radius:14px;flex:none;transition:all .16s;${on?'background:#fff;box-shadow:0 12px 26px -14px rgba(90,40,150,.55);border:1px solid rgba(122,47,224,.2)':'background:rgba(255,255,255,.4);border:1px solid transparent;opacity:.72'}`,
+      go:()=>this.setState({reelIdx:i,playing:false,timeOpen:false})
+    };});
+    const quotaFull=s.used>=4;
+    const upProps=P.map((p,i)=>({ title:p.title, sub:p.sub, on:s.upPi===i,
+      photoStyle:this.thumb(p.photo,42,10),
+      style:`display:flex;align-items:center;gap:10px;padding:9px;border-radius:13px;background:#fff;border:1.5px solid ${s.upPi===i?'#7a2fe0':'rgba(122,47,224,.14)'};transition:all .15s;cursor:pointer`,
+      pick:()=>this.setState({upPi:i}) }));
+
+    // ---- LIBRARY (date-grouped, scroll, property popup) ----
+    const LP=[
+      {pi:0,when:'6:40 AM',ch:'ig',pub:false,reach:'—',likes:'—',opens:'—',grp:'today'},
+      {pi:1,when:'6:41 AM',ch:'fb',pub:false,reach:'—',likes:'—',opens:'—',grp:'today'},
+      {pi:3,when:'5:12 PM',ch:'ig',pub:true,reach:'2.1k',likes:'142',opens:'71',grp:'yesterday'},
+      {pi:2,when:'9:03 AM',ch:'wa',pub:true,reach:'1.2k',likes:'86',opens:'40',grp:'yesterday'},
+      {pi:4,when:'Sat 17 Aug',ch:'gbp',pub:true,reach:'640',likes:'31',opens:'22',grp:'week'},
+      {pi:0,when:'Fri 16 Aug',ch:'fb',pub:true,reach:'1.9k',likes:'118',opens:'63',grp:'week'},
+      {pi:5,when:'Tue 13 Aug',ch:'ig',pub:true,reach:'2.4k',likes:'167',opens:'88',grp:'last'},
+      {pi:2,when:'Mon 12 Aug',ch:'wa',pub:true,reach:'980',likes:'54',opens:'33',grp:'last'},
+      {pi:1,when:'Tue 6 Aug',ch:'ig',pub:true,reach:'1.6k',likes:'99',opens:'47',grp:'earlier'},
+      {pi:4,when:'Mon 5 Aug',ch:'gbp',pub:true,reach:'720',likes:'38',opens:'25',grp:'earlier'},
+      {pi:0,when:'Tue 18 Aug',ch:'ig',pub:true,reach:'3.4k',likes:'286',shares:'64',grp:'yesterday',kind:'reel',dur:'0:28'},
+      {pi:1,when:'Sat 17 Aug',ch:'fb',pub:true,reach:'2.8k',likes:'201',shares:'47',grp:'week',kind:'reel',dur:'0:34'},
+      {pi:4,when:'Tue 13 Aug',ch:'ig',pub:true,reach:'4.1k',likes:'333',shares:'88',grp:'last',kind:'reel',dur:'0:22'},
+      {pi:5,when:'Wed 7 Aug',ch:'ig',pub:true,reach:'2.2k',likes:'174',shares:'39',grp:'earlier',kind:'reel',dur:'0:31'}
+    ];
+    const GRP=[
+      {k:'today',label:'Today',date:'Wed · 19 Aug'},
+      {k:'yesterday',label:'Yesterday',date:'Tue · 18 Aug'},
+      {k:'week',label:'Earlier this week',date:'16–17 Aug'},
+      {k:'last',label:'Last week',date:'12–13 Aug'},
+      {k:'earlier',label:'Earlier this month',date:'5–6 Aug'}
+    ];
+    const libVisible=LP.filter(a=> (s.libProp==='all'||String(a.pi)===s.libProp) && (s.libKind==='all'|| (s.libKind==='reels'?a.kind==='reel':a.kind!=='reel')));
+    let gci=0;
+    const mkCard=(a)=>{ const pr=P[a.pi], c=CH[a.ch], gi=gci++%4, isReel=a.kind==='reel'; return {
+      cardStyle:`border-radius:24px;overflow:hidden;background:${this.GRAD[gi]};border:1.5px solid ${this.BORD[gi]};box-shadow:0 30px 60px -34px rgba(40,15,70,.55);animation:omRise .4s cubic-bezier(.2,.8,.2,1) both`,
+      photoStyle:`position:relative;height:280px;background-image:url("${pr.photo}");background-size:cover;background-position:center`,
+      chipStyle:`position:absolute;top:14px;right:14px;width:36px;height:36px;border-radius:11px;background:#fff;display:grid;place-items:center;z-index:2;box-shadow:0 6px 14px -6px rgba(0,0,0,.4)`,
+      chanIcon:c.icon, chanColor:c.c,
+      statusStyle:`position:absolute;top:14px;left:14px;display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:9px;z-index:2;font-size:11px;font-weight:800;${a.pub?'background:rgba(34,197,94,.94);color:#fff':'background:rgba(255,255,255,.94);color:#7a2fe0'}`,
+      statusIcon:a.pub?'ph-fill ph-check':'ph-fill ph-clock', statusLabel:a.pub?'Published':'Not posted',
+      loc:pr.sub.split(' · ')[0], title:pr.title, when:a.when,
+      reuse:()=>this.say('Reusing this creative — pick where to send it.'),
+      stats:[
+        {icon:'ph-fill ph-eye',value:a.reach,label:'Reach',bg:'rgba(255,255,255,.66)',bd:'rgba(122,47,224,.14)',fg:'#7a2fe0'},
+        {icon:'ph-fill ph-heart',value:a.likes,label:'Likes',bg:'rgba(255,255,255,.66)',bd:'rgba(224,48,108,.18)',fg:'#E1306C'},
+        {icon:'ph-fill ph-cursor-click',value:a.opens,label:'Opens',bg:'rgba(255,255,255,.66)',bd:'rgba(230,150,0,.2)',fg:'#b07d1e'}
+      ]
+    };};
+    const mkReel=(a)=>{ const pr=P[a.pi], c=CH[a.ch]; return {
+      mediaStyle:`position:relative;width:100%;aspect-ratio:9/16;border-radius:24px 24px 0 0;overflow:hidden;background-image:url("${pr.photo}");background-size:cover;background-position:center;background-color:#14101f;box-shadow:0 36px 70px -32px rgba(40,15,70,.75)`,
+      chanIcon:c.icon, chanColor:c.c, dur:a.dur||'—',
+      statusStyle:`position:absolute;top:14px;left:14px;display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:9px;z-index:2;font-size:11px;font-weight:800;${a.pub?'background:rgba(34,197,94,.94);color:#fff':'background:rgba(255,255,255,.94);color:#7a2fe0'}`,
+      statusIcon:a.pub?'ph-fill ph-check':'ph-fill ph-clock', statusLabel:a.pub?'Published':'Not posted',
+      loc:pr.sub.split(' · ')[0], title:pr.title, when:a.when,
+      play:()=>this.say('Playing reel · '+pr.title),
+      reuse:()=>this.say('Reusing this reel — pick where to send it.'),
+      stats:[
+        {icon:'ph-fill ph-eye',value:a.reach,label:'Reach',fg:'#7a2fe0',bd:'rgba(122,47,224,.16)'},
+        {icon:'ph-fill ph-heart',value:a.likes,label:'Likes',fg:'#E1306C',bd:'rgba(224,48,108,.2)'},
+        {icon:'ph-fill ph-share-fat',value:a.shares||'—',label:'Shares',fg:'#16a34a',bd:'rgba(22,163,74,.22)'}
+      ]
+    };};
+    const noun=(n)=>{ const w=s.libKind==='reels'?'reel':(s.libKind==='posts'?'post':'item'); return n+' '+w+(n===1?'':'s'); };
+    const grpWrap='margin-top:26px;animation:omRise .45s cubic-bezier(.2,.8,.2,1) both';
+    const libGroups=(s.libKind==='reels')
+      ? (libVisible.length?[{label:'Finished reels',date:'August',count:noun(libVisible.length),showHeader:false,wrapStyle:'margin-top:14px;animation:omRise .45s cubic-bezier(.2,.8,.2,1) both',hasReels:true,reels:libVisible.map(mkReel),hasPosts:false,posts:[]}]:[])
+      : GRP.map(g=>{ const items=libVisible.filter(a=>a.grp===g.k); if(!items.length) return null;
+      const ps=items.filter(a=>a.kind!=='reel'), rs=items.filter(a=>a.kind==='reel');
+      return { label:g.label, date:g.date, count:noun(items.length), showHeader:true, wrapStyle:grpWrap,
+        hasReels:rs.length>0, reels:rs.map(mkReel),
+        hasPosts:ps.length>0, posts:ps.map(mkCard) };
+    }).filter(Boolean);
+    const kindTabs=[{k:'all',label:'All',icon:'ph-squares-four'},{k:'posts',label:'Posts',icon:'ph-image'},{k:'reels',label:'Reels',icon:'ph-film-reel'}].map(t=>{ const on=s.libKind===t.k; return {
+      label:t.label, icon:(on?'ph-fill ':'ph ')+t.icon,
+      style:`display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:10px;font-size:13px;font-weight:800;transition:all .15s;${on?'background:#1c1430;color:#ffcb45':'color:#5a3a1c;background:transparent'}`,
+      go:()=>this.setState({libKind:t.k})
+    };});
+
+    // ---- LIBRARY filter popup ----
+    let pickerItems=[];
+    if(s.picker){
+      const withPosts=[...new Set(LP.map(a=>a.pi))];
+      pickerItems.push({
+        isAll:true, title:'All properties', sub:'Show every post', current:s.libProp==='all',
+        photoStyle:'width:48px;height:48px;flex:none;border-radius:11px;background:linear-gradient(135deg,#7a2fe0,#22bf55);display:grid;place-items:center',
+        style:`display:flex;align-items:center;gap:12px;padding:11px;border-radius:14px;background:#fff;border:1.5px solid ${s.libProp==='all'?'#e6ad45':'rgba(122,47,224,.14)'};transition:all .15s;cursor:pointer`,
+        choose:()=>this.setState({libProp:'all',picker:null})
+      });
+      withPosts.forEach(pi=>{ const pr=P[pi]; pickerItems.push({
+        isAll:false, title:pr.title, sub:pr.sub, current:String(pi)===s.libProp,
+        photoStyle:this.thumb(pr.photo,48,11),
+        style:`display:flex;align-items:center;gap:12px;padding:11px;border-radius:14px;background:#fff;border:1.5px solid ${String(pi)===s.libProp?'#e6ad45':'rgba(122,47,224,.14)'};transition:all .15s;cursor:pointer`,
+        choose:()=>{ this.setState({libProp:String(pi),picker:null}); this.say('Showing '+pr.title+'.'); }
+      }); });
+    }
+    const filterLabel = s.libProp==='all' ? '' : (P[Number(s.libProp)]?P[Number(s.libProp)].title:'');
+
+    // ---- PERFORMANCE ----
+    const kpis=[
+      {icon:'ph-fill ph-paper-plane-right',value:'42',label:'Posts published',delta:'↑ 5',bg:'rgba(255,255,255,.6)',fg:'#7a2fe0'},
+      {icon:'ph-fill ph-eye',value:'8,400',label:'People reached',delta:'↑ 38%',bg:'rgba(255,255,255,.6)',fg:'#E1306C'},
+      {icon:'ph-fill ph-cursor-click',value:'610',label:'Property opens',delta:'↑ 44%',bg:'rgba(255,255,255,.6)',fg:'#b07d1e'},
+      {icon:'ph-fill ph-user-plus',value:'312',label:'New followers',delta:'↑ 18%',bg:'rgba(255,255,255,.6)',fg:'#16a34a'}
+    ].map((k,i)=>({...k,cardStyle:`border-radius:20px;background:${this.GRAD[i%4]};border:1.5px solid ${this.BORD[i%4]};padding:20px 22px;box-shadow:0 22px 46px -34px rgba(40,15,70,.5)`}));
+    const engagement=[
+      {icon:'ph-fill ph-heart',value:'430',label:'Likes',bg:'rgba(255,255,255,.7)',fg:'#E1306C'},
+      {icon:'ph-fill ph-chat-circle',value:'58',label:'Comments',bg:'rgba(255,255,255,.7)',fg:'#1877F2'},
+      {icon:'ph-fill ph-share-fat',value:'41',label:'Shares',bg:'rgba(255,255,255,.7)',fg:'#7c3aed'},
+      {icon:'ph-fill ph-bookmark-simple',value:'83',label:'Saves',bg:'rgba(255,255,255,.7)',fg:'#b07d1e'}
+    ];
+    const perfChannels=[{k:'ig',pct:'52%',reach:'4.4k'},{k:'fb',pct:'31%',reach:'2.6k'},{k:'gbp',pct:'11%',reach:'0.9k'},{k:'wa',pct:'6%',reach:'0.5k'}]
+      .map(c=>({name:CH[c.k].name,color:CH[c.k].c,pct:c.pct,reach:c.reach}));
+    const fmax=214;
+    const followerRows=[
+      {k:'ig',val:'+214',n:214},{k:'fb',val:'+98',n:98}
+    ].map(r=>({ name:CH[r.k].name, icon:CH[r.k].icon, color:CH[r.k].c, val:r.val,
+      barStyle:`height:100%;width:${Math.round(r.n/fmax*100)}%;border-radius:6px;background:${CH[r.k].c}` }));
+
+    return {
+      isToday:s.section==='today', isReels:isReels, isLibrary:s.section==='library', isPerf:s.section==='performance',
+      contentStyle: (s.section==='today'||isReels) ? 'flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;position:relative' : 'flex:1;min-height:0;overflow-y:auto;position:relative',
+
+      reel, reelTabs,
+      reelPrev:()=>this.cycleReel(-1), reelNext:()=>this.cycleReel(1),
+      reelPublishable:crReady, reelPending:!crReady,
+      quotaLabel:s.used+' of 4 reels used this month',
+      quotaStyle:`display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:12px;background:rgba(255,255,255,.55);border:1px solid rgba(230,150,0,.24);font-size:12.5px;font-weight:800;color:${quotaFull?'#c0402e':'#8a5a2e'}`,
+      uploadBtnStyle:`display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:13px;font-size:14px;font-weight:800;transition:transform .16s;${quotaFull?'background:rgba(122,47,224,.12);color:#9a8aa8;cursor:not-allowed':'background:#1c1430;color:#ffcb45;box-shadow:0 14px 28px -14px rgba(28,20,48,.8)'}`,
+      openUpload:()=>{ if(s.used>=4){ this.say('All 4 reels for this month are used.'); return; } this.setState({upload:true,upStep:1}); },
+      uploadOpen:!!s.upload, closeUpload:()=>this.setState({upload:false}),
+      upProps,
+      isStep1:(s.upStep||1)===1, isStep2:(s.upStep||1)===2,
+      stepLabel:(s.upStep||1)===1?'Step 1 of 2':'Step 2 of 2',
+      stepTitle:(s.upStep||1)===1?'Which property?':'Upload the raw video',
+      stepSub:(s.upStep||1)===1?'Pick the plot this video is of.':'Send us footage straight from your phone — MAPCO edits it into a finished reel.',
+      dot1Style:'height:4px;border-radius:3px;flex:1;background:#7a2fe0',
+      dot2Style:`height:4px;border-radius:3px;flex:1;background:${(s.upStep||1)===2?'#7a2fe0':'rgba(122,47,224,.2)'}`,
+      nextStep:()=>{ if(s.upPi===null){ this.say('Pick a property first.'); return; } this.setState({upStep:2}); },
+      backStep:()=>this.setState({upStep:1}),
+      nextStyle:`width:100%;margin-top:20px;display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:15px 24px;border-radius:16px;font-size:16px;font-weight:800;transition:transform .16s;${s.upPi!==null?'background:#1c1430;color:#ffcb45;box-shadow:0 20px 38px -18px rgba(28,20,48,.9)':'background:rgba(122,47,224,.14);color:#9a8aa8'}`,
+      chosenTitle:s.upPi!==null?P[s.upPi].title:'',
+      chosenPhotoStyle:s.upPi!==null?this.thumb(P[s.upPi].photo,42,10):'width:42px;height:42px;border-radius:10px;background:#e6ddce',
+      fileBtnStyle:`width:100%;margin-top:10px;display:flex;align-items:center;gap:13px;padding:14px 16px;border-radius:16px;border:1.5px dashed ${s.upFile?'#22c55e':'rgba(122,47,224,.35)'};background:rgba(255,255,255,.7);transition:all .15s;cursor:pointer`,
+      fileIcon:s.upFile?'ph-fill ph-check-circle':'ph-fill ph-video-camera',
+      fileTitle:s.upFile||'Choose video',
+      fileSub:s.upFile?'Ready to send · tap to replace':'MP4 or MOV straight from your phone',
+      chooseFile:()=>this.setState({upFile:'IMG_4821.MOV · 42 MB'}),
+      setNote:e=>{ this._note=e.target.value; },
+      submitStyle:`width:100%;margin-top:22px;display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:16px 24px;border-radius:16px;font-size:16.5px;font-weight:800;transition:transform .16s;${(s.upPi!==null&&s.upFile)?'background:linear-gradient(100deg,#7a2fe0,#e0473a 55%,#f0a83c);color:#fff;box-shadow:0 22px 40px -14px rgba(224,71,58,.6)':'background:rgba(122,47,224,.14);color:#9a8aa8'}`,
+      submitUpload:()=>this.submitUpload(),
+      kindTabs,
+      libWrapStyle:'max-width:1240px;margin:0 auto;width:100%;padding:'+(s.libKind==='reels'?'16px 34px 14px':'16px 34px 56px'),
+      tabs, navAccounts,
+
+      active, postTabs,
+      goPrev:()=>this.cyclePost(), goNext:()=>this.cyclePost(),
+      barReady, barPublishing, barPosted,
+      progressChannels, postedChannels,
+      postedLine:'Sent to '+postedChannels.length+' channel'+(postedChannels.length>1?'s':'')+' · tracked via go.mapco.in',
+      activeTime:s.times[at.id], timeOpen:s.timeOpen, toggleTime:()=>this.setState(st2=>({timeOpen:!st2.timeOpen})), timeOptions,
+      timeChipStyle:'display:inline-flex;align-items:center;gap:8px;padding:11px 15px;border-radius:14px;background:rgba(255,255,255,.75);border:1px solid rgba(122,47,224,.16);flex:none;transition:all .15s',
+      publishLabel: selChans.length? 'Post now' : 'Pick a channel',
+      publishBtnStyle:`display:inline-flex;align-items:center;gap:12px;padding:16px 34px;border-radius:16px;font-size:18px;font-weight:800;flex:none;transition:transform .16s,box-shadow .16s;${selChans.length?'background:linear-gradient(100deg,#7a2fe0,#e0473a 55%,#f0a83c);color:#fff;box-shadow:0 22px 40px -14px rgba(224,71,58,.65)':'background:rgba(122,47,224,.14);color:#9a8aa8;cursor:default'}`,
+      publishActive:()=>this.publishActive(),
+
+      libGroups,
+      libCount:noun(libVisible.length),
+      activeFilter:s.libProp!=='all', filterLabel,
+      clearFilter:()=>this.setState({libProp:'all'}),
+      openLibFilter:()=>this.setState({picker:true}),
+      libFilterBtnStyle:'display:inline-flex;align-items:center;gap:9px;padding:11px 16px;border-radius:14px;background:rgba(255,255,255,.7);border:1px solid rgba(122,47,224,.18);color:#1c1430;font-size:13.5px;font-weight:800;transition:all .15s',
+
+      picker:!!s.picker, pickerItems, closePicker:()=>this.setState({picker:null}), stop:e=>{ e.stopPropagation&&e.stopPropagation(); },
+
+      kpis, engagement, perfChannels,
+      reachChart:this._rc||(this._rc=React.createElement('div',{dangerouslySetInnerHTML:{__html:this.reachChartSvg()}})),
+      donut:this._dn||(this._dn=React.createElement('div',{dangerouslySetInnerHTML:{__html:this.donutSvg()}})),
+      topPropStyle:'position:relative;height:150px;background-image:url("assets/mkt-prop-3.webp");background-size:cover;background-position:center',
+      topPropTitle:'Sector 88 · Plot 214',
+      topPropLine:'1,900 people reached · 138 opened the property page. Your most-viewed listing this month.',
+      followerRows, followerTotal:'+312 this month',
+      toast:s.toast
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -5,7 +5,7 @@ export class Component extends DCLogic {
   state = {
     section: 'areas', celebrate: null, tlAll: false, invView: 'live', dealView: 'live', selectedDeal: null, dealEdit: false, dealSearch: '', clientSearch: '', selectedClient: null, clientFilter: 'all',
     addOpen: false, addClientOpen: false, plotCity: 'all', plotCityOpen: false, p: 0, linkFor: null, delArm: false,
-    cardMenu: null, shareFor: null, shareDone: null, sharesFor: null, mobileFor: null, propDetail: null, propShot: 0, more: false, pdTab: 'gallery', pdMedia: 'photos', cpTab: 'overview',
+    cardMenu: null, shareFor: null, shareDone: null, sharesFor: null, mobileFor: null, propDetail: null, propShot: 0, more: false, pdTab: 'gallery', pdMedia: 'photos', cpTab: 'overview', moreDetailsOpen: false,
     addPlotOpen: false, pstep: 1, pEditId: null, propQ: '', filtersOpen: false, fType: 'all', fState: 'all', pSaved: false,
     sellerQ: '', sellerAdd: false, sellerView: null, svTab: 'overview', docName: '', docOpen: null, docPickOpen: false, docNewName: '', docNewOpen: false,
     savingProp: false, propDocsOpen: false, quickView: 'all',
@@ -2429,7 +2429,7 @@ export class Component extends DCLogic {
     const linkList = linkFor ? this.properties.filter(pr => pr.status !== 'sold').map(pr => ({ title: pr.type + ' · ' + pr.size, loc: pr.loc, priceFmt: this.inr(pr.price), imgId: 'plotimg-' + pr.id, photoStyle: `width:52px;height:52px;border-radius:11px;flex:none;background-image:url('${this.plotPhoto(pr, 0)}');background-size:cover;background-position:center`, pick: () => this.linkProp(linkFor, pr.id) })) : [];
 
     // Plots
-    const stM = { available: { l: 'Available', c: '#c85a1a', b: '#fbe4d3' }, onhold: { l: 'On hold', c: '#b06f0c', b: '#fbeecb' }, sold: { l: 'Sold', c: '#7a7167', b: '#f3eeff' } };
+    const stM = { available: { l: 'Available', c: '#c85a1a', b: '#fbe4d3' }, onhold: { l: 'On hold', c: '#b06f0c', b: '#fbeecb' }, sold: { l: 'Sold', c: '#ffffff', b: '#0a6634' } };
     const propVM = (pr) => {
       const mm = stM[pr.status]; const shs = sharesOf(pr.id); const act = shs.filter(x => x.status === 'active').length;
       const menuStyle = 'display:flex;align-items:center;gap:7px;height:40px;padding:0 14px;border-radius:11px;background:#f3eeff;color:#4c463d;font-size:14px;font-weight:800';
@@ -2910,6 +2910,9 @@ export class Component extends DCLogic {
         customNotes: OV.customNotes,
         moreDetailsOpen: !!s.moreDetailsOpen,
         toggleMoreDetails: () => this.setState({ moreDetailsOpen: !s.moreDetailsOpen }),
+        moreIcon: s.moreDetailsOpen ? 'ph-caret-up' : 'ph-caret-down',
+        moreLabel: s.moreDetailsOpen ? 'Hide secondary details' : ('View all property details (' + OV.moreDetailsCount + ' more facts)'),
+        moreAction: s.moreDetailsOpen ? 'Collapse' : 'Expand',
         rdStyle2: `display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 13px;border-radius:11px;font-size:14.5px;font-weight:800;white-space:nowrap;flex:none;background:${rr.b};color:${rr.c}`,
         availStyle2: `display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 13px;border-radius:11px;font-size:14.5px;font-weight:800;white-space:nowrap;flex:none;${pd.status === 'available' ? 'background:rgba(217,245,227,.94);color:#0a6634' : 'background:rgba(255,230,207,.94);color:#a3541b'}`,
         priceWord: isSold ? 'Sold for' : 'Asking',
@@ -4156,8 +4159,8 @@ export class Component extends DCLogic {
           const cpTabs = CPT.map(t => {
             const on = cpTab === t.k; return {
               label: t.l, icon: t.i, sub: t.sub, go: () => this.setState({ cpTab: t.k }),
-              style: `display:flex;align-items:center;gap:10px;height:52px;padding:0 18px;border-radius:14px;flex:none;transition:all .16s;${on ? 'background:#5b21b6;color:#ffffff;box-shadow:0 4px 14px rgba(91,33,182,.4);' : 'background:#ffffff;color:#5b21b6;box-shadow:inset 0 0 0 1.5px #ddd6fe;'}`,
-              subStyle: `font-size:12.5px;font-weight:700;${on ? 'color:#ddd6fe' : 'color:#7c3aed'}`
+              style: `display:flex;align-items:center;gap:10px;height:52px;padding:0 18px;border-radius:14px;flex:none;transition:all .16s;${on ? 'background:#ffffff;color:#3b1464;box-shadow:0 6px 20px rgba(0,0,0,.3);' : 'background:rgba(255,255,255,.12);color:#ffffff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.2);'}`,
+              subStyle: `font-size:12.5px;font-weight:700;${on ? 'color:#6d28d9' : 'color:rgba(255,255,255,.6)'}`
             };
           });
           cp = {
@@ -4308,11 +4311,11 @@ export class Component extends DCLogic {
           return {
             id: l.id, status: l.status, client: l.client || '—', initials: this.initialsOf(l.client || '?'),
             sub: 'Sent ' + l.created + ' · ' + (l.status === 'active' ? ('expires ' + l.expires) : st.l.toLowerCase()),
-            statusLabel: st.l, statusStyle: pillS(st.b, st.c),
+            statusLabel: st.l, statusStyle: `display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 13px;border-radius:999px;font-size:13px;font-weight:800;background:rgba(255,255,255,.2);color:#ffffff;border:1px solid rgba(255,255,255,.3)`,
             cardStyle: `background:${st.card};border-radius:24px;padding:22px 24px 22px 22px;border-left:10px solid ${st.c};box-shadow:0 0 0 1.5px ${st.ring},0 18px 40px -32px rgba(40,30,10,.8)`,
             avStyle: `width:52px;height:52px;border-radius:17px;flex:none;display:grid;place-items:center;font-size:18px;font-weight:800;background:${st.b};color:${st.c}`,
             opened: l.opens ? ((l.opens === 1 ? 'Opened once' : 'Opened ' + l.opens + ' times') + ' · last ' + l.lastOpen) : 'Not opened yet',
-            openedStyle: `font-size:16px;font-weight:800;${l.opens ? 'color:#241f1c' : 'color:#a3541b'}`,
+            openedStyle: `font-size:15.5px;font-weight:800;${l.opens ? 'color:#a5f3c8' : 'color:#fcd34d'}`,
             propRows: props.map(pr => {
               const a = this.propAct(l, pr.id);
               const none = a.views === 0;
@@ -4510,7 +4513,7 @@ export class Component extends DCLogic {
             const on = s.linkTab === t.k;
             return {
               label: t.l, go: () => this.setState({ linkTab: t.k }),
-              style: `height:52px;padding:0 22px;border-radius:15px;font-size:16.5px;font-weight:800;${on ? 'background:#241d0c;color:#f8c200' : 'background:#fffdf7;color:#6b6156;box-shadow:inset 0 0 0 1.5px #e6d6b4'}`
+              style: `height:46px;padding:0 20px;border-radius:13px;font-size:15.5px;font-weight:800;flex:none;transition:all .16s;${on ? 'background:#ffffff;color:#2e1065;box-shadow:0 4px 14px rgba(0,0,0,.3);' : 'background:rgba(255,255,255,.14);color:#ffffff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.2);'}`
             };
           }),
         };

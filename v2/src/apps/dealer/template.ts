@@ -1953,85 +1953,113 @@ export function renderApp(state: any) {
           \` : '' }
 
           \${ ldOpen ? \`
-            <div style="position:fixed;inset:0;z-index:87;display:flex;justify-content:flex-end">
+            <div
+              style="position:fixed;inset:0;z-index:87;display:flex;align-items:center;justify-content:center;padding:20px;overflow:hidden">
               <div onClick="\${__b(closeLd)}"
-                style="position:absolute;inset:0;background:rgba(40,26,2,.6);animation:omVeil .2s ease both"></div>
-              <div data-scroll=""
-                style="position:relative;width:900px;max-width:100%;height:100%;overflow-y:auto;overflow-x:hidden;background:#fdf8ee;box-shadow:-40px 0 100px -30px rgba(0,0,0,.6);animation:omSlide .3s cubic-bezier(.2,.8,.2,1) both">
+                style="position:absolute;inset:0;background:rgba(20,10,40,.72);animation:omVeil .2s ease both"></div>
+              <div
+                style="position:relative;width:1100px;max-width:100%;height:100%;display:flex;flex-direction:column;background:#f5f1fd;border-radius:26px;overflow:hidden;box-shadow:0 50px 110px -30px rgba(0,0,0,.8);">
+
+                <!-- Purple header -->
                 <div
-                  style="position:sticky;top:0;z-index:3;padding:22px 30px;background:#fdf8ee;box-shadow:0 1px 0 #ecdfc8">
-                  <div style="display:flex;align-items:flex-start;gap:16px">
-                    <span
-                      style="width:60px;height:60px;border-radius:19px;flex:none;display:grid;place-items:center;font-size:21px;font-weight:800;background:#efe8fb;color:#4a2c99">\${ld.initials}</span>
-                    <div style="flex:1;min-width:0">
-                      <div style="display:flex;align-items:flex-start;gap:11px;flex-wrap:wrap">
-                        <h2
-                          style="margin:0;flex:1 1 240px;min-width:0;font-family:'Newsreader',serif;font-weight:500;font-size:31px;line-height:1.18;letter-spacing:-.02em;color:#241f1c;text-wrap:pretty">
-                          \${ld.client}</h2>
-                        <span style="\${ld.statusStyle};flex:none;margin-top:4px">\${ld.statusLabel}</span>
-                      </div>
-                      <div style="font-size:15.5px;color:#8a7f6e;margin-top:3px">\${ld.sub} · \${ld.propCount}</div>
-                      <div style="\${ld.openedStyle};margin-top:6px">\${ld.opened}</div>
+                  style="flex:none;display:flex;align-items:center;gap:16px;padding:22px 28px;background:linear-gradient(135deg, #3b0764, #4c1d95 50%, #2e1065);color:#ffffff;box-shadow:0 10px 30px -10px rgba(59,7,100,.7);flex-wrap:wrap">
+                  <span
+                    style="width:62px;height:62px;border-radius:18px;background:rgba(255,255,255,.18);color:#ffffff;border:1.5px solid rgba(255,255,255,.3);display:grid;place-items:center;font-size:22px;font-weight:800;flex:none">\${ld.initials}</span>
+                  <div style="flex:1 1 200px;min-width:0">
+                    <div style="display:flex;align-items:center;gap:11px;flex-wrap:wrap">
+                      <h2
+                        style="margin:0;font-family:'Newsreader',serif;font-weight:600;font-size:30px;line-height:1.14;letter-spacing:-.02em;color:#ffffff">
+                        \${ld.client}</h2>
+                      <span style="\${ld.statusStyle};flex:none">\${ld.statusLabel}</span>
                     </div>
-                    <button onClick="\${__b(closeLd)}"
-                      style="width:46px;height:46px;border-radius:14px;background:#f4ecdc;color:#6b6156;display:grid;place-items:center;flex:none"
-                      style-hover="background:#ebe0ca"><i class="ph-bold ph-x" style="font-size:19px"></i></button>
+                    <div style="font-size:15.5px;color:#ddd6fe;margin-top:4px">\${ld.sub} · \${ld.propCount}</div>
+                    <div style="\${ld.openedStyle};margin-top:5px">\${ld.opened}</div>
                   </div>
-                  <div style="display:flex;align-items:center;gap:10px;margin-top:16px;flex-wrap:wrap">
-                    <button onClick="\${__b(ld.goClient)}"
-                      style="display:flex;align-items:center;gap:9px;height:52px;padding:0 20px;border-radius:15px;background:#fdf3e2;color:#a3541b;font-size:16.5px;font-weight:800"><i
-                        class="ph-fill ph-user-circle" style="font-size:20px"></i>Open client</button>
-                    <button onClick="\${__b(ld.preview)}"
-                      style="display:flex;align-items:center;gap:9px;height:52px;padding:0 20px;border-radius:15px;background:#f4eeff;color:#4a2c99;font-size:16.5px;font-weight:800"><i
-                        class="ph-fill ph-device-mobile" style="font-size:20px"></i>Preview their page</button>
-                    <a href="\${ld.wa}" target="_blank"
-                      style="display:flex;align-items:center;gap:9px;height:52px;padding:0 20px;border-radius:15px;background:#0f7a45;color:#fff;font-size:16.5px;font-weight:800;text-decoration:none"><i
-                        class="ph-fill ph-whatsapp-logo" style="font-size:20px"></i>Message</a>
-                    \${ ld.isLive ? \`<button onClick="\${__b(ld.revoke)}"
-                        style="display:flex;align-items:center;gap:8px;height:52px;padding:0 18px;border-radius:15px;background:#faf6ee;color:#8a7f6e;font-size:16px;font-weight:800"><i
-                          class="ph ph-prohibit" style="font-size:19px"></i>Revoke</button>\` : '' }
+                  <div style="display:flex;align-items:center;gap:9px;flex-wrap:nowrap;justify-content:flex-end;flex:none">
+                    <button onClick="\${__b(ld.goClient)}" title="Open client"
+                      style="display:grid;place-items:center;width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,.18);color:#ffffff;border:1.5px solid rgba(255,255,255,.25);flex:none;cursor:pointer"
+                      style-hover="background:rgba(255,255,255,.28)"><i class="ph-fill ph-user-circle"
+                        style="font-size:21px"></i></button>
+                    <button onClick="\${__b(ld.preview)}" title="Preview their page"
+                      style="display:grid;place-items:center;width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,.18);color:#e9d5ff;border:1.5px solid rgba(255,255,255,.25);flex:none;cursor:pointer"
+                      style-hover="background:rgba(255,255,255,.28)"><i class="ph-fill ph-device-mobile"
+                        style="font-size:20px"></i></button>
+                    <a href="\${ld.wa}" target="_blank" title="WhatsApp"
+                      style="display:grid;place-items:center;width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,.18);color:#34d399;border:1.5px solid rgba(52,211,153,.35);flex:none;text-decoration:none"
+                      style-hover="background:rgba(255,255,255,.28)"><i class="ph-fill ph-whatsapp-logo"
+                        style="font-size:21px"></i></a>
+                    \${ ld.isLive ? \`<button onClick="\${__b(ld.revoke)}" title="Revoke link"
+                        style="display:grid;place-items:center;width:48px;height:48px;border-radius:14px;background:rgba(255,60,60,.22);color:#fca5a5;border:1.5px solid rgba(252,165,165,.3);flex:none;cursor:pointer"
+                        style-hover="background:rgba(255,60,60,.32)"><i class="ph ph-prohibit"
+                          style="font-size:20px"></i></button>\` : '' }
+                    <button onClick="\${__b(closeLd)}"
+                      style="width:48px;height:48px;border-radius:14px;background:rgba(255,255,255,.2);color:#ffffff;display:grid;place-items:center;border:none;cursor:pointer"
+                      style-hover="background:rgba(255,255,255,.3)"><i class="ph-bold ph-x"
+                        style="font-size:20px"></i></button>
                   </div>
                 </div>
-                <div style="padding:20px 30px 44px">
-                  \${ ld.hasReasons ? \`
-                    <div
-                      style="padding:20px 22px;border-radius:22px;background:#fff2e0;box-shadow:inset 0 0 0 1.5px #f0d4ab">
+
+                <!-- Dark purple tab bar -->
+                <div data-scroll=""
+                  style="flex:none;display:flex;align-items:center;gap:9px;padding:10px 24px;background:linear-gradient(180deg,#2e1065 0%,#1e0a45 100%);border-bottom:2px solid rgba(255,255,255,.08);overflow-x:auto">
+                  \${ (ldTabs || []).map(t => \`<button onClick="\${__b(t.go)}"
+                      style="\${t.style}">\${t.label}</button>\`).join('') }
+                </div>
+
+                <!-- Content area -->
+                <div data-scroll=""
+                  style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:20px 24px 44px;background:#f5f1fd">
+
+                  <!-- Tab: What they looked at -->
+                  \${ ldTabFocus ? \`
+                    <div>
+
+                      <!-- Important actions callout -->
+                      \${ ld.hasReasons ? \`
+                        <div
+                          style="margin-bottom:16px;padding:16px 20px;border-radius:20px;background:#fff5e6;box-shadow:inset 0 0 0 1.5px #f5c9a0">
+                          <div
+                            style="font-size:12.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#a3541b;margin-bottom:10px">
+                            Important actions</div>
+                          <div style="display:flex;flex-wrap:wrap;gap:8px">
+                            \${ (ld.reasons || []).map(r => \`<span
+                                style="\${r.style}"><i class="\${r.icon}"
+                                  style="font-size:16px"></i>\${r.label}\${ r.when ? \`<span
+                                    style="opacity:.7"> · \${r.when}</span>\` : '' }</span>\`).join('') }
+                          </div>
+                        </div>
+                      \` : '' }
+
+                      <!-- Property rows -->
                       <div
-                        style="font-size:13px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:#a3541b">
-                        Why they may be worth a call</div>
-                      <div style="display:flex;flex-wrap:wrap;gap:9px;margin-top:12px">
-                        \${ (ld.reasons || []).map(r => \`<span style="\${r.style}"><i
-                              class="\${r.icon}" style="font-size:17px"></i>\${r.label} · \${r.when}</span>\`).join('') }
+                        style="font-size:12.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#6d28d9;margin-bottom:10px">
+                        Properties in this link</div>
+                      <div style="display:flex;flex-direction:column;gap:11px">
+                        \${ (ld.propRows || []).map(p => \`
+                          <div style="\${p.rowStyle}">
+                            <span style="\${p.thumb}"></span>
+                            <span style="flex:1;min-width:0">
+                              <span style="display:block;font-size:17.5px;font-weight:800;\${p.titleColor}">\${p.title}</span>
+                              <span style="display:block;font-size:14.5px;\${p.subColor};margin-top:2px">\${p.loc}</span>
+                              <span style="display:flex;flex-wrap:wrap;gap:7px;margin-top:9px">
+                                \${ (p.extra || []).map(e => \`<span
+                                    style="\${e.style}"><i class="\${e.icon}"
+                                      style="font-size:15px"></i>\${e.label}</span>\`).join('') }
+                              </span>
+                            </span>
+                            <span style="text-align:right;flex:none;min-width:80px">
+                              <span style="display:block;\${p.viewStyle}">\${p.viewLine}</span>
+                              <span style="display:block;font-size:13.5px;color:#8a8073;margin-top:3px">\${p.whenLine}</span>
+                            </span>
+                          </div>
+                        \`).join('') }
                       </div>
                     </div>
                   \` : '' }
-                  <div style="display:flex;gap:10px;margin-top:16px">
-                    \${ (ldTabs || []).map(t => \`<button onClick="\${__b(t.go)}"
-                        style="\${t.style}">\${t.label}</button>\`).join('') }
-                  </div>
 
-                  \${ ldTabFocus ? \`
-                    <div style="display:flex;flex-direction:column;gap:11px;margin-top:16px">
-                      \${ (ld.propRows || []).map(p => \`
-                        <div style="\${p.rowStyle}">
-                          <span style="\${p.thumb}"></span>
-                          <span style="flex:1;min-width:0">
-                            <span style="display:block;font-size:18px;font-weight:800;color:#241f1c">\${p.title}</span>
-                            <span style="display:block;font-size:15px;color:#8a7f6e">\${p.loc}</span>
-                            <span style="display:flex;flex-wrap:wrap;gap:7px;margin-top:8px">\${ (p.extra || []).map(e => \`<span style="\${e.style}"><i
-                                    class="\${e.icon}" style="font-size:15px"></i>\${e.label}</span>\`).join('') }</span>
-                          </span>
-                          <span style="text-align:right;flex:none">
-                            <span style="display:block;\${p.viewStyle}">\${p.viewLine}</span>
-                            <span style="display:block;font-size:14px;color:#8a7f6e;margin-top:2px">\${p.whenLine}</span>
-                          </span>
-                        </div>
-                      \`).join('') }
-                    </div>
-                  \` : '' }
-
+                  <!-- Tab: Full history -->
                   \${ ldTabTime ? \`
-                    <div style="margin-top:16px">
+                    <div>
                       \${ ld.hasTimeline ? \`
                         <div style="display:flex;flex-direction:column;gap:9px">
                           \${ (ld.timeline || []).map(a => \`
@@ -2047,16 +2075,17 @@ export function renderApp(state: any) {
                       \` : '' }
                       \${ ldNoTimeline ? \`
                         <div
-                          style="padding:44px 30px;text-align:center;border-radius:22px;background:#fffdf7;box-shadow:inset 0 0 0 1.5px #e6d6b4">
-                          <i class="ph-fill ph-clock-counter-clockwise" style="font-size:40px;color:#c8b795"></i>
-                          <div style="font-size:19px;font-weight:800;color:#241f1c;margin-top:11px">Nothing has happened
-                            yet</div>
-                          <div style="font-size:16px;color:#6b6156;margin-top:5px">This link has not been opened.
-                            Nothing to show would be a guess.</div>
+                          style="padding:52px 30px;text-align:center;border-radius:22px;background:#fffdf7;box-shadow:inset 0 0 0 1.5px #e6d6b4">
+                          <i class="ph-fill ph-clock-counter-clockwise" style="font-size:44px;color:#c8b795"></i>
+                          <div style="font-size:20px;font-weight:800;color:#241f1c;margin-top:12px">Nothing has
+                            happened yet</div>
+                          <div style="font-size:15.5px;color:#6b6156;margin-top:5px">This link has not been opened.
+                          </div>
                         </div>
                       \` : '' }
                     </div>
                   \` : '' }
+
                 </div>
               </div>
             </div>
@@ -2104,7 +2133,7 @@ export function renderApp(state: any) {
                 </div>
 
                 <div data-scroll=""
-                  style="flex:none;display:flex;align-items:center;gap:9px;padding:12px 24px;background:#f5f3ff;border-bottom:2px solid #ddd6fe;overflow-x:auto">
+                  style="flex:none;display:flex;align-items:center;gap:9px;padding:12px 24px;background:linear-gradient(180deg,#3b1464 0%,#2f1050 100%);border-bottom:2px solid rgba(255,255,255,.1);overflow-x:auto">
                   \${ (cp.tabs || []).map(t => \`
                     <button onClick="\${__b(t.go)}" style="\${t.style}">
                       <i class="\${t.icon}" style="font-size:20px;flex:none"></i>
@@ -3397,11 +3426,11 @@ export function renderApp(state: any) {
                               <button onClick="\${__b(propDetail.toggleMoreDetails)}"
                                 style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:13px 18px;border-radius:15px;background:#f7f2e7;border:1px solid #e2d8c4;font-size:15px;font-weight:800;color:#6b5e4c;cursor:pointer">
                                 <span style="display:flex;align-items:center;gap:8px">
-                                  <i class="ph-bold \${propDetail.moreDetailsOpen ? 'ph-caret-up' : 'ph-caret-down'}"
+                                  <i class="ph-bold \${propDetail.moreIcon}"
                                     style="font-size:16px;color:#9a6a00"></i>
-                                  \${propDetail.moreDetailsOpen ? 'Hide secondary details' : ('View all property details (' + propDetail.moreDetailsCount + ' more facts)')}
+                                  \${propDetail.moreLabel}
                                 </span>
-                                <span style="font-size:13px;font-weight:700;color:#9a8f80">\${propDetail.moreDetailsOpen ? 'Collapse' : 'Expand'}</span>
+                                <span style="font-size:13px;font-weight:700;color:#9a8f80">\${propDetail.moreAction}</span>
                               </button>
 
                               \${ propDetail.moreDetailsOpen ? \`

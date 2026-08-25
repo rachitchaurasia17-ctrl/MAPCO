@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en" style=""><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Property Intelligence Sidebar</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed": "#e5e2e1",
+                        "on-tertiary-container": "#565555",
+                        "on-background": "#e5e2e1",
+                        "on-secondary-container": "#b7b5b4",
+                        "on-primary": "#3f2e00",
+                        "on-secondary-fixed-variant": "#474746",
+                        "tertiary-container": "#cccaca",
+                        "primary-fixed-dim": "#f0c04d",
+                        "inverse-on-surface": "#313030",
+                        "tertiary-fixed": "#e4e2e1",
+                        "background": "#131313",
+                        "primary-fixed": "#ffdf9d",
+                        "surface-tint": "#f0c04d",
+                        "on-primary-fixed": "#251a00",
+                        "surface-dim": "#131313",
+                        "secondary-fixed-dim": "#c8c6c5",
+                        "on-tertiary-fixed": "#1b1c1c",
+                        "surface-bright": "#3a3939",
+                        "surface-container-highest": "#353534",
+                        "surface-container": "#201f1f",
+                        "tertiary-fixed-dim": "#c8c6c5",
+                        "on-tertiary-fixed-variant": "#474746",
+                        "error": "#ffb4ab",
+                        "on-secondary-fixed": "#1c1b1b",
+                        "primary-container": "#f5c451",
+                        "on-surface-variant": "#d2c5b0",
+                        "on-secondary": "#313030",
+                        "tertiary": "#e9e6e6",
+                        "surface-variant": "#353534",
+                        "secondary-container": "#474746",
+                        "outline": "#9b8f7c",
+                        "surface": "#131313",
+                        "surface-container-high": "#2a2a2a",
+                        "inverse-surface": "#e5e2e1",
+                        "primary": "#ffe4af",
+                        "on-surface": "#e5e2e1",
+                        "error-container": "#93000a",
+                        "on-error-container": "#ffdad6",
+                        "on-tertiary": "#303030",
+                        "on-primary-fixed-variant": "#5b4300",
+                        "on-primary-container": "#6d5100",
+                        "secondary": "#c8c6c5",
+                        "surface-container-low": "#1c1b1b",
+                        "inverse-primary": "#785a00",
+                        "on-error": "#690005",
+                        "outline-variant": "#4e4635",
+                        "surface-container-lowest": "#0e0e0e"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-padding": "20px",
+                        "stack-sm": "4px",
+                        "stack-lg": "16px",
+                        "unit": "4px",
+                        "thumbnail-size": "60px",
+                        "card-gap": "12px",
+                        "stack-md": "8px"
+                    },
+                    "fontFamily": {
+                        "body-sm": ["Inter"],
+                        "label-caps": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "metric-bold": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "body-sm": ["12px", { "lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400" }],
+                        "label-caps": ["10px", { "lineHeight": "16px", "letterSpacing": "0.1em", "fontWeight": "700" }],
+                        "headline-md": ["20px", { "lineHeight": "28px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "display-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.04em", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "0em", "fontWeight": "400" }],
+                        "headline-sm": ["16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "metric-bold": ["14px", { "lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { background-color: #0e0e0e; /* surface-container-lowest */ }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center font-sans antialiased text-on-surface" style="background-color: rgb(5, 5, 5);">
+<!-- Sidebar Container -->
+<div class="w-[375px] h-[812px] bg-surface rounded-2xl overflow-hidden shadow-2xl relative flex flex-col border border-surface-container-high bg-gradient-to-b from-surface-container-high to-surface-container-lowest">
+<!-- Header Section -->
+<header class="flex-shrink-0 bg-surface z-10 sticky top-0 border-b border-surface-container-high">
+<!-- TopNavBar (Shared Component style mapped) -->
+<div class="flex justify-between items-center px-container-padding h-16 w-full">
+<div class="flex gap-4 items-center">
+</div>
+</div>
+<!-- Segmented Control (Details / Intelligence) -->
+<div class="px-container-padding pb-unit mb-2">
+<div class="flex bg-surface-container-high/50 rounded-xl p-1.5 gap-1 border border-surface-container-highest"><button class="flex-1 py-2 text-center font-headline-sm text-[14px] text-on-surface-variant/80 rounded-lg cursor-pointer transition-all duration-300 hover:text-on-surface hover:bg-surface-bright/30 hover:shadow-sm border border-transparent hover:border-surface-container-highest font-bold hover:text-primary">DETAILS</button>
+<button class="flex-1 py-2 text-center font-bold text-[14px] bg-primary text-on-primary rounded-lg cursor-pointer shadow-[0_0_15px_rgba(245,196,81,0.4)] border-t border-white/30 border-b border-black/20 transition-all duration-300 uppercase">INTELLIGENCE</button></div>
+</div>
+<!-- SideNavBar Tabs (Shared Component style mapped to horizontal for top layout) -->
+<div class="px-container-padding py-stack-md">
+<div class="flex bg-surface-container-low/40 rounded-full p-1 gap-1 border border-surface-container-high/50">
+<button class="flex-1 flex items-center justify-center gap-2 py-1.5 rounded-full font-body-sm text-on-surface-variant/70 hover:text-on-surface hover:bg-surface-bright/30 transition-all duration-300">
+<span class="material-symbols-outlined text-[18px]">calendar_today</span>
+<span class="text-body-sm">Day to Day</span>
+</button>
+<button class="flex-1 flex items-center justify-center gap-2 py-1.5 rounded-full font-metric-bold bg-surface-container-highest text-on-surface shadow-sm border border-surface-container-high transition-all duration-300">
+<span class="material-symbols-outlined text-[18px] fill-1">map</span>
+<span class="text-body-sm">City Reach</span>
+</button>
+</div>
+</div>
+<!-- Context Header -->
+<div class="px-container-padding py-stack-md bg-surface-container-lowest/50">
+</div>
+</header>
+<!-- Landmark List -->
+<main class="flex-1 overflow-y-auto scrollbar-hide bg-surface p-container-padding space-y-stack-md">
+<!-- Active Card -->
+<div class="bg-primary/10 hover:bg-primary/20 transition-all rounded-xl p-3 flex gap-4 cursor-pointer border border-primary/30 shadow-lg border-l-4 border-l-primary"><div class="w-thumbnail-size h-thumbnail-size rounded-lg bg-cover bg-center flex-shrink-0 border border-surface-container-high bg-surface-container-highest" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCTfdbVI0U5yMPSBWrem9olRLYbhwBT4z42dPA1MpkkqecNJ7uLRu7yG2BWiWuPp8VknB676S_Us01pr1PpIhl2gW6naG_-wwpj7FvVcacP0nFyI0Y20yABNBMAbZnC5ceik9x460SQy-QyhNsq-6_iAT8RLKhSfsQPGzxMOjCzRSeUscOvXEmka1VbC7iDCzwhewIrrFzyeU_91jpoRQalifzGp7NuLwGjPS6b8_RbBGUw_unCaInkE3g1JFK3orJTxw');"></div><div class="flex-1 min-w-0 flex flex-col justify-center"><h3 class="font-headline-sm text-headline-sm text-on-surface truncate mb-1.5">Gurdwara Singh Shaheeda</h3><div class="flex items-center gap-3 font-metric-bold text-[16px] font-bold text-primary"><div class="flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">directions_walk</span>650m</div><div class="flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">schedule</span>8 min</div></div></div></div>
+<!-- Inactive Card 1 -->
+<div class="bg-primary-fixed-dim/10 hover:bg-primary-fixed-dim/20 transition-all rounded-xl p-3 flex gap-4 cursor-pointer border border-primary-fixed-dim/30 shadow-lg border-l-4 border-l-primary-fixed-dim"><div class="w-thumbnail-size h-thumbnail-size rounded-lg bg-cover bg-center flex-shrink-0 border border-surface-container-high bg-surface-container-highest" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB4sp7VivOgHy5mSf9EyUYlBMbyobIeK2kaBDsy2X8mCN59gXzKvVpCOSMt-QfNGWAu-h_EWOT9B4t7jH62RA1TTZLpH_Rd3_3oqZf788--Qa2GkjJ0udByMFrG9wumyl_0o3frvMr36plLdn68OWuUZTpUAwGGOZQfhOhsTIfQ02vHWVKdlLwuI4kVBMJzZKbfiZjTBX8ROokuKYSMhbj9_2zZ6qeItLfBdG4Rfrd7hzhox8k99wr6');"></div><div class="flex-1 min-w-0 flex flex-col justify-center"><h3 class="font-headline-sm text-headline-sm text-on-surface truncate mb-1.5">CP67 Mall</h3><div class="flex items-center gap-3 font-metric-bold text-[16px] font-bold text-primary-fixed-dim"><div class="flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">directions_car</span>1.2km</div><div class="flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">schedule</span>4 min</div></div></div></div>
+<!-- Inactive Card 2 -->
+<div class="bg-surface-tint/10 hover:bg-surface-tint/20 transition-all rounded-xl p-3 flex gap-4 cursor-pointer border border-surface-tint/30 shadow-lg border-l-4 border-l-surface-tint"><div class="w-thumbnail-size h-thumbnail-size rounded-lg bg-cover bg-center flex-shrink-0 border border-surface-container-high bg-surface-container-highest" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuADbQZFro4l7b2zSw158ukKmIGFO_xwb59jlI3bE3-ucM_0d79wykk9wOATpmLLOz2QSKI1qMSXo9r3kpybqJBoFZsStoTPJP5xBkqDblp-NSN1kU7cewwlCF26zFOqRSLRo1Ggbw3WWuc2lPyqx31MZY0Ag-b1JyKt6DM8w4_xIyHp17Os-bL9XPXHXXnJQspTJLUaFQdlQUgqs0vVcR5Z3Sbxfrxuoz8td05TREoLFujRnNwSt2OP');"></div><div class="flex-1 min-w-0 flex flex-col justify-center"><h3 class="font-headline-sm text-headline-sm text-on-surface truncate mb-1.5">Community Park Sec 79</h3><div class="flex items-center gap-3 font-metric-bold text-[16px] font-bold text-surface-tint"><div class="flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">directions_walk</span>300m</div><div class="flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">schedule</span>4 min</div></div></div></div>
+<!-- Inactive Card 3 -->
+<div class="bg-primary/10 hover:bg-primary/20 transition-all rounded-xl p-3 flex gap-4 cursor-pointer border border-primary/30 shadow-lg border-l-4 border-l-primary"><div class="w-thumbnail-size h-thumbnail-size rounded-lg bg-cover bg-center flex-shrink-0 border border-surface-container-high bg-surface-container-highest" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCTfdbVI0U5yMPSBWrem9olRLYbhwBT4z42dPA1MpkkqecNJ7uLRu7yG2BWiWuPp8VknB676S_Us01pr1PpIhl2gW6naG_-wwpj7FvVcacP0nFyI0Y20yABNBMAbZnC5ceik9x460SQy-QyhNsq-6_iAT8RLKhSfsQPGzxMOjCzRSeUscOvXEmka1VbC7iDCzwhewIrrFzyeU_91jpoRQalifzGp7NuLwGjPS6b8_RbBGUw_unCaInkE3g1JFK3orJTxw');"></div><div class="flex-1 min-w-0 flex flex-col justify-center"><h3 class="font-headline-sm text-headline-sm text-on-surface truncate mb-1.5">Gurdwara Singh Shaheeda</h3><div class="flex items-center gap-3 font-metric-bold text-[16px] font-bold text-primary"><div class="flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">directions_walk</span>650m</div><div class="flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">schedule</span>8 min</div></div></div></div>
+<!-- Inactive Card 4 -->
+<div class="bg-primary-fixed-dim/10 hover:bg-primary-fixed-dim/20 transition-all rounded-xl p-3 flex gap-4 cursor-pointer border border-primary-fixed-dim/30 shadow-lg border-l-4 border-l-primary-fixed-dim"><div class="w-thumbnail-size h-thumbnail-size rounded-lg bg-cover bg-center flex-shrink-0 border border-surface-container-high bg-surface-container-highest" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB4sp7VivOgHy5mSf9EyUYlBMbyobIeK2kaBDsy2X8mCN59gXzKvVpCOSMt-QfNGWAu-h_EWOT9B4t7jH62RA1TTZLpH_Rd3_3oqZf788--Qa2GkjJ0udByMFrG9wumyl_0o3frvMr36plLdn68OWuUZTpUAwGGOZQfhOhsTIfQ02vHWVKdlLwuI4kVBMJzZKbfiZjTBX8ROokuKYSMhbj9_2zZ6qeItLfBdG4Rfrd7hzhox8k99wr6');"></div><div class="flex-1 min-w-0 flex flex-col justify-center"><h3 class="font-headline-sm text-headline-sm text-on-surface truncate mb-1.5">CP67 Mall</h3><div class="flex items-center gap-3 font-metric-bold text-[16px] font-bold text-primary-fixed-dim"><div class="flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">directions_car</span>1.2km</div><div class="flex items-center gap-1"><span class="material-symbols-outlined text-[18px]">schedule</span>4 min</div></div></div></div>
+<!-- Bottom spacing for scroll -->
+<div class="bg-surface-container-low/40 hover:bg-surface-container-high transition-all rounded-xl p-3 flex gap-4 cursor-pointer border border-surface-container-high/50 shadow-md"></div>
+</main>
+</div>
+</body></html>

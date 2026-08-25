@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%;background:#0e1512}
+  body{font-family:'Hanken Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  .nr{font-family:'Newsreader',Georgia,serif}
+  @keyframes eDrop{from{opacity:0;transform:translate(-50%,-140%) scale(.6)}to{opacity:1;transform:translate(-50%,-100%) scale(1)}}
+  @keyframes eRise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+  @keyframes eRightIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
+  @keyframes eFade{from{opacity:0}to{opacity:1}}
+  @keyframes ePulse{0%{box-shadow:0 0 0 0 rgba(255,201,60,.55)}70%{box-shadow:0 0 0 14px rgba(255,201,60,0)}100%{box-shadow:0 0 0 0 rgba(255,201,60,0)}}
+  @keyframes eToast{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+  .escroll::-webkit-scrollbar{width:9px}
+  .escroll::-webkit-scrollbar-thumb{background:#cbb98f;border-radius:9px;border:3px solid transparent;background-clip:padding-box}
+  .escroll::-webkit-scrollbar-track{background:transparent}
+</style>
+</helmet>
+<div ref="{{ setRoot }}" onPointerDown="{{ onDown }}" onWheel="{{ onWheel }}" style="position:fixed;inset:0;overflow:hidden;background:#0e1512;font-family:'Hanken Grotesk',system-ui,sans-serif;touch-action:none;user-select:none;cursor:{{ mapCursor }}">
+
+  <!-- MAP LAYER -->
+  <div style="{{ mapWrapStyle }}">
+    <img src="assets/earth-sat.png" draggable="false" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 42%"/>
+    <div style="position:absolute;inset:0;background:radial-gradient(120% 90% at 30% 20%,rgba(91,50,196,.10),transparent 55%),radial-gradient(120% 90% at 90% 100%,rgba(255,201,60,.10),transparent 55%);pointer-events:none"></div>
+    <div style="position:absolute;inset:0;box-shadow:inset 0 0 200px 30px rgba(10,14,12,.42);pointer-events:none"></div>
+    <!-- PINS -->
+    <sc-for list="{{ pins }}" as="p" hint-placeholder-count="5">
+      <div onClick="{{ p.onClick }}" style="position:absolute;left:{{ p.leftPct }};top:{{ p.topPct }};transform:{{ p.tf }};transform-origin:bottom center;z-index:{{ p.z }};cursor:pointer;animation:eDrop .5s cubic-bezier(.2,.9,.3,1.2) both;will-change:transform">
+        <div style="{{ p.cardStyle }}">
+          <span style="{{ p.badgeStyle }}"><span class="ph-fill ph-house-line" style="font-size:13px"></span></span>
+          <span style="font-weight:800;font-size:13.5px;letter-spacing:.01em;white-space:nowrap">{{ p.tag }}</span>
+        </div>
+        <div style="{{ p.stemStyle }}"></div>
+        <div style="{{ p.groundStyle }}"></div>
+      </div>
+    </sc-for>
+  </div>
+
+  <!-- MASTERPLAN / 3D OVERLAY -->
+  <sc-if value="{{ showPlan }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;background:#f5efff;background-image:radial-gradient(62% 50% at -2% -4%,rgba(139,96,232,.5),transparent 62%),radial-gradient(54% 44% at 104% 0%,rgba(255,201,60,.42),transparent 60%),radial-gradient(70% 60% at 50% 108%,rgba(255,225,230,.55),transparent 65%);animation:eFade .4s both;display:flex;align-items:center;justify-content:center">
+      <div style="{{ planGridStyle }}"></div>
+      <div style="position:relative;text-align:center;max-width:440px;padding:0 24px">
+        <div style="width:78px;height:78px;border-radius:22px;margin:0 auto 22px;display:flex;align-items:center;justify-content:center;background:#241d0c;box-shadow:0 18px 34px -18px rgba(120,86,10,.9)">
+          <span class="{{ planIcon }}" style="font-size:38px;color:#ffc93c"></span>
+        </div>
+        <div style="font-size:11.5px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#a8792a;margin-bottom:10px">{{ planEyebrow }}</div>
+        <div class="nr" style="font-size:38px;font-weight:500;letter-spacing:-.02em;color:#241f1c;line-height:1.05">{{ planTitle }}</div>
+        <p style="font-size:16px;line-height:1.55;color:#6b6156;margin:14px 0 0;text-wrap:pretty">{{ planBody }}</p>
+        <sc-if value="{{ hasSel }}" hint-placeholder-val="{{ false }}">
+          <div style="display:inline-flex;align-items:center;gap:9px;margin-top:20px;padding:10px 16px;border-radius:999px;background:#fff3d1;border:1.5px solid #f6d98d;color:#8a5a0c;font-weight:800;font-size:14px">
+            <span class="ph-fill ph-map-pin"></span>Showing {{ selTag }} · {{ selSector }}
+          </div>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- TOP BAR -->
+  <div style="position:absolute;top:0;left:0;right:0;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:16px 18px;z-index:50;pointer-events:none">
+    <!-- left: brand + search + jump -->
+    <div style="display:flex;flex-direction:column;gap:10px;pointer-events:auto;width:min(320px,46vw)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="display:flex;align-items:center;gap:11px;padding:8px 14px 8px 10px;background:rgba(255,250,240,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(221,210,245,.9);border-radius:14px;box-shadow:0 10px 30px -18px rgba(30,28,22,.7)">
+          <svg width="34" height="26" viewBox="0 0 132 96" style="display:block">
+            <defs>
+              <linearGradient id="mY" x1=".2" y1="0" x2=".7" y2="1"><stop offset="0" stop-color="#ffe14d"/><stop offset=".55" stop-color="#ffc21e"/><stop offset="1" stop-color="#f39a00"/></linearGradient>
+              <linearGradient id="mGl" x1=".2" y1="0" x2=".7" y2="1"><stop offset="0" stop-color="#8fe25f"/><stop offset="1" stop-color="#3fb851"/></linearGradient>
+              <linearGradient id="mGd" x1=".3" y1="0" x2=".7" y2="1"><stop offset="0" stop-color="#33ad5f"/><stop offset="1" stop-color="#0e9b6c"/></linearGradient>
+              <linearGradient id="mP" x1=".3" y1="0" x2=".8" y2="1"><stop offset="0" stop-color="#b163ea"/><stop offset=".6" stop-color="#9038db"/><stop offset="1" stop-color="#7118c4"/></linearGradient>
+            </defs>
+            <g stroke="#ffffff" stroke-width="3" stroke-linejoin="round">
+              <polygon points="10,16 38,6 38,68 22,80 10,72" fill="url(#mY)"/>
+              <polygon points="38,6 66,54 66,70 38,22" fill="url(#mGl)"/>
+              <polygon points="66,54 94,6 94,22 66,70" fill="url(#mGd)"/>
+              <polygon points="94,6 122,16 122,72 110,80 94,68" fill="url(#mP)"/>
+            </g>
+            <g fill="#ffffff" opacity=".34" stroke="none">
+              <polygon points="12,17 37,8 37,15 13,23"/>
+              <polygon points="95,8 120,17 120,24 95,16"/>
+            </g>
+          </svg>
+          <div style="line-height:1">
+            <div class="nr" style="font-size:18px;font-weight:600;letter-spacing:-.01em;color:#241f1c">MAPCO</div>
+            <div style="font-size:9.5px;font-weight:800;letter-spacing:.26em;color:#8a5a0c;margin-top:2px">EARTH</div>
+          </div>
+        </div>
+        <div onClick="{{ goHome }}" title="Back to MAPCO" style="width:40px;height:40px;flex:none;display:flex;align-items:center;justify-content:center;background:rgba(255,250,240,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(221,210,245,.9);border-radius:13px;box-shadow:0 10px 30px -18px rgba(30,28,22,.7);cursor:pointer;color:#3a332c">
+          <span class="ph ph-arrow-left" style="font-size:19px"></span>
+        </div>
+      </div>
+
+      <!-- SEARCH (compact) -->
+      <div style="position:relative;width:100%">
+        <div style="display:flex;align-items:center;gap:9px;padding:0 12px;height:40px;background:rgba(255,250,240,.95);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1.5px solid rgba(221,210,245,.95);border-radius:12px;box-shadow:0 12px 30px -22px rgba(30,28,22,.85)">
+          <span class="ph ph-magnifying-glass" style="font-size:16px;color:#8d8271"></span>
+          <input value="{{ q }}" onInput="{{ onSearch }}" onFocus="{{ onSearchFocus }}" placeholder="Search plot, sector or landmark…" style="flex:1;min-width:0;border:0;outline:0;background:transparent;font-family:'Hanken Grotesk',sans-serif;font-size:13.5px;font-weight:600;color:#241f1c"/>
+          <sc-if value="{{ hasQuery }}" hint-placeholder-val="{{ false }}">
+            <span onClick="{{ clearSearch }}" class="ph ph-x" style="font-size:16px;color:#8d8271;cursor:pointer"></span>
+          </sc-if>
+        </div>
+        <sc-if value="{{ showResults }}" hint-placeholder-val="{{ false }}">
+          <div class="escroll" style="position:absolute;top:48px;left:0;right:0;max-height:min(58vh,440px);overflow-y:auto;background:rgba(255,250,240,.98);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1.5px solid rgba(221,210,245,.95);border-radius:16px;box-shadow:0 26px 60px -28px rgba(30,28,22,.9);padding:7px;animation:eRise .2s ease both">
+            <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+              <div style="padding:20px 14px;text-align:center;color:#8d8271;font-size:14.5px">No matches for “{{ q }}”. Try a plot number, sector or landmark.</div>
+            </sc-if>
+            <sc-for list="{{ results }}" as="r" hint-placeholder-count="4">
+              <div onClick="{{ r.onClick }}" style="display:flex;align-items:center;gap:12px;padding:10px 11px;border-radius:12px;cursor:pointer" style-hover="background:#f0eaff">
+                <div style="width:40px;height:40px;flex:none;border-radius:11px;display:flex;align-items:center;justify-content:center;background:{{ r.bed }};color:{{ r.fg }}">
+                  <span class="{{ r.icon }}" style="font-size:20px"></span>
+                </div>
+                <div style="min-width:0;flex:1">
+                  <div style="font-weight:800;font-size:15px;color:#241f1c">{{ r.label }}</div>
+                  <div style="font-size:13px;color:#8d8271;margin-top:1px">{{ r.sub }}</div>
+                </div>
+                <span class="ph-bold ph-arrow-up-right" style="font-size:15px;color:#b8ab98"></span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+
+      <!-- JUMP TO (dropdown) -->
+      <sc-if value="{{ showJump }}" hint-placeholder-val="{{ true }}">
+        <div style="position:relative;width:max-content">
+          <div onClick="{{ toggleJump }}" style="display:inline-flex;align-items:center;gap:9px;padding:0 14px;height:38px;border-radius:11px;background:rgba(255,250,240,.9);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1.5px solid rgba(221,210,245,.9);color:#3a332c;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 8px 22px -16px rgba(30,28,22,.7)" style-hover="background:#fff;border-color:#ffc93c">
+            <span class="ph-fill ph-compass" style="font-size:17px;color:#8a5a0c"></span>Jump to area
+            <span class="ph-bold ph-caret-down" style="font-size:12px;color:#8d8271"></span>
+          </div>
+          <sc-if value="{{ jumpOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="position:absolute;top:46px;left:0;width:244px;background:rgba(255,250,240,.98);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1.5px solid rgba(221,210,245,.95);border-radius:14px;box-shadow:0 22px 50px -26px rgba(30,28,22,.9);padding:6px;animation:eRise .18s ease both">
+              <sc-for list="{{ chips }}" as="c" hint-placeholder-count="5">
+                <div onClick="{{ c.onClick }}" style="display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:11px;cursor:pointer" style-hover="background:#f0eaff">
+                  <span class="ph-fill ph-map-pin-area" style="font-size:18px;color:#8a5a0c"></span>
+                  <span style="font-weight:700;font-size:15px;color:#241f1c">{{ c.label }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+    </div>
+
+    <!-- right: view toggle (compact) -->
+    <div style="pointer-events:auto;display:flex;align-items:center;gap:4px;padding:4px;background:rgba(36,29,12,.68);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.14);border-radius:13px;box-shadow:0 16px 40px -22px rgba(0,0,0,.8)">
+      <sc-for list="{{ viewTabs }}" as="v" hint-placeholder-count="3">
+        <div onClick="{{ v.onClick }}" style="{{ v.style }}">
+          <span class="{{ v.icon }}" style="font-size:16px"></span>{{ v.label }}
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <!-- MY PROPERTIES PANEL (bottom-left) -->
+  <div style="position:absolute;left:18px;bottom:20px;z-index:35;display:flex;flex-direction:column;gap:12px;align-items:flex-start;pointer-events:none">
+    <sc-if value="{{ panelOpen }}" hint-placeholder-val="{{ false }}">
+      <div class="escroll" style="pointer-events:auto;width:322px;max-height:min(52vh,440px);overflow-y:auto;background:rgba(20,26,22,.74);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:15px;box-shadow:0 26px 60px -28px rgba(0,0,0,.9);animation:eRise .28s ease both">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.18em;color:#ffe9b0">MY PROPERTIES · {{ propCount }}</div>
+          <span onClick="{{ togglePanel }}" class="ph ph-x" style="font-size:18px;color:#c9dbcf;cursor:pointer"></span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <sc-for list="{{ propList }}" as="p" hint-placeholder-count="5">
+            <div onClick="{{ p.onClick }}" style="{{ p.rowStyle }}">
+              <div style="width:40px;height:40px;flex:none;border-radius:11px;display:flex;align-items:center;justify-content:center;background:#ffc93c;color:#241d0c;font-weight:800;font-size:12.5px">{{ p.tag }}</div>
+              <div style="min-width:0;flex:1">
+                <div style="font-weight:700;font-size:15px;color:#faf7ff">{{ p.plotNo }}</div>
+                <div style="font-size:13px;color:#a9bdb0">{{ p.sub }}</div>
+              </div>
+              <span class="ph-fill ph-arrow-fat-right" style="font-size:15px;color:#7f978a"></span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+    <div onClick="{{ togglePanel }}" style="pointer-events:auto;display:inline-flex;align-items:center;gap:11px;padding:0 17px;height:48px;border-radius:14px;background:rgba(20,26,22,.8);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.14);color:#faf7ff;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 16px 40px -22px rgba(0,0,0,.85)" style-hover="border-color:#ffc93c">
+      <span class="ph-fill ph-stack-simple" style="font-size:19px;color:#ffc93c"></span>My properties
+      <span style="display:inline-flex;align-items:center;justify-content:center;min-width:23px;height:23px;padding:0 7px;border-radius:8px;background:#ffc93c;color:#241d0c;font-size:13px;font-weight:800">{{ propCount }}</span>
+    </div>
+  </div>
+
+  <!-- MAP CONTROLS (bottom-right, minimal) -->
+  <div style="position:absolute;right:18px;bottom:20px;z-index:35;display:flex;flex-direction:column;gap:9px;align-items:center">
+    <div onClick="{{ recenter }}" title="Reset view" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:rgba(255,250,240,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(221,210,245,.9);border-radius:13px;color:#241f1c;cursor:pointer;box-shadow:0 14px 36px -22px rgba(30,28,22,.85)" style-hover="background:#fff3d1"><span class="ph-fill ph-crosshair" style="font-size:20px"></span></div>
+    <div onClick="{{ startAdd }}" title="Add a property here" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:#1f4d3a;border:1px solid #2c4a3c;border-radius:13px;color:#eafff2;cursor:pointer;box-shadow:0 14px 36px -22px rgba(0,0,0,.85)" style-hover="background:#25604a"><span class="ph-bold ph-plus" style="font-size:19px"></span></div>
+  </div>
+
+  <!-- PROPERTY DETAIL — floating card (Google-Earth style) -->
+  <sc-if value="{{ showCard }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;top:74px;right:18px;z-index:45;width:400px;max-width:calc(100vw - 36px);max-height:calc(100% - 100px);background:rgba(255,250,240,.98);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);border:1px solid rgba(221,210,245,.9);border-radius:22px;box-shadow:0 30px 70px -30px rgba(30,28,22,.7);display:flex;flex-direction:column;overflow:hidden;animation:eRightIn .34s cubic-bezier(.2,.8,.2,1) both;transition:box-shadow .22s ease,transform .22s ease" style-hover="box-shadow:0 44px 96px -30px rgba(30,28,22,.82);transform:translateY(-3px)">
+      <div class="escroll" style="flex:1;min-height:0;overflow-y:auto">
+
+        <!-- HERO PHOTO -->
+        <div style="position:relative;height:270px;flex:none;background:#241d0c">
+          <div style="{{ selPhotoStyle }}"></div>
+          <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,16,6,.36),rgba(20,16,6,0) 30%,rgba(20,16,6,.16) 56%,rgba(20,16,6,.86))"></div>
+          <!-- top actions: share + close -->
+          <div style="position:absolute;top:13px;right:13px;display:flex;gap:8px">
+            <span onClick="{{ shareProp }}" title="Share" class="ph-fill ph-share-network" style="width:37px;height:37px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(20,16,6,.5);backdrop-filter:blur(8px);color:#fff;font-size:17px;cursor:pointer;transition:all .16s" style-hover="background:#ffc93c;color:#241d0c;transform:scale(1.06)"></span>
+            <span onClick="{{ closeCard }}" title="Close" class="ph ph-x" style="width:37px;height:37px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:rgba(20,16,6,.5);backdrop-filter:blur(8px);color:#fff;font-size:18px;cursor:pointer;transition:all .16s" style-hover="background:rgba(20,16,6,.82);transform:scale(1.06)"></span>
+          </div>
+          <!-- next photo arrow -->
+          <div onClick="{{ nextPhoto }}" title="Next photo" style="position:absolute;top:50%;right:14px;transform:translateY(-50%);width:42px;height:42px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:#ffc93c;color:#241d0c;cursor:pointer;box-shadow:0 10px 22px -8px rgba(0,0,0,.75);transition:transform .16s" style-hover="transform:translateY(-50%) scale(1.09)">
+            <span class="ph-bold ph-caret-right" style="font-size:21px"></span>
+          </div>
+          <!-- title overlay -->
+          <div style="position:absolute;left:18px;right:18px;bottom:15px">
+            <div style="display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:9px;background:#ffc93c;color:#241d0c;font-weight:800;font-size:12.5px;letter-spacing:.02em;margin-bottom:9px">
+              <span class="ph-fill ph-map-pin"></span>{{ selTag }}
+            </div>
+            <div class="nr" style="font-size:30px;font-weight:500;letter-spacing:-.015em;color:#fff;line-height:1.02;text-shadow:0 2px 18px rgba(0,0,0,.5)">{{ selPlotNo }}</div>
+            <div style="display:flex;align-items:center;gap:6px;color:rgba(255,251,240,.92);font-size:14.5px;font-weight:600;margin-top:5px;text-shadow:0 1px 10px rgba(0,0,0,.6)">
+              <span class="ph-fill ph-map-pin-area" style="font-size:16px"></span>{{ selSector }} · {{ selCity }}
+            </div>
+          </div>
+        </div>
+
+        <!-- THUMBNAIL STRIP -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px;padding:12px 18px 2px">
+          <sc-for list="{{ gallery }}" as="g" hint-placeholder-count="4">
+            <div onClick="{{ g.onClick }}" style="{{ g.style }}" style-hover="opacity:1;transform:translateY(-2px)"></div>
+          </sc-for>
+        </div>
+
+        <div style="padding:14px 20px 20px">
+          <!-- PRICE -->
+          <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding-bottom:16px;border-bottom:1px solid #ece3fa">
+            <div>
+              <div style="font-size:10.5px;font-weight:800;letter-spacing:.14em;color:#a8792a;text-transform:uppercase">Asking price</div>
+              <div class="nr" style="font-size:32px;font-weight:600;letter-spacing:-.02em;color:#241f1c;line-height:1;margin-top:5px;font-variant-numeric:tabular-nums">{{ selPrice }}</div>
+            </div>
+            <div style="text-align:right;padding-bottom:3px">
+              <div style="font-size:15px;font-weight:800;color:#3a332c;font-variant-numeric:tabular-nums">{{ selPpu }}</div>
+              <div style="font-size:11.5px;font-weight:600;color:#8d8271;margin-top:1px">per sq yd</div>
+            </div>
+          </div>
+
+          <!-- HIGHLIGHT CHIPS -->
+          <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:15px">
+            <sc-for list="{{ highlights }}" as="h" hint-placeholder-count="3">
+              <span style="display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:9px;background:#f4efff;border:1px solid #e4dbf7;color:#5b4a7a;font-weight:700;font-size:12.5px">
+                <span class="{{ h.icon }}" style="font-size:14px;color:#8a5a0c"></span>{{ h.label }}
+              </span>
+            </sc-for>
+          </div>
+
+          <!-- SPEC LIST -->
+          <div style="margin-top:18px;border:1px solid #e9e0f6;border-radius:15px;overflow:hidden;background:#fdfbff">
+            <sc-for list="{{ specs }}" as="s" hint-placeholder-count="8">
+              <div style="{{ s.rowStyle }}">
+                <div style="display:flex;align-items:center;gap:9px;color:#6b6156;font-size:13.5px;font-weight:600">
+                  <span class="{{ s.icon }}" style="font-size:16px;color:#b39a63"></span>{{ s.k }}
+                </div>
+                <div style="font-size:14px;font-weight:800;color:#241f1c;text-align:right">{{ s.v }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <button onClick="{{ openDetails }}" style="width:100%;margin-top:18px;height:52px;border:0;border-radius:14px;background:#ffc93c;color:#241d0c;font-family:'Hanken Grotesk',sans-serif;font-weight:800;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;box-shadow:0 14px 30px -16px rgba(120,86,10,.9);transition:background .15s" style-hover="background:#ffd75e">
+            Open full details<span class="ph-bold ph-arrow-right" style="font-size:16px"></span>
+          </button>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-top:10px">
+            <button onClick="{{ goMasterplan }}" style="height:48px;border:1.5px solid #e4dbf7;border-radius:13px;background:#fff;color:#3a332c;font-family:'Hanken Grotesk',sans-serif;font-weight:700;font-size:13px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transition:all .15s" style-hover="border-color:#ffc93c;background:#fffaf0"><span class="ph-fill ph-map-trifold" style="font-size:19px;color:#8a5a0c"></span>Masterplan</button>
+            <button onClick="{{ directions }}" style="height:48px;border:1.5px solid #e4dbf7;border-radius:13px;background:#fff;color:#3a332c;font-family:'Hanken Grotesk',sans-serif;font-weight:700;font-size:13px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transition:all .15s" style-hover="border-color:#ffc93c;background:#fffaf0"><span class="ph-fill ph-navigation-arrow" style="font-size:19px;color:#5b32c4"></span>Directions</button>
+            <button onClick="{{ saveProp }}" style="height:48px;border:1.5px solid #e4dbf7;border-radius:13px;background:#fff;color:#3a332c;font-family:'Hanken Grotesk',sans-serif;font-weight:700;font-size:13px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transition:all .15s" style-hover="border-color:#ffc93c;background:#fffaf0"><span class="ph-fill ph-bookmark-simple" style="font-size:19px;color:#1f4d3a"></span>Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ADD PROPERTY: place-the-pin mock -->
+  <sc-if value="{{ addMode }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;inset:0;z-index:60;pointer-events:none">
+      <div style="position:absolute;inset:0;background:rgba(10,14,12,.28)"></div>
+      <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-100%);text-align:center">
+        <div style="display:inline-flex;flex-direction:column;align-items:center;animation:eDrop .4s cubic-bezier(.2,.9,.3,1.2) both">
+          <div style="padding:8px 16px;border-radius:13px;background:#1f4d3a;color:#eafff2;font-weight:800;font-size:15px;box-shadow:0 14px 30px -14px rgba(0,0,0,.8);border:2px solid #eafff2;white-space:nowrap">Place the property</div>
+          <div style="width:16px;height:16px;background:#1f4d3a;transform:rotate(45deg);margin-top:-8px;border-right:2px solid #eafff2;border-bottom:2px solid #eafff2"></div>
+        </div>
+        <div style="width:14px;height:14px;border-radius:50%;background:#ffc93c;box-shadow:0 0 0 4px rgba(255,201,60,.35);margin:2px auto 0;animation:ePulse 1.8s infinite"></div>
+      </div>
+      <div style="position:absolute;top:24px;left:50%;transform:translateX(-50%);pointer-events:auto;display:inline-flex;align-items:center;gap:10px;padding:12px 20px;border-radius:14px;background:rgba(255,250,240,.97);border:1.5px solid #f6d98d;color:#8a5a0c;font-weight:700;font-size:15px;box-shadow:0 16px 40px -22px rgba(30,28,22,.85)">
+        <span class="ph-fill ph-hand-pointing" style="font-size:20px"></span>Drag the map so the pin sits on the plot — Aerocity
+      </div>
+      <div style="position:absolute;left:50%;bottom:34px;transform:translateX(-50%);pointer-events:auto;display:flex;gap:12px;background:rgba(255,250,240,.97);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1.5px solid rgba(221,210,245,.95);border-radius:18px;padding:12px 12px;box-shadow:0 26px 60px -28px rgba(30,28,22,.95)">
+        <button onClick="{{ skipAdd }}" style="height:54px;padding:0 26px;border:1.5px solid #e4dbf7;border-radius:14px;background:#fff;color:#6b6156;font-family:'Hanken Grotesk',sans-serif;font-weight:800;font-size:16px;cursor:pointer" style-hover="background:#faf7ff">Skip for now</button>
+        <button onClick="{{ confirmAdd }}" style="height:54px;padding:0 34px;border:0;border-radius:14px;background:#1f4d3a;color:#eafff2;font-family:'Hanken Grotesk',sans-serif;font-weight:800;font-size:16px;cursor:pointer;display:flex;align-items:center;gap:10px;box-shadow:0 14px 30px -16px rgba(12,45,30,.9)" style-hover="background:#25604a"><span class="ph-bold ph-check"></span>Confirm location</button>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- TOAST -->
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:50%;bottom:34px;transform:translateX(-50%);z-index:70;display:inline-flex;align-items:center;gap:10px;padding:14px 22px;border-radius:14px;background:rgba(36,29,12,.94);color:#fff5df;font-weight:700;font-size:15px;box-shadow:0 20px 50px -24px rgba(0,0,0,.9);animation:eToast .25s ease both;pointer-events:none">
+      <span class="ph-fill ph-check-circle" style="font-size:20px;color:#ffc93c"></span>{{ toast }}
+    </div>
+  </sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;accent&quot;:{&quot;editor&quot;:&quot;color&quot;,&quot;default&quot;:&quot;#ffc93c&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;options&quot;:[&quot;#ffc93c&quot;,&quot;#5b32c4&quot;,&quot;#1f4d3a&quot;],&quot;section&quot;:&quot;Look&quot;},&quot;startView&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;earth&quot;,&quot;options&quot;:[&quot;earth&quot;,&quot;masterplan&quot;,&quot;3d&quot;],&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Behaviour&quot;},&quot;showMyProps&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Behaviour&quot;}}">
+class Component extends DCLogic {
+  PROPS = [
+    {id:'p1', tag:'P-382', plotNo:'Plot 627', sector:'Sector 78', city:'Mohali', size:'250 sq yd', facing:'East', road:'30 ft', type:'Residential plot', price:'₹2.75 Cr', ppu:'₹1.10 L', dims:'50 × 45 ft', approval:'GMADA', ownership:'Freehold', possession:'Ready to build', x:.505, y:.545, photos:['assets/ph-plot-1.png','assets/ph-plot-3.png','assets/ph-road-1.png','assets/ph-amenity-1.png']},
+    {id:'p2', tag:'P-118', plotNo:'Plot 92',  sector:'Sector 88', city:'Mohali', size:'200 sq yd', facing:'West', road:'24 ft', type:'Residential plot', price:'₹1.95 Cr', ppu:'₹97,500', dims:'40 × 45 ft', approval:'GMADA', ownership:'Freehold', possession:'Ready to build', x:.135, y:.55, photos:['assets/ph-plot-2.png','assets/ph-plot-1.png','assets/ph-road-2.png','assets/ph-amenity-2.png']},
+    {id:'p3', tag:'P-540', plotNo:'Plot 12',  sector:'Sector 89', city:'Mohali', size:'500 sq yd', facing:'North-East', road:'40 ft', type:'Kothi plot', price:'₹5.50 Cr', ppu:'₹1.10 L', dims:'90 × 50 ft', approval:'GMADA', ownership:'Freehold', possession:'Ready to build', x:.135, y:.175, photos:['assets/ph-plot-3.png','assets/ph-project-1.png','assets/ph-road-3.png','assets/ph-amenity-3.png']},
+    {id:'p4', tag:'P-206', plotNo:'Plot 344', sector:'Sector 79', city:'Mohali', size:'300 sq yd', facing:'South', road:'30 ft', type:'Residential plot', price:'₹3.15 Cr', ppu:'₹1.05 L', dims:'60 × 45 ft', approval:'GMADA', ownership:'Freehold', possession:'Ready to build', x:.605, y:.83, photos:['assets/ph-plot-1.png','assets/ph-project-2.png','assets/ph-road-1.png','assets/ph-landmark-1.png']},
+    {id:'p5', tag:'P-771', plotNo:'Plot 58',  sector:'Sector 68', city:'Mohali', size:'420 sq yd', facing:'North', road:'33 ft', type:'Corner plot', price:'₹4.40 Cr', ppu:'₹1.05 L', dims:'75 × 50 ft', approval:'GMADA', ownership:'Freehold', possession:'Ready to build', x:.9, y:.5, photos:['assets/ph-plot-2.png','assets/ph-project-3.png','assets/ph-road-2.png','assets/ph-landmark-2.png']},
+  ];
+  CHIPS = [
+    {label:'Sector 78', t:[.505,.55,1.9]},
+    {label:'Sector 88', t:[.14,.55,1.9]},
+    {label:'Sector 89', t:[.14,.2,1.9]},
+    {label:'Aerocity',  t:[.78,.72,1.5], toast:'Aerocity — sample area'},
+    {label:'Airport Road', t:[.42,.5,1.35], toast:'Airport Road'},
+  ];
+  SEARCH = [
+    {kind:'plot', label:'P-382 · Plot 627', sub:'Sector 78, Mohali · your inventory', pid:'p1'},
+    {kind:'plot', label:'Plot 627 (P-382)', sub:'Sector 78, Mohali · your inventory', pid:'p1'},
+    {kind:'plot', label:'P-118 · Plot 92', sub:'Sector 88, Mohali · your inventory', pid:'p2'},
+    {kind:'plot', label:'P-540 · Plot 12', sub:'Sector 89, Mohali · your inventory', pid:'p3'},
+    {kind:'plot', label:'P-206 · Plot 344', sub:'Sector 79, Mohali · your inventory', pid:'p4'},
+    {kind:'plot', label:'P-771 · Plot 58', sub:'Sector 68, Mohali · your inventory', pid:'p5'},
+    {kind:'sector', label:'Sector 78', sub:'Mohali', t:[.505,.55,1.9]},
+    {kind:'sector', label:'Sector 88', sub:'Mohali', t:[.14,.55,1.9]},
+    {kind:'sector', label:'Sector 89', sub:'Mohali', t:[.14,.2,1.9]},
+    {kind:'sector', label:'Sector 79', sub:'Mohali', t:[.6,.85,1.9]},
+    {kind:'sector', label:'Sector 82', sub:'Mohali · Aerocity belt', t:[.78,.72,1.6], toast:'Sector 82'},
+    {kind:'project', label:'CP67', sub:'Commercial project · Sector 67', t:[.85,.78,1.7], toast:'CP67'},
+    {kind:'project', label:'Aerocity', sub:'GMADA township', t:[.78,.72,1.5], toast:'Aerocity'},
+    {kind:'landmark', label:'Airport Road', sub:'Main approach road', t:[.42,.5,1.35], toast:'Airport Road'},
+    {kind:'landmark', label:'GMADA Sports Complex', sub:'Sector 78 landmark', t:[.72,.26,1.8], toast:'GMADA Sports Complex'},
+    {kind:'landmark', label:'Rattan Professional College', sub:'Sector 78 landmark', t:[.5,.5,1.9], toast:'Rattan College'},
+  ];
+  KMETA = {
+    plot:{icon:'ph-fill ph-map-pin', bed:'#fff3d1', fg:'#8a5a0c'},
+    sector:{icon:'ph-fill ph-square-half', bed:'#efe8fb', fg:'#5b32c4'},
+    project:{icon:'ph-fill ph-buildings', bed:'#dcf3e5', fg:'#1f4d3a'},
+    landmark:{icon:'ph-fill ph-flag-banner', bed:'#ffe1e6', fg:'#b23a56'},
+  };
+  VIEWMETA = [
+    {k:'earth', label:'Earth', icon:'ph-fill ph-globe-hemisphere-east'},
+    {k:'masterplan', label:'Masterplan', icon:'ph-fill ph-map-trifold'},
+    {k:'3d', label:'3D', icon:'ph-fill ph-cube'},
+  ];
+
+  state = {
+    view: (this.props.startView || 'earth'),
+    zoom: 1, tx: 0, ty: 0, dragging: false,
+    q: '', searchFocused: false,
+    jumpOpen: false,
+    selId: null, photoIdx: 0,
+    panelOpen: !!(this.props.showMyProps),
+    addMode: false,
+    toast: null,
+  };
+
+  componentDidMount(){
+    this._onMove = (e)=>{ if(!this._drag) return; this.setState({tx: e.clientX - this._drag.sx, ty: e.clientY - this._drag.sy}); };
+    this._onUp = ()=>{ if(this._drag){ this._drag=null; this.setState({dragging:false}); } };
+    window.addEventListener('pointermove', this._onMove);
+    window.addEventListener('pointerup', this._onUp);
+  }
+  componentWillUnmount(){
+    window.removeEventListener('pointermove', this._onMove);
+    window.removeEventListener('pointerup', this._onUp);
+    if(this._toastT) clearTimeout(this._toastT);
+  }
+
+  dims(){ const el=this.mapEl; return {w: el?el.clientWidth:window.innerWidth, h: el?el.clientHeight:window.innerHeight}; }
+  flyTo(px,py,z,rightPad){
+    rightPad=rightPad||0;
+    const {w,h}=this.dims();
+    const cx=(w-rightPad)/2;
+    this.setState({zoom:z, tx: cx - px*w*z, ty: h/2 - py*h*z, dragging:false});
+  }
+  showToast(msg){ this.setState({toast:msg}); if(this._toastT) clearTimeout(this._toastT); this._toastT=setTimeout(()=>this.setState({toast:null}), 2400); }
+
+  renderVals(){
+    const S=this.state, accent=this.props.accent||'#ffc93c';
+    const sel = this.PROPS.find(p=>p.id===S.selId) || null;
+    const view=S.view, isEarth=view==='earth', showPlan=!isEarth;
+    const z=S.zoom, inv=(1/z);
+
+    const q=S.q.trim().toLowerCase();
+    const hasQuery=S.q.length>0;
+    const matches = q ? this.SEARCH.filter(s=>(s.label+' '+s.sub).toLowerCase().includes(q)) : this.SEARCH.slice(0,6);
+    const results = matches.slice(0,8).map(s=>{
+      const m=this.KMETA[s.kind];
+      return {label:s.label, sub:s.sub, icon:m.icon, bed:m.bed, fg:m.fg,
+        onClick:()=>{
+          if(s.pid){ this.selectProp(s.pid); }
+          else { this.setState({view:'earth', searchFocused:false, q:'', panelOpen:false, jumpOpen:false}); this.flyTo(s.t[0],s.t[1],s.t[2]); if(s.toast) this.showToast(s.toast); }
+        }};
+    });
+    const showResults = S.searchFocused && isEarth && !S.addMode;
+
+    const gradSel='linear-gradient(180deg,#ffe08a,#f4ad1a)';
+    const gradUn='linear-gradient(180deg,rgba(42,33,16,.96),rgba(26,20,9,.96))';
+    const pins=this.PROPS.map(p=>{
+      const on=p.id===S.selId;
+      const scale=(inv*(on?1.12:1)).toFixed(3);
+      const edge=on?'#fffdf5':'rgba(255,201,60,.5)';
+      return {
+        leftPct:(p.x*100).toFixed(2)+'%', topPct:(p.y*100).toFixed(2)+'%',
+        tf:`translate(-50%,-100%) scale(${scale})`, z:on?30:20, tag:p.tag,
+        onClick:(e)=>{ e.stopPropagation(); this.selectProp(p.id); },
+        cardStyle:`display:inline-flex;align-items:center;gap:7px;padding:5px 13px 5px 6px;border-radius:999px;font-family:'Hanken Grotesk',sans-serif;background:${on?gradSel:gradUn};color:${on?'#2a1c02':'#ffe9b0'};border:${on?'2px':'1.5px'} solid ${edge};box-shadow:${on?'0 0 0 5px rgba(255,201,60,.26),0 14px 26px -10px rgba(0,0,0,.7)':'0 10px 22px -12px rgba(0,0,0,.85)'}`,
+        badgeStyle:`display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:${on?'#2a1c02':'rgba(255,201,60,.92)'};color:${on?'#ffd75e':'#241d0c'}`,
+        stemStyle:`width:11px;height:11px;transform:rotate(45deg);margin:-6px auto 0;background:${on?'#f4ad1a':'#1c150a'};border-right:${on?'2px':'1.5px'} solid ${edge};border-bottom:${on?'2px':'1.5px'} solid ${edge}`,
+        groundStyle:`width:16px;height:5px;border-radius:50%;background:rgba(0,0,0,.42);filter:blur(1.5px);margin:4px auto 0;${on?'box-shadow:0 0 10px 3px rgba(255,201,60,.5)':''}`,
+      };
+    });
+
+    const chips=this.CHIPS.map(c=>({label:c.label, onClick:()=>{ this.setState({view:'earth',searchFocused:false,jumpOpen:false}); this.flyTo(c.t[0],c.t[1],c.t[2]); if(c.toast) this.showToast(c.toast); }}));
+
+    const viewTabs=this.VIEWMETA.map(v=>{
+      const on=v.k===view;
+      return {label:v.label, icon:v.icon,
+        onClick:()=>this.setState({view:v.k, searchFocused:false, jumpOpen:false}),
+        style:`display:inline-flex;align-items:center;gap:6px;padding:0 12px;height:36px;border-radius:10px;font-family:'Hanken Grotesk',sans-serif;font-weight:800;font-size:13px;cursor:pointer;transition:all .15s;background:${on?accent:'transparent'};color:${on?'#241d0c':'#f3ead2'}`};
+    });
+
+    const propList=this.PROPS.map(p=>{
+      const on=p.id===S.selId;
+      return {tag:p.tag, plotNo:p.plotNo, sub:`${p.sector} · ${p.size}`,
+        onClick:()=>this.selectProp(p.id),
+        rowStyle:`display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:13px;cursor:pointer;transition:background .15s;background:${on?'rgba(255,201,60,.16)':'transparent'};border:1px solid ${on?'rgba(255,201,60,.4)':'transparent'}`};
+    });
+
+    const heroPhoto = sel ? (sel.photos[S.photoIdx] || sel.photos[0]) : 'assets/ph-plot-1.png';
+    const gallery = (sel?sel.photos:[]).map((src,i)=>({
+      onClick:()=>this.setState({photoIdx:i}),
+      style:`height:54px;border-radius:10px;background:#241d0c center/cover no-repeat;background-image:url('${src}');cursor:pointer;border:2px solid ${i===S.photoIdx?accent:'transparent'};box-shadow:${i===S.photoIdx?'0 5px 14px -7px rgba(0,0,0,.55)':'none'};opacity:${i===S.photoIdx?1:.7};transition:all .15s`,
+    }));
+    const specs = sel ? [
+      {k:'Plot size', v:sel.size, icon:'ph-fill ph-ruler'},
+      {k:'Dimensions', v:sel.dims, icon:'ph-fill ph-frame-corners'},
+      {k:'Facing', v:sel.facing, icon:'ph-fill ph-compass'},
+      {k:'Road width', v:sel.road, icon:'ph-fill ph-road-horizon'},
+      {k:'Plot type', v:sel.type, icon:'ph-fill ph-house-line'},
+      {k:'Approval', v:sel.approval, icon:'ph-fill ph-certificate'},
+      {k:'Ownership', v:sel.ownership, icon:'ph-fill ph-scroll'},
+      {k:'Possession', v:sel.possession, icon:'ph-fill ph-key'},
+    ].map((s,i,arr)=>({...s, rowStyle:`display:flex;align-items:center;justify-content:space-between;gap:14px;padding:11px 14px;${i<arr.length-1?'border-bottom:1px solid #efe8fb;':''}${i%2?'background:#faf7ff;':''}`})) : [];
+    const highlights = sel ? [
+      {label:'GMADA approved', icon:'ph-fill ph-seal-check'},
+      {label:'Clear title', icon:'ph-fill ph-shield-check'},
+      {label:'Loan ready', icon:'ph-fill ph-bank'},
+    ] : [];
+
+    const planIcon = view==='3d'?'ph-fill ph-cube':'ph-fill ph-map-trifold';
+    const planEyebrow = view==='3d'?'PRESENTATION VIEW':'OFFICIAL LAYOUT';
+    const planTitle = view==='3d'?'3D masterplan':'Masterplan';
+    const planBody = view==='3d'
+      ? 'The 3D presentation layout for this area will appear here. Same property, shown the way clients love to see it.'
+      : 'The official plot layout for this area will appear here — plot numbers, roads and blocks, matched to the same property you have on Earth.';
+    const planGridStyle = view==='3d'
+      ? 'position:absolute;width:820px;height:520px;background-image:linear-gradient(rgba(91,50,196,.16) 1px,transparent 1px),linear-gradient(90deg,rgba(91,50,196,.16) 1px,transparent 1px);background-size:52px 52px;border:1px solid rgba(91,50,196,.25);transform:perspective(1100px) rotateX(52deg) rotateZ(2deg);opacity:.7;box-shadow:0 60px 120px -40px rgba(91,50,196,.4)'
+      : 'position:absolute;width:min(760px,80vw);height:min(520px,60vh);background-image:linear-gradient(rgba(138,90,12,.16) 1px,transparent 1px),linear-gradient(90deg,rgba(138,90,12,.16) 1px,transparent 1px);background-size:48px 48px;border:1.5px solid rgba(138,90,12,.2);border-radius:18px;opacity:.65';
+
+    return {
+      setRoot:(el)=>{ if(el) this.mapEl=el; },
+      mapCursor: S.dragging?'grabbing':'grab',
+      onDown:(e)=>{
+        if(!isEarth) return;
+        this._drag={sx:e.clientX-S.tx, sy:e.clientY-S.ty};
+        this.setState({dragging:true, searchFocused:false, jumpOpen:false});
+      },
+      onWheel:(e)=>{ if(!isEarth) return; const nz=Math.min(3, Math.max(.85, z*(e.deltaY<0?1.12:0.9))); this.setState({zoom:nz}); },
+      mapWrapStyle:`position:absolute;inset:0;transform:translate(${S.tx}px,${S.ty}px) scale(${z});transform-origin:0 0;transition:${S.dragging?'none':'transform .55s cubic-bezier(.22,.61,.36,1)'};will-change:transform`,
+      pins, chips, viewTabs, propList, results, showResults,
+      q:S.q, hasQuery, noResults: q && matches.length===0,
+      onSearch:(e)=>this.setState({q:e.target.value, searchFocused:true, jumpOpen:false}),
+      onSearchFocus:()=>this.setState({searchFocused:true, jumpOpen:false}),
+      clearSearch:()=>this.setState({q:'', searchFocused:true}),
+      showJump: isEarth && !showResults && !S.addMode && !sel,
+      jumpOpen: S.jumpOpen,
+      toggleJump:()=>this.setState({jumpOpen:!S.jumpOpen, searchFocused:false}),
+      goHome:()=>this.showToast('Back to MAPCO (demo)'),
+      propCount:this.PROPS.length,
+      panelOpen:S.panelOpen && isEarth && !S.addMode,
+      togglePanel:()=>this.setState({panelOpen:!S.panelOpen}),
+      recenter:()=>this.setState({zoom:1,tx:0,ty:0,view:'earth'}),
+      startAdd:()=>{ this.setState({addMode:true, selId:null, searchFocused:false, panelOpen:false, jumpOpen:false, view:'earth'}); this.flyTo(.78,.72,1.5); },
+      confirmAdd:()=>{ this.setState({addMode:false}); this.showToast('Location saved — Aerocity'); },
+      skipAdd:()=>{ this.setState({addMode:false}); this.showToast('Skipped — add location later'); },
+      addMode:S.addMode,
+      showPlan, planIcon, planEyebrow, planTitle, planBody, planGridStyle,
+      hasSel: !!sel,
+      showCard: !!sel && isEarth && !S.addMode,
+      selTag: sel?sel.tag:'', selPlotNo: sel?sel.plotNo:'', selSector: sel?sel.sector:'',
+      selCity: sel?sel.city:'', selPrice: sel?sel.price:'', selPpu: sel?sel.ppu:'',
+      selPhotoStyle:`position:absolute;inset:0;width:100%;height:100%;background:#241d0c center/cover no-repeat;background-image:url('${heroPhoto}')`,
+      gallery, specs, highlights,
+      nextPhoto:()=>{ if(!sel) return; const n=sel.photos.length; this.setState({photoIdx:(S.photoIdx+1)%n}); },
+      closeCard:()=>this.setState({selId:null}),
+      openDetails:()=>this.showToast('Opening full property details…'),
+      goMasterplan:()=>this.setState({view:'masterplan'}),
+      directions:()=>this.showToast('Opening directions…'),
+      shareProp:()=>this.showToast('Share link copied'),
+      saveProp:()=>this.showToast('Saved to your list'),
+      toast:S.toast,
+    };
+  }
+
+  selectProp(id){
+    const p=this.PROPS.find(x=>x.id===id); if(!p) return;
+    this.setState({selId:id, photoIdx:0, view:'earth', searchFocused:false, q:'', panelOpen:false, jumpOpen:false, addMode:false});
+    this.flyTo(p.x, p.y, 1.9, 440);
+  }
+}
+</script>
+</body>
+</html>
