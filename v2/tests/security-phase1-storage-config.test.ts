@@ -3,11 +3,11 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
-const config = readFileSync(new URL('../../supabase/config.toml', import.meta.url), 'utf8');
-const deletion = readFileSync(new URL('../../supabase/functions/delete-dealer/index.ts', import.meta.url), 'utf8');
-const isolation = readFileSync(new URL('../../supabase/verification/verify-isolation.js', import.meta.url), 'utf8');
-const liveVerifier = readFileSync(new URL('../scripts/security-verify.mjs', import.meta.url), 'utf8');
-const serviceVerifier = readFileSync(new URL('../scripts/backend-verify.mjs', import.meta.url), 'utf8');
+const config = readFileSync(new URL('../../supabase/config.toml', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+const deletion = readFileSync(new URL('../../supabase/functions/delete-dealer/index.ts', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+const isolation = readFileSync(new URL('../../supabase/verification/verify-isolation.js', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+const liveVerifier = readFileSync(new URL('../scripts/security-verify.mjs', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
+const serviceVerifier = readFileSync(new URL('../scripts/backend-verify.mjs', import.meta.url), 'utf8').replace(/\r\n/g, '\n');
 const liveVerifierPath = fileURLToPath(new URL('../scripts/security-verify.mjs', import.meta.url));
 const isolationVerifierPath = fileURLToPath(new URL('../../supabase/verification/verify-isolation.js', import.meta.url));
 

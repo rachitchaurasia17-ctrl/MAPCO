@@ -3293,79 +3293,147 @@ export function renderApp(state: any) {
 
 
                       <div
-                        style="margin:16px 22px 0;border-radius:22px;background:#fffdf7;box-shadow:0 0 0 1.5px #ece3d2;overflow:hidden">
+                        style="margin:16px 22px 0;border-radius:24px;background:#fffdf7;box-shadow:0 0 0 1.5px #ece3d2;overflow:hidden">
+                        <!-- Level 1: Property Summary Banner -->
                         <div
-                          style="display:flex;align-items:center;gap:13px;padding:15px 20px;background:#fdf0d4;flex-wrap:wrap">
+                          style="display:flex;align-items:center;gap:14px;padding:18px 22px;background:#fdf0d4;flex-wrap:wrap">
                           <span
-                            style="width:42px;height:42px;border-radius:13px;background:#9a6a00;color:#fff;display:grid;place-items:center;flex:none"><i
-                              class="ph-fill ph-info" style="font-size:21px"></i></span>
-                          <div style="flex:1;min-width:160px">
-                            <div style="font-size:20px;font-weight:800;color:#241f1c">What this property is</div>
-                            <div style="font-size:15.5px;font-weight:700;color:#9a6a00;margin-top:1px">Everything you
-                              have written down</div>
+                            style="width:44px;height:44px;border-radius:14px;background:#9a6a00;color:#fff;display:grid;place-items:center;flex:none"><i
+                              class="\${propDetail.typeIcon}" style="font-size:22px"></i></span>
+                          <div style="flex:1;min-width:180px">
+                            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                              <span
+                                style="font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#9a6a00">\${propDetail.typeLabel}</span>
+                              \${ propDetail.isNegotiable ? \`
+                                <span
+                                  style="font-size:11px;font-weight:800;padding:2px 7px;border-radius:6px;background:rgba(154,106,0,.15);color:#7a5400">Negotiable</span>
+                              \` : '' }
+                              \${ propDetail.isFixedPrice ? \`
+                                <span
+                                  style="font-size:11px;font-weight:800;padding:2px 7px;border-radius:6px;background:rgba(0,0,0,.08);color:#5c5446">Fixed
+                                  price</span>
+                              \` : '' }
+                            </div>
+                            <div
+                              style="font-size:21px;font-weight:800;color:#241f1c;margin-top:3px;line-height:1.25">
+                              \${propDetail.headline}</div>
                           </div>
                           <button onClick="\${__b(propDetail.editGo)}"
-                            style="display:flex;align-items:center;gap:9px;height:48px;padding:0 18px;border-radius:14px;background:#9a6a00;color:#fff;font-size:16px;font-weight:800;flex:none"><i
-                              class="ph-fill ph-pencil-simple" style="font-size:18px"></i>Edit this property</button>
+                            style="display:flex;align-items:center;gap:8px;height:46px;padding:0 18px;border-radius:13px;background:#9a6a00;color:#fff;font-size:15.5px;font-weight:800;flex:none;box-shadow:0 6px 16px -6px rgba(154,106,0,.6)"><i
+                              class="ph-fill ph-pencil-simple" style="font-size:17px"></i>Edit property</button>
                         </div>
-                        <div style="padding:16px 20px 4px">
-                          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px">
-                            \${ (propDetail.pHero || []).map(f => \`
+
+                        <!-- Key Advantage Highlights -->
+                        \${ propDetail.hasHighlightChips ? \`
+                          <div
+                            style="padding:12px 22px;background:#fff8e8;border-bottom:1px solid #f0e2c8;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                            <span
+                              style="font-size:11.5px;font-weight:800;color:#9a6a00;text-transform:uppercase;letter-spacing:.08em;margin-right:2px">Highlights:</span>
+                            \${ (propDetail.highlightChips || []).map(h => \`
+                              <span style="\${h.style}"><i class="\${h.icon}" style="font-size:14px"></i>\${h.label}</span>
+                            \`).join('') }
+                          </div>
+                        \` : '' }
+
+                        <div style="padding:20px 22px 22px">
+                          <!-- Level 2: Key Specs Grid (6-8 structured facts) -->
+                          <div
+                            style="font-size:12.5px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:#8a7f6e;margin-bottom:10px">
+                            Key Specifications</div>
+                          <div
+                            style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px">
+                            \${ (propDetail.keySpecs || []).map(s => \`
                               <div
-                                style="padding:17px 19px 15px;border-radius:20px;background:#fff8e6;box-shadow:inset 0 0 0 2px #f0d493">
-                                <div
-                                  style="font-size:12.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#a3541b">
-                                  \${f.label}</div>
-                                <div
-                                  style="font-family:'Newsreader',serif;font-weight:600;font-size:32px;line-height:1.08;color:#241f1c;margin-top:5px;text-wrap:balance">
-                                  \${f.value}</div>
-                                <div style="font-size:14.5px;font-weight:700;color:#8a7f6e;margin-top:2px">\${f.sub}
+                                style="display:flex;align-items:center;gap:11px;padding:13px 14px;border-radius:16px;background:#fffdf7;box-shadow:inset 0 0 0 1.5px #ecdcc0">
+                                <i class="\${s.icon}" style="font-size:21px;color:#a3541b;flex:none"></i>
+                                <div style="flex:1;min-width:0">
+                                  <div
+                                    style="font-size:11px;font-weight:800;color:#9c907e;text-transform:uppercase;letter-spacing:.06em">
+                                    \${s.label}</div>
+                                  <div
+                                    style="font-size:17px;font-weight:800;color:#241f1c;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                                    \${s.value}</div>
                                 </div>
                               </div>
                             \`).join('') }
                           </div>
 
+                          <!-- Level 3: Grouped Property Details -->
                           <div
-                            style="display:grid;grid-template-columns:repeat(auto-fit,minmax(152px,1fr));gap:9px;margin-top:13px">
-                            \${ (propDetail.pSpecs || []).map(f => \`
-                              <div
-                                style="display:flex;align-items:center;gap:10px;padding:12px 13px;border-radius:14px;background:#fffdf7;box-shadow:inset 0 0 0 1.5px #ecdcc0">
-                                <i class="\${f.icon}" style="font-size:19px;color:#a3541b;flex:none"></i>
-                                <span style="flex:1;min-width:0">
-                                  <span
-                                    style="display:block;font-size:12px;font-weight:800;color:#a89e8b;text-transform:uppercase;letter-spacing:.06em">\${f.label}</span>
-                                  <span style="display:block;font-size:17px;font-weight:800;color:#241f1c">\${f.value}</span>
-                                </span>
-                              </div>
-                            \`).join('') }
-                          </div>
-
+                            style="font-size:12.5px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:#8a7f6e;margin-top:24px;margin-bottom:10px">
+                            Property Breakdown</div>
                           <div
-                            style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px;margin-top:13px">
-                            \${ (propDetail.pGroups || []).map(g => \`
+                            style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px">
+                            \${ (propDetail.detailGroups || []).map(g => \`
                               <div style="\${g.wrap}">
                                 <div style="display:flex;align-items:center;gap:9px;\${g.headColor}"><i
                                     class="\${g.icon}" style="font-size:19px"></i><span
                                     style="font-size:14px;font-weight:800;letter-spacing:.09em;text-transform:uppercase">\${g.title}</span></div>
-                                <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
-                                  \${ (g.items || []).map(i => \`
-                                    <div style="display:flex;align-items:baseline;gap:12px">
-                                      <span
-                                        style="flex:1;min-width:0;font-size:15.5px;font-weight:700;color:#8a7f6e;text-wrap:pretty">\${i.label}</span>
-                                      <span
-                                        style="font-size:16.5px;font-weight:800;color:#241f1c;text-align:right;flex:none">\${i.value}</span>
-                                    </div>
-                                  \`).join('') }
-                                </div>
-                                <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:11px">
-                                  \${ (g.chips || []).map(c => \`<span
-                                      style="\${c.style}"><i class="ph-fill ph-check" style="font-size:15px"></i>\${c.label}</span>\`).join('') }
-                                </div>
+                                \${ g.hasItems ? \`
+                                  <div style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+                                    \${ (g.items || []).map(i => \`
+                                      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+                                        <span
+                                          style="font-size:15px;font-weight:700;color:#7a6f5e">\${i.label}</span>
+                                        <span
+                                          style="font-size:15.5px;font-weight:800;color:#241f1c;text-align:right">\${i.value}</span>
+                                      </div>
+                                    \`).join('') }
+                                  </div>
+                                \` : '' }
+                                \${ g.hasChips ? \`
+                                  <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:11px">
+                                    \${ (g.chips || []).map(c => \`<span
+                                        style="\${c.style}"><i class="ph-fill ph-check" style="font-size:14px"></i>\${c.label}</span>\`).join('') }
+                                  </div>
+                                \` : '' }
                               </div>
                             \`).join('') }
                           </div>
+
+                          <!-- Level 4: Expandable More Details -->
+                          \${ propDetail.hasMoreDetails ? \`
+                            <div style="margin-top:20px">
+                              <button onClick="\${__b(propDetail.toggleMoreDetails)}"
+                                style="display:flex;align-items:center;justify-content:space-between;width:100%;padding:13px 18px;border-radius:15px;background:#f7f2e7;border:1px solid #e2d8c4;font-size:15px;font-weight:800;color:#6b5e4c;cursor:pointer">
+                                <span style="display:flex;align-items:center;gap:8px">
+                                  <i class="ph-bold \${propDetail.moreDetailsOpen ? 'ph-caret-up' : 'ph-caret-down'}"
+                                    style="font-size:16px;color:#9a6a00"></i>
+                                  \${propDetail.moreDetailsOpen ? 'Hide secondary details' : ('View all property details (' + propDetail.moreDetailsCount + ' more facts)')}
+                                </span>
+                                <span style="font-size:13px;font-weight:700;color:#9a8f80">\${propDetail.moreDetailsOpen ? 'Collapse' : 'Expand'}</span>
+                              </button>
+
+                              \${ propDetail.moreDetailsOpen ? \`
+                                <div
+                                  style="margin-top:12px;padding:18px 20px;border-radius:18px;background:#fffdf7;border:1.5px dashed #ded4c0">
+                                  <div
+                                    style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
+                                    \${ (propDetail.moreDetailsList || []).map(m => \`
+                                      <div
+                                        style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid #f0e8d8">
+                                        <span style="font-size:14px;font-weight:700;color:#8a7f6e">\${m.label}</span>
+                                        <span
+                                          style="font-size:14.5px;font-weight:800;color:#241f1c;text-align:right">\${m.value}</span>
+                                      </div>
+                                    \`).join('') }
+                                  </div>
+                                  \${ propDetail.hasCustomNotes ? \`
+                                    <div
+                                      style="margin-top:14px;padding:12px 14px;border-radius:12px;background:#fff8e8;border:1px solid #f0d493">
+                                      <div
+                                        style="font-size:11.5px;font-weight:800;text-transform:uppercase;color:#a3541b;letter-spacing:.08em">
+                                        Internal Notes &amp; Highlights</div>
+                                      <div
+                                        style="font-size:14.5px;font-weight:600;color:#4c4233;margin-top:4px;line-height:1.5">
+                                        \${propDetail.customNotes}</div>
+                                    </div>
+                                  \` : '' }
+                                </div>
+                              \` : '' }
+                            </div>
+                          \` : '' }
                         </div>
-                        <div style="height:18px"></div>
                       </div>
 
                       <div style="height:20px"></div>

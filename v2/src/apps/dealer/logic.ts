@@ -410,139 +410,245 @@ export class Component extends DCLogic {
   PTYPES = [{ k: 'Residential Plot', i: 'ph-fill ph-map-pin-area', g: 'plot' }, { k: 'Flat', i: 'ph-fill ph-buildings', g: 'built' }, { k: 'Builder Floor', i: 'ph-fill ph-stack', g: 'built' }, { k: 'Kothi', i: 'ph-fill ph-house-line', g: 'built' }, { k: 'Villa', i: 'ph-fill ph-house', g: 'built' }, { k: 'Commercial SCO', i: 'ph-fill ph-storefront', g: 'comm' }, { k: 'Commercial Booth', i: 'ph-fill ph-shopping-bag-open', g: 'comm' }, { k: 'Office', i: 'ph-fill ph-briefcase', g: 'comm' }, { k: 'Showroom', i: 'ph-fill ph-shopping-cart', g: 'comm' }, { k: 'Industrial Plot', i: 'ph-fill ph-factory', g: 'plot' }];
   HIGHLIGHTS = ['Park Facing', 'Corner', 'Wide Road', 'Prime Location', 'Clear Title', 'GMADA Approved', 'RERA Approved', 'Gated', 'Near Market', 'Ready to Move'];
   RS = { ready: { l: 'Ready to show', c: '#0a6634', b: '#c9f0d9', bd: '#8fdcae', i: 'ph-fill ph-seal-check' }, attention: { l: 'Needs attention', c: '#a33417', b: '#ffdccb', bd: '#f3bb98', i: 'ph-fill ph-warning' }, draft: { l: 'Draft', c: '#6b5320', b: '#f6e6bd', bd: '#e2cd97', i: 'ph-fill ph-note-pencil' }, sold: { l: 'Sold', c: '#0a4a26', b: '#c9f0d9', bd: '#8fdcae', i: 'ph-fill ph-seal-check' } };
-  pTiers(pd) {
+  buildPropertyOverview(pd) {
+    if (!pd) return { headline: '', typeIcon: 'ph-fill ph-house-line', typeLabel: '', isNegotiable: true, isFixedPrice: false, highlightChips: [], hasHighlightChips: false, keySpecs: [], detailGroups: [], moreDetailsList: [], moreDetailsCount: 0, hasMoreDetails: false, hasCustomNotes: false, customNotes: '' };
     const K = this.kindOf(pd.type);
     const has = (v) => v !== undefined && v !== null && String(v).trim() !== '' && String(v) !== '—';
-    const H = [], S = [], G = [];
-    const hero = (l, v, sub) => { if (has(v)) H.push({ label: l, value: String(v), sub: sub || '' }); };
-    const spec = (l, v, i) => { if (has(v)) S.push({ label: l, value: String(v), icon: i || 'ph-fill ph-circle' }); };
-    const CH = (c, b) => 'display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 13px;border-radius:999px;background:' + b + ';color:' + c + ';font-size:15px;font-weight:800';
-    const grp = (title, icon, c, b, r, items, flagList) => {
-      const it = (items || []).filter(x => has(x.value)).map(x => ({ label: x.label, value: String(x.value) }));
-      const ch = (flagList || []).filter(x => pd[x.k]).map(x => ({ label: x.l, style: CH(c, b) }));
-      if (it.length || ch.length) G.push({
-        title, icon, items: it, chips: ch,
-        headColor: 'color:' + c,
-        wrap: 'padding:17px 19px 17px;border-radius:20px;background:#fffdf7;box-shadow:inset 0 0 0 1.5px ' + r
+    const U = (v, u) => {
+      if (!has(v)) return '';
+      const s = String(v).trim();
+      return /[a-z]/i.test(s) ? s : (s + ' ' + u);
+    };
+    const park = (v) => has(v) ? (String(v) === '0' ? 'None' : (String(v).toLowerCase().includes('car') || String(v).toLowerCase().includes('park') ? String(v) : v + ' car parking')) : '';
+    const dims = (pd.frontage && pd.depth) ? (pd.frontage + ' × ' + pd.depth + ' ft') : '';
+
+    // 1. PROPERTY SUMMARY (Level 1 Headline)
+    let headlineParts = [];
+    let typeIcon = 'ph-fill ph-house-line';
+    let typeLabel = pd.type || 'Property';
+
+    if (K === 'plot' || K === 'indplot') {
+      typeIcon = K === 'indplot' ? 'ph-fill ph-warehouse' : 'ph-fill ph-compass';
+      typeLabel = K === 'indplot' ? 'Industrial Plot' : 'Residential Plot';
+      if (pd.landArea) headlineParts.push(pd.landArea + ' sq yd');
+      else if (pd.size) headlineParts.push(pd.size);
+      if (dims) headlineParts.push(dims);
+      if (has(pd.facing)) headlineParts.push(pd.facing + ' facing');
+      if (has(pd.road)) headlineParts.push(pd.road + ' ft road');
+      if (pd.corner) headlineParts.push('Corner');
+      else if (pd.twoSide) headlineParts.push('Two-side open');
+      else if (pd.parkFacing) headlineParts.push('Park facing');
+    } else if (K === 'flat' || K === 'bfloor') {
+      typeIcon = K === 'bfloor' ? 'ph-fill ph-stack' : 'ph-fill ph-buildings';
+      typeLabel = K === 'bfloor' ? 'Builder Floor' : 'Apartment / Flat';
+      if (pd.config) headlineParts.push(pd.config);
+      else if (has(pd.beds)) headlineParts.push(pd.beds + ' BHK');
+      if (has(pd.builtup)) headlineParts.push(pd.builtup + ' sq ft');
+      else if (has(pd.carpet)) headlineParts.push(pd.carpet + ' sq ft');
+      else if (pd.size) headlineParts.push(pd.size);
+      if (has(pd.beds)) headlineParts.push(pd.beds + ' Bed');
+      if (has(pd.baths)) headlineParts.push(pd.baths + ' Bath');
+      if (has(pd.floor)) headlineParts.push(pd.floor + (String(pd.floor).match(/\d/) && !String(pd.floor).includes('Floor') && !String(pd.floor).includes('Ground') ? 'th Floor' : ''));
+      if (has(pd.parking) && pd.parking !== '0') headlineParts.push(park(pd.parking));
+    } else if (K === 'kothi' || K === 'villa') {
+      typeIcon = 'ph-fill ph-house';
+      typeLabel = K === 'villa' ? 'Luxury Villa' : 'Independent Kothi';
+      if (pd.landArea) headlineParts.push(pd.landArea + ' sq yd');
+      else if (pd.size) headlineParts.push(pd.size);
+      if (pd.config) headlineParts.push(pd.config);
+      else if (has(pd.beds)) headlineParts.push(pd.beds + ' BHK');
+      if (has(pd.floorCount)) headlineParts.push(pd.floorCount + (String(pd.floorCount).includes('Floor') ? '' : ' Floors'));
+      if (has(pd.builtup)) headlineParts.push(pd.builtup + ' sq ft built-up');
+      if (has(pd.facing)) headlineParts.push(pd.facing + ' facing');
+    } else {
+      typeIcon = 'ph-fill ph-storefront';
+      typeLabel = K === 'sco' ? 'Commercial SCO' : (K === 'office' ? 'Commercial Office' : (K === 'showroom' ? 'Commercial Showroom' : 'Commercial Space'));
+      if (pd.landArea) headlineParts.push(pd.landArea + ' sq yd');
+      else if (has(pd.carpet)) headlineParts.push(pd.carpet + ' sq ft');
+      else if (pd.size) headlineParts.push(pd.size);
+      if (dims) headlineParts.push(dims);
+      if (has(pd.floorCount) || has(pd.floor)) headlineParts.push((pd.floorCount || pd.floor) + ' Floors');
+      if (has(pd.builtup)) headlineParts.push(pd.builtup + ' sq ft built-up');
+      if (has(pd.road)) headlineParts.push(pd.road + ' ft road');
+    }
+
+    const headline = headlineParts.join(' · ') || (pd.type + ' · ' + (pd.size || ''));
+
+    // Highlight Advantage Chips
+    const highlightChips = [];
+    const addChip = (label, icon, color, bg) => {
+      highlightChips.push({
+        label, icon: icon || 'ph-fill ph-seal-check',
+        style: `display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:999px;font-size:13px;font-weight:800;background:${bg};color:${color}`
       });
     };
-    const dims = (pd.frontage && pd.depth) ? (pd.frontage + ' × ' + pd.depth + ' ft') : '';
-    const U = (v, u) => {
-      if (v === undefined || v === null || String(v).trim() === '') return '';
-      const s = String(v).trim(); return /[a-z]/i.test(s) ? s : (s + ' ' + u);
+
+    if (pd.corner) addChip('Corner plot', 'ph-fill ph-corners-out', '#a3541b', '#fff0d6');
+    if (pd.twoSide) addChip('2-Side open', 'ph-fill ph-arrows-out', '#1a5aa8', '#e1ecfb');
+    if (pd.parkFacing) addChip('Park facing', 'ph-fill ph-tree', '#0a6634', '#d7f0e2');
+    if (pd.mainRoad) addChip('Main road', 'ph-fill ph-road-horizon', '#7a2fe0', '#ebe3fa');
+    if (pd.nearGreen) addChip('Near green belt', 'ph-fill ph-plant', '#0a6634', '#d7f0e2');
+    if (has(pd.possession) && String(pd.possession).toLowerCase().includes('ready')) addChip('Ready to move', 'ph-fill ph-key', '#0a6634', '#d7f0e2');
+    if (pd.lift) addChip('Lift installed', 'ph-fill ph-arrows-vertical', '#1a5aa8', '#e1ecfb');
+    if (pd.powerBackup) addChip('Power backup', 'ph-fill ph-lightning', '#9a6a00', '#fdf0d4');
+    if (pd.security) addChip('Gated security', 'ph-fill ph-shield-check', '#4a2c99', '#ebe3fa');
+    if (has(pd.tenure) && String(pd.tenure).toLowerCase().includes('freehold')) addChip('Freehold title', 'ph-fill ph-certificate', '#0a6634', '#d7f0e2');
+    if (has(pd.approval) || has(pd.approvalNote)) addChip(pd.approval || pd.approvalNote, 'ph-fill ph-seal-check', '#0a6634', '#d7f0e2');
+    if (has(pd.basementArea)) addChip('Basement built', 'ph-fill ph-arrow-down', '#a3541b', '#fff0d6');
+
+    // 2. KEY SPECS (6–8 facts tailored by type)
+    const keySpecs = [];
+    const addSpec = (label, value, icon) => {
+      if (has(value)) keySpecs.push({ label, value: String(value), icon: icon || 'ph-fill ph-check-circle' });
     };
-    const park = (v) => has(v) ? (String(v) === '0' ? 'None' : v + ' car') : '';
-    const irr = [['Front', pd.dimFront], ['Back', pd.dimBack], ['Left', pd.dimLeft], ['Right', pd.dimRight]]
-      .filter(x => has(x[1])).map(x => ({ label: x[0] + ' side', value: x[1] + ' ft' }));
-    const floorPlanItems = (() => {
-      const v = pd.floorPlan; if (!has(v)) return [];
-      return String(v).split('·').map(s => s.trim()).filter(Boolean).map(s => {
+
+    if (K === 'plot' || K === 'indplot') {
+      addSpec('Plot Area', pd.landArea ? (pd.landArea + ' sq yd') : pd.size, 'ph-fill ph-ruler');
+      addSpec('Dimensions', dims || '—', 'ph-fill ph-arrows-out-line-horizontal');
+      addSpec('Facing', pd.facing, 'ph-fill ph-compass');
+      addSpec('Road in Front', has(pd.road) ? (pd.road + ' ft') : '', 'ph-fill ph-road-horizon');
+      if (K === 'indplot') {
+        addSpec('Built Shed', U(pd.shedArea, 'sq ft'), 'ph-fill ph-warehouse');
+        addSpec('Power Load', U(pd.powerLoad, 'KVA'), 'ph-fill ph-lightning');
+      } else {
+        addSpec('Open Sides', pd.openSides || (pd.twoSide ? '2 Sides' : (pd.corner ? 'Corner' : '1 Side')), 'ph-fill ph-arrows-out');
+        addSpec('Second Road', has(pd.road2) ? (pd.road2 + ' ft') : (pd.corner ? 'Side road' : ''), 'ph-fill ph-road-horizon');
+      }
+      addSpec('Ownership', pd.tenure || 'Freehold', 'ph-fill ph-certificate');
+      addSpec('Approvals', pd.approval || pd.approvalNote || 'GMADA Approved', 'ph-fill ph-seal-check');
+    } else if (K === 'flat' || K === 'bfloor') {
+      addSpec('Configuration', pd.config || (has(pd.beds) ? pd.beds + ' BHK' : ''), 'ph-fill ph-house-line');
+      addSpec('Built-up Area', has(pd.builtup) ? (pd.builtup + ' sq ft') : (has(pd.carpet) ? pd.carpet + ' sq ft' : pd.size), 'ph-fill ph-ruler');
+      addSpec(K === 'bfloor' ? 'Which Floor' : 'Floor Level', pd.floor ? (pd.floor + (has(pd.totalFloors) ? ' of ' + pd.totalFloors : '')) : '', 'ph-fill ph-stack');
+      addSpec('Washrooms', has(pd.baths) ? (pd.baths + ' Baths') : '', 'ph-fill ph-toilet');
+      addSpec('Balconies', has(pd.balconies) ? (pd.balconies + ' Balconies') : '', 'ph-fill ph-wind');
+      addSpec('Parking', park(pd.parking), 'ph-fill ph-car');
+      addSpec('Furnishing', pd.furnishing || 'Unfurnished', 'ph-fill ph-armchair');
+      addSpec('Possession', pd.possession || (has(pd.age) ? pd.age + ' Old' : 'Ready to move'), 'ph-fill ph-key');
+    } else if (K === 'kothi' || K === 'villa') {
+      addSpec(K === 'villa' ? 'Land Area' : 'Plot Size', has(pd.landArea) ? (pd.landArea + ' sq yd') : pd.size, 'ph-fill ph-ruler');
+      addSpec('Built-up Area', has(pd.builtup) ? (pd.builtup + ' sq ft') : (has(pd.carpet) ? pd.carpet + ' sq ft' : ''), 'ph-fill ph-buildings');
+      addSpec('Bed & Bath', (has(pd.beds) ? pd.beds : '—') + ' Bed · ' + (has(pd.baths) ? pd.baths : '—') + ' Bath', 'ph-fill ph-door-open');
+      addSpec('Total Floors', pd.floorCount ? (pd.floorCount + ' Floors') : '', 'ph-fill ph-stack');
+      addSpec('Facing', pd.facing, 'ph-fill ph-compass');
+      addSpec('Road Width', has(pd.road) ? (pd.road + ' ft') : '', 'ph-fill ph-road-horizon');
+      addSpec('Parking', park(pd.parking), 'ph-fill ph-car');
+      addSpec('Lawn / Basement', has(pd.lawnArea) ? ('Lawn ' + pd.lawnArea + ' sq yd') : (has(pd.basementArea) ? 'Basement ' + pd.basementArea + ' sq ft' : ''), 'ph-fill ph-tree');
+    } else {
+      addSpec(K === 'sco' ? 'Plot Area' : 'Total Area', has(pd.landArea) ? (pd.landArea + ' sq yd') : (has(pd.carpet) ? pd.carpet + ' sq ft' : pd.size), 'ph-fill ph-ruler');
+      addSpec('Frontage & Dims', dims || (has(pd.frontage) ? pd.frontage + ' ft Front' : ''), 'ph-fill ph-arrows-out-line-horizontal');
+      addSpec('Built-up Area', has(pd.builtup) ? (pd.builtup + ' sq ft') : '', 'ph-fill ph-buildings');
+      addSpec('Floors', pd.floorCount || pd.floor, 'ph-fill ph-stack');
+      addSpec('Road in Front', has(pd.road) ? (pd.road + ' ft') : '', 'ph-fill ph-road-horizon');
+      addSpec('Basement', has(pd.basementArea) ? (pd.basementArea + ' sq ft') : (pd.basement ? 'Yes' : 'None'), 'ph-fill ph-arrow-down');
+      addSpec('Parking & Access', park(pd.parking) || (pd.groundAccess ? 'Ground access' : 'Front parking'), 'ph-fill ph-car');
+      addSpec('Condition / Fitout', pd.fitout || 'Ready', 'ph-fill ph-hammer');
+    }
+
+    // 3. GROUPED PROPERTY DETAILS
+    const detailGroups = [];
+    const addGroup = (title, icon, c, b, r, items, flagList) => {
+      const it = (items || []).filter(x => has(x.value)).map(x => ({ label: x.label, value: String(x.value) }));
+      const ch = (flagList || []).filter(x => pd[x.k]).map(x => ({
+        label: x.l,
+        style: `display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:999px;background:${b};color:${c};font-size:14px;font-weight:800`
+      }));
+      if (it.length || ch.length) {
+        detailGroups.push({
+          title, icon, items: it, chips: ch, hasItems: it.length > 0, hasChips: ch.length > 0,
+          headColor: 'color:' + c,
+          wrap: 'padding:18px 20px;border-radius:20px;background:#fffdf7;box-shadow:inset 0 0 0 1.5px ' + r
+        });
+      }
+    };
+
+    // Position & Boundaries for Plots
+    if (K === 'plot' || K === 'indplot') {
+      addGroup('Position & Dimensions', 'ph-fill ph-compass', '#a3541b', '#fff0d6', '#ecdcc0',
+        [{ label: 'Shape', value: pd.shape }, { label: 'Ground Level', value: pd.level }, { label: 'Frontage', value: has(pd.frontage) ? pd.frontage + ' ft' : '' }, { label: 'Depth', value: has(pd.depth) ? pd.depth + ' ft' : '' }],
+        [{ k: 'corner', l: 'Corner plot' }, { k: 'twoSide', l: 'Two-side open' }, { k: 'parkFacing', l: 'Park facing' }, { k: 'mainRoad', l: 'Main road' }, { k: 'nearGreen', l: 'Near green belt' }, { k: 'cornerCut', l: 'Corner cut' }]);
+    }
+
+    // Building & Facilities / Fittings
+    if (K === 'flat' || K === 'bfloor' || K === 'kothi' || K === 'villa') {
+      addGroup('Building & Facilities', 'ph-fill ph-buildings', '#1a5aa8', '#e1ecfb', '#d7e6f6',
+        [{ label: 'Flooring', value: pd.flooring }, { label: 'Maintenance', value: pd.maintenance }, { label: 'Roof Rights', value: pd.roofRights ? 'Yes' : '' }],
+        [{ k: 'lift', l: 'Lift' }, { k: 'powerBackup', l: 'Power backup' }, { k: 'security', l: 'Gated security' }, { k: 'modularKitchen', l: 'Modular kitchen' }, { k: 'wardrobes', l: 'Fitted wardrobes' }, { k: 'ac', l: 'ACs installed' }, { k: 'piped', l: 'Piped gas' }, { k: 'solar', l: 'Solar' }, { k: 'borewell', l: 'Borewell' }]);
+      
+      addGroup('Layout & Rooms Inside', 'ph-fill ph-door-open', '#a3541b', '#fff0d6', '#ecdcc0', [],
+        [{ k: 'living', l: 'Drawing / living' }, { k: 'dining', l: 'Dining room' }, { k: 'store', l: 'Store room' }, { k: 'puja', l: 'Pooja room' }, { k: 'study', l: 'Study room' }, { k: 'servant', l: 'Servant room' }, { k: 'servantBath', l: 'Servant washroom' }, { k: 'barsati', l: 'Barsati' }, { k: 'sepEntry', l: 'Separate entry' }, { k: 'terrace', l: 'Private terrace' }, { k: 'portico', l: 'Portico' }, { k: 'stilt', l: 'Stilt parking' }, { k: 'lawn', l: 'Lawn' }, { k: 'basement', l: 'Basement' }]);
+    } else if (K === 'sco' || K === 'office' || K === 'showroom') {
+      addGroup('Services & Facilities', 'ph-fill ph-plug', '#1a5aa8', '#e1ecfb', '#d7e6f6',
+        [{ label: 'Washrooms', value: pd.washrooms }, { label: 'Ceiling Height', value: U(pd.ceiling, 'ft') }, { label: 'Cabins', value: pd.cabins }, { label: 'Workstations / Seats', value: pd.seats }],
+        [{ k: 'lift', l: 'Lift' }, { k: 'powerBackup', l: 'Power backup' }, { k: 'pantry', l: 'Pantry' }, { k: 'centralAc', l: 'Central AC' }, { k: 'conference', l: 'Conference room' }, { k: 'reception', l: 'Reception' }, { k: 'serverRoom', l: 'Server room' }, { k: 'terrace', l: 'Terrace' }]);
+
+      addGroup('Commercial Position & Access', 'ph-fill ph-compass', '#a3541b', '#fff0d6', '#ecdcc0',
+        [{ label: 'Shutter Width', value: U(pd.shutter, 'ft') }, { label: 'Second Road', value: has(pd.road2) ? pd.road2 + ' ft' : '' }],
+        [{ k: 'corner', l: 'Corner' }, { k: 'twoSide', l: 'Two-side open' }, { k: 'mainRoad', l: 'On the main road' }, { k: 'groundAccess', l: 'Direct ground access' }, { k: 'parkingAccess', l: 'Front parking' }, { k: 'basement', l: 'Basement' }, { k: 'mezzanine', l: 'Mezzanine' }]);
+    } else if (K === 'indplot') {
+      addGroup('Utilities & Infrastructure', 'ph-fill ph-plug', '#0a6634', '#d7f0e2', '#b3e2c8',
+        [{ label: 'Industrial Phase', value: pd.phase }, { label: 'Yard Area', value: U(pd.yardArea, 'sq ft') }, { label: 'Current Use', value: pd.use }],
+        [{ k: 'water', l: 'Water line' }, { k: 'sewer', l: 'Sewer line' }, { k: 'effluent', l: 'Effluent line' }, { k: 'gas', l: 'Gas pipeline' }, { k: 'crane', l: 'Crane / gantry' }, { k: 'loadingBay', l: 'Loading bay' }, { k: 'built', l: 'Shed built' }, { k: 'officeBlock', l: 'Office block' }, { k: 'labourQtr', l: 'Labour quarters' }]);
+    }
+
+    // Floor-wise Configuration
+    if (pd.floorPlan) {
+      const floorItems = String(pd.floorPlan).split('·').map(s => s.trim()).filter(Boolean).map(s => {
         const p = s.split('—');
         return p.length > 1 ? { label: p[0].trim(), value: p.slice(1).join('—').trim() } : { label: s, value: '' };
       });
-    })();
+      if (floorItems.length) {
+        addGroup(K === 'kothi' || K === 'villa' ? 'Floor by Floor Layout' : 'Floor-wise Configuration', 'ph-fill ph-list-numbers', '#0a6634', '#d7f0e2', '#b3e2c8', floorItems, []);
+      }
+    }
 
-    // Rate calculation
-    const rateCalc = (() => {
-      const sz = parseFloat(String(pd.size || '').replace(/[^0-9.]/g, ''));
-      const r = pd.rate ? parseFloat(pd.rate) : (sz && pd.price ? Math.round(pd.price / sz) : 0);
-      if (!r) return '';
-      return '₹' + Math.round(r).toLocaleString('en-IN') + ' per ' + (String(pd.size).includes('ft') ? 'sq ft' : 'sq yd');
-    })();
+    // Project & Locality (if any project / society / block)
+    if (pd.society || pd.block || pd.address) {
+      addGroup('Project & Locality', 'ph-fill ph-buildings', '#4a2c99', '#ebe3fa', '#d5c5f2',
+        [{ label: 'Project / Society', value: pd.society }, { label: 'Block / Pocket', value: pd.block }, { label: 'Address', value: pd.address }, { label: 'Locality', value: pd.loc }, { label: 'City', value: pd.city }], []);
+    }
 
-    if (K === 'plot' || K === 'indplot') {
-      hero('Dimensions', dims, 'frontage × depth');
-      if (!dims) hero('Plot area', pd.landArea ? (pd.landArea + ' sq yd') : pd.size);
-      if (K === 'plot') hero('Facing', pd.facing && pd.facing !== '—' ? pd.facing : '', 'main entrance');
-      hero('Road in front', has(pd.road) ? (pd.road + ' ft') : '');
-      if (K === 'indplot') { spec('Shed / built-up', U(pd.shedArea, 'sq ft'), 'ph-fill ph-warehouse'); spec('Power load', U(pd.powerLoad, 'KVA'), 'ph-fill ph-lightning'); }
-      spec('Plot number', pd.plotNo, 'ph-fill ph-hash');
-      spec('Second road', has(pd.road2) ? (pd.road2 + ' ft') : '', 'ph-fill ph-road-horizon');
-      spec('Open sides', pd.openSides, 'ph-fill ph-arrows-out');
-      spec('Block / pocket', pd.block, 'ph-fill ph-squares-four');
-      grp('Position & Dimensions', 'ph-fill ph-compass', '#a3541b', '#fff0d6', '#ecdcc0',
-        [{ label: 'Shape', value: pd.shape }, { label: 'Level', value: pd.level }, { label: 'Frontage', value: has(pd.frontage) ? pd.frontage + ' ft' : '' }, { label: 'Depth', value: has(pd.depth) ? pd.depth + ' ft' : '' }],
-        [{ k: 'corner', l: 'Corner plot' }, { k: 'twoSide', l: 'Two-side open' }, { k: 'parkFacing', l: 'Park facing' }, { k: 'mainRoad', l: 'On the main road' }, { k: 'nearGreen', l: 'Near green belt' }, { k: 'cornerCut', l: 'Corner cut' }]);
-      if (irr.length) grp('Exact dimensions', 'ph-fill ph-ruler', '#1a5aa8', '#e1ecfb', '#d7e6f6', irr, []);
-      grp('Price & Title', 'ph-fill ph-tag', '#9a6a00', '#fdf0d4', '#f0d493',
-        [{ label: 'Asking price', value: this.inr(pd.price) }, { label: 'Rate', value: rateCalc }, { label: 'Price is', value: pd.negotiable !== false ? 'Negotiable' : 'Fixed' }, { label: 'Title', value: pd.registry }, { label: 'Approvals', value: pd.approval || pd.approvalNote }, { label: 'Ownership', value: pd.tenure }], []);
-      if (K === 'indplot') grp('Utilities & Infrastructure', 'ph-fill ph-plug', '#0a6634', '#d7f0e2', '#b3e2c8',
-        [{ label: 'Yard area', value: U(pd.yardArea, 'sq ft') }, { label: 'Industrial area', value: pd.phase }, { label: 'Current use', value: pd.use }],
-        [{ k: 'water', l: 'Water connection' }, { k: 'sewer', l: 'Sewer connection' }, { k: 'effluent', l: 'Effluent line' }, { k: 'gas', l: 'Gas line' }, { k: 'crane', l: 'Crane / gantry' }, { k: 'loadingBay', l: 'Loading bay' }, { k: 'built', l: 'Shed built' }, { k: 'officeBlock', l: 'Office block' }, { k: 'labourQtr', l: 'Labour quarters' }]);
-    }
-    else if (K === 'flat' || K === 'bfloor') {
-      hero('Configuration', pd.config || (has(pd.beds) ? pd.beds + ' BHK' : ''));
-      hero('Built-up area', has(pd.builtup) ? (pd.builtup + ' sq ft') : (has(pd.carpet) ? pd.carpet + ' sq ft' : pd.size), has(pd.carpet) && has(pd.builtup) ? (pd.carpet + ' sq ft carpet') : '');
-      hero('Bedrooms', pd.beds); hero('Washrooms', pd.baths);
-      spec(K === 'bfloor' ? 'Which floor' : 'Floor', pd.floor, 'ph-fill ph-stack');
-      spec('Floors in building', pd.totalFloors, 'ph-fill ph-buildings');
-      spec('Balconies', pd.balconies, 'ph-fill ph-wind');
-      spec('Kitchens', pd.kitchens, 'ph-fill ph-cooking-pot');
-      spec('Parking', park(pd.parking), 'ph-fill ph-car');
-      spec('Furnishing', pd.furnishing, 'ph-fill ph-armchair');
-      spec('Age', pd.age, 'ph-fill ph-calendar-blank');
-      spec('Possession', pd.possession, 'ph-fill ph-key');
-      if (K === 'bfloor') { spec('Plot it sits on', has(pd.landArea) ? (pd.landArea + ' sq yd') : '', 'ph-fill ph-ruler'); }
-      grp('Rooms & Spaces', 'ph-fill ph-door-open', '#a3541b', '#fff0d6', '#ecdcc0', [],
-        [{ k: 'living', l: 'Drawing / living' }, { k: 'dining', l: 'Dining' }, { k: 'store', l: 'Store' }, { k: 'puja', l: 'Pooja room' }, { k: 'study', l: 'Study' }, { k: 'servant', l: 'Servant room' }, { k: 'servantBath', l: 'Servant washroom' }, { k: 'barsati', l: 'Barsati' }, { k: 'sepEntry', l: 'Separate entry' }, { k: 'terrace', l: 'Terrace' }]);
-      grp('Building & Fittings', 'ph-fill ph-buildings', '#1a5aa8', '#e1ecfb', '#d7e6f6',
-        [{ label: 'Flooring', value: pd.flooring }, { label: 'Maintenance', value: pd.maintenance }, { label: 'Road in front', value: has(pd.road) ? pd.road + ' ft' : '' }],
-        [{ k: 'lift', l: 'Lift' }, { k: 'powerBackup', l: 'Power backup' }, { k: 'security', l: 'Gated security' }, { k: 'modularKitchen', l: 'Modular kitchen' }, { k: 'wardrobes', l: 'Fitted wardrobes' }, { k: 'ac', l: 'ACs installed' }, { k: 'piped', l: 'Piped gas' }, { k: 'solar', l: 'Solar' }, { k: 'borewell', l: 'Borewell' }]);
-      grp('Price & Title', 'ph-fill ph-tag', '#9a6a00', '#fdf0d4', '#f0d493',
-        [{ label: 'Asking price', value: this.inr(pd.price) }, { label: 'Rate', value: rateCalc }, { label: 'Price is', value: pd.negotiable !== false ? 'Negotiable' : 'Fixed' }, { label: 'Title', value: pd.registry }, { label: 'Approvals', value: pd.approval || pd.approvalNote }, { label: 'Ownership', value: pd.tenure }], []);
-    }
-    else if (K === 'kothi' || K === 'villa') {
-      hero(K === 'villa' ? 'Land area' : 'Plot size', has(pd.landArea) ? (pd.landArea + ' sq yd') : pd.size, dims || '');
-      hero('Built-up area', has(pd.builtup) ? (pd.builtup + ' sq ft') : (has(pd.carpet) ? pd.carpet + ' sq ft' : ''));
-      hero('Floors', pd.floorCount);
-      hero('Bed / wash', (has(pd.beds) ? pd.beds : '—') + ' / ' + (has(pd.baths) ? pd.baths : '—'), 'across the house');
-      spec('Facing', pd.facing && pd.facing !== '—' ? pd.facing : '', 'ph-fill ph-compass');
-      spec('Road in front', has(pd.road) ? (pd.road + ' ft') : '', 'ph-fill ph-road-horizon');
-      spec('Kitchens', pd.kitchens, 'ph-fill ph-cooking-pot');
-      spec('Parking', park(pd.parking), 'ph-fill ph-car');
-      spec('Furnishing', pd.furnishing, 'ph-fill ph-armchair');
-      spec('Age', pd.age, 'ph-fill ph-calendar-blank');
-      spec('Lawn area', U(pd.lawnArea, 'sq yd'), 'ph-fill ph-tree');
-      spec('Basement area', U(pd.basementArea, 'sq ft'), 'ph-fill ph-arrow-down');
-      grp('Rooms and spaces', 'ph-fill ph-door-open', '#a3541b', '#fff0d6', '#ecdcc0', [],
-        [{ k: 'living', l: 'Drawing / living' }, { k: 'dining', l: 'Dining' }, { k: 'store', l: 'Store' }, { k: 'puja', l: 'Pooja room' }, { k: 'study', l: 'Study' }, { k: 'servant', l: 'Servant room' }, { k: 'servantBath', l: 'Servant washroom' }, { k: 'terrace', l: 'Terrace' }, { k: 'barsati', l: 'Barsati' }, { k: 'portico', l: 'Portico' }, { k: 'stilt', l: 'Stilt parking' }, { k: 'lawn', l: K === 'villa' ? 'Private lawn' : 'Lawn' }, { k: 'basement', l: 'Basement' }]);
-      grp('Building and fittings', 'ph-fill ph-buildings', '#1a5aa8', '#e1ecfb', '#d7e6f6',
-        [{ label: 'Flooring', value: pd.flooring }, { label: 'Roof rights', value: pd.roofRights ? 'Yes' : '' }],
-        [{ k: 'lift', l: 'Lift' }, { k: 'powerBackup', l: 'Power backup' }, { k: 'borewell', l: 'Borewell' }, { k: 'solar', l: 'Solar' }, { k: 'security', l: 'Security' }, { k: 'modularKitchen', l: 'Modular kitchen' }, { k: 'ac', l: 'ACs' }]);
-      grp('Price & Title', 'ph-fill ph-tag', '#9a6a00', '#fdf0d4', '#f0d493',
-        [{ label: 'Asking price', value: this.inr(pd.price) }, { label: 'Rate', value: rateCalc }, { label: 'Price is', value: pd.negotiable !== false ? 'Negotiable' : 'Fixed' }, { label: 'Title', value: pd.registry }, { label: 'Approvals', value: pd.approval || pd.approvalNote }, { label: 'Ownership', value: pd.tenure }], []);
-      if (floorPlanItems.length) grp('Floor by floor', 'ph-fill ph-list-numbers', '#0a6634', '#d7f0e2', '#b3e2c8', floorPlanItems, []);
-    }
-    else {
-      const isSco = K === 'sco';
-      hero(isSco ? 'Plot area' : 'Area', has(pd.landArea) ? (pd.landArea + ' sq yd') : (has(pd.carpet) ? pd.carpet + ' sq ft' : pd.size), dims || '');
-      hero('Built-up area', has(pd.builtup) ? (pd.builtup + ' sq ft') : (has(pd.carpet) ? pd.carpet + ' sq ft' : ''));
-      hero('Floors', pd.floorCount || pd.floor);
-      hero('Road in front', has(pd.road) ? (pd.road + ' ft') : '');
-      spec('Frontage', has(pd.frontage) ? (pd.frontage + ' ft') : '', 'ph-fill ph-arrows-horizontal');
-      spec('Ownership', pd.tenure || 'Freehold', 'ph-fill ph-scroll');
-      spec('Washrooms', pd.washrooms, 'ph-fill ph-toilet');
-      spec('Parking', park(pd.parking), 'ph-fill ph-car');
-      spec('Ceiling height', U(pd.ceiling, 'ft'), 'ph-fill ph-arrows-vertical');
-      spec('Cabins', pd.cabins, 'ph-fill ph-door');
-      spec('Open seats', pd.seats, 'ph-fill ph-users-three');
-      spec('Basement area', U(pd.basementArea, 'sq ft'), 'ph-fill ph-arrow-down');
-      spec('Condition', pd.fitout, 'ph-fill ph-hammer');
-      grp('Position & Dimensions', 'ph-fill ph-compass', '#a3541b', '#fff0d6', '#ecdcc0',
-        [{ label: 'Second road', value: has(pd.road2) ? (pd.road2 + ' ft') : '' }, { label: 'Shutter width', value: U(pd.shutter, 'ft') }, { label: 'Depth', value: U(pd.depth, 'ft') }],
-        [{ k: 'corner', l: 'Corner' }, { k: 'twoSide', l: 'Two-side open' }, { k: 'mainRoad', l: 'On the main road' }, { k: 'groundAccess', l: 'Direct ground access' }, { k: 'parkingAccess', l: 'Parking in front' }, { k: 'basement', l: 'Basement' }, { k: 'mezzanine', l: 'Mezzanine' }]);
-      grp('Services & Facilities', 'ph-fill ph-plug', '#1a5aa8', '#e1ecfb', '#d7e6f6', [],
-        [{ k: 'lift', l: 'Lift' }, { k: 'powerBackup', l: 'Power backup' }, { k: 'pantry', l: 'Pantry' }, { k: 'washroom', l: 'Washroom' }, { k: 'centralAc', l: 'Central AC' }, { k: 'conference', l: 'Conference room' }, { k: 'reception', l: 'Reception' }, { k: 'serverRoom', l: 'Server room' }, { k: 'terrace', l: 'Terrace' }]);
-      grp('Price & Title', 'ph-fill ph-tag', '#9a6a00', '#fdf0d4', '#f0d493',
-        [{ label: 'Asking price', value: this.inr(pd.price) }, { label: 'Rate', value: rateCalc }, { label: 'Price is', value: pd.negotiable !== false ? 'Negotiable' : 'Fixed' }, { label: 'Title', value: pd.registry }, { label: 'Approvals', value: pd.approval || pd.approvalNote }, { label: 'Ownership', value: pd.tenure }], []);
-      grp('What it suits', 'ph-fill ph-storefront', '#4a2c99', '#e7defc', '#ddd0f5',
-        [{ label: 'Suitable for', value: pd.use }, { label: 'Currently', value: pd.currentUse }].concat(floorPlanItems), []);
-    }
-    if (pd.society || pd.address) {
-      grp('Project & Locality', 'ph-fill ph-buildings', '#0a6634', '#d7f0e2', '#b3e2c8',
-        [{ label: 'Project / Society', value: pd.society }, { label: 'Address', value: pd.address }, { label: 'Block / Pocket', value: pd.block }, { label: 'Locality', value: pd.loc }, { label: 'City', value: pd.city }], []);
-    }
-    return { hero: H.slice(0, 4), specs: S, groups: G };
+    // 4. LEVEL 4: EXPANDABLE MORE DETAILS
+    const moreDetailsList = [];
+    const addMore = (label, value) => {
+      if (has(value)) moreDetailsList.push({ label, value: String(value) });
+    };
+
+    addMore('Plot / Unit Number', pd.plotNo);
+    addMore('Carpet Area', has(pd.carpet) ? pd.carpet + ' sq ft' : '');
+    addMore('Super Built-up Area', has(pd.builtup) ? pd.builtup + ' sq ft' : '');
+    addMore('Front Side Dimension', has(pd.dimFront) ? pd.dimFront + ' ft' : '');
+    addMore('Back Side Dimension', has(pd.dimBack) ? pd.dimBack + ' ft' : '');
+    addMore('Left Side Dimension', has(pd.dimLeft) ? pd.dimLeft + ' ft' : '');
+    addMore('Right Side Dimension', has(pd.dimRight) ? pd.dimRight + ' ft' : '');
+    addMore('Plot Shape', pd.shape);
+    addMore('Plot Level', pd.level);
+    addMore('Ceiling Height', has(pd.ceiling) ? pd.ceiling + ' ft' : '');
+    addMore('Maintenance Cost', pd.maintenance);
+    addMore('Construction Age', pd.age);
+    addMore('Possession Status', pd.possession);
+    addMore('Registry Status', pd.registry);
+    addMore('Authority Approval', pd.approval || pd.approvalNote);
+    addMore('Ownership Tenure', pd.tenure);
+    addMore('Current Use', pd.currentUse);
+    addMore('Suitable For', pd.use);
+
+    return {
+      headline,
+      typeIcon,
+      typeLabel,
+      isNegotiable: pd.negotiable !== false,
+      isFixedPrice: pd.negotiable === false,
+      highlightChips,
+      hasHighlightChips: highlightChips.length > 0,
+      keySpecs,
+      detailGroups,
+      moreDetailsList,
+      moreDetailsCount: moreDetailsList.length,
+      hasMoreDetails: moreDetailsList.length > 0 || has(pd.notes) || (pd.highlights && pd.highlights.length > 0),
+      hasCustomNotes: has(pd.notes) || has(pd.customHl),
+      customNotes: [pd.customHl, pd.notes].filter(has).join(' · ')
+    };
   }
   kindOf(t) {
     const s = (t || '').toLowerCase();
@@ -2674,246 +2780,7 @@ export class Component extends DCLogic {
       const shot = s.propShot % 6; const sheet = this.PROPMAP[pd.id];
       const inLinks = this.clientLinks.filter(l => l.props.includes(pd.id));
       const rd = this.readinessOf(pd); const rr = this.RS[rd.state];
-      const pgd = this.groupOf(pd.type);
-      const factStyle = 'display:flex;flex-direction:column;gap:5px;padding:15px 17px;border-radius:16px;background:#fff7e8;box-shadow:inset 0 0 0 1.5px #ecdcc0';
-      const fact = (l, v, i) => ({ label: l, value: v, icon: i, style: factStyle });
-      const facts = [fact('Type', pd.type, 'ph-fill ph-house-line'), fact('Size', pd.size, 'ph-fill ph-ruler'), fact('Locality', (pd.loc || '').split(',')[0], 'ph-fill ph-map-pin'), fact('City', pd.city, 'ph-fill ph-buildings')];
-      const TIERS = this.pTiers(pd);
-      const PK = this.kindOf(pd.type);
-      const yn = (v) => v ? 'Yes' : 'No';
-      const add = (l, v, i) => { if (v !== '' && v !== undefined && v !== null && v !== false) facts.push(fact(l, String(v), i)); };
-      const ifSet = (l, v, i) => { if (v) add(l, v, i); };
-      const onlyY = (l, v, i) => { if (v) add(l, 'Yes', i); };
-      const ft = (v, u) => v ? (String(v).match(/[a-z]/i) ? String(v) : String(v) + (u || ' ft')) : '';
-      const dimLine = (() => {
-        const f = parseFloat(pd.frontage), d = parseFloat(pd.depth);
-        if (!f || !d) return ''; return f + ' ft × ' + d + ' ft';
-      })();
-      const dimArea = (() => {
-        const f = parseFloat(pd.frontage), d = parseFloat(pd.depth);
-        if (!f || !d) return ''; return Math.round(f * d / 9).toLocaleString('en-IN') + ' sq yd';
-      })();
-      const park = String(pd.parking || '0') === '0' ? '' : (pd.parking + ' car');
-
-      if (PK === 'plot' || PK === 'indplot') {
-        ifSet('Dimensions', dimLine, 'ph-fill ph-arrows-out');
-        ifSet('Works out to', dimArea, 'ph-fill ph-ruler');
-        if (pd.facing && pd.facing !== '—') add('Facing', pd.facing + ' facing', 'ph-fill ph-compass');
-        ifSet('Road in front', ft(pd.road), 'ph-fill ph-road-horizon');
-        ifSet('Second-side road', ft(pd.road2), 'ph-fill ph-road-horizon');
-        ifSet(PK === 'indplot' ? 'Access' : 'Open sides', PK === 'indplot' ? pd.access : pd.openSides, 'ph-fill ph-arrows-out-line-horizontal');
-        onlyY('Corner plot', pd.corner, 'ph-fill ph-corners-out');
-        onlyY('Park facing', pd.parkFacing || (pd.highlights || []).includes('Park Facing'), 'ph-fill ph-tree');
-        onlyY('On the main road', pd.mainRoad, 'ph-fill ph-signpost');
-        onlyY('Corner cut', pd.cornerCut, 'ph-fill ph-scissors');
-        onlyY('Green belt behind', pd.nearGreen, 'ph-fill ph-leaf');
-        ifSet('Plot shape', pd.shape, 'ph-fill ph-polygon');
-        ifSet('Ground level', pd.level, 'ph-fill ph-steps');
-        if (pd.dimFront || pd.dimBack || pd.dimLeft || pd.dimRight)
-          add('Exact sides', 'Front ' + (pd.dimFront || '—') + ' · Back ' + (pd.dimBack || '—') + ' · Left ' + (pd.dimLeft || '—') + ' · Right ' + (pd.dimRight || '—'), 'ph-fill ph-selection-all');
-        ifSet('Block / pocket', pd.block, 'ph-fill ph-squares-four');
-        ifSet('Plot number', pd.plotNo, 'ph-fill ph-hash');
-        if (PK === 'indplot') {
-          ifSet('Industrial area', pd.phase, 'ph-fill ph-factory');
-          ifSet('Shed / built-up area', ft(pd.shedArea, ' sq ft'), 'ph-fill ph-warehouse');
-          ifSet('Shed height', ft(pd.ceiling), 'ph-fill ph-arrows-vertical');
-          ifSet('Power load', pd.powerLoad, 'ph-fill ph-lightning');
-          onlyY('Water connection', pd.water, 'ph-fill ph-drop');
-          onlyY('Sewer connection', pd.sewer, 'ph-fill ph-pipe');
-          onlyY('Effluent line', pd.effluent, 'ph-fill ph-flow-arrow');
-          onlyY('Gas line', pd.gas, 'ph-fill ph-fire');
-          onlyY('Crane / gantry', pd.crane, 'ph-fill ph-crane-tower');
-          onlyY('Loading bay', pd.loadingBay, 'ph-fill ph-truck');
-          onlyY('Office block', pd.officeBlock, 'ph-fill ph-briefcase');
-          onlyY('Labour quarters', pd.labourQtr, 'ph-fill ph-users-three');
-          ifSet('Yard / parking area', ft(pd.yardArea, ' sq ft'), 'ph-fill ph-car');
-          ifSet('Current use', pd.use, 'ph-fill ph-briefcase');
-        }
-        ifSet('Ownership', pd.tenure, 'ph-fill ph-scroll');
-        ifSet('Approving authority', pd.approvalNote, 'ph-fill ph-certificate');
-      }
-      else if (PK === 'flat' || PK === 'bfloor') {
-        ifSet('Configuration', pd.config, 'ph-fill ph-squares-four');
-        ifSet('Bedrooms', pd.beds, 'ph-fill ph-bed');
-        ifSet('Washrooms', pd.baths, 'ph-fill ph-bathtub');
-        ifSet('Balconies', pd.balconies, 'ph-fill ph-wind');
-        ifSet('Kitchens', pd.kitchens, 'ph-fill ph-cooking-pot');
-        onlyY('Drawing / living', pd.living, 'ph-fill ph-couch');
-        onlyY('Dining', pd.dining, 'ph-fill ph-fork-knife');
-        onlyY('Store room', pd.store, 'ph-fill ph-archive-box');
-        onlyY('Pooja room', pd.puja, 'ph-fill ph-flower-lotus');
-        onlyY('Study', pd.study, 'ph-fill ph-book-open');
-        onlyY('Servant room', pd.servant, 'ph-fill ph-door');
-        onlyY('Servant washroom', pd.servantBath, 'ph-fill ph-toilet');
-        ifSet('Floor', pd.floor, 'ph-fill ph-stack');
-        ifSet('Total floors', pd.totalFloors, 'ph-fill ph-buildings');
-        if (PK === 'bfloor') {
-          ifSet('Plot size under it', ft(pd.landArea, ' sq yd'), 'ph-fill ph-map-pin-area');
-          onlyY('Separate entry', pd.sepEntry, 'ph-fill ph-door-open');
-          onlyY('Terrace with it', pd.terrace, 'ph-fill ph-sun');
-          onlyY('Roof rights', pd.roofRights, 'ph-fill ph-house-line');
-          onlyY('Stilt parking', pd.stilt, 'ph-fill ph-car-profile');
-        }
-        ifSet('Built-up area', ft(pd.builtup, ' sq ft'), 'ph-fill ph-selection-all');
-        ifSet('Carpet area', ft(pd.carpet, ' sq ft'), 'ph-fill ph-selection-plus');
-        onlyY('Lift', pd.lift, 'ph-fill ph-elevator');
-        onlyY('Power backup', pd.powerBackup, 'ph-fill ph-lightning');
-        onlyY('Borewell', pd.borewell, 'ph-fill ph-drop');
-        onlyY('Solar', pd.solar, 'ph-fill ph-sun-dim');
-        onlyY('Gated security', pd.security, 'ph-fill ph-shield-check');
-        ifSet('Covered parking', park, 'ph-fill ph-car');
-        ifSet('Furnishing', pd.furnishing, 'ph-fill ph-armchair');
-        ifSet('Flooring', pd.flooring, 'ph-fill ph-grid-nine');
-        ifSet('Age', pd.age, 'ph-fill ph-calendar-blank');
-        ifSet('Possession', pd.possession, 'ph-fill ph-key');
-        ifSet('Monthly maintenance', pd.maintenance, 'ph-fill ph-receipt');
-        onlyY('Modular kitchen', pd.modularKitchen, 'ph-fill ph-cooking-pot');
-        onlyY('Fitted wardrobes', pd.wardrobes, 'ph-fill ph-coat-hanger');
-        onlyY('ACs installed', pd.ac, 'ph-fill ph-fan');
-        onlyY('Piped gas', pd.piped, 'ph-fill ph-fire');
-        if (pd.facing && pd.facing !== '—') add('Facing', pd.facing + ' facing', 'ph-fill ph-compass');
-        ifSet('Road in front', ft(pd.road), 'ph-fill ph-road-horizon');
-      }
-      else if (PK === 'kothi' || PK === 'villa') {
-        ifSet('Plot dimensions', dimLine, 'ph-fill ph-arrows-out');
-        ifSet(PK === 'villa' ? 'Land area' : 'Plot area', ft(pd.landArea, ' sq yd') || pd.size, 'ph-fill ph-map-pin-area');
-        ifSet('Built-up area', ft(pd.builtup, ' sq ft'), 'ph-fill ph-selection-all');
-        ifSet('Carpet area', ft(pd.carpet, ' sq ft'), 'ph-fill ph-selection-plus');
-        ifSet('Floors built', pd.floorCount, 'ph-fill ph-stack');
-        ifSet('Total bedrooms', pd.beds, 'ph-fill ph-bed');
-        ifSet('Total washrooms', pd.baths, 'ph-fill ph-bathtub');
-        ifSet('Kitchens', pd.kitchens, 'ph-fill ph-cooking-pot');
-        onlyY('Drawing / living', pd.living, 'ph-fill ph-couch');
-        onlyY('Dining', pd.dining, 'ph-fill ph-fork-knife');
-        onlyY('Store room', pd.store, 'ph-fill ph-archive-box');
-        onlyY('Pooja room', pd.puja, 'ph-fill ph-flower-lotus');
-        onlyY('Study', pd.study, 'ph-fill ph-book-open');
-        onlyY('Servant room', pd.servant, 'ph-fill ph-door');
-        onlyY('Servant washroom', pd.servantBath, 'ph-fill ph-toilet');
-        onlyY(PK === 'villa' ? 'Private lawn' : 'Lawn / garden', pd.lawn, 'ph-fill ph-tree');
-        ifSet('Lawn area', ft(pd.lawnArea, ' sq yd'), 'ph-fill ph-tree');
-        onlyY('Basement', pd.basement, 'ph-fill ph-arrow-down');
-        ifSet('Basement area', ft(pd.basementArea, ' sq ft'), 'ph-fill ph-arrow-down');
-        onlyY('Terrace', pd.terrace, 'ph-fill ph-sun');
-        onlyY('Barsati / top room', pd.barsati, 'ph-fill ph-house-line');
-        onlyY('Portico', pd.portico, 'ph-fill ph-garage');
-        onlyY('Stilt parking', pd.stilt, 'ph-fill ph-car-profile');
-        onlyY('Lift', pd.lift, 'ph-fill ph-elevator');
-        onlyY('Power backup', pd.powerBackup, 'ph-fill ph-lightning');
-        onlyY('Borewell', pd.borewell, 'ph-fill ph-drop');
-        onlyY('Solar', pd.solar, 'ph-fill ph-sun-dim');
-        onlyY('Gated security', pd.security, 'ph-fill ph-shield-check');
-        ifSet('Covered parking', park, 'ph-fill ph-car');
-        ifSet('Furnishing', pd.furnishing, 'ph-fill ph-armchair');
-        ifSet('Age', pd.age, 'ph-fill ph-calendar-blank');
-        if (pd.facing && pd.facing !== '—') add('Facing', pd.facing + ' facing', 'ph-fill ph-compass');
-        ifSet('Road in front', ft(pd.road), 'ph-fill ph-road-horizon');
-        ifSet('Ownership', pd.tenure, 'ph-fill ph-scroll');
-        ifSet('Floor-wise rooms', pd.floorPlan, 'ph-fill ph-list-numbers');
-      }
-      else if (PK === 'sco') {
-        ifSet('Dimensions', dimLine, 'ph-fill ph-arrows-out');
-        ifSet('Plot area', ft(pd.landArea, ' sq yd'), 'ph-fill ph-map-pin-area');
-        ifSet('Floors built', pd.floorCount, 'ph-fill ph-stack');
-        ifSet('Total built-up area', ft(pd.builtup, ' sq ft'), 'ph-fill ph-selection-all');
-        ifSet('Road in front', ft(pd.road), 'ph-fill ph-road-horizon');
-        ifSet('Washrooms', pd.washrooms, 'ph-fill ph-toilet');
-        onlyY('Basement', pd.basement, 'ph-fill ph-arrow-down');
-        ifSet('Basement area', ft(pd.basementArea, ' sq ft'), 'ph-fill ph-arrow-down');
-        ifSet('Ceiling height', ft(pd.ceiling), 'ph-fill ph-arrows-vertical');
-        onlyY('Corner', pd.corner, 'ph-fill ph-corners-out');
-        onlyY('Two-side open', pd.twoSide, 'ph-fill ph-arrows-out-line-horizontal');
-        onlyY('On the main road', pd.mainRoad, 'ph-fill ph-signpost');
-        onlyY('Pantry', pd.pantry, 'ph-fill ph-coffee');
-        onlyY('Lift', pd.lift, 'ph-fill ph-elevator');
-        onlyY('Power backup', pd.powerBackup, 'ph-fill ph-lightning');
-        onlyY('Terrace usable', pd.terrace, 'ph-fill ph-sun');
-        ifSet('Covered parking', park, 'ph-fill ph-car');
-        ifSet('Condition', pd.fitout, 'ph-fill ph-hammer');
-        ifSet('Suitable for', pd.use, 'ph-fill ph-storefront');
-        ifSet('Ownership', pd.tenure, 'ph-fill ph-scroll');
-        ifSet('Currently', pd.currentUse, 'ph-fill ph-briefcase');
-        ifSet('Floor-wise use', pd.floorPlan, 'ph-fill ph-list-numbers');
-      }
-      else if (PK === 'booth') {
-        ifSet('Unit area', ft(pd.carpet, ' sq ft') || pd.size, 'ph-fill ph-selection-all');
-        ifSet('Shutter frontage', ft(pd.frontage), 'ph-fill ph-arrows-horizontal');
-        ifSet('Depth', ft(pd.depth), 'ph-fill ph-arrows-vertical');
-        ifSet('Where it sits', pd.floor, 'ph-fill ph-stack');
-        ifSet('Ceiling height', ft(pd.ceiling), 'ph-fill ph-arrows-vertical');
-        ifSet('Suitable for', pd.use, 'ph-fill ph-storefront');
-        ifSet('Condition', pd.fitout, 'ph-fill ph-hammer');
-        onlyY('Washroom', pd.washroom, 'ph-fill ph-toilet');
-        onlyY('Pantry', pd.pantry, 'ph-fill ph-coffee');
-        onlyY('Mezzanine', pd.mezzanine, 'ph-fill ph-stack-simple');
-        onlyY('Corner', pd.corner, 'ph-fill ph-corners-out');
-        onlyY('On the main road', pd.mainRoad, 'ph-fill ph-signpost');
-        onlyY('Parking in front', pd.parkingAccess, 'ph-fill ph-car');
-        onlyY('Power backup', pd.powerBackup, 'ph-fill ph-lightning');
-        ifSet('Road in front', ft(pd.road), 'ph-fill ph-road-horizon');
-        ifSet('Booth number', pd.plotNo, 'ph-fill ph-hash');
-        ifSet('Ownership', pd.tenure, 'ph-fill ph-scroll');
-        ifSet('Current use', pd.currentUse, 'ph-fill ph-briefcase');
-      }
-      else if (PK === 'office') {
-        ifSet('Carpet area', ft(pd.carpet, ' sq ft') || pd.size, 'ph-fill ph-selection-plus');
-        ifSet('Built-up area', ft(pd.builtup, ' sq ft'), 'ph-fill ph-selection-all');
-        ifSet('Floor', pd.floor, 'ph-fill ph-stack');
-        ifSet('Total floors', pd.totalFloors, 'ph-fill ph-buildings');
-        ifSet('Cabins', pd.cabins, 'ph-fill ph-door');
-        ifSet('Open seating', pd.seats ? pd.seats + ' seats' : '', 'ph-fill ph-users-three');
-        ifSet('Washrooms', pd.washrooms, 'ph-fill ph-toilet');
-        onlyY('Conference room', pd.conference, 'ph-fill ph-presentation');
-        onlyY('Reception', pd.reception, 'ph-fill ph-desk');
-        onlyY('Pantry', pd.pantry, 'ph-fill ph-coffee');
-        onlyY('Server room', pd.serverRoom, 'ph-fill ph-hard-drives');
-        onlyY('Lift', pd.lift, 'ph-fill ph-elevator');
-        onlyY('Power backup', pd.powerBackup, 'ph-fill ph-lightning');
-        onlyY('Central AC', pd.centralAc, 'ph-fill ph-fan');
-        ifSet('Covered parking', park, 'ph-fill ph-car');
-        ifSet('Condition', pd.fitout, 'ph-fill ph-hammer');
-        ifSet('Furnishing', pd.furnishing, 'ph-fill ph-armchair');
-        ifSet('Ceiling height', ft(pd.ceiling), 'ph-fill ph-arrows-vertical');
-        ifSet('Monthly maintenance', pd.maintenance, 'ph-fill ph-receipt');
-        if (pd.facing && pd.facing !== '—') add('Facing', pd.facing + ' facing', 'ph-fill ph-compass');
-        ifSet('Currently', pd.currentUse, 'ph-fill ph-briefcase');
-      }
-      else {
-        ifSet('Area', ft(pd.carpet, ' sq ft') || pd.size, 'ph-fill ph-selection-all');
-        ifSet('Dimensions', dimLine, 'ph-fill ph-arrows-out');
-        ifSet('Ceiling height', ft(pd.ceiling), 'ph-fill ph-arrows-vertical');
-        ifSet('Floor', pd.floor, 'ph-fill ph-stack');
-        ifSet('Road in front', ft(pd.road), 'ph-fill ph-road-horizon');
-        ifSet('Washrooms', pd.washrooms, 'ph-fill ph-toilet');
-        onlyY('Direct ground access', pd.groundAccess, 'ph-fill ph-door-open');
-        onlyY('Corner visibility', pd.corner, 'ph-fill ph-corners-out');
-        onlyY('On the main road', pd.mainRoad, 'ph-fill ph-signpost');
-        onlyY('Mezzanine', pd.mezzanine, 'ph-fill ph-stack-simple');
-        onlyY('Pantry', pd.pantry, 'ph-fill ph-coffee');
-        onlyY('Power backup', pd.powerBackup, 'ph-fill ph-lightning');
-        onlyY('Central AC', pd.centralAc, 'ph-fill ph-fan');
-        ifSet('Basement area', ft(pd.basementArea, ' sq ft'), 'ph-fill ph-arrow-down');
-        ifSet('Shutter frontage', ft(pd.shutter), 'ph-fill ph-arrows-horizontal');
-        ifSet('Covered parking', park, 'ph-fill ph-car');
-        ifSet('Condition', pd.fitout, 'ph-fill ph-hammer');
-        ifSet('Suitable for', pd.use, 'ph-fill ph-storefront');
-        ifSet('Ownership', pd.tenure, 'ph-fill ph-scroll');
-        ifSet('Current use', pd.currentUse, 'ph-fill ph-briefcase');
-      }
-      if (pd.society) facts.push(fact('Project / society', pd.society, 'ph-fill ph-buildings'));
-      if (pd.address) facts.push(fact('Address', pd.address, 'ph-fill ph-signpost'));
-      facts.push(fact('Asking price', this.inr(pd.price), 'ph-fill ph-tag'));
-      (() => {
-        const sz = parseFloat(String(pd.size || '').replace(/[^0-9.]/g, ''));
-        const r = pd.rate ? parseFloat(pd.rate) : (sz && pd.price ? Math.round(pd.price / sz) : 0);
-        if (r) facts.push(fact('Rate', '₹' + Math.round(r).toLocaleString('en-IN') + ' per ' + (String(pd.size).includes('ft') ? 'sq ft' : 'sq yd'), 'ph-fill ph-calculator'));
-      })();
-      facts.push(fact('Price is', pd.negotiable !== false ? 'Negotiable' : 'Fixed', 'ph-fill ph-handshake'));
-      if (pd.registry) facts.push(fact('Title', pd.registry, 'ph-fill ph-seal-check'));
-      if (pd.approval) facts.push(fact('Approvals', pd.approval, 'ph-fill ph-certificate'));
-      facts.push(fact('On your books', pd.status === 'available' ? 'On sale' : pd.status === 'onhold' ? 'Off market' : 'Sold', 'ph-fill ph-storefront'));
-      facts.push(fact('Shown in person', (pd.views || 0) + (((pd.views || 0) === 1) ? ' time' : ' times'), 'ph-fill ph-presentation'));
-      const hls = (pd.highlights || []).map(h => ({ label: h, style: 'display:inline-flex;align-items:center;gap:8px;height:46px;padding:0 16px;border-radius:14px;background:#d9f5e3;color:#0a6634;font-size:16px;font-weight:800;white-space:nowrap;flex:none' }));
+      const OV = this.buildPropertyOverview(pd);
       const merged = {};
       const bump = (name, o) => {
         const m = merged[name] || (merged[name] = { name, opens: 0, last: '', status: 'expired', audio: false, called: false, wa: false, visit: false, ids: [] });
@@ -3024,11 +2891,25 @@ export class Component extends DCLogic {
           { l: 'Your listed price', v: this.inr(pd.price), i: 'ph-fill ph-currency-inr' },
           { l: 'Relationship', v: ps.relation || 'Owner', i: 'ph-fill ph-user-check' },
           { l: 'Seller type', v: sl ? sl.kind : '—', i: 'ph-fill ph-identification-card' }];
-          if (sl && sl.city) o.push({ l: 'Seller stays in', v: sl.city, i: 'ph-fill ph-house-line' });
           return o.map(x => ({ label: x.l, value: x.v, icon: x.i }));
         })(),
-        pHero: TIERS.hero, pSpecs: TIERS.specs, pGroups: TIERS.groups,
         headStyle: `position:relative;flex:none;height:186px;background:#4a3f2c;background-image:url('${this.plotPhoto(pd, shot)}');background-size:cover;background-position:center`,
+        headline: OV.headline,
+        typeIcon: OV.typeIcon,
+        typeLabel: OV.typeLabel,
+        isNegotiable: OV.isNegotiable,
+        isFixedPrice: OV.isFixedPrice,
+        highlightChips: OV.highlightChips,
+        hasHighlightChips: OV.hasHighlightChips,
+        keySpecs: OV.keySpecs,
+        detailGroups: OV.detailGroups,
+        moreDetailsList: OV.moreDetailsList,
+        moreDetailsCount: OV.moreDetailsCount,
+        hasMoreDetails: OV.hasMoreDetails,
+        hasCustomNotes: OV.hasCustomNotes,
+        customNotes: OV.customNotes,
+        moreDetailsOpen: !!s.moreDetailsOpen,
+        toggleMoreDetails: () => this.setState({ moreDetailsOpen: !s.moreDetailsOpen }),
         rdStyle2: `display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 13px;border-radius:11px;font-size:14.5px;font-weight:800;white-space:nowrap;flex:none;background:${rr.b};color:${rr.c}`,
         availStyle2: `display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 13px;border-radius:11px;font-size:14.5px;font-weight:800;white-space:nowrap;flex:none;${pd.status === 'available' ? 'background:rgba(217,245,227,.94);color:#0a6634' : 'background:rgba(255,230,207,.94);color:#a3541b'}`,
         priceWord: isSold ? 'Sold for' : 'Asking',
