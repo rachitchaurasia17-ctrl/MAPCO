@@ -83,8 +83,10 @@ create table if not exists public.marketing_creatives (
   copy jsonb not null default '{}'::jsonb,
   -- Storage reference for the rendered asset: {bucket, path, w, h, bytes}.
   asset jsonb,
-  execution_id uuid references public.ai_executions(id) on delete set null,
-  job_id uuid references public.ai_jobs(id) on delete set null,
+  -- Optional provenance identities. Kept provider-neutral and deliberately
+  -- not foreign-keyed so Marketing can deploy without activating dormant AI.
+  execution_id uuid,
+  job_id uuid,
   approved_by uuid references public.profiles(id) on delete set null,
   approved_at timestamptz,
   error_message text,
@@ -354,7 +356,8 @@ as $$
 declare
   v_dealer text := public.plotmap_current_dealer_id();
 begin
-  if v_dealer = '' or not public.plotmap_is_active_member() then
+  if auth.uid() is null or v_dealer = '' or not public.plotmap_can_edit_crm()
+     or not public.plotmap_dealer_is_active(v_dealer) then
     return jsonb_build_object('ok', false, 'reason', 'not_authenticated');
   end if;
   return public.plotmap_ai_marketing_facts_for(v_dealer, p_property_id);
@@ -383,7 +386,7 @@ declare
 begin
   if v_dealer = '' or v_prop = '' then raise exception 'invalid_input'; end if;
   if p_facts is null or jsonb_typeof(p_facts) <> 'object' then raise exception 'facts_must_be_object'; end if;
-  if not public.plotmap_ai_is_enabled(v_dealer) then raise exception 'ai_disabled'; end if;
+  if not public.plotmap_dealer_is_active(v_dealer) then raise exception 'dealer_inactive'; end if;
 
   perform pg_advisory_xact_lock(hashtext('plotmap:marketing:context:' || v_dealer || ':' || v_prop));
 

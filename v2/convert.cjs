@@ -26,19 +26,21 @@ content = content.replace(/`/g, '\\`').replace(/\$\{/g, '\\${');
 
 // We need to parse nested sc-if and sc-for.
 // A simpler way is to replace tags directly:
-// <sc-if value="{{ cond }}"> -> ${ cond ? `
-// </sc-if> -> ` : ''}
-// <sc-for list="{{ items }}" as="item"> -> ${ (items || []).map(item => `
-// </sc-for> -> `).join('') }
 
-content = content.replace(/<sc-if\s+value="\{\{\s*([^}]+?)\s*\}\}"[^>]*>/g, '${ $1 ? `');
-content = content.replace(/<\/sc-if>/g, '` : \'\' }');
+content = content.replace(/<sc-if\s+value="\{\{\s*([^}]+?)\s*\}\}"[^>]*>/g, '\\${ $1 ? \\`');
+content = content.replace(/<\/sc-if>/g, '\\` : \'\' }');
 
-content = content.replace(/<sc-for\s+list="\{\{\s*([^}]+?)\s*\}\}"\s+as="([^"]+)"[^>]*>/g, '${ ($1 || []).map($2 => `');
-content = content.replace(/<\/sc-for>/g, '`).join(\'\') }');
+content = content.replace(/<sc-for\s+list="\{\{\s*([^}]+?)\s*\}\}"\s+as="([^"]+)"[^>]*>/g, '\\${ ($1 || []).map($2 => \\`');
+content = content.replace(/<\/sc-for>/g, '\\`).join(\'\') }');
+
+// Replace event bindings: onClick="{{ fn }}" -> onClick="${__b(fn)}"
+content = content.replace(/on([A-Z]\w+)="\{\{\s*([^}]+?)\s*\}\}"/g, 'on$1="\\${__b($2)}"');
+
+// Strip omFadeIn, omRise, omPop animations to prevent flicker during full DOM re-renders
+content = content.replace(/animation:\s*(omFadeIn|omRise|omPop)\s+[^;"]+;?/g, '');
 
 // Replace {{ variable }} with ${ variable }
-content = content.replace(/\{\{\s*([^}]+?)\s*\}\}/g, '${$1}');
+content = content.replace(/\{\{\s*([^}]+?)\s*\}\}/g, '\\${$1}');
 
 // The return statement in our output file
 const output = `// @ts-nocheck
@@ -47,7 +49,7 @@ export const globalHead = \`${helmetContent.replace(/`/g, '\\`').replace(/\$\{/g
 export function renderApp(state: any) {
   const compiler = new Function('props', \`
     with (props) {
-      return \\\`\${content}\\\`;
+      return \\\`${content}\\\`;
     }
   \`);
   

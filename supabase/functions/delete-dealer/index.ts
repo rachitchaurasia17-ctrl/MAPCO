@@ -27,8 +27,24 @@ const ALLOWED_ORIGINS = new Set(
     .split(',').map((v) => v.trim().replace(/\/$/, '')).filter(Boolean),
 );
 const MAX_REQUEST_BYTES = 4 * 1024;
-const DEALER_STORAGE_BUCKETS = ['property-photos', 'client-link-audio'];
-const MAX_STORAGE_OBJECTS = 10000;
+type DealerStorageScope = { bucket: string; prefix: 'dealers' | 'dealer-root' };
+type StorageCleanupResult = { deleted: number; complete: boolean };
+
+// Keep this registry aligned with every tenant-private bucket migration. Some
+// older product buckets use dealers/<dealer-id>/..., while marketing buckets
+// deliberately use <dealer-id>/... as their first segment.
+const DEALER_STORAGE_SCOPES: DealerStorageScope[] = [
+  { bucket: 'property-photos', prefix: 'dealers' },
+  { bucket: 'client-link-audio', prefix: 'dealers' },
+  { bucket: 'property-documents', prefix: 'dealers' },
+  { bucket: 'marketing-creatives', prefix: 'dealer-root' },
+  { bucket: 'marketing-reel-raw', prefix: 'dealer-root' },
+  { bucket: 'marketing-reel-finished', prefix: 'dealer-root' },
+];
+// Bound one invocation, but delete the bounded batch before returning a
+// retryable response. A retry starts from the remaining objects, so tenants
+// above 10k objects make durable progress after the SQL tombstone exists.
+const MAX_STORAGE_OBJECTS_PER_REQUEST = 10000;
 
 function corsHeaders(origin: string | null): HeadersInit {
   const allowed = origin && ALLOWED_ORIGINS.has(origin.replace(/\/$/, '')) ? origin : '';
@@ -80,12 +96,20 @@ function storageBucketMissing(response: Response, data: unknown): boolean {
   return response.status === 400 && /bucket[^a-z]+not[^a-z]+found/i.test(message);
 }
 
-async function deleteDealerStorageObjects(dealerId: string, bucket: string): Promise<number> {
-  const root = `dealers/${dealerId}`;
+async function deleteDealerStorageObjects(
+  dealerId: string,
+  bucket: string,
+  prefix: DealerStorageScope['prefix'],
+  maxObjects: number,
+): Promise<StorageCleanupResult> {
+  if (maxObjects < 1) return { deleted: 0, complete: false };
+  const root = prefix === 'dealers' ? `dealers/${dealerId}` : dealerId;
   const directories = [root];
   const visited = new Set<string>();
   const objects: string[] = [];
+  let truncated = false;
 
+  scan:
   while (directories.length) {
     const prefix = directories.shift() as string;
     if (visited.has(prefix)) continue;
@@ -102,7 +126,7 @@ async function deleteDealerStorageObjects(dealerId: string, bucket: string): Pro
         },
         body: JSON.stringify({ prefix, limit: 100, offset, sortBy: { column: 'name', order: 'asc' } }),
       });
-      if (storageBucketMissing(listed.response, listed.data)) return 0;
+      if (storageBucketMissing(listed.response, listed.data)) return { deleted: 0, complete: true };
       if (!listed.response.ok || !Array.isArray(listed.data)) throw new Error('storage_list_failed');
 
       for (const raw of listed.data) {
@@ -111,11 +135,14 @@ async function deleteDealerStorageObjects(dealerId: string, bucket: string): Pro
         const name = String(item.name || '').replace(/^\/+|\/+$/g, '');
         if (!name || name === '.' || name === '..') continue;
         const objectPath = `${prefix}/${name}`;
-        if (item.id || item.metadata) objects.push(objectPath);
-        else directories.push(objectPath);
-        if (objects.length > MAX_STORAGE_OBJECTS || directories.length > MAX_STORAGE_OBJECTS) {
-          throw new Error('storage_limit_exceeded');
+        if (item.id || item.metadata) {
+          objects.push(objectPath);
+          if (objects.length >= maxObjects) {
+            truncated = true;
+            break scan;
+          }
         }
+        else directories.push(objectPath);
       }
 
       if (listed.data.length < 100) break;
@@ -136,7 +163,7 @@ async function deleteDealerStorageObjects(dealerId: string, bucket: string): Pro
     if (!response.ok) throw new Error('storage_delete_failed');
   }
 
-  return objects.length;
+  return { deleted: objects.length, complete: !truncated };
 }
 
 Deno.serve(async (request: Request): Promise<Response> => {
@@ -186,10 +213,30 @@ Deno.serve(async (request: Request): Promise<Response> => {
   // Storage is intentionally removed through the Storage API. Supabase
   // forbids direct SQL deletion from storage.objects. On failure, the durable
   // SQL tombstone makes this whole external cleanup path safely retryable.
+  // Large tenants are deleted in bounded batches; every retry removes another
+  // batch instead of repeatedly failing on the same >10k listing.
   const storageObjectsDeleted: Record<string, number> = {};
+  let storageObjectsRemainingBudget = MAX_STORAGE_OBJECTS_PER_REQUEST;
+  let storagePendingBucket = '';
   try {
-    for (const bucket of DEALER_STORAGE_BUCKETS) {
-      storageObjectsDeleted[bucket] = await deleteDealerStorageObjects(dealerId, bucket);
+    for (let index = 0; index < DEALER_STORAGE_SCOPES.length; index += 1) {
+      const scope = DEALER_STORAGE_SCOPES[index];
+      if (storageObjectsRemainingBudget < 1) {
+        storagePendingBucket = scope.bucket;
+        break;
+      }
+      const cleanup = await deleteDealerStorageObjects(
+        dealerId,
+        scope.bucket,
+        scope.prefix,
+        storageObjectsRemainingBudget,
+      );
+      storageObjectsDeleted[scope.bucket] = cleanup.deleted;
+      storageObjectsRemainingBudget -= cleanup.deleted;
+      if (!cleanup.complete) {
+        storagePendingBucket = scope.bucket;
+        break;
+      }
     }
   } catch (_) {
     return json(origin, {
@@ -198,6 +245,20 @@ Deno.serve(async (request: Request): Promise<Response> => {
       retryable: true,
       dealer_id: dealerId,
       operation_id: summary.operation_id || null,
+    }, 502);
+  }
+
+  if (storagePendingBucket) {
+    return json(origin, {
+      ok: false,
+      error: 'STORAGE_CLEANUP_INCOMPLETE',
+      retryable: true,
+      dealer_id: dealerId,
+      operation_id: summary.operation_id || null,
+      pending_bucket: storagePendingBucket,
+      storage_objects_deleted_this_attempt: Object.values(storageObjectsDeleted)
+        .reduce((total, count) => total + count, 0),
+      storage_batch_limit: MAX_STORAGE_OBJECTS_PER_REQUEST,
     }, 502);
   }
 
@@ -252,6 +313,10 @@ Deno.serve(async (request: Request): Promise<Response> => {
     removed: summary.deleted || {},
     property_photo_objects_deleted: storageObjectsDeleted['property-photos'] || 0,
     client_link_audio_objects_deleted: storageObjectsDeleted['client-link-audio'] || 0,
+    property_document_objects_deleted: storageObjectsDeleted['property-documents'] || 0,
+    marketing_creative_objects_deleted: storageObjectsDeleted['marketing-creatives'] || 0,
+    marketing_reel_raw_objects_deleted: storageObjectsDeleted['marketing-reel-raw'] || 0,
+    marketing_reel_finished_objects_deleted: storageObjectsDeleted['marketing-reel-finished'] || 0,
     auth_users_deleted: authDeleted,
     auth_users_pending: 0,
   }, 200);

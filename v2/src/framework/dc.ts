@@ -28,11 +28,14 @@ export class DCLogic {
       proto = Object.getPrototypeOf(proto);
     }
     
-    // If the component defines a renderVals(), merge its returned values into props.
     if (typeof (this as any).renderVals === 'function') {
-      const computed = (this as any).renderVals();
-      if (computed) {
-        Object.assign(props, computed);
+      try {
+        const computed = (this as any).renderVals();
+        if (computed) {
+          Object.assign(props, computed);
+        }
+      } catch (err) {
+        console.error("renderVals failed:", err);
       }
     }
     
@@ -42,6 +45,14 @@ export class DCLogic {
         props[key] = (this as any)[key];
       }
     });
+
+    (window as any).__dcEvents = (window as any).__dcEvents || {};
+    props.__b = (fn: any) => {
+      if (typeof fn !== 'function') return fn;
+      const id = 'ev_' + Math.random().toString(36).substr(2, 9);
+      (window as any).__dcEvents[id] = fn;
+      return `window.__dcEvents['${id}'](event)`;
+    };
 
     // The template.ts should expose a renderApp function that takes props
     // We expect it to be passed in from main.ts. We'll store it on the instance or inject it.
