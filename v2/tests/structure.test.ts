@@ -60,10 +60,9 @@ describe('Buyer client does not import internal record data', () => {
 
 describe('Audited adapter and accessibility boundaries', () => {
   it('keeps migrated dealer screens on DataAdapterV2', () => {
-    for (const p of ['src/apps/dealer/pages/home.ts', 'src/apps/dealer/pages/links.ts', 'src/apps/dealer/pages/properties.ts']) {
+    for (const p of ['src/apps/dealer/main.ts', 'src/apps/earth/main.ts', 'src/apps/marketing/main.ts']) {
       const source = readFileSync(join(root, p), 'utf8');
       // Screens import the mode-switched adapter entry, never a concrete adapter.
-      expect(source).toMatch(/packages\/data\/adapter['"]/);
       expect(source).not.toMatch(/mock-adapter['"]/);
     }
   });

@@ -911,53 +911,56 @@ export function renderApp(state: any) {
 
           \${ isClients ? \`
             <div style="max-width:1680px;margin:0 auto;padding:22px 32px 80px">
+              <!-- Row 1: Clients / Sellers Primary Bar + Search & Add Button -->
               <div
-                style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px;">
+                style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px;">
                 <!-- Segmented Tabs for Clients / Sellers -->
-                <div style="display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:16px;background:#fff3d6;box-shadow:inset 0 0 0 1.5px rgba(120,100,60,.16);">
+                <div style="display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:18px;background:#fff3d6;box-shadow:inset 0 0 0 1.5px rgba(120,100,60,.16);">
                   \${ (ctTabs || []).map(t => \`
                     <button onClick="\${__b(t.go)}" style="\${t.style}"><i class="\${t.icon}"
-                        style="font-size:18px"></i>\${t.label}<span style="\${t.numStyle}">\${t.count}</span></button>
+                        style="font-size:21px"></i>\${t.label}<span style="\${t.numStyle}">\${t.count}</span></button>
                   \`).join('') }
                 </div>
-
-                <!-- Segmented filter bar for Needs attention / Bought / Hot -->
-                \${ ctIsClients ? \`
-                  <div style="display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:16px;background:#fff3d6;box-shadow:inset 0 0 0 1.5px rgba(120,100,60,.16);">
-                    \${ (cliChips || []).map(c => \`
-                      <button onClick="\${__b(c.go)}" style="\${c.style}">\${c.label}<span style="\${c.numStyle}">\${c.count}</span></button>
-                    \`).join('') }
-                  </div>
-                \` : '' }
 
                 <div style="flex:1"></div>
 
                 <!-- Right corner compact search bar & Add button -->
                 \${ ctIsClients ? \`
                   <label
-                    style="display:flex;align-items:center;gap:10px;width:280px;height:52px;padding:0 16px;border-radius:15px;background:#fffdf7;box-shadow:inset 0 0 0 1.5px #e6d6b4">
+                    style="display:flex;align-items:center;gap:10px;width:280px;height:54px;padding:0 16px;border-radius:15px;background:#fffdf7;box-shadow:inset 0 0 0 1.5px #e6d6b4">
                     <i class="ph-bold ph-magnifying-glass" style="font-size:19px;color:#a3541b"></i>
                     <input value="\${cliQ}" onInput="\${__b(onCliQ)}"
                       placeholder="Search client…"
                       style="border:none;outline:none;background:none;width:100%;font-size:15.5px;font-weight:600;color:#241f1c">
                   </label>
                   <button onClick="\${__b(openAddClientBig)}"
-                    style="display:flex;align-items:center;gap:9px;height:52px;padding:0 22px;border-radius:15px;background:#f8a800;color:#241d0c;white-space:nowrap;font-size:16.5px;font-weight:800;box-shadow:0 10px 20px -10px rgba(248,168,0,.95)"
+                    style="display:flex;align-items:center;gap:9px;height:54px;padding:0 22px;border-radius:15px;background:#f8a800;color:#241d0c;white-space:nowrap;font-size:16.5px;font-weight:800;box-shadow:0 10px 20px -10px rgba(248,168,0,.95)"
                     style-hover="background:#db9500"><i class="ph-bold ph-user-plus" style="font-size:19px"></i>Add client</button>
                 \` : '' }
                 \${ ctIsSellers ? \`
                   <label
-                    style="display:flex;align-items:center;gap:10px;width:280px;height:52px;padding:0 16px;border-radius:15px;background:#fffdf7;box-shadow:inset 0 0 0 1.5px #d6c6f2">
+                    style="display:flex;align-items:center;gap:10px;width:280px;height:54px;padding:0 16px;border-radius:15px;background:#fffdf7;box-shadow:inset 0 0 0 1.5px #d6c6f2">
                     <i class="ph-bold ph-magnifying-glass" style="font-size:19px;color:#4a2c99"></i>
                     <input value="\${sellQ}" onInput="\${__b(onSellQ)}"
                       placeholder="Search seller…"
                       style="border:none;outline:none;background:none;width:100%;font-size:15.5px;font-weight:600;color:#241f1c">
                   </label>
                   <button onClick="\${__b(openAddSeller)}"
-                    style="display:flex;align-items:center;gap:9px;height:52px;padding:0 22px;border-radius:15px;background:#4a2c99;color:#efe8fb;font-size:16.5px;font-weight:800;box-shadow:0 10px 20px -10px rgba(74,44,153,.95)"
+                    style="display:flex;align-items:center;gap:9px;height:54px;padding:0 22px;border-radius:15px;background:#4a2c99;color:#efe8fb;font-size:16.5px;font-weight:800;box-shadow:0 10px 20px -10px rgba(74,44,153,.95)"
                     style-hover="background:#3d2380"><i class="ph-bold ph-plus" style="font-size:19px"></i>Add seller</button>
                 \` : '' }
               </div>
+
+              <!-- Row 2: Sub-filter bar for Needs attention / Bought / Hot (below Clients / Sellers) -->
+              \${ ctIsClients ? \`
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:22px;">
+                  <div style="display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:14px;background:#fff3d6;box-shadow:inset 0 0 0 1.5px rgba(120,100,60,.16);">
+                    \${ (cliChips || []).map(c => \`
+                      <button onClick="\${__b(c.go)}" style="\${c.style}">\${c.label}<span style="\${c.numStyle}">\${c.count}</span></button>
+                    \`).join('') }
+                  </div>
+                </div>
+              \` : '' }
 
               \${ ctIsClients ? \`
                 <div>
@@ -1162,7 +1165,7 @@ export function renderApp(state: any) {
                   <div
                     style="display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:18px;margin-top:18px;align-items:stretch">
                     <div
-                      style="border-radius:24px;background:#fff8e6;box-shadow:inset 0 0 0 2px #f0d493;padding:20px 22px 22px;display:flex;flex-direction:column;height:auto;min-height:520px">
+                      style="border-radius:24px;background:#fff8e6;box-shadow:inset 0 0 0 2px #f0d493;padding:20px 22px 22px;display:flex;flex-direction:column;height:520px;max-height:520px;overflow:hidden">
                       <div style="display:flex;align-items:center;gap:11px;flex:none">
                         <span
                           style="width:40px;height:40px;border-radius:13px;background:#a3541b;color:#fff;display:grid;place-items:center;flex:none"><i
@@ -1172,7 +1175,7 @@ export function renderApp(state: any) {
                           <div style="font-size:14.5px;font-weight:700;color:#a3541b">Counted from real opens</div>
                         </div>
                       </div>
-                      <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px">
+                      <div data-scroll="" style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;margin-top:16px;padding-right:4px">
                         \${ (lkAttention || []).map(a => \`
                           <button onClick="\${__b(a.go)}"
                             style="\${a.style}"
@@ -1198,7 +1201,7 @@ export function renderApp(state: any) {
                     </div>
 
                     <div
-                      style="border-radius:24px;background:#f1eeff;box-shadow:inset 0 0 0 2px #ddd4f7;padding:20px 22px 22px;display:flex;flex-direction:column;height:auto;min-height:520px">
+                      style="border-radius:24px;background:#f1eeff;box-shadow:inset 0 0 0 2px #ddd4f7;padding:20px 22px 22px;display:flex;flex-direction:column;height:520px;max-height:520px;overflow:hidden">
                       <div style="display:flex;align-items:center;gap:11px;flex:none">
                         <span
                           style="width:40px;height:40px;border-radius:13px;background:#4a2c99;color:#fff;display:grid;place-items:center;flex:none"><i
@@ -1208,7 +1211,7 @@ export function renderApp(state: any) {
                           <div style="font-size:14.5px;font-weight:700;color:#5b32c4">What customers actually did</div>
                         </div>
                       </div>
-                      <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px">
+                      <div data-scroll="" style="flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;margin-top:16px;padding-right:4px">
                         \${ (lkFeed || []).map(f => \`
                           <button onClick="\${__b(f.go)}"
                             style="\${f.cardStyle}"
@@ -3122,17 +3125,15 @@ export function renderApp(state: any) {
 
 
                 <div data-scroll=""
-                  style="flex:none;display:flex;align-items:center;gap:9px;padding:14px 20px 16px;background:#ffefd2;border-bottom:3px solid #f0c96a;box-shadow:inset 0 1.5px 0 #ead9b4,0 10px 22px -12px rgba(80,55,15,.5);overflow-x:auto">
-                  \${ (propDetail.tabs || []).map(t => \`
-                    <button onClick="\${__b(t.go)}" style="\${t.style}">
-                      <i class="\${t.icon}" style="font-size:21px;flex:none"></i>
-                      <span
-                        style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.2;white-space:nowrap">
-                        <span style="font-size:16.5px;font-weight:800">\${t.label}</span>
-
-                      </span>
-                    </button>
-                  \`).join('') }
+                  style="flex:none;display:flex;align-items:center;padding:12px 20px;background:#ffefd2;border-bottom:2px solid #f0c96a;overflow-x:auto">
+                  <div style="display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:18px;background:#fff3d6;box-shadow:inset 0 0 0 1.5px rgba(120,100,60,.16);">
+                    \${ (propDetail.tabs || []).map(t => \`
+                      <button onClick="\${__b(t.go)}" style="\${t.style}">
+                        <i class="\${t.icon}" style="font-size:20px;flex:none"></i>
+                        <span style="font-size:16px;font-weight:800;white-space:nowrap">\${t.label}</span>
+                      </button>
+                    \`).join('') }
+                  </div>
                 </div>
 
                 <div style="flex:1;min-height:0;position:relative;background:#f5f1fd">
@@ -3208,7 +3209,7 @@ export function renderApp(state: any) {
                                 Satellite view</div>
                               <div style="font-size:19px;font-weight:800;color:#fff;margin-top:2px">\${propDetail.earthLabel}</div>
                             </div>
-                            \${ propDetail.earthOn ? \`<a href="MAPCO Earth.dc.html"
+                            \${ propDetail.earthOn ? \`<a href="/app/earth/index.html"
                                 style="display:flex;align-items:center;gap:8px;height:50px;padding:0 20px;border-radius:14px;background:#fffdf7;color:#0a5b2e;font-size:16px;font-weight:800;text-decoration:none;flex:none">Open
                                 in MAPCO Earth<i class="ph-bold ph-arrow-right" style="font-size:17px"></i></a>\` : '' }
                             \${ propDetail.earthOff ? \`<button onClick="\${__b(propDetail.setEarth)}"
@@ -3228,7 +3229,7 @@ export function renderApp(state: any) {
                                 Sector map</div>
                               <div style="font-size:19px;font-weight:800;color:#fff;margin-top:2px">\${propDetail.sheetLabel}</div>
                             </div>
-                            \${ propDetail.hasSheet ? \`<a href="Client Presentation.dc.html"
+                            \${ propDetail.hasSheet ? \`<a href="/client/index.html"
                                 style="display:flex;align-items:center;gap:8px;height:50px;padding:0 20px;border-radius:14px;background:#fffdf7;color:#7a5410;font-size:16px;font-weight:800;text-decoration:none;flex:none">Open
                                 the sector map<i class="ph-bold ph-arrow-right" style="font-size:17px"></i></a>\` : '' }
                             \${ propDetail.noSheet ? \`<button onClick="\${__b(propDetail.linkSheet)}"
@@ -3367,31 +3368,6 @@ export function renderApp(state: any) {
                         <div style="height:18px"></div>
                       </div>
 
-                      \${ propDetail.notReady ? \`
-                        <div
-                          style="margin:16px 22px 0;border-radius:22px;background:#fffdf7;box-shadow:0 0 0 1.5px #ece3d2;overflow:hidden">
-                          <div
-                            style="display:flex;align-items:center;gap:13px;padding:15px 20px;background:#fde5d3;flex-wrap:wrap">
-                            <span
-                              style="width:42px;height:42px;border-radius:13px;background:#c0490c;color:#fff;display:grid;place-items:center;flex:none"><i
-                                class="ph-fill ph-warning" style="font-size:21px"></i></span>
-                            <div style="flex:1;min-width:160px">
-                              <div style="font-size:20px;font-weight:800;color:#241f1c">Finish these before you show it
-                              </div>
-                              <div style="font-size:15.5px;font-weight:700;color:#c0490c;margin-top:1px">\${propDetail.missCount}</div>
-                            </div>
-                          </div>
-                          <div style="display:flex;flex-direction:column;gap:10px;padding:16px 20px 20px">
-                            \${ (propDetail.missRows || []).map(m => \`
-                              <div style="\${m.style}">
-                                <i class="\${m.icon}" style="font-size:20px;color:#c0490c;flex:none"></i>
-                                <div style="flex:1;min-width:140px;font-size:17px;font-weight:700;color:#241f1c">\${m.label}</div>
-                                <button onClick="\${__b(m.go)}" style="\${m.btnStyle}">\${m.fix}</button>
-                              </div>
-                            \`).join('') }
-                          </div>
-                        </div>
-                      \` : '' }
                       <div style="height:20px"></div>
                     </div>
                   \` : '' }
@@ -3643,7 +3619,7 @@ export function renderApp(state: any) {
                             <div style="font-size:21px;font-weight:800;color:#241f1c">Marketing for this property</div>
                             <div style="font-size:15.5px;font-weight:700;color:#c0490c;margin-top:1px">\${propDetail.mktSub}</div>
                           </div>
-                          <a href="MAPCO Marketing.dc.html"
+                          <a href="/admin/marketing.html"
                             style="display:flex;align-items:center;gap:8px;height:50px;padding:0 19px;border-radius:14px;background:#c0490c;color:#fff;font-size:16px;font-weight:800;text-decoration:none;flex:none">Open
                             Marketing<i class="ph-bold ph-arrow-right" style="font-size:17px"></i></a>
                         </div>
@@ -3727,7 +3703,7 @@ export function renderApp(state: any) {
                                 style="flex:1;min-width:200px;font-size:17px;font-weight:700;color:#a03d09;text-wrap:pretty">
                                 No post or reel made for this property yet. Make one and it will show up here with its
                                 real numbers.</div>
-                              <a href="MAPCO Marketing.dc.html"
+                              <a href="/admin/marketing.html"
                                 style="height:50px;padding:0 20px;border-radius:14px;background:#c0490c;color:#fff;font-size:16px;font-weight:800;text-decoration:none;display:flex;align-items:center;flex:none">Make
                                 one now</a>
                             </div>

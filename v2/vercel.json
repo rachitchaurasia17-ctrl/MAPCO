@@ -3,6 +3,23 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/marketing", "destination": "/admin/marketing.html" },
+    { "source": "/earth", "destination": "/app/earth/index.html" },
+    { "source": "/map-studio", "destination": "/admin/map-studio.html" },
+    { "source": "/map-pilot", "destination": "/app/map-pilot/index.html" },
+    { "source": "/owner", "destination": "/admin/owner.html" },
+    { "source": "/properties", "destination": "/admin/properties.html" },
+    { "source": "/clients", "destination": "/admin/clients.html" },
+    { "source": "/deals", "destination": "/admin/deals.html" },
+    { "source": "/team", "destination": "/admin/team.html" },
+    { "source": "/ops", "destination": "/admin/ops.html" },
+    { "source": "/ai-console", "destination": "/admin/ai-console.html" },
+    { "source": "/developer", "destination": "/admin/developer.html" },
+    { "source": "/area-intelligence", "destination": "/admin/area-intelligence.html" },
+    { "source": "/property-insights", "destination": "/admin/property-insights.html" }
+  ],
   "headers": [
     {
       "source": "/(.*)",

@@ -442,6 +442,14 @@ export class Component extends DCLogic {
       });
     })();
 
+    // Rate calculation
+    const rateCalc = (() => {
+      const sz = parseFloat(String(pd.size || '').replace(/[^0-9.]/g, ''));
+      const r = pd.rate ? parseFloat(pd.rate) : (sz && pd.price ? Math.round(pd.price / sz) : 0);
+      if (!r) return '';
+      return '₹' + Math.round(r).toLocaleString('en-IN') + ' per ' + (String(pd.size).includes('ft') ? 'sq ft' : 'sq yd');
+    })();
+
     if (K === 'plot' || K === 'indplot') {
       hero('Dimensions', dims, 'frontage × depth');
       if (!dims) hero('Plot area', pd.landArea ? (pd.landArea + ' sq yd') : pd.size);
@@ -452,15 +460,15 @@ export class Component extends DCLogic {
       spec('Second road', has(pd.road2) ? (pd.road2 + ' ft') : '', 'ph-fill ph-road-horizon');
       spec('Open sides', pd.openSides, 'ph-fill ph-arrows-out');
       spec('Block / pocket', pd.block, 'ph-fill ph-squares-four');
-      grp('Position', 'ph-fill ph-compass', '#a3541b', '#fff0d6', '#ecdcc0',
-        [{ label: 'Shape', value: pd.shape }, { label: 'Level', value: pd.level }],
+      grp('Position & Dimensions', 'ph-fill ph-compass', '#a3541b', '#fff0d6', '#ecdcc0',
+        [{ label: 'Shape', value: pd.shape }, { label: 'Level', value: pd.level }, { label: 'Frontage', value: has(pd.frontage) ? pd.frontage + ' ft' : '' }, { label: 'Depth', value: has(pd.depth) ? pd.depth + ' ft' : '' }],
         [{ k: 'corner', l: 'Corner plot' }, { k: 'twoSide', l: 'Two-side open' }, { k: 'parkFacing', l: 'Park facing' }, { k: 'mainRoad', l: 'On the main road' }, { k: 'nearGreen', l: 'Near green belt' }, { k: 'cornerCut', l: 'Corner cut' }]);
       if (irr.length) grp('Exact dimensions', 'ph-fill ph-ruler', '#1a5aa8', '#e1ecfb', '#d7e6f6', irr, []);
-      grp('Papers and approval', 'ph-fill ph-certificate', '#4a2c99', '#e7defc', '#ddd0f5',
-        [{ label: 'Authority', value: pd.approvalNote }, { label: 'Ownership', value: pd.tenure }], []);
-      if (K === 'indplot') grp('Utilities', 'ph-fill ph-plug', '#0a6634', '#d7f0e2', '#b3e2c8',
-        [{ label: 'Yard area', value: U(pd.yardArea, 'sq ft') }, { label: 'Current use', value: pd.use }],
-        [{ k: 'water', l: 'Water' }, { k: 'sewer', l: 'Sewer' }, { k: 'effluent', l: 'Effluent line' }, { k: 'gas', l: 'Gas line' }, { k: 'crane', l: 'Crane' }, { k: 'loadingBay', l: 'Loading bay' }, { k: 'built', l: 'Shed built' }]);
+      grp('Price & Title', 'ph-fill ph-tag', '#9a6a00', '#fdf0d4', '#f0d493',
+        [{ label: 'Asking price', value: this.inr(pd.price) }, { label: 'Rate', value: rateCalc }, { label: 'Price is', value: pd.negotiable !== false ? 'Negotiable' : 'Fixed' }, { label: 'Title', value: pd.registry }, { label: 'Approvals', value: pd.approval || pd.approvalNote }, { label: 'Ownership', value: pd.tenure }], []);
+      if (K === 'indplot') grp('Utilities & Infrastructure', 'ph-fill ph-plug', '#0a6634', '#d7f0e2', '#b3e2c8',
+        [{ label: 'Yard area', value: U(pd.yardArea, 'sq ft') }, { label: 'Industrial area', value: pd.phase }, { label: 'Current use', value: pd.use }],
+        [{ k: 'water', l: 'Water connection' }, { k: 'sewer', l: 'Sewer connection' }, { k: 'effluent', l: 'Effluent line' }, { k: 'gas', l: 'Gas line' }, { k: 'crane', l: 'Crane / gantry' }, { k: 'loadingBay', l: 'Loading bay' }, { k: 'built', l: 'Shed built' }, { k: 'officeBlock', l: 'Office block' }, { k: 'labourQtr', l: 'Labour quarters' }]);
     }
     else if (K === 'flat' || K === 'bfloor') {
       hero('Configuration', pd.config || (has(pd.beds) ? pd.beds + ' BHK' : ''));
@@ -475,11 +483,13 @@ export class Component extends DCLogic {
       spec('Age', pd.age, 'ph-fill ph-calendar-blank');
       spec('Possession', pd.possession, 'ph-fill ph-key');
       if (K === 'bfloor') { spec('Plot it sits on', has(pd.landArea) ? (pd.landArea + ' sq yd') : '', 'ph-fill ph-ruler'); }
-      grp('Rooms inside', 'ph-fill ph-door-open', '#a3541b', '#fff0d6', '#ecdcc0', [],
-        [{ k: 'living', l: 'Drawing / living' }, { k: 'dining', l: 'Dining' }, { k: 'store', l: 'Store' }, { k: 'puja', l: 'Pooja room' }, { k: 'study', l: 'Study' }, { k: 'servant', l: 'Servant room' }, { k: 'servantBath', l: 'Servant washroom' }, { k: 'barsati', l: 'Barsati' }, { k: 'sepEntry', l: 'Separate entry' }]);
-      grp('Building and fittings', 'ph-fill ph-buildings', '#1a5aa8', '#e1ecfb', '#d7e6f6',
-        [{ label: 'Flooring', value: pd.flooring }, { label: 'Maintenance', value: pd.maintenance }],
-        [{ k: 'lift', l: 'Lift' }, { k: 'powerBackup', l: 'Power backup' }, { k: 'security', l: 'Security' }, { k: 'modularKitchen', l: 'Modular kitchen' }, { k: 'wardrobes', l: 'Wardrobes' }, { k: 'ac', l: 'ACs' }, { k: 'piped', l: 'Piped gas' }, { k: 'solar', l: 'Solar' }]);
+      grp('Rooms & Spaces', 'ph-fill ph-door-open', '#a3541b', '#fff0d6', '#ecdcc0', [],
+        [{ k: 'living', l: 'Drawing / living' }, { k: 'dining', l: 'Dining' }, { k: 'store', l: 'Store' }, { k: 'puja', l: 'Pooja room' }, { k: 'study', l: 'Study' }, { k: 'servant', l: 'Servant room' }, { k: 'servantBath', l: 'Servant washroom' }, { k: 'barsati', l: 'Barsati' }, { k: 'sepEntry', l: 'Separate entry' }, { k: 'terrace', l: 'Terrace' }]);
+      grp('Building & Fittings', 'ph-fill ph-buildings', '#1a5aa8', '#e1ecfb', '#d7e6f6',
+        [{ label: 'Flooring', value: pd.flooring }, { label: 'Maintenance', value: pd.maintenance }, { label: 'Road in front', value: has(pd.road) ? pd.road + ' ft' : '' }],
+        [{ k: 'lift', l: 'Lift' }, { k: 'powerBackup', l: 'Power backup' }, { k: 'security', l: 'Gated security' }, { k: 'modularKitchen', l: 'Modular kitchen' }, { k: 'wardrobes', l: 'Fitted wardrobes' }, { k: 'ac', l: 'ACs installed' }, { k: 'piped', l: 'Piped gas' }, { k: 'solar', l: 'Solar' }, { k: 'borewell', l: 'Borewell' }]);
+      grp('Price & Title', 'ph-fill ph-tag', '#9a6a00', '#fdf0d4', '#f0d493',
+        [{ label: 'Asking price', value: this.inr(pd.price) }, { label: 'Rate', value: rateCalc }, { label: 'Price is', value: pd.negotiable !== false ? 'Negotiable' : 'Fixed' }, { label: 'Title', value: pd.registry }, { label: 'Approvals', value: pd.approval || pd.approvalNote }, { label: 'Ownership', value: pd.tenure }], []);
     }
     else if (K === 'kothi' || K === 'villa') {
       hero(K === 'villa' ? 'Land area' : 'Plot size', has(pd.landArea) ? (pd.landArea + ' sq yd') : pd.size, dims || '');
@@ -495,10 +505,12 @@ export class Component extends DCLogic {
       spec('Lawn area', U(pd.lawnArea, 'sq yd'), 'ph-fill ph-tree');
       spec('Basement area', U(pd.basementArea, 'sq ft'), 'ph-fill ph-arrow-down');
       grp('Rooms and spaces', 'ph-fill ph-door-open', '#a3541b', '#fff0d6', '#ecdcc0', [],
-        [{ k: 'living', l: 'Drawing / living' }, { k: 'dining', l: 'Dining' }, { k: 'store', l: 'Store' }, { k: 'puja', l: 'Pooja room' }, { k: 'study', l: 'Study' }, { k: 'servant', l: 'Servant room' }, { k: 'terrace', l: 'Terrace' }, { k: 'barsati', l: 'Barsati' }, { k: 'portico', l: 'Portico' }, { k: 'stilt', l: 'Stilt parking' }, { k: 'lawn', l: K === 'villa' ? 'Private lawn' : 'Lawn' }, { k: 'basement', l: 'Basement' }]);
+        [{ k: 'living', l: 'Drawing / living' }, { k: 'dining', l: 'Dining' }, { k: 'store', l: 'Store' }, { k: 'puja', l: 'Pooja room' }, { k: 'study', l: 'Study' }, { k: 'servant', l: 'Servant room' }, { k: 'servantBath', l: 'Servant washroom' }, { k: 'terrace', l: 'Terrace' }, { k: 'barsati', l: 'Barsati' }, { k: 'portico', l: 'Portico' }, { k: 'stilt', l: 'Stilt parking' }, { k: 'lawn', l: K === 'villa' ? 'Private lawn' : 'Lawn' }, { k: 'basement', l: 'Basement' }]);
       grp('Building and fittings', 'ph-fill ph-buildings', '#1a5aa8', '#e1ecfb', '#d7e6f6',
         [{ label: 'Flooring', value: pd.flooring }, { label: 'Roof rights', value: pd.roofRights ? 'Yes' : '' }],
         [{ k: 'lift', l: 'Lift' }, { k: 'powerBackup', l: 'Power backup' }, { k: 'borewell', l: 'Borewell' }, { k: 'solar', l: 'Solar' }, { k: 'security', l: 'Security' }, { k: 'modularKitchen', l: 'Modular kitchen' }, { k: 'ac', l: 'ACs' }]);
+      grp('Price & Title', 'ph-fill ph-tag', '#9a6a00', '#fdf0d4', '#f0d493',
+        [{ label: 'Asking price', value: this.inr(pd.price) }, { label: 'Rate', value: rateCalc }, { label: 'Price is', value: pd.negotiable !== false ? 'Negotiable' : 'Fixed' }, { label: 'Title', value: pd.registry }, { label: 'Approvals', value: pd.approval || pd.approvalNote }, { label: 'Ownership', value: pd.tenure }], []);
       if (floorPlanItems.length) grp('Floor by floor', 'ph-fill ph-list-numbers', '#0a6634', '#d7f0e2', '#b3e2c8', floorPlanItems, []);
     }
     else {
@@ -516,13 +528,19 @@ export class Component extends DCLogic {
       spec('Open seats', pd.seats, 'ph-fill ph-users-three');
       spec('Basement area', U(pd.basementArea, 'sq ft'), 'ph-fill ph-arrow-down');
       spec('Condition', pd.fitout, 'ph-fill ph-hammer');
-      grp('Position', 'ph-fill ph-compass', '#a3541b', '#fff0d6', '#ecdcc0',
-        [{ label: 'Second road', value: has(pd.road2) ? (pd.road2 + ' ft') : '' }, { label: 'Shutter width', value: U(pd.shutter, 'ft') }],
+      grp('Position & Dimensions', 'ph-fill ph-compass', '#a3541b', '#fff0d6', '#ecdcc0',
+        [{ label: 'Second road', value: has(pd.road2) ? (pd.road2 + ' ft') : '' }, { label: 'Shutter width', value: U(pd.shutter, 'ft') }, { label: 'Depth', value: U(pd.depth, 'ft') }],
         [{ k: 'corner', l: 'Corner' }, { k: 'twoSide', l: 'Two-side open' }, { k: 'mainRoad', l: 'On the main road' }, { k: 'groundAccess', l: 'Direct ground access' }, { k: 'parkingAccess', l: 'Parking in front' }, { k: 'basement', l: 'Basement' }, { k: 'mezzanine', l: 'Mezzanine' }]);
-      grp('Services', 'ph-fill ph-plug', '#1a5aa8', '#e1ecfb', '#d7e6f6', [],
+      grp('Services & Facilities', 'ph-fill ph-plug', '#1a5aa8', '#e1ecfb', '#d7e6f6', [],
         [{ k: 'lift', l: 'Lift' }, { k: 'powerBackup', l: 'Power backup' }, { k: 'pantry', l: 'Pantry' }, { k: 'washroom', l: 'Washroom' }, { k: 'centralAc', l: 'Central AC' }, { k: 'conference', l: 'Conference room' }, { k: 'reception', l: 'Reception' }, { k: 'serverRoom', l: 'Server room' }, { k: 'terrace', l: 'Terrace' }]);
+      grp('Price & Title', 'ph-fill ph-tag', '#9a6a00', '#fdf0d4', '#f0d493',
+        [{ label: 'Asking price', value: this.inr(pd.price) }, { label: 'Rate', value: rateCalc }, { label: 'Price is', value: pd.negotiable !== false ? 'Negotiable' : 'Fixed' }, { label: 'Title', value: pd.registry }, { label: 'Approvals', value: pd.approval || pd.approvalNote }, { label: 'Ownership', value: pd.tenure }], []);
       grp('What it suits', 'ph-fill ph-storefront', '#4a2c99', '#e7defc', '#ddd0f5',
         [{ label: 'Suitable for', value: pd.use }, { label: 'Currently', value: pd.currentUse }].concat(floorPlanItems), []);
+    }
+    if (pd.society || pd.address) {
+      grp('Project & Locality', 'ph-fill ph-buildings', '#0a6634', '#d7f0e2', '#b3e2c8',
+        [{ label: 'Project / Society', value: pd.society }, { label: 'Address', value: pd.address }, { label: 'Block / Pocket', value: pd.block }, { label: 'Locality', value: pd.loc }, { label: 'City', value: pd.city }], []);
     }
     return { hero: H.slice(0, 4), specs: S, groups: G };
   }
@@ -2940,16 +2958,18 @@ export class Component extends DCLogic {
       const pdTab = s.pdTab || 'gallery';
       const med = s.pdMedia || 'photos';
       const isSold = pd.status === 'sold';
-      const PDT = [{ k: 'gallery', l: 'Gallery', i: 'ph-fill ph-images', c: '#a3541b', b: '#fbeee0', r: '#e8cdae', sub: (pd.photoCount || 0) + ' photos · 2 maps' },
-      { k: 'overview', l: 'Overview', i: 'ph-fill ph-info', c: '#9a6a00', b: '#fdf0d4', r: '#f0d493', sub: 'All the details' },
-      { k: 'seller', l: 'Seller', i: 'ph-fill ph-user-circle', c: '#4a2c99', b: '#ebe3fa', r: '#d5c5f2', sub: sl ? sl.name.split(' ')[0] + ' · private' : 'Not saved' },
-      { k: 'papers', l: 'Paper', i: 'ph-fill ph-folder-open', c: '#0f5f7a', b: '#dff0f6', r: '#c9e2ec', sub: ((pd.docs || []).length || 'No') + ' on file' },
-      { k: 'clients', l: 'Activity', i: 'ph-fill ph-users-three', c: '#1a5aa8', b: '#e1ecfb', r: '#c0d7f4', sub: (shareRows.length || 'No') + ' customers' },
-      { k: 'mkt', l: 'Marketing', i: 'ph-fill ph-megaphone', c: '#c0490c', b: '#fde5d3', r: '#f5c9a0', sub: mk ? (mk.published + ' published') : 'Nothing yet' }];
+      const PDT = [
+        { k: 'gallery', l: 'Gallery', i: 'ph-fill ph-images', c: '#a3541b', b: '#fbeee0', r: '#e8cdae', sub: (pd.photoCount || 0) + ' photos · 2 maps' },
+        { k: 'overview', l: 'Overview', i: 'ph-fill ph-info', c: '#9a6a00', b: '#fdf0d4', r: '#f0d493', sub: 'All the details' },
+        { k: 'seller', l: 'Seller', i: 'ph-fill ph-user-circle', c: '#4a2c99', b: '#ebe3fa', r: '#d5c5f2', sub: sl ? sl.name.split(' ')[0] + ' · private' : 'Not saved' },
+        { k: 'papers', l: 'Documents', i: 'ph-fill ph-folder-open', c: '#0f5f7a', b: '#dff0f6', r: '#c9e2ec', sub: ((pd.docs || []).length || 'No') + ' on file' },
+        { k: 'clients', l: 'Site visits', i: 'ph-fill ph-users-three', c: '#1a5aa8', b: '#e1ecfb', r: '#c0d7f4', sub: (shareRows.length || 'No') + ' customers' },
+        { k: 'mkt', l: 'Marketing', i: 'ph-fill ph-megaphone', c: '#c0490c', b: '#fde5d3', r: '#f5c9a0', sub: mk ? (mk.published + ' published') : 'Nothing yet' }
+      ];
       const pdTabs = PDT.map(t => {
         const on = pdTab === t.k; return {
           label: t.l, icon: t.i, sub: t.sub, go: () => this.setState({ pdTab: t.k, cardMenu: null }),
-          style: `display:flex;align-items:center;gap:10px;height:58px;padding:0 17px;border-radius:15px;flex:none;transition:all .16s;${on ? `background:${t.c};color:#fff;box-shadow:0 14px 26px -14px rgba(60,40,10,.9)` : `background:#fffdf7;color:${t.c};box-shadow:inset 0 0 0 2px ${t.r}`}`,
+          style: `display:flex;align-items:center;gap:8px;height:46px;padding:0 18px;border-radius:14px;font-size:15.5px;font-weight:800;white-space:nowrap;flex:none;transition:all .16s;${on ? 'background:#241d0c;color:#f8c200;box-shadow:0 8px 18px -8px rgba(36,29,12,.9)' : 'background:transparent;color:#786950;'}`,
           subStyle: `font-size:13.5px;font-weight:700;${on ? 'color:rgba(255,255,255,.82)' : 'opacity:.72'}`
         };
       });
@@ -4482,8 +4502,8 @@ export class Component extends DCLogic {
             const on = s.contactMode === t.k;
             return {
               label: t.l, icon: t.i, count: String(t.n), go: () => this.setState({ contactMode: t.k }),
-              style: `display:flex;align-items:center;gap:8px;height:46px;padding:0 18px;border-radius:12px;font-size:15.5px;font-weight:800;transition:all .16s;${on ? 'background:#241d0c;color:#f8c200;box-shadow:0 8px 18px -8px rgba(36,29,12,.9)' : 'background:transparent;color:#786950;'}`,
-              numStyle: `font-size:13px;font-weight:800;border-radius:999px;padding:1px 8px;${on ? 'background:rgba(255,255,255,.16)' : 'background:rgba(0,0,0,.08);color:#6b5f4c'}`
+              style: `display:flex;align-items:center;gap:10px;height:54px;padding:0 24px;border-radius:14px;font-size:17.5px;font-weight:800;letter-spacing:-.01em;transition:all .18s;${on ? 'background:linear-gradient(135deg, #3b1464, #501d8a);color:#fff;box-shadow:0 10px 24px -10px rgba(59,20,100,.8)' : 'background:transparent;color:#786950;'}`,
+              numStyle: `font-size:14px;font-weight:800;border-radius:999px;padding:2px 10px;${on ? 'background:rgba(255,255,255,.2);color:#ffd875' : 'background:rgba(0,0,0,.07);color:#6b5f4c'}`
             };
           }),
           cliQ: s.cliQ || '', onCliQ: (e) => this.setState({ cliQ: e.target.value }),
@@ -4492,8 +4512,8 @@ export class Component extends DCLogic {
             const on = s.cliFilter === d.k; const cm = CS[d.k] || { c: '#241d0c', b: '#ffe5a0', card: '#fffaea', ring: '#e6d6b4' };
             return {
               label: d.l, count: String(d.n), go: () => this.setState({ cliFilter: on ? 'all' : d.k }),
-              style: `display:flex;align-items:center;gap:7px;height:46px;padding:0 16px;border-radius:12px;font-size:15px;font-weight:800;white-space:nowrap;flex:none;transition:all .15s;${on ? `background:${cm.c};color:#fff;box-shadow:0 8px 16px -8px ${cm.c}` : 'background:transparent;color:#6b5f4c'}`,
-              numStyle: `font-size:12.5px;font-weight:800;border-radius:999px;padding:1px 7px;${on ? 'background:rgba(255,255,255,.24)' : 'background:rgba(0,0,0,.08);color:#6b5f4c'}`
+              style: `display:flex;align-items:center;gap:7px;height:40px;padding:0 16px;border-radius:11px;font-size:14px;font-weight:800;white-space:nowrap;flex:none;transition:all .15s;${on ? `background:${cm.c};color:#fff;box-shadow:0 6px 14px -6px ${cm.c}` : 'background:transparent;color:#6b5f4c'}`,
+              numStyle: `font-size:12px;font-weight:800;border-radius:999px;padding:1px 7px;${on ? 'background:rgba(255,255,255,.24)' : 'background:rgba(0,0,0,.08);color:#6b5f4c'}`
             };
           }),
           cliCards, cliEmpty: cliCards.length === 0, cliAny: cliCards.length > 0,
