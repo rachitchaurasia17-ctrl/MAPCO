@@ -1825,15 +1825,16 @@ export class Component extends DCLogic {
         valStyle: "font-family:'Newsreader',serif;font-weight:600;font-size:32px;line-height:1.05;margin-top:5px;color:" + k.c
       }));
 
-    const dvTabs = [{ k: 'active', l: 'Ongoing', n: dActiveAll.length, i: 'ph-fill ph-handshake', on: 'background:#f8a800;color:#241d0c;box-shadow:0 16px 30px -14px rgba(248,168,0,.95)', off: 'background:#fff3d6;color:#8a5a12;box-shadow:inset 0 0 0 2px #f0d493' },
-    { k: 'done', l: 'Sold', n: dDoneAll.length, i: 'ph-fill ph-seal-check', on: 'background:#0b6f39;color:#eafff2;box-shadow:0 16px 30px -14px rgba(11,111,57,.95)', off: 'background:#e6f6ec;color:#0a6634;box-shadow:inset 0 0 0 2px #a9dcc0' }]
-      .map(t => {
-        const on = dView === t.k; return {
-          label: t.l, count: String(t.n), icon: t.i, go: () => this.setState({ dealView: t.k, dealStage: 'all', ledgerFilter: 'all' }),
-          style: 'display:flex;align-items:center;gap:11px;height:64px;padding:0 30px;border-radius:18px;font-size:20px;font-weight:800;white-space:nowrap;transition:all .16s;' + (on ? t.on : t.off),
-          num: 'font-size:14px;font-weight:800;border-radius:999px;padding:2px 10px;' + (on ? 'background:rgba(255,255,255,.28)' : 'background:rgba(0,0,0,.07)')
-        };
-      });
+    const dvTabs = [
+      { k: 'active', l: 'Ongoing', n: dActiveAll.length, i: 'ph-fill ph-handshake', on: 'background:#f8a800;color:#241d0c;box-shadow:0 10px 20px -10px rgba(248,168,0,.9);', off: 'background:transparent;color:#786950;' },
+      { k: 'done', l: 'Sold', n: dDoneAll.length, i: 'ph-fill ph-seal-check', on: 'background:#0a6634;color:#eafff2;box-shadow:0 10px 20px -10px rgba(10,102,52,.9);', off: 'background:transparent;color:#786950;' }
+    ].map(t => {
+      const on = dView === t.k; return {
+        label: t.l, count: String(t.n), icon: t.i, go: () => this.setState({ dealView: t.k, dealStage: 'all', ledgerFilter: 'all' }),
+        style: 'display:flex;align-items:center;gap:9px;height:52px;padding:0 22px;border-radius:14px;font-size:17px;font-weight:800;white-space:nowrap;transition:all .16s;' + (on ? t.on : t.off),
+        num: 'font-size:13.5px;font-weight:800;border-radius:999px;padding:2px 9px;' + (on ? 'background:rgba(0,0,0,.14)' : 'background:rgba(0,0,0,.07)')
+      };
+    });
 
     /* ---------- TODAY ---------- */
     const dRowBase = 'display:flex;align-items:center;gap:13px;flex-wrap:wrap;padding:13px 16px;border-radius:15px;background:#fffdf7;box-shadow:inset 0 0 0 1.5px #ecdcc0';
@@ -2353,9 +2354,7 @@ export class Component extends DCLogic {
         accent: (() => { const g = this.groupOf(pr.type); return g === 'plot' ? '#e8681c' : g === 'comm' ? '#5b32c4' : '#0a6634'; })(),
         accentBar: (() => { const g = this.groupOf(pr.type); const c = g === 'plot' ? '#e8681c' : g === 'comm' ? '#5b32c4' : '#0a6634'; return `height:5px;background:${c}`; })(),
         cardWrap: (() => {
-          const g = this.groupOf(pr.type);
-          const t = g === 'plot' ? ['#fff0e2', '#f6cba6'] : g === 'comm' ? ['#efe9ff', '#cfc0f5'] : ['#e6f6ec', '#aedcc2'];
-          return 'background:' + t[0] + ';border-radius:22px;overflow:hidden;box-shadow:0 0 0 2px ' + t[1] + ',0 18px 40px -28px rgba(60,40,10,.7);transition:transform .14s';
+          return 'background:#ffffff;border-radius:22px;overflow:hidden;box-shadow:0 0 0 1.5px #eadfc9,0 16px 36px -18px rgba(40,24,6,.14);transition:transform .14s,box-shadow .14s;';
         })()
       };
     };
@@ -2445,13 +2444,13 @@ export class Component extends DCLogic {
 
     const qvDefs = soldView
       ? [{ k: 'price', l: 'Biggest sales', i: 'ph-fill ph-trend-up' }]
-      : [{ k: 'hot', l: 'Hot right now', i: 'ph-fill ph-fire' }, { k: 'price', l: 'Highest price', i: 'ph-fill ph-trend-up' }, { k: 'new', l: 'Newest', i: 'ph-fill ph-sparkle' }, { k: 'quiet', l: 'No interest yet', i: 'ph-fill ph-moon' }];
+      : [{ k: 'hot', l: 'Hot right now', i: 'ph-fill ph-fire' }, { k: 'price', l: 'Highest price', i: 'ph-fill ph-trend-up' }, { k: 'new', l: 'Newest', i: 'ph-fill ph-sparkle' }];
     const quickViews = qvDefs.map(q => {
       const on = qv === q.k;
       const t = qvTheme[q.k] || qvTheme.price;
       return {
         label: q.l, icon: q.i, go: () => this.setState({ quickView: on ? 'all' : q.k }),
-        style: `display:flex;align-items:center;gap:8px;height:56px;padding:0 18px;border-radius:16px;font-size:15.5px;font-weight:800;white-space:nowrap;flex:none;transition:all .15s;background:${on ? t.bgOn : t.bgOff};color:${on ? t.fgOn : t.fgOff};border:2px solid ${on ? t.bdOn : t.bdOff};box-shadow:${on ? t.shadowOn : t.shadowOff};`
+        style: `display:flex;align-items:center;gap:8px;height:46px;padding:0 18px;border-radius:12px;font-size:15px;font-weight:800;white-space:nowrap;flex:none;transition:all .15s;background:${on ? t.bgOn : 'transparent'};color:${on ? t.fgOn : '#786950'};box-shadow:${on ? t.shadowOn : 'none'};`
       };
     });
     const propsNeedWork = [];
@@ -3377,13 +3376,15 @@ export class Component extends DCLogic {
       invAddBtnStyle: 'display:flex;align-items:center;gap:10px;height:60px;padding:0 26px;border-radius:16px;font-size:18px;font-weight:800;white-space:nowrap;white-space:nowrap;transition:transform .12s;' + (soldView ? 'background:#f8a800;color:#241d0c' : 'background:#1d7a43;background-image:linear-gradient(140deg,#27a05a,#125c31);color:#eafff2;box-shadow:0 18px 34px -16px rgba(11,111,57,.9)'),
       propQ: s.propQ, propQOn: !!s.propQ,
       onPropQ: (e) => this.setState({ propQ: e.target.value }), clearPropQ: () => this.setState({ propQ: '' }),
-      invSearchStyle: 'flex:1;min-width:240px;display:flex;align-items:center;gap:12px;height:56px;padding:0 18px;border-radius:16px;background:#fffdf7;box-shadow:inset 0 0 0 2px ' + (soldView ? '#a9d9bd' : '#e6d6b4') + ',0 6px 16px -10px rgba(40,26,2,.4)',
-      invSearchInput: 'border:none;outline:none;background:none;width:100%;font-size:16.5px;font-weight:600;color:#241f1c',
+      invSearchStyle: 'width:280px;max-width:320px;flex:0 1 280px;display:flex;align-items:center;gap:10px;height:52px;padding:0 16px;border-radius:15px;background:#fffdf7;box-shadow:inset 0 0 0 1.5px ' + (soldView ? '#a9d9bd' : '#e6d6b4') + ',0 4px 12px -8px rgba(40,26,2,.2);',
+      invSearchInput: 'border:none;outline:none;background:none;width:100%;font-size:16px;font-weight:600;color:#241f1c',
       filtersOpen: s.filtersOpen, toggleFilters: () => this.setState({ filtersOpen: !s.filtersOpen, plotCityOpen: false }),
-      invFilterBtn: 'display:flex;align-items:center;gap:8px;height:56px;padding:0 20px;border-radius:16px;font-size:16px;font-weight:800;' + (invFilterCount ? 'background:#e8681c;color:#fff;box-shadow:0 10px 20px -8px rgba(232,104,28,.85);border:2px solid #e8681c;' : 'background:#fffdf7;color:#4c463d;border:2px solid #e6d6b4;box-shadow:0 4px 10px -4px rgba(40,26,2,.1);'),
+      invFilterBtn: 'display:flex;align-items:center;gap:8px;height:52px;padding:0 18px;border-radius:15px;font-size:15.5px;font-weight:800;' + (invFilterCount ? 'background:#e8681c;color:#fff;box-shadow:0 8px 18px -6px rgba(232,104,28,.8);border:2px solid #e8681c;' : 'background:#fffdf7;color:#4c463d;border:1.5px solid #e6d6b4;box-shadow:0 3px 8px -4px rgba(40,26,2,.1);'),
       invFilterCount: invFilterCount ? String(invFilterCount) : '',
       invFilterCountStyle: invFilterCount ? 'font-size:14px;font-weight:800;background:rgba(0,0,0,.2);border-radius:999px;padding:2px 9px' : 'display:none',
       invFilterChips, hasFilterChips: invFilterChips.length > 0, quickViews,
+      invQuickSegWrap: 'display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:16px;background:#fff3d6;box-shadow:inset 0 0 0 1.5px rgba(120,100,60,.16);',
+      dealSegWrap: 'display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:18px;background:#fff3d6;box-shadow:inset 0 0 0 1.5px rgba(120,100,60,.16);',
       fCityRows: [{ k: 'all', l: 'All cities' }, ...this.CITIES.map(c => ({ k: c, l: c }))].map(ch => ({
         label: ch.l, go: () => this.setState({ plotCity: ch.k }), style: chipF(s.plotCity === ch.k),
         count: String(ch.k === 'all' ? this.properties.length : this.properties.filter(pr => pr.city === ch.k).length)
@@ -4245,15 +4246,17 @@ export class Component extends DCLogic {
           const dls = this.deals.filter(d => d.client === pc.name);
           const bought = boughtOf(pc);
           const cpTab = s.cpTab || 'overview';
-          const CPT = [{ k: 'overview', l: 'Overview', i: 'ph-fill ph-user-focus', c: '#a3541b', b: '#fdf0d4', r: '#f0d493', sub: 'What you know' },
-          { k: 'activity', l: 'Activity', i: 'ph-fill ph-activity', c: '#4a2c99', b: '#ebe3fa', r: '#d5c5f2', sub: (evAll.length || 'No') + ' events · ' + myLinks.length + (myLinks.length === 1 ? ' link' : ' links') },
-          { k: 'props', l: 'Properties', i: 'ph-fill ph-buildings', c: '#1a5aa8', b: '#e1ecfb', r: '#c0d7f4', sub: (propRows.length || 'No') + (propRows.length === 1 ? ' property' : ' properties') },
-          { k: 'deals', l: 'Deals', i: 'ph-fill ph-handshake', c: '#0a7a42', b: '#d7f0e2', r: '#b3e2c8', sub: (dls.length || 'No') + (dls.length === 1 ? ' deal · ' : ' deals · ') + (bought.length || 'no') + ' bought' }];
+          const CPT = [
+            { k: 'overview', l: 'Overview', i: 'ph-fill ph-user-focus', sub: 'What you know' },
+            { k: 'activity', l: 'Activity', i: 'ph-fill ph-activity', sub: (evAll.length || 'No') + ' events · ' + myLinks.length + (myLinks.length === 1 ? ' link' : ' links') },
+            { k: 'props', l: 'Properties', i: 'ph-fill ph-buildings', sub: (propRows.length || 'No') + (propRows.length === 1 ? ' property' : ' properties') },
+            { k: 'deals', l: 'Deals', i: 'ph-fill ph-handshake', sub: (dls.length || 'No') + (dls.length === 1 ? ' deal · ' : ' deals · ') + (bought.length || 'no') + ' bought' }
+          ];
           const cpTabs = CPT.map(t => {
             const on = cpTab === t.k; return {
               label: t.l, icon: t.i, sub: t.sub, go: () => this.setState({ cpTab: t.k }),
-              style: `display:flex;align-items:center;gap:11px;height:60px;padding:0 20px;border-radius:16px;flex:none;transition:all .16s;${on ? `background:${t.b};color:${t.c};box-shadow:0 0 0 2px ${t.r}` : 'background:#fffdf7;color:#6b6156;box-shadow:inset 0 0 0 1.5px #e6d6b4'}`,
-              subStyle: `font-size:13px;font-weight:700;${on ? 'opacity:.8' : 'color:#a89b81'}`
+              style: `display:flex;align-items:center;gap:10px;height:52px;padding:0 18px;border-radius:14px;flex:none;transition:all .16s;${on ? 'background:#5b21b6;color:#ffffff;box-shadow:0 4px 14px rgba(91,33,182,.4);' : 'background:#ffffff;color:#5b21b6;box-shadow:inset 0 0 0 1.5px #ddd6fe;'}`,
+              subStyle: `font-size:12.5px;font-weight:700;${on ? 'color:#ddd6fe' : 'color:#7c3aed'}`
             };
           });
           cp = {
@@ -4479,8 +4482,8 @@ export class Component extends DCLogic {
             const on = s.contactMode === t.k;
             return {
               label: t.l, icon: t.i, count: String(t.n), go: () => this.setState({ contactMode: t.k }),
-              style: `display:flex;align-items:center;gap:10px;height:58px;padding:0 24px;border-radius:17px;font-size:18px;font-weight:800;transition:all .16s;${on ? 'background:#241d0c;color:#f8c200;box-shadow:0 14px 26px -16px rgba(36,29,12,.9)' : 'background:#fffdf7;color:#6b6156;box-shadow:inset 0 0 0 1.5px #e6d6b4'}`,
-              numStyle: `font-size:14.5px;font-weight:800;border-radius:999px;padding:2px 10px;${on ? 'background:rgba(255,255,255,.16)' : 'background:#f2ece0;color:#8a7f6e'}`
+              style: `display:flex;align-items:center;gap:8px;height:46px;padding:0 18px;border-radius:12px;font-size:15.5px;font-weight:800;transition:all .16s;${on ? 'background:#241d0c;color:#f8c200;box-shadow:0 8px 18px -8px rgba(36,29,12,.9)' : 'background:transparent;color:#786950;'}`,
+              numStyle: `font-size:13px;font-weight:800;border-radius:999px;padding:1px 8px;${on ? 'background:rgba(255,255,255,.16)' : 'background:rgba(0,0,0,.08);color:#6b5f4c'}`
             };
           }),
           cliQ: s.cliQ || '', onCliQ: (e) => this.setState({ cliQ: e.target.value }),
@@ -4489,8 +4492,8 @@ export class Component extends DCLogic {
             const on = s.cliFilter === d.k; const cm = CS[d.k] || { c: '#241d0c', b: '#ffe5a0', card: '#fffaea', ring: '#e6d6b4' };
             return {
               label: d.l, count: String(d.n), go: () => this.setState({ cliFilter: on ? 'all' : d.k }),
-              style: `display:flex;align-items:center;gap:9px;height:52px;padding:0 20px;border-radius:15px;font-size:16.5px;font-weight:800;white-space:nowrap;flex:none;transition:all .15s;${on ? `background:${cm.c};color:#fff` : `background:${cm.card};color:${cm.c};box-shadow:inset 0 0 0 2px ${cm.ring}`}`,
-              numStyle: `font-size:13.5px;font-weight:800;border-radius:999px;padding:1px 9px;${on ? 'background:rgba(255,255,255,.24)' : `background:${cm.b}`}`
+              style: `display:flex;align-items:center;gap:7px;height:46px;padding:0 16px;border-radius:12px;font-size:15px;font-weight:800;white-space:nowrap;flex:none;transition:all .15s;${on ? `background:${cm.c};color:#fff;box-shadow:0 8px 16px -8px ${cm.c}` : 'background:transparent;color:#6b5f4c'}`,
+              numStyle: `font-size:12.5px;font-weight:800;border-radius:999px;padding:1px 7px;${on ? 'background:rgba(255,255,255,.24)' : 'background:rgba(0,0,0,.08);color:#6b5f4c'}`
             };
           }),
           cliCards, cliEmpty: cliCards.length === 0, cliAny: cliCards.length > 0,
