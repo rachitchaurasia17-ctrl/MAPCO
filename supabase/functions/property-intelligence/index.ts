@@ -30,6 +30,7 @@ import {
   PROPERTY_INTELLIGENCE_SCHEMA_VERSION,
   type GeoPoint, type RoadGeometry, type PipelineDeps,
 } from '../../../v2/src/packages/property-intelligence/index.ts';
+import { CURATED_LANDMARK_LIBRARY } from '../../../v2/src/packages/property-intelligence/landmarks/library.ts';
 import roadsData from './roads.json' with { type: 'json' };
 
 const ORIGINS = allowedOrigins('MAPCO_AI_ALLOWED_ORIGINS');
@@ -106,6 +107,8 @@ function buildDeps(): PipelineDeps {
     resolver: new GooglePlacesResolver({ apiKey: MAPS_KEY }),
     matrix: new GoogleRoutesClient({ apiKey: MAPS_KEY }),
     roads: ROADS,
+    // Curated City Reach: no Places discovery, no Place Photo calls.
+    landmarks: CURATED_LANDMARK_LIBRARY,
     now: () => new Date().toISOString(),
     log: (lvl, ev, d) => logEvent(lvl, `pi.${ev}`, d ?? {}),
   };

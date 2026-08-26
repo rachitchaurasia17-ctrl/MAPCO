@@ -22,6 +22,7 @@ import {
   type GeoPoint,
   type PipelineDeps,
 } from '../src/packages/property-intelligence';
+import { CURATED_LANDMARK_LIBRARY } from '../src/packages/property-intelligence/landmarks/library';
 
 const POINT: GeoPoint = { latitude: 30.6725, longitude: 76.752 };
 
@@ -97,6 +98,9 @@ function baseDeps(over: Partial<PipelineDeps> = {}): PipelineDeps {
     resolver: new MockResolver(),
     matrix: new MockMatrix(),
     roads: [],
+    // City Reach is now MAPCO-curated: the pipeline reads this library
+    // instead of resolving anchors through Google Places.
+    landmarks: CURATED_LANDMARK_LIBRARY,
     now: () => '2026-08-18T00:00:00.000Z',
     ...over,
   };
@@ -200,7 +204,10 @@ describe('runPropertyIntelligence — assembly', () => {
     );
     expect(viewModel.status).toBe('ready');
     expect(viewModel.dayToDay).toHaveLength(6);
-    expect(viewModel.cityReach).toHaveLength(6);
+    // City Reach is curated and presented narrow: 5–6 finalists chosen
+    // from real travel times, not six Places lookups.
+    expect(viewModel.cityReach.length).toBeGreaterThanOrEqual(5);
+    expect(viewModel.cityReach.length).toBeLessThanOrEqual(6);
     // Day-to-Day stays in the fixed category order.
     expect(viewModel.dayToDay.map((p) => p.destinationType))
       .toEqual(['park', 'grocery', 'gym', 'school', 'healthcare', 'daily_market']);
@@ -211,7 +218,8 @@ describe('runPropertyIntelligence — assembly', () => {
       expect(row.durationLabel).toMatch(/min|hr/);
       expect(row.routeTarget).toBeTruthy();
     }
-    expect(usage.matrixElements).toBe(12);
+    // One matrix covers Day to Day plus the curated City Reach shortlist.
+    expect(usage.matrixElements).toBeGreaterThanOrEqual(12);
     expect(usage.costMicroUsd).toBeGreaterThan(0);
   });
 
@@ -235,14 +243,16 @@ describe('runPropertyIntelligence — assembly', () => {
   });
 
   it('rejects duplicates that resolve to the same place', async () => {
-    // Two City Reach names collapse to one place id.
+    // Two Day-to-Day names collapse to one place id.
     const resolver = new MockResolver(new Set(), { 'IT City': 'pid:CP67', CP67: 'pid:CP67' });
     const { viewModel } = await runPropertyIntelligence(
       { dealerId: 'd1', propertyId: 'p1', point: POINT }, baseDeps({ resolver }),
     );
-    const ids = [...viewModel.dayToDay, ...viewModel.cityReach].map((p) => p.placeId);
-    expect(new Set(ids).size).toBe(ids.length); // no duplicate place id survives
-    expect(viewModel.cityReach.length).toBeLessThan(6);
+    // Identity is a Google place id where one exists, otherwise the
+    // coordinate — curated landmarks have no place id by design.
+    const keys = [...viewModel.dayToDay, ...viewModel.cityReach]
+      .map((p) => p.placeId ?? `${p.latitude.toFixed(4)},${p.longitude.toFixed(4)}`);
+    expect(new Set(keys).size).toBe(keys.length);
   });
 
   it('runs bounded repair for a Day-to-Day category the model name fails to resolve', async () => {
@@ -254,22 +264,27 @@ describe('runPropertyIntelligence — assembly', () => {
     expect(viewModel.dayToDay.some((p) => p.destinationType === 'park')).toBe(true);
   });
 
-  it('resolves a City Reach road via MAPCO road geometry (nearest point)', async () => {
-    const road: RoadGeometry = {
-      id: 'airport-road', name: 'Airport Road', aliases: [],
-      path: [
-        { latitude: 30.6606, longitude: 76.7969 },
-        { latitude: 30.6752, longitude: 76.7602 },
-        { latitude: 30.6811, longitude: 76.7502 },
-      ],
-    };
-    const { viewModel } = await runPropertyIntelligence(
-      { dealerId: 'd1', propertyId: 'p1', point: POINT }, baseDeps({ roads: [road] }),
+  /* City Reach anchors used to be resolved through Google Places (and
+     roads through MAPCO GeoJSON). They now come from the curated
+     library. The assertion that matters is unchanged: an anchor routes
+     to OUR coordinate, never to a Google place id we had to pay to
+     discover. */
+  it('routes City Reach to MAPCO-owned coordinates, never a Google place id', async () => {
+    const { viewModel, usage } = await runPropertyIntelligence(
+      { dealerId: 'd1', propertyId: 'p1', point: POINT }, baseDeps(),
     );
-    const roadRow = viewModel.cityReach.find((p) => p.destinationType === 'road');
-    expect(roadRow?.name).toBe('Airport Road');
-    expect(roadRow?.routeTarget.kind).toBe('road');
-    expect(roadRow?.routeTarget.placeId).toBeUndefined();
+    expect(viewModel.cityReach.length).toBeGreaterThan(0);
+    for (const row of viewModel.cityReach) {
+      expect(row.routeTarget.kind).toBe('curated-landmark');
+      expect(row.routeTarget.placeId).toBeUndefined();
+      expect(row.imageSource).toBe('mapco-curated');
+      // The coordinate is the curated one, used exactly as supplied.
+      const source = CURATED_LANDMARK_LIBRARY.find((l) => l.name === row.name);
+      expect(source, row.name).toBeTruthy();
+      expect(row.latitude).toBe(source!.latitude);
+      expect(row.longitude).toBe(source!.longitude);
+    }
+    expect(usage.cityReachPlacesCalls).toBe(0);
   });
 
   it('reports a truthful unavailable state instead of faking rows', async () => {

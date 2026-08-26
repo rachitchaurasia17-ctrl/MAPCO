@@ -26,6 +26,7 @@ import {
   type RoadGeometry, type GeoPoint, type PipelineDeps, type PropertyIntelligenceViewModel,
   type RunUsage,
 } from '../src/packages/property-intelligence/index.ts';
+import { CURATED_LANDMARK_LIBRARY } from '../src/packages/property-intelligence/landmarks/library.ts';
 
 const VERTEX = { project: 'mapco-504912', location: 'global', model: 'gemini-3.6-flash' };
 
@@ -144,6 +145,8 @@ function buildDeps(cfg: ServerConfig): PipelineDeps {
     resolver: new GooglePlacesResolver({ apiKey: cfg.mapsKey }),
     matrix: new GoogleRoutesClient({ apiKey: cfg.mapsKey }),
     roads: cfg.roads,
+    // Curated City Reach: no Places discovery, no Place Photo calls.
+    landmarks: CURATED_LANDMARK_LIBRARY,
     now: () => new Date().toISOString(),
     log: (lvl, ev, d) => { if (lvl !== 'info') console.log(`[pi] ${lvl} ${ev}`, d ?? ''); },
   };

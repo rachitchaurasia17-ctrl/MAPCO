@@ -48,7 +48,7 @@ export type CityReachType =
   | 'landmark';
 
 /** Whether a destination routes to a Google Place or to a MAPCO-owned road. */
-export type DestinationKind = 'place' | 'road';
+export type DestinationKind = 'place' | 'road' | 'curated-landmark';
 
 /** A point the Routes API can route to: a stable Google Place id, or a raw
  *  coordinate (used for MAPCO road access points and grounded fallbacks). */
@@ -80,6 +80,18 @@ export interface IntelligencePlace {
   longitude: number;
   /** Legacy field kept for the existing UI's category read. */
   category?: string;
+  /**
+   * The card image. City Reach carries a MAPCO-owned curated asset path
+   * ("/landmarks/…"); Day to Day carries a Google Place Photo resource
+   * resolved through the permitted flow. Null means no photo is
+   * available and the UI must fall back honestly rather than borrowing
+   * another place's image.
+   */
+  image?: string | null;
+  /** Where the image came from, so attribution is never mislabelled. */
+  imageSource?: 'mapco-curated' | 'google-place-photo';
+  /** The travel mode the displayed time was actually computed with. */
+  travelMode?: 'WALK' | 'DRIVE';
 }
 
 export type IntelStatus = 'ready' | 'unavailable';
@@ -206,6 +218,15 @@ export interface RunUsage {
   matrixElements: number;
   routeCalls: number;
   repairAttempts: number;
+  /**
+   * Places calls attributable to City Reach. The curated library exists to
+   * make this exactly 0 — it is counted separately so a regression that
+   * reintroduces paid City Reach discovery is visible rather than hidden
+   * inside the total.
+   */
+  cityReachPlacesCalls: number;
+  /** Google Place Photo fetches. Day to Day only; City Reach uses our own. */
+  placePhotoCalls: number;
   costMicroUsd: number;
   cacheOutcome: CacheOutcome;
   refreshReason?: string;
@@ -231,6 +252,12 @@ export interface PipelineDeps {
   resolver: GeoResolver;
   matrix: RouteMatrixClient;
   roads: RoadGeometry[];
+  /**
+   * MAPCO curated City Reach landmarks. Supplying these replaces Places
+   * discovery for City Reach entirely — zero Places calls, zero Place
+   * Photo calls, and the card photo is our own asset.
+   */
+  landmarks?: readonly import('./landmarks/types.ts').CuratedLandmark[];
   /** Injected ISO clock (Deno/Node/browser agnostic; keeps the module pure). */
   now: () => string;
   /** Optional deterministic id factory for tests. */
