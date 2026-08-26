@@ -16,6 +16,7 @@ import {
   type DataAdapterV2,
   type AuthRepository, type ActivationState, type AccountState,
   type PropertyRepository, type CustomerRepository, type DealRepository, type RecordSaleInput,
+  type StartDealInput, type SetDealStageInput, type RecordDealPaymentInput,
   type SellerRepository, type SaveSellerInput, type AssignPropertySellerInput,
   type PropertyDocumentRepository, type UploadPropertyDocumentInput,
   type DemandRepository, type DemandRecord, type DemandDraft, type DemandMatch,
@@ -40,6 +41,13 @@ import type {
   PropertySeller,
   SellerWithProperties,
   PropertyDocument,
+  PropertyDocumentType,
+  PropertyDocumentVisibility,
+  PropertyDocumentSafety,
+  PipelineDeal,
+  DealPayment,
+  DealPaymentKind,
+  DealWorkspace,
 } from '../types';
 import {
   PROPERTY_PHOTO_BUCKET,
@@ -50,7 +58,7 @@ import {
   validatePropertyPhoto,
 } from '../property-photos';
 import { resolveMapAssetUrl } from '../map-assets';
-import { normalizeCompletedDeal } from '../deal-normalization';
+import { normalizeCompletedDeal, normalizePipelineDeal, readDealStage } from '../deal-normalization';
 import {
   normalizePropertyLocationOnRead,
   propertyLocationValidationError,
@@ -547,6 +555,214 @@ class SupaDeals implements DealRepository {
       return ok(deal);
     } catch (e) { return toErr(e); }
   }
+
+  /* ── pipeline ── */
+
+  async listPipeline(p?: PageParams, o?: QueryOptions): Promise<Result<Page<PipelineDeal>>> {
+    const raw: UnknownDeal[] = [];
+    let rawCursor: string | undefined;
+    do {
+      const page = await crmList<UnknownDeal>('deals', { cursor: rawCursor, limit: MAX_LIMIT }, o, () => true);
+      if (!page.ok) return page;
+      raw.push(...page.value.items);
+      rawCursor = page.value.nextCursor ?? undefined;
+    } while (rawCursor);
+
+    const query = (p?.query ?? '').trim().toLowerCase();
+    const byId = new Map<string, PipelineDeal>();
+    for (const payload of raw) {
+      const deal = normalizePipelineDeal(String(payload.id ?? ''), payload);
+      if (!deal) continue;
+      if (query && !`${deal.prop} ${deal.buyer} ${deal.seller ?? ''} ${deal.city} ${deal.sector}`.toLowerCase().includes(query)) continue;
+      byId.set(deal.id, deal);
+    }
+    const all = [...byId.values()];
+    const limit = Math.min(p?.limit ?? DEFAULT_LIMIT, MAX_LIMIT);
+    const offset = p?.cursor ? parseInt(p.cursor, 10) || 0 : 0;
+    return ok({
+      items: all.slice(offset, offset + limit),
+      nextCursor: offset + limit < all.length ? String(offset + limit) : null,
+      total: all.length,
+    });
+  }
+
+  async start(input: StartDealInput, o?: QueryOptions): Promise<Result<PipelineDeal>> {
+    const a = aborted<PipelineDeal>(o); if (a) return a;
+    try {
+      const c = await client();
+      const { data, error } = await c.rpc('plotmap_start_deal', {
+        p_payload: {
+          propertyId: input.propertyId,
+          buyerId: input.buyerId ?? null,
+          newBuyer: input.newBuyer ?? null,
+          stage: input.stage ?? 'negotiating',
+          value: input.value ?? null,
+          commission: input.commission ?? null,
+          nextAction: input.nextAction ?? null,
+        },
+      });
+      if (error) return toErr(error);
+      const env = (data ?? {}) as { ok?: boolean; reason?: string; deal?: Record<string, unknown> };
+      if (env.ok !== true || !env.deal) {
+        if (env.reason === 'not_found') return err('not_found', 'That property is no longer available');
+        return err('validation', env.reason ?? 'Could not start the deal');
+      }
+      const deal = normalizePipelineDeal(String(env.deal.id ?? ''), env.deal);
+      if (!deal) return err('unknown', 'Deal response was invalid');
+      publishResourceInvalidation({ entity: 'inventory', id: input.propertyId });
+      return ok(deal);
+    } catch (e) { return toErr(e); }
+  }
+
+  async setStage(input: SetDealStageInput, o?: QueryOptions): Promise<Result<PipelineDeal>> {
+    const a = aborted<PipelineDeal>(o); if (a) return a;
+    try {
+      const c = await client();
+      const { data, error } = await c.rpc('plotmap_set_deal_stage', {
+        p_payload: {
+          dealId: input.dealId,
+          stage: input.stage,
+          reason: input.reason ?? null,
+          tokenDate: input.tokenDate ?? null,
+          registryDate: input.registryDate ?? null,
+          note: input.note ?? null,
+        },
+      });
+      if (error) return toErr(error);
+      const env = (data ?? {}) as { ok?: boolean; reason?: string; deal?: Record<string, unknown> };
+      if (env.ok !== true || !env.deal) {
+        if (env.reason === 'not_found') return err('not_found', 'That deal is no longer available');
+        return err('validation', env.reason ?? 'Could not move the deal');
+      }
+      const deal = normalizePipelineDeal(String(env.deal.id ?? input.dealId), env.deal);
+      if (!deal) return err('unknown', 'Deal response was invalid');
+      return ok(deal);
+    } catch (e) { return toErr(e); }
+  }
+
+  async recordPayment(input: RecordDealPaymentInput, o?: QueryOptions): Promise<Result<DealPayment>> {
+    const a = aborted<DealPayment>(o); if (a) return a;
+    try {
+      const c = await client();
+      const { data, error } = await c.rpc('plotmap_record_deal_payment', {
+        p_payload: {
+          dealId: input.dealId,
+          kind: input.kind,
+          amount: input.amount,
+          receivedOn: input.receivedOn ?? null,
+          note: input.note ?? null,
+        },
+      });
+      if (error) return toErr(error);
+      const env = (data ?? {}) as { ok?: boolean; reason?: string; payment?: Record<string, unknown> };
+      if (env.ok !== true || !env.payment) {
+        if (env.reason === 'not_found') return err('not_found', 'That deal is no longer available');
+        return err('validation', env.reason ?? 'Could not record the payment');
+      }
+      const row = env.payment as Record<string, unknown>;
+      return ok({
+        id: String(row.id ?? ''),
+        kind: String(row.kind ?? 'token') as DealPaymentKind,
+        amount: Number(row.amount ?? 0),
+        receivedOn: String(row.received_on ?? row.receivedOn ?? ''),
+        ...(row.note ? { note: String(row.note) } : {}),
+      });
+    } catch (e) { return toErr(e); }
+  }
+
+  async workspace(dealId: string, o?: QueryOptions): Promise<Result<DealWorkspace>> {
+    const a = aborted<DealWorkspace>(o); if (a) return a;
+    try {
+      const c = await client();
+      const { data, error } = await c.rpc('plotmap_deal_workspace', { p_deal_id: dealId });
+      if (error) return toErr(error);
+      const env = (data ?? {}) as Record<string, unknown>;
+      if (env.ok !== true) {
+        return env.reason === 'not_found'
+          ? err('not_found', 'That deal is no longer available')
+          : err('unknown', 'Could not load the deal');
+      }
+      return readDealWorkspace(dealId, env);
+    } catch (e) { return toErr(e); }
+  }
+}
+
+/** Shape the deal-workspace RPC envelope into the contract type. */
+function readDealWorkspace(dealId: string, env: Record<string, unknown>): Result<DealWorkspace> {
+  const dealPayload = (env.deal ?? {}) as Record<string, unknown>;
+  const deal = normalizePipelineDeal(String(dealPayload.id ?? dealId), dealPayload)
+    ?? normalizeCompletedPipelineView(String(dealPayload.id ?? dealId), dealPayload);
+  if (!deal) return err('unknown', 'Deal response was invalid');
+
+  const wrapped = (value: unknown): Record<string, unknown> | undefined => {
+    if (!value || typeof value !== 'object') return undefined;
+    const outer = value as Record<string, unknown>;
+    const payload = outer.payload;
+    return payload && typeof payload === 'object' ? payload as Record<string, unknown> : outer;
+  };
+  const list = (value: unknown): Record<string, unknown>[] =>
+    Array.isArray(value) ? value.filter((x): x is Record<string, unknown> => !!x && typeof x === 'object') : [];
+
+  const money = (env.money ?? {}) as Record<string, unknown>;
+  const num = (key: string): number => Number(money[key] ?? 0) || 0;
+
+  return ok({
+    deal,
+    property: wrapped(env.property) as unknown as DealWorkspace['property'],
+    buyer: wrapped(env.buyer) as unknown as DealWorkspace['buyer'],
+    seller: env.seller ? (env.seller as unknown as DealWorkspace['seller']) : undefined,
+    stageHistory: list(env.stageHistory).map((e) => ({
+      stage: readDealStage(e.stage),
+      occurredAt: String(e.occurredAt ?? ''),
+      ...(e.note ? { note: String(e.note) } : {}),
+    })),
+    payments: list(env.payments).map((p) => ({
+      id: String(p.id ?? ''),
+      kind: String(p.kind ?? 'token') as DealPaymentKind,
+      amount: Number(p.amount ?? 0),
+      receivedOn: String(p.receivedOn ?? ''),
+      ...(p.note ? { note: String(p.note) } : {}),
+    })),
+    money: {
+      value: num('value'), token: num('token'),
+      expectedBuyer: num('expectedBuyer'), expectedSeller: num('expectedSeller'),
+      expected: num('expected'),
+      receivedBuyer: num('receivedBuyer'), receivedSeller: num('receivedSeller'),
+      received: num('received'), due: num('due'),
+      fullySettled: money.fullySettled === true,
+    },
+    dealPapers: list(env.dealPapers).map((d) => ({
+      id: String(d.id ?? ''), title: String(d.title ?? ''), type: String(d.type ?? 'other'),
+      bucket: String(d.bucket ?? 'deal-documents'), path: String(d.path ?? ''),
+      mimeType: String(d.mimeType ?? ''), sizeBytes: Number(d.sizeBytes ?? 0),
+      ...(d.createdAt ? { createdAt: String(d.createdAt) } : {}),
+    })),
+    propertyPapers: list(env.propertyPapers).map((d) => ({
+      id: String(d.id ?? ''),
+      propertyId: deal.propertyId,
+      title: String(d.title ?? ''),
+      type: String(d.type ?? 'other') as PropertyDocumentType,
+      storage: { bucket: 'property-documents' as const, path: String(d.path ?? '') },
+      mimeType: String(d.mimeType ?? ''),
+      sizeBytes: Number(d.sizeBytes ?? 0),
+      visibility: String(d.visibility ?? 'private') as PropertyDocumentVisibility,
+      safety: String(d.safety ?? 'private') as PropertyDocumentSafety,
+      ...(d.createdAt ? { createdAt: String(d.createdAt) } : {}),
+    })),
+  });
+}
+
+/**
+ * A completed sale opened from the Deal room still needs a PipelineDeal-shaped
+ * header. Its recordType is 'completed-sale', so the pipeline normalizer
+ * declines it — read the same fields at stage 'closed' instead. No value the
+ * dealer never recorded is invented.
+ */
+function normalizeCompletedPipelineView(id: string, payload: Record<string, unknown>): PipelineDeal | null {
+  const propertyId = String(payload.propertyId ?? payload.propId ?? '');
+  const buyerId = String(payload.buyerId ?? '');
+  if (!id || !propertyId || !buyerId) return null;
+  return normalizePipelineDeal(id, { ...payload, recordType: 'pipeline', stage: payload.stage ?? 'closed' });
 }
 
 class SupaDemand implements DemandRepository {

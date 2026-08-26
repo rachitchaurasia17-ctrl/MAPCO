@@ -84,6 +84,13 @@ export interface Property {
   mapPlacement?: { mapId: string; x: number; y: number };
   /** Canonical real-world location. Independent from masterplan/SVG placement. */
   location?: PropertyLocation;
+  /**
+   * Type-specific specifications (frontage, beds, cabins, ceiling height…).
+   * The valid key set is decided by the property's kind — see
+   * `property-specs.ts`. Changing `type` drops the keys the new kind does
+   * not accept, so a stale `beds` can never survive Flat → Plot.
+   */
+  specs?: import('./property-specs').PropertySpecs;
   /** Private owner details — dealer-only, never projected into a client link. */
   owner?: { name: string; phone: string; priceConfirmedAt?: string };
 }
@@ -182,10 +189,14 @@ export interface DealFieldPresence {
 }
 
 /**
- * A Deal is a COMPLETED property transaction — never an ongoing negotiation.
- * Ongoing buyer follow-ups live on Client, not here. Every field below is
- * dealer-private (buyer, seller, price, payment, commission, documents) and
- * must never appear in a ClientSafePayload / public client link.
+ * The COMPLETED-sale shape of a deal — the register row a finished
+ * transaction settles into. A deal still in flight is a `PipelineDeal`
+ * (below); both are the same canonical crm_records row at different
+ * points in its life, distinguished by recordType.
+ *
+ * Every field below is dealer-private (buyer, seller, price, payment,
+ * commission, documents) and must never appear in a ClientSafePayload
+ * or a public client link.
  */
 export interface Deal {
   id: string;
@@ -217,6 +228,144 @@ export interface Deal {
   timeline: DealTimelineEntry[];
   /** Adapter-derived only; omitted by complete in-memory/current records. */
   fieldPresence?: DealFieldPresence;
+}
+
+/* ───────────────────────────────────────────────────────────────
+   PIPELINE DEALS
+   `Deal` above stays the COMPLETED-sale register shape so existing
+   readers keep working. A deal in flight is a PipelineDeal: the same
+   canonical crm_records row, distinguished by recordType='pipeline'.
+   Marking a property sold completes the matching pipeline deal in
+   place rather than writing a second canonical deal.
+   ─────────────────────────────────────────────────────────────── */
+
+export type DealStage = 'negotiating' | 'token' | 'registry' | 'closed' | 'lost';
+
+/** Stages a dealer can move a deal to directly. Completion goes through
+ *  the sale command so property/buyer history move as one unit. */
+export type DealStageTransition = Exclude<DealStage, 'closed'>;
+
+export type CommissionMode = 'none' | 'pct' | 'fixed';
+
+/** One side of the brokerage. `percent` applies to the deal value. */
+export interface CommissionSide {
+  mode: CommissionMode;
+  percent?: number;
+  fixed?: number;
+}
+
+export interface DealCommission {
+  buyer: CommissionSide;
+  seller: CommissionSide;
+}
+
+export interface DealNextAction {
+  kind: string;
+  note?: string;
+  /** ISO yyyy-mm-dd */
+  dueOn?: string;
+}
+
+/** A deal in flight. Every field is dealer-private. */
+export interface PipelineDeal {
+  id: string;
+  stage: DealStage;
+  propertyId: string;
+  prop: string;
+  propSub: string;
+  city: string;
+  sector: string;
+  buyerId: string;
+  buyer: string;
+  sellerId?: string;
+  seller?: string;
+  sellerPhone?: string;
+  /** Current agreed value. Absent until the dealer records one. */
+  value?: number;
+  commission: DealCommission;
+  nextAction?: DealNextAction;
+  tokenDate?: string;
+  registryDate?: string;
+  lostReason?: string;
+  lostOn?: string;
+  createdAt?: string;
+}
+
+export type DealPaymentKind = 'token' | 'commission-buyer' | 'commission-seller';
+
+export interface DealPayment {
+  id: string;
+  kind: DealPaymentKind;
+  amount: number;
+  /** ISO yyyy-mm-dd */
+  receivedOn: string;
+  note?: string;
+}
+
+export interface DealStageEvent {
+  stage: DealStage;
+  occurredAt: string;
+  note?: string;
+}
+
+/**
+ * Commission arithmetic, computed server-side so the database, the read
+ * model and the UI can never disagree. A completed deal may still carry
+ * `due > 0` — commission outlives the sale.
+ */
+export interface DealMoney {
+  value: number;
+  token: number;
+  expectedBuyer: number;
+  expectedSeller: number;
+  expected: number;
+  receivedBuyer: number;
+  receivedSeller: number;
+  received: number;
+  due: number;
+  fullySettled: boolean;
+}
+
+/** A deal-owned paper. Property papers are referenced, never copied here. */
+export interface DealPaper {
+  id: string;
+  title: string;
+  type: string;
+  bucket: string;
+  path: string;
+  mimeType: string;
+  sizeBytes: number;
+  createdAt?: string;
+}
+
+/** The seller context a deal inherits through its canonical property. */
+export interface DealSellerContext {
+  id: string;
+  name: string;
+  primaryPhone: string;
+  type: SellerType;
+  relationship: SellerRelationship;
+  availability: SellerAvailability;
+  askingPrice?: number;
+  siteVisitInstructions?: string;
+}
+
+/**
+ * Everything the Deal room needs in one dealer-private round trip:
+ * canonical buyer/property/seller, stage history, the money ledger, the
+ * deal's own papers and — by reference, never duplicated — the canonical
+ * property's papers.
+ */
+export interface DealWorkspace {
+  deal: PipelineDeal;
+  property?: Property;
+  buyer?: Client;
+  seller?: DealSellerContext;
+  stageHistory: readonly DealStageEvent[];
+  payments: readonly DealPayment[];
+  money: DealMoney;
+  dealPapers: readonly DealPaper[];
+  propertyPapers: readonly PropertyDocument[];
 }
 
 export interface ClientLink {

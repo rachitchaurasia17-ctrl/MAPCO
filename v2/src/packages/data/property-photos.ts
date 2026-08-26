@@ -1,6 +1,7 @@
 import type { Property, PropertyPhotoStorageRef } from './types';
 import { normalizePropertyLocation } from './property-location';
 import { canonicalPropertyLifecycle } from './property-lifecycle';
+import { normalizePropertySpecs } from './property-specs';
 
 export const PROPERTY_PHOTO_BUCKET = 'property-photos';
 export const PROPERTY_PHOTO_MAX_BYTES = 5 * 1024 * 1024;
@@ -35,6 +36,9 @@ export function normalizePropertyPhotoStorage(value: unknown, propertyId?: strin
 
 export function persistentPropertyPayload(property: Property): Property {
   const location = normalizePropertyLocation(property.location);
+  // Project specs onto the current type's model so a type change cannot
+  // persist keys the new kind does not accept.
+  const specs = normalizePropertySpecs(property.type, property.specs);
   const persistent = {
     ...property,
     photos: (property.photos ?? []).filter(isPersistentExternalPhoto),
@@ -42,6 +46,8 @@ export function persistentPropertyPayload(property: Property): Property {
   };
   if (location) persistent.location = location;
   else delete persistent.location;
+  if (specs) persistent.specs = specs;
+  else delete persistent.specs;
   return canonicalPropertyLifecycle(persistent);
 }
 

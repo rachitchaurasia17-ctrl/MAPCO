@@ -10,6 +10,8 @@
 import type {
   Property, PropertyLocationInput, Client, Deal, ClientLink, MapData, DemandSignal,
   Seller, PropertySeller, SellerWithProperties, PropertyDocument,
+  PipelineDeal, DealPayment, DealPaymentKind, DealStageEvent, DealPaper,
+  DealWorkspace, CommissionSide,
 } from './types';
 import {
   PROPERTIES, CLIENTS, DEALS, CLIENT_LINKS, DEMAND_SIGNALS, persistMock,
@@ -19,6 +21,7 @@ import {
   type Scenario, type Result, type Page, type PageParams, type QueryOptions,
   type AuthRepository, type ActivationState, type AccountState,
   type PropertyRepository, type CustomerRepository, type DealRepository, type RecordSaleInput,
+  type StartDealInput, type SetDealStageInput, type RecordDealPaymentInput,
   type SellerRepository, type SaveSellerInput, type AssignPropertySellerInput,
   type PropertyDocumentRepository, type UploadPropertyDocumentInput,
   type DemandRepository, type DemandRecord, type DemandDraft, type DemandMatch,
@@ -44,7 +47,7 @@ import {
   propertyLocationValidationError,
   propertyLocationPoint,
 } from './property-location';
-import { normalizeCompletedDeal } from './deal-normalization';
+import { normalizeCompletedDeal, expectedCommissionSide } from './deal-normalization';
 import { canonicalPropertyLifecycle, propertyLifecycleValidationError } from './property-lifecycle';
 import {
   PROPERTY_DOCUMENT_BUCKET,
@@ -61,6 +64,13 @@ const MOCK_PROPERTY_DOCUMENT_OBJECTS = new Map<string, string>();
 const MOCK_SELLERS: Seller[] = [];
 const MOCK_PROPERTY_SELLERS: PropertySeller[] = [];
 const MOCK_PROPERTY_DOCUMENTS: PropertyDocument[] = [];
+
+/* Pipeline deal stores. Empty by construction — a deal only exists once the
+   dealer starts one, so mock mode never shows an invented negotiation. */
+const PIPELINE_DEALS: PipelineDeal[] = [];
+const DEAL_STAGE_EVENTS: (DealStageEvent & { dealId: string })[] = [];
+const DEAL_PAYMENTS: (DealPayment & { dealId: string })[] = [];
+const DEAL_PAPERS: (DealPaper & { dealId: string })[] = [];
 let mockSequence = 0;
 const mockId = (prefix: string): string => `${prefix}-${Date.now()}-${++mockSequence}`;
 
@@ -438,10 +448,175 @@ class MockDealRepository implements DealRepository {
     prop.sale = { finalPrice: input.soldPrice, soldAt: input.saleDate, buyerId: buyer.id, dealId: deal.id };
     DEALS.unshift(deal);
     buyer.purchased = [...(buyer.purchased ?? []), prop.id];
+    // Complete a matching open pipeline deal in place rather than leaving a
+    // duplicate behind, mirroring plotmap_record_completed_sale.
+    const openPipeline = PIPELINE_DEALS.find((d) =>
+      d.propertyId === prop.id && d.buyerId === buyer!.id && d.stage !== 'closed' && d.stage !== 'lost');
+    if (openPipeline) openPipeline.stage = 'closed';
     persistMock();
     publishResourceInvalidation({ entity: 'inventory', id: prop.id });
 
     return ok(deal);
+  }
+
+  /* ── pipeline ── */
+
+  async listPipeline(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<PipelineDeal>>> {
+    const a = aborted<Page<PipelineDeal>>(opts); if (a) return a;
+    const s = scenarioResult<PipelineDeal>(); if (s) return s;
+    return ok(paginate([...PIPELINE_DEALS], params, (d, q) =>
+      `${d.prop} ${d.buyer} ${d.seller ?? ''} ${d.city} ${d.sector}`.toLowerCase().includes(q)));
+  }
+
+  async start(input: StartDealInput, opts?: QueryOptions): Promise<Result<PipelineDeal>> {
+    const a = aborted<PipelineDeal>(opts); if (a) return a;
+    const prop = PROPERTIES.find((p) => p.id === input.propertyId);
+    if (!prop) return err('not_found', 'That property is no longer available');
+    if (prop.sold || prop.lifecycle === 'sold') return err('validation', 'This property is already sold');
+
+    let buyer = input.buyerId ? CLIENTS.find((c) => c.id === input.buyerId) : undefined;
+    if (!buyer) {
+      if (!input.newBuyer?.name) return err('validation', 'Choose or add a buyer');
+      buyer = {
+        id: mockId('client'), name: input.newBuyer.name, phone: input.newBuyer.phone || '',
+        city: '', want: '', budget: '', budgetMax: 0, status: 'active', seen: '', note: '',
+        viewed: [], interest: [], purchased: [],
+        profileCompleteness: 'needs-attention', missingFields: ['city', 'requirements', 'budget'],
+      };
+      CLIENTS.unshift(buyer);
+    }
+
+    const existing = PIPELINE_DEALS.find((d) =>
+      d.propertyId === prop.id && d.buyerId === buyer!.id && d.stage !== 'closed' && d.stage !== 'lost');
+    if (existing) return ok(existing);
+
+    const relationship = MOCK_PROPERTY_SELLERS.find((row) => row.propertyId === prop.id && row.isPrimary);
+    const primarySeller = MOCK_SELLERS.find((seller) => seller.id === relationship?.sellerId);
+    const side = (s?: { mode?: string; percent?: number; fixed?: number }): CommissionSide => {
+      const mode = s?.mode === 'pct' || s?.mode === 'fixed' ? s.mode : 'none';
+      return {
+        mode,
+        ...(mode === 'pct' && s?.percent !== undefined ? { percent: s.percent } : {}),
+        ...(mode === 'fixed' && s?.fixed !== undefined ? { fixed: s.fixed } : {}),
+      };
+    };
+
+    const deal: PipelineDeal = {
+      id: mockId('deal'),
+      stage: input.stage ?? 'negotiating',
+      propertyId: prop.id,
+      prop: `${prop.area} ${prop.type.toLowerCase().includes('plot') ? 'plot' : 'site'}`,
+      propSub: `${prop.size} · ${prop.facing}`,
+      city: prop.city, sector: prop.sector || prop.loc,
+      buyerId: buyer.id, buyer: buyer.name,
+      ...(primarySeller ? { sellerId: primarySeller.id, seller: primarySeller.name, sellerPhone: primarySeller.primaryPhone } : {}),
+      ...(input.value !== undefined ? { value: input.value } : {}),
+      commission: { buyer: side(input.commission?.buyer), seller: side(input.commission?.seller) },
+      ...(input.nextAction ? { nextAction: input.nextAction } : {}),
+      createdAt: new Date().toISOString().slice(0, 10),
+    };
+    PIPELINE_DEALS.unshift(deal);
+    DEAL_STAGE_EVENTS.push({ dealId: deal.id, stage: deal.stage, occurredAt: new Date().toISOString(), note: 'Deal created' });
+    persistMock();
+    return ok(deal);
+  }
+
+  async setStage(input: SetDealStageInput, opts?: QueryOptions): Promise<Result<PipelineDeal>> {
+    const a = aborted<PipelineDeal>(opts); if (a) return a;
+    const deal = PIPELINE_DEALS.find((d) => d.id === input.dealId);
+    if (!deal) return err('not_found', 'That deal is no longer available');
+    if (deal.stage === 'closed') return err('validation', 'This deal is already completed');
+
+    deal.stage = input.stage;
+    if (input.stage === 'lost') {
+      deal.lostReason = input.reason || 'Not recorded';
+      deal.lostOn = new Date().toISOString().slice(0, 10);
+    }
+    if (input.stage === 'token' && input.tokenDate) deal.tokenDate = input.tokenDate;
+    if (input.stage === 'registry' && input.registryDate) deal.registryDate = input.registryDate;
+    DEAL_STAGE_EVENTS.push({
+      dealId: deal.id, stage: input.stage, occurredAt: new Date().toISOString(),
+      ...(input.note ? { note: input.note } : {}),
+    });
+    persistMock();
+    return ok(deal);
+  }
+
+  async recordPayment(input: RecordDealPaymentInput, opts?: QueryOptions): Promise<Result<DealPayment>> {
+    const a = aborted<DealPayment>(opts); if (a) return a;
+    if (!(input.amount > 0)) return err('validation', 'Enter an amount');
+    const known = PIPELINE_DEALS.some((d) => d.id === input.dealId) || DEALS.some((d) => d.id === input.dealId);
+    if (!known) return err('not_found', 'That deal is no longer available');
+    const payment: DealPayment = {
+      id: mockId('ddp'), kind: input.kind, amount: input.amount,
+      receivedOn: input.receivedOn || new Date().toISOString().slice(0, 10),
+      ...(input.note ? { note: input.note } : {}),
+    };
+    DEAL_PAYMENTS.push({ dealId: input.dealId, ...payment });
+    persistMock();
+    return ok(payment);
+  }
+
+  async workspace(dealId: string, opts?: QueryOptions): Promise<Result<DealWorkspace>> {
+    const a = aborted<DealWorkspace>(opts); if (a) return a;
+    let deal = PIPELINE_DEALS.find((d) => d.id === dealId);
+    if (!deal) {
+      // A completed sale opened from the Deal room reads at stage 'closed'.
+      const sale = DEALS.find((d) => String(d.id) === dealId);
+      const completed = sale && normalizeCompletedDeal(String(sale.id), sale as unknown as Record<string, unknown>);
+      if (!completed) return err('not_found', 'That deal is no longer available');
+      deal = {
+        id: completed.id, stage: 'closed', propertyId: completed.propId, prop: completed.prop,
+        propSub: completed.propSub, city: completed.city, sector: completed.sector,
+        buyerId: completed.buyerId, buyer: completed.buyer,
+        ...(completed.sellerId ? { sellerId: completed.sellerId } : {}),
+        ...(completed.seller ? { seller: completed.seller } : {}),
+        value: completed.soldPrice,
+        commission: { buyer: { mode: 'none' }, seller: { mode: 'none' } },
+      };
+    }
+
+    const property = PROPERTIES.find((p) => p.id === deal!.propertyId);
+    const buyer = CLIENTS.find((c) => c.id === deal!.buyerId);
+    const relationship = MOCK_PROPERTY_SELLERS.find((r) => r.propertyId === deal!.propertyId && r.isPrimary);
+    const sellerRecord = MOCK_SELLERS.find((s) => s.id === relationship?.sellerId);
+    const payments = DEAL_PAYMENTS.filter((p) => p.dealId === deal!.id);
+    const sum = (kind: DealPaymentKind) => payments
+      .filter((p) => p.kind === kind).reduce((total, p) => total + p.amount, 0);
+
+    const value = deal.value ?? 0;
+    const expectedBuyer = expectedCommissionSide(value, deal.commission.buyer);
+    const expectedSeller = expectedCommissionSide(value, deal.commission.seller);
+    const receivedBuyer = sum('commission-buyer');
+    const receivedSeller = sum('commission-seller');
+    const expected = expectedBuyer + expectedSeller;
+    const received = receivedBuyer + receivedSeller;
+
+    return ok({
+      deal,
+      property,
+      buyer,
+      seller: sellerRecord && relationship ? {
+        id: sellerRecord.id, name: sellerRecord.name, primaryPhone: sellerRecord.primaryPhone,
+        type: sellerRecord.type, relationship: relationship.relationship,
+        availability: relationship.availability,
+        ...(relationship.askingPrice !== undefined ? { askingPrice: relationship.askingPrice } : {}),
+        ...(relationship.siteVisitInstructions ? { siteVisitInstructions: relationship.siteVisitInstructions } : {}),
+      } : undefined,
+      stageHistory: DEAL_STAGE_EVENTS.filter((e) => e.dealId === deal!.id)
+        .map(({ stage, occurredAt, note }) => ({ stage, occurredAt, ...(note ? { note } : {}) })),
+      payments: payments.map(({ dealId: _d, ...rest }) => rest),
+      money: {
+        value, token: sum('token'),
+        expectedBuyer, expectedSeller, expected,
+        receivedBuyer, receivedSeller, received,
+        due: Math.max(0, expected - received),
+        fullySettled: expected > 0 && received >= expected,
+      },
+      dealPapers: DEAL_PAPERS.filter((d) => d.dealId === deal!.id).map(({ dealId: _d, ...rest }) => rest),
+      // Referenced from the canonical property — never copied into the deal.
+      propertyPapers: MOCK_PROPERTY_DOCUMENTS.filter((d) => d.propertyId === deal!.propertyId),
+    });
   }
 }
 

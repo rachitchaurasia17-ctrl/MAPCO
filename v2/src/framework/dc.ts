@@ -3,10 +3,21 @@ export class DCLogic {
   
   constructor() {
     this.setState = this.setState.bind(this);
+    this.forceUpdate = this.forceUpdate.bind(this);
   }
 
   setState(newState: any) {
     this.state = { ...this.state, ...newState };
+    this.render();
+  }
+
+  /**
+   * Re-render after mutating data held on the instance rather than in `state`
+   * (collections like `properties`, `clients`, `clientLinks`, `deals`).
+   * `setState` cannot be used there because the change is not a state patch,
+   * and without this the DOM keeps showing the pre-mutation value.
+   */
+  forceUpdate() {
     this.render();
   }
 

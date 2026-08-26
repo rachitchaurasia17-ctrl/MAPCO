@@ -20,6 +20,8 @@ import type {
   Property, PropertyLocationInput, Client, Deal, ClientLink, MapData, DemandSignal,
   Seller, PropertySeller, SellerWithProperties, PropertyDocument, PropertyDocumentType,
   PropertyDocumentVisibility, PropertyDocumentSafety,
+  PipelineDeal, DealCommission, DealNextAction, DealStageTransition,
+  DealPayment, DealPaymentKind, DealWorkspace,
 } from './types';
 
 /* ───────────────────────────────────────────────────────────────
@@ -267,15 +269,66 @@ export interface RecordSaleInput {
   documents?: { name: string; kind?: string }[];
 }
 
+/** Start a deal from an existing Client + Property. Neither is duplicated. */
+export interface StartDealInput {
+  propertyId: string;
+  /** existing canonical client id, or provide newBuyer to create a minimal one. */
+  buyerId?: string;
+  newBuyer?: { name: string; phone?: string };
+  /** A deal may open at negotiating, token or registry — never at closed. */
+  stage?: 'negotiating' | 'token' | 'registry';
+  value?: number;
+  commission?: Partial<DealCommission>;
+  nextAction?: DealNextAction;
+}
+
+export interface SetDealStageInput {
+  dealId: string;
+  stage: DealStageTransition;
+  /** Required when moving to `lost`; persisted so the deal never disappears. */
+  reason?: string;
+  tokenDate?: string;
+  registryDate?: string;
+  note?: string;
+}
+
+export interface RecordDealPaymentInput {
+  dealId: string;
+  kind: DealPaymentKind;
+  amount: number;
+  /** ISO yyyy-mm-dd; defaults to today when omitted. */
+  receivedOn?: string;
+  note?: string;
+}
+
 export interface DealRepository {
+  /** The completed-sales register. */
   list(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<Deal>>>;
   get(id: string, opts?: QueryOptions): Promise<Result<Deal>>;
   /**
    * Record a completed sale as a single safe transaction. Partial completion
    * must be impossible: either the property, deal and buyer history all update,
-   * or none do.
+   * or none do. When an open pipeline deal already exists for the same buyer
+   * and property it is COMPLETED in place rather than duplicated.
    */
   record(input: RecordSaleInput, opts?: QueryOptions): Promise<Result<Deal>>;
+
+  /* ── pipeline ── */
+
+  /** Deals in flight, newest first. Completed sales are not included. */
+  listPipeline(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<PipelineDeal>>>;
+  /**
+   * Open a deal on a canonical Client + Property. Seller context is inherited
+   * through the property↔seller relationship — never re-entered. Re-issuing
+   * the same start returns the existing open deal instead of a duplicate.
+   */
+  start(input: StartDealInput, opts?: QueryOptions): Promise<Result<PipelineDeal>>;
+  /** Persist a stage transition and append it to the deal's history. */
+  setStage(input: SetDealStageInput, opts?: QueryOptions): Promise<Result<PipelineDeal>>;
+  /** Append a token or commission receipt to the deal's money ledger. */
+  recordPayment(input: RecordDealPaymentInput, opts?: QueryOptions): Promise<Result<DealPayment>>;
+  /** Everything the Deal room renders, in one dealer-private round trip. */
+  workspace(dealId: string, opts?: QueryOptions): Promise<Result<DealWorkspace>>;
 }
 
 /* ───────────────────────────────────────────────────────────────
