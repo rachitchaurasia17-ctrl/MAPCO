@@ -23,6 +23,7 @@ export class Component extends DCLogic {
     cform: { name: '', phone: '', want: 'Plot', city: 'Mohali', budgetFrom: '', budgetTo: '', unit: 'Cr', note: '', plots: [] },
     contactMode: 'clients', cliQ: '', cliFilter: 'all', sellQ: '', addClientBig: false, addSellerOpen: false, sellerProfile: null,
     savingSeller: false, sellerError: '', sellerEditId: null,
+    savingSold: false, soldError: '', propError: '', propMissing: [],
     cliEdit: false, noteDraft: '', cpPick: false, cpPickQ: '', cpGroup: 'shortlisted', linkView: null, linkTab: 'focus', lkQ: '', lkFilter: 'all', linksTab: 'props', arch: null,
     cf: { name: '', phone: '', phone2: '', business: '', city: '', types: [], areas: [], budgetFrom: '', budgetTo: '', sizeFrom: '', sizeTo: '', prefs: [], customPref: '', stage: 'Just looking', note: '', areaDraft: '' },
     sf2: { name: '', phone: '', phone2: '', business: '', kind: 'Individual', city: '', note: '' },
@@ -215,20 +216,10 @@ export class Component extends DCLogic {
     },
   ];
   ;
-  clients = [
-    { id: 'C1', name: 'Harpreet Singh Gill', phone: '+91 98146 22107', city: 'Mohali', budget: '₹1.5–1.8 Cr', budgetMax: 18000000, want: 'Plot', status: 'active', seen: 'today', note: 'Wants East-facing, ready for registry.', viewed: ['Mohali', 'Sector 79', 'Plot 250 sq yd'], interest: ['P1', 'P2'] },
-    { id: 'C2', name: 'Simarjeet Kaur', phone: '+91 99885 31220', city: 'Aerocity', budget: '₹2.5–3 Cr', budgetMax: 30000000, want: 'Plot', status: 'active', seen: 'today', note: 'Comparing Aerocity vs New Chandigarh.', viewed: ['Aerocity', 'Sector map', 'Plot 300 sq yd'], interest: ['P5'] },
-    { id: 'C3', name: 'Dr. Neeraj Verma', phone: '+91 98720 55014', city: 'Panchkula', budget: '₹3–3.5 Cr', budgetMax: 35000000, want: 'Kothi', status: 'active', seen: 'yesterday', note: 'Kothi buyer, decision this month.', viewed: ['Panchkula', 'Sector 9', 'Kothi 300 sq yd'] },
-    { id: 'C4', name: 'Anil Mehta', phone: '+91 98723 11900', city: 'Zirakpur', budget: '₹70–90 L', budgetMax: 9000000, want: 'Flat', status: 'warm', seen: '2 days ago', note: 'Budget-conscious, first enquiry.', viewed: ['Zirakpur', 'Builder Floor'] },
-    { id: 'C5', name: 'Baldev Raj Jindal', phone: '+91 98555 71220', city: 'New Chandigarh', budget: '₹4.5–5 Cr', budgetMax: 50000000, want: 'Villa', status: 'active', seen: 'today', note: 'Premium villa, wants gated society.', viewed: ['New Chandigarh', 'Omaxe', 'Villa 400 sq yd'] },
-    { id: 'C6', name: 'Rajesh Bansal', phone: '+91 94170 88231', city: 'New Chandigarh', budget: '₹2–2.5 Cr', budgetMax: 25000000, want: 'Plot', status: 'warm', seen: '3 days ago', note: 'Investor, comparing sectors.', viewed: ['New Chandigarh', 'Eco City'] },
-    { id: 'C7', name: 'Vikram Ahluwalia', phone: '+91 98159 74430', city: 'Mohali', budget: '₹1.2–1.4 Cr', budgetMax: 14000000, want: 'Plot', status: 'active', seen: 'yesterday', note: 'Token discussed, close to token.', viewed: ['Mohali', 'Sector 88'] },
-    { id: 'C8', name: 'Sunita Rani', phone: '+91 98550 09912', city: 'Aerocity', budget: '₹1 Cr', budgetMax: 10500000, want: 'Flat', status: 'closed', seen: 'last week', note: 'Deal closed — registry done.', viewed: ['Aerocity', '3 BHK Flat'] },
-    { id: 'C9', name: 'Gurdeep Singh Sandhu', phone: '+91 98761 30022', city: 'Kharar', budget: '₹55–70 L', budgetMax: 7000000, want: 'Plot', status: 'cold', seen: '2 weeks ago', note: 'Just browsing for now.', viewed: ['Kharar'] },
-    { id: 'C10', name: 'Manpreet Sethi', phone: '+91 98140 66710', city: 'Chandigarh', budget: '₹4 Cr+', budgetMax: 45000000, want: 'Kothi', status: 'cold', seen: 'this week', note: 'Went with another dealer — keep warm.', viewed: ['Chandigarh', 'Sector 22'] },
-    { id: 'C11', name: 'Karan Gupta', phone: '+91 98729 40561', city: 'Aerotropolis', budget: '₹1.5–2 Cr', budgetMax: 20000000, want: 'Plot', status: 'warm', seen: 'today', note: 'NRI, wants GMADA plot near airport.', viewed: ['Aerotropolis', 'Plot 250 sq yd'] },
-    { id: 'C12', name: 'Ramesh Yadav', phone: '+91 94654 22890', city: 'Derabassi', budget: '₹40–55 L', budgetMax: 5500000, want: 'Plot', status: 'warm', seen: '4 days ago', note: 'First-time buyer, small plot.', viewed: ['Derabassi'] },
-  ];
+  /* Clients are canonical — Mark Sold resolves the buyer server-side and
+     appends to that client's purchase history, so a fixture id would not
+     exist. Filled in place by deskStore.loadClients(). */
+  clients = deskStore.clients;
   newClients = ['C5', 'C7', 'C11'];
   CLIX = {
     C1: { types: ['Residential Plot'], areas: ['Sector 79, Mohali', 'Sector 88, Mohali'], bFrom: 1.5, bTo: 1.8, sizeFrom: '250', sizeTo: '300', prefs: ['East facing', 'Ready for registry', 'Corner'], stage: 'Negotiating', business: 'Gill Transport Co.', notes: [{ t: '2 days ago', x: 'Brother is coming next Saturday to see Sector 79.' }, { t: 'Last week', x: 'Only wants ready-for-registry. No GPA.' }] },
@@ -320,58 +311,18 @@ export class Component extends DCLogic {
     if (l.status === 'active' && !l.opens) out.push({ t: 'Link sent but never opened', w: 'Sent ' + l.created, i: 'ph-fill ph-envelope-simple', c: '#6b6156', b: '#efeae2' });
     return out;
   }
-  properties = [
-    { id: 'P1', type: 'Residential Plot', want: 'Plot', size: '250 sq yd', loc: 'Sector 79, Mohali', city: 'Mohali', facing: 'East', price: 16500000, status: 'available', ready: true, views: 24 },
-    { id: 'P2', type: 'Residential Plot', want: 'Plot', size: '200 sq yd', loc: 'Sector 88, Mohali', city: 'Mohali', facing: 'South', price: 12800000, status: 'available', ready: true, views: 15 },
-    { id: 'P3', type: '3 BHK Flat', want: 'Flat', size: '1800 sq ft', loc: 'Sector 66, Mohali', city: 'Mohali', facing: 'East', price: 13500000, status: 'available', ready: true, views: 11 },
-    { id: 'P4', type: 'Commercial SCO', want: 'Commercial', size: '120 sq yd', loc: 'Sector 82, Mohali', city: 'Mohali', facing: '—', price: 45000000, status: 'available', ready: false, views: 7, gap: 'No photo yet — add one to show it' },
-    { id: 'P5', type: 'Residential Plot', want: 'Plot', size: '300 sq yd', loc: 'Aerocity, Mohali', city: 'Aerocity', facing: 'West', price: 27500000, status: 'available', ready: true, views: 27 },
-    { id: 'P6', type: '3 BHK Flat', want: 'Flat', size: '1650 sq ft', loc: 'Aerocity, Mohali', city: 'Aerocity', facing: 'East', price: 10500000, status: 'onhold', ready: true, views: 12 },
-    { id: 'P7', type: 'Residential Plot', want: 'Plot', size: '250 sq yd', loc: 'GMADA Aerotropolis', city: 'Aerotropolis', facing: 'North-East', price: 19500000, status: 'available', ready: true, views: 16 },
-    { id: 'P8', type: 'Residential Plot', want: 'Plot', size: '200 sq yd', loc: 'GMADA Aerotropolis', city: 'Aerotropolis', facing: 'North', price: 15500000, status: 'available', ready: false, views: 6, gap: 'Sector map not linked yet' },
-    { id: 'P9', type: 'Residential Plot', want: 'Plot', size: '500 sq yd', loc: 'Eco City, New Chandigarh', city: 'New Chandigarh', facing: 'North-East', price: 23500000, status: 'available', ready: true, views: 31 },
-    { id: 'P10', type: 'Villa', want: 'Villa', size: '400 sq yd', loc: 'Omaxe, New Chandigarh', city: 'New Chandigarh', facing: 'North-East', price: 48000000, status: 'onhold', ready: true, views: 21 },
-    { id: 'P11', type: 'Builder Floor', want: 'Flat', size: '1450 sq ft', loc: 'VIP Road, Zirakpur', city: 'Zirakpur', facing: 'East', price: 7800000, status: 'available', ready: true, views: 9 },
-    {
-      id: 'P12', type: 'Residential Plot', want: 'Plot', size: '250 sq yd', loc: 'Dhakoli, Zirakpur', city: 'Zirakpur', facing: 'North', price: 9800000, status: 'sold', ready: true, views: 33,
-      sale: { price: 9800000, comm: 147000, date: '12 August', buyerName: 'Harpreet Singh Gill', buyerPhone: '98764 33012', buyerId: 'C1' }
-    },
-    { id: 'P13', type: 'Kothi', want: 'Kothi', size: '300 sq yd', loc: 'Sector 9, Panchkula', city: 'Panchkula', facing: 'West', price: 32000000, status: 'available', ready: true, views: 18 },
-    { id: 'P14', type: 'Commercial Booth', want: 'Commercial', size: '60 sq yd', loc: 'Sector 20, Panchkula', city: 'Panchkula', facing: '—', price: 19500000, status: 'available', ready: false, views: 3, gap: 'No photo, no sector map' },
-    { id: 'P15', type: 'Residential Plot', want: 'Plot', size: '150 sq yd', loc: 'Sunny Enclave, Kharar', city: 'Kharar', facing: 'East', price: 6200000, status: 'available', ready: false, views: 4, gap: 'No photo yet — add one to show it' },
-    { id: 'P16', type: 'Residential Plot', want: 'Plot', size: '200 sq yd', loc: 'Bhankharpur, Derabassi', city: 'Derabassi', facing: 'North', price: 5200000, status: 'available', ready: true, views: 5 },
-    { id: 'P17', type: 'Kothi', want: 'Kothi', size: '500 sq yd', loc: 'Sector 22, Chandigarh', city: 'Chandigarh', facing: 'East', price: 65000000, status: 'available', ready: true, views: 14 },
-  ];
+  /* Inventory is canonical. This is the store's own array by reference —
+     deskStore.loadProperties() fills it in place from the repository
+     boundary. No property fixture remains, so Supabase mode can only show
+     the dealer's real inventory. */
+  properties = deskStore.properties;
   today = { sessions: 3, areas: 9, topArea: 'New Chandigarh' };
-  initPublished() {
-    if (this._pub) return; this._pub = true; for (const pr of this.properties) {
-      if (pr.published === undefined) pr.published = !!pr.ready && pr.status !== 'sold';
-      if (pr.photoCount === undefined) pr.photoCount = /photo/i.test(pr.gap || '') ? 0 : 6;
-      if (pr.frontage === undefined) {
-        const K = this.kindOf(pr.type); const seed = { ...(this.SEEDDET[K] || {}) };
-        const d = this.dimsFromSize(pr.size);
-        const sqft = d ? d.yd * 9 : 0;
-        if (d) {
-          seed.frontage = d.f; seed.depth = d.d;
-          if (K === 'plot') { seed.dimFront = d.f; seed.dimBack = d.f; seed.dimLeft = d.d; seed.dimRight = d.d; }
-          if (K === 'kothi' || K === 'villa' || K === 'sco' || K === 'indplot') seed.landArea = String(d.yd);
-          const R = (x) => String(Math.round(x / 10) * 10);
-          if (K === 'flat' || K === 'bfloor') { seed.builtup = R(sqft); seed.carpet = R(sqft * 0.8); }
-          if (K === 'kothi' || K === 'villa') { seed.builtup = R(sqft * (K === 'kothi' ? 1.7 : 1.4)); seed.carpet = R(sqft * (K === 'kothi' ? 1.45 : 1.2)); }
-          if (K === 'sco') { seed.builtup = R(sqft * 3.2); seed.basementArea = R(sqft * 0.8); }
-          if (K === 'booth') { seed.carpet = R(sqft); }
-          if (K === 'office') { seed.carpet = R(sqft * 0.78); seed.builtup = R(sqft); }
-          if (K === 'showroom') { seed.carpet = R(sqft); seed.basementArea = R(sqft * 0.45); seed.shutter = seed.frontage; }
-          if (K === 'indplot') { seed.shedArea = R(sqft * 0.55); seed.yardArea = R(sqft * 0.2); }
-        }
-        Object.keys(seed).forEach(k => { if (pr[k] === undefined) pr[k] = seed[k]; });
-      }
-      if (pr.earth === undefined) pr.earth = !(pr.id === 'P14' || pr.id === 'P15');
-      if (pr.ps === undefined) pr.ps = this.PROPSELLER[pr.id] ? { ...this.PROPSELLER[pr.id] } : null;
-      if (pr.docs === undefined) pr.docs = (pr.ps && pr.ps.docs ? pr.ps.docs : []).map((d, i) => ({ name: d, kind: d, img: i % 3 }));
-      if (pr.highlights === undefined) pr.highlights = this.DEFHL[pr.id] || [];
-    }
-  }
+  /* Specifications used to be SYNTHESISED here at mount — a whole spec
+     sheet invented per property from SEEDDET + dimsFromSize, so the rich
+     Overview a dealer saw was generated, never entered. Canonical specs
+     now arrive with the property and a field the dealer never filled in
+     stays empty. Nothing is seeded. */
+  initPublished() { this._pub = true; }
   /* Sellers are canonical. This is the store's own array by reference —
      deskStore.loadSellers() fills it in place from the repository
      boundary. There is no seller fixture here, so Supabase mode can only
@@ -386,29 +337,10 @@ export class Component extends DCLogic {
     { k: 'Authority NOC / Transfer Permission', l: 'Authority NOC', i: 'ph-fill ph-stamp' },
     { k: 'Possession Letter', l: 'Possession Letter', i: 'ph-fill ph-key' }];
   DOCTYPES = ['Registry / Sale Deed', 'Previous Registry / Title Chain', 'Encumbrance / Mortgage Release / Bank NOC', 'Jamabandi / Fard', 'Mutation', 'Allotment Letter', 'Lease Deed', 'Conveyance Deed', 'Authority NOC / Transfer Permission', 'Authority No-Dues Certificate (NDC)', 'Approved Layout Plan', 'CLU / Development Licence', 'Sanctioned Building Plan', 'Occupancy Certificate (OC)', 'Completion Certificate (CC)', 'RERA Certificate', 'Agreement to Sell / Builder Buyer Agreement', 'Property Tax Receipt / Property ID', 'Possession Letter', 'Power of Attorney (GPA / SPA)', 'Society NOC / Share Certificate / Maintenance NDC', 'Lease / Rent Agreement', 'Inheritance / Will / Legal-Heir / Release Documents', 'Tax / TDS / GST Closing Documents', 'Other Document'];
-  PROPSELLER = {
-    P1: { sellerId: 'SL1', askPrice: 14200000, relation: 'Owner', availConfirmed: true, lastConfirmed: '2 days ago', visitNote: 'Call before coming, the gate stays locked.', note: 'Wants a fast close, will adjust 4–5 lakh.', docs: ['Registry', 'Possession Letter'] },
-    P5: { sellerId: 'SL2', askPrice: 9800000, relation: 'Builder', availConfirmed: true, lastConfirmed: 'Today', visitNote: 'Site office open 10 am – 6 pm, ask for Rajan.', note: 'Builder pays 1% to us on closing.', docs: ['Allotment Letter', 'RERA / Approval'] },
-    P9: { sellerId: 'SL3', askPrice: 6400000, relation: 'Co-owner', availConfirmed: false, lastConfirmed: '3 weeks ago', visitNote: 'Keys with the neighbour.', note: 'Brother must also sign — confirm before token.', docs: ['Registry'] },
-    P10: { sellerId: 'SL4', askPrice: 11500000, relation: 'Authorized Seller', availConfirmed: true, lastConfirmed: '5 days ago', visitNote: 'Any day, give an hour of notice.', note: '', docs: ['Registry', 'RERA / Approval'] },
-    P2: { sellerId: 'SL2', askPrice: 8600000, relation: 'Owner', availConfirmed: true, lastConfirmed: 'Yesterday', visitNote: 'Owner stays in Ludhiana — his cousin opens the plot.', note: 'Will not go below 86 lakh before Diwali.', docs: ['Registry', 'Jamabandi / Fard', 'Mutation'] },
-    P7: { sellerId: 'SL1', askPrice: 15400000, relation: 'Owner', availConfirmed: false, lastConfirmed: '11 days ago', visitNote: 'Only Sunday mornings.', note: 'Asked us to keep the price off the internet.', docs: ['Registry', 'Property Tax Receipt'] },
-    P13: { sellerId: 'SL4', askPrice: 30500000, relation: 'Authorized Seller', availConfirmed: true, lastConfirmed: '4 days ago', visitNote: 'Guard has the keys, call the gate first.', note: 'Two brothers own it jointly, both will sign.', docs: ['Registry', 'Sanctioned Building Plan', 'Occupancy Certificate (OC)', 'Society NOC'] },
-    P12: { sellerId: 'SL3', askPrice: 9600000, relation: 'Owner', availConfirmed: true, lastConfirmed: 'On sale day', visitNote: '', note: 'Sold at 98 lakh after two visits. Papers cleared in 9 days.', docs: ['Registry', 'Mutation', 'Tax / TDS Closing Documents'] }
-  };
-  SEEDDET = {
-    plot: { frontage: '50', depth: '45', openSides: 'Two side', road: '40', road2: '24', shape: 'Regular', level: 'Level with road', block: 'B', parkFacing: true, mainRoad: false, tenure: 'Freehold', approvalNote: 'GMADA approved', dimFront: '50', dimBack: '50', dimLeft: '45', dimRight: '45' },
-    indplot: { access: 'Two-side access', powerLoad: '75 KVA', water: true, sewer: true, built: true, ceiling: '28', loadingBay: true, officeBlock: true, phase: 'Phase 8B, Mohali', tenure: 'Leasehold', use: 'Warehouse' },
-    flat: { config: '3 BHK', beds: '3', baths: '3', balconies: '2', kitchens: '1', floor: '2nd', totalFloors: '4', road: '30', parking: '1', furnishing: 'Semi-furnished', living: true, dining: true, store: true, puja: true, servant: false, lift: true, powerBackup: true, security: true, age: '1–5 years', possession: 'Ready to move', flooring: 'Vitrified', maintenance: '₹2,400', modularKitchen: true, wardrobes: true, piped: true },
-    bfloor: { config: '3 BHK', beds: '3', baths: '3', balconies: '2', kitchens: '1', floor: 'First', totalFloors: '3', parking: '1', furnishing: 'Unfurnished', living: true, dining: true, store: true, puja: true, sepEntry: true, stilt: true, powerBackup: true, age: '1–5 years', flooring: 'Vitrified', road: '40' },
-    kothi: { floorCount: '2', beds: '5', baths: '5', kitchens: '2', parking: '2', furnishing: 'Semi-furnished', living: true, dining: true, store: true, puja: true, servant: true, servantBath: true, lawn: true, lawnArea: '80', basement: true, basementArea: '900', terrace: true, portico: true, borewell: true, powerBackup: true, age: '5–10 years', tenure: 'Freehold', road: '40', floorPlan: 'Ground — 2 bed, 2 bath, kitchen, drawing · First — 3 bed, 3 bath, kitchen' },
-    villa: { floorCount: '2', beds: '4', baths: '4', kitchens: '1', parking: '2', furnishing: 'Furnished', living: true, dining: true, store: true, servant: true, lawn: true, lawnArea: '60', terrace: true, stilt: true, lift: true, powerBackup: true, security: true, age: 'New', tenure: 'Freehold', road: '30' },
-    sco: { floorCount: '4', washrooms: '4', basement: true, ceiling: '12', corner: true, pantry: true, lift: true, powerBackup: true, terrace: true, parking: '2', fitout: 'Semi-finished', use: 'Office', tenure: 'Freehold', road: '80', floorPlan: 'Ground — showroom · First — office · Second — vacant · Third — vacant' },
-    booth: { floor: 'Ground', use: 'Shop', fitout: 'Fully finished', washroom: true, mainRoad: true, parkingAccess: true, ceiling: '11', road: '40', tenure: 'Freehold', currentUse: 'Running tea stall' },
-    office: { floor: 'Third', totalFloors: '8', cabins: '6', seats: '36', washrooms: '3', conference: true, reception: true, pantry: true, lift: true, powerBackup: true, centralAc: true, parking: '3', fitout: 'Ready to move', furnishing: 'Furnished', ceiling: '10', maintenance: '₹18,000', currentUse: 'Vacant since Feb' },
-    showroom: { ceiling: '14', floor: 'Ground + First', road: '80', washrooms: '2', groundAccess: true, corner: true, mainRoad: true, mezzanine: true, pantry: true, powerBackup: true, parking: '2', fitout: 'Semi-finished', use: 'Showroom', tenure: 'Freehold', currentUse: 'Running furniture showroom' }
-  };
-  DEFHL = { P1: ['Park Facing', 'Wide Road', 'GMADA Approved'], P2: ['Corner', 'Clear Title'], P3: ['Gated', 'Near Market'], P5: ['Prime Location', 'Wide Road', 'GMADA Approved'], P7: ['GMADA Approved', 'Corner'], P9: ['Park Facing', 'Clear Title'], P10: ['Gated', 'Prime Location'], P13: ['Corner', 'Wide Road'], P17: ['Prime Location', 'Clear Title'] };
+  /* PROPSELLER / SEEDDET / DEFHL were per-fixture demo data keyed by the
+     retired P1..P17 ids: an invented seller relationship, an invented spec
+     sheet and invented highlight chips. All three are canonical now —
+     desk_property_sellers, Property.specs and Property.highlights. */
   PTYPES = [{ k: 'Residential Plot', i: 'ph-fill ph-map-pin-area', g: 'plot' }, { k: 'Flat', i: 'ph-fill ph-buildings', g: 'built' }, { k: 'Builder Floor', i: 'ph-fill ph-stack', g: 'built' }, { k: 'Kothi', i: 'ph-fill ph-house-line', g: 'built' }, { k: 'Villa', i: 'ph-fill ph-house', g: 'built' }, { k: 'Commercial SCO', i: 'ph-fill ph-storefront', g: 'comm' }, { k: 'Commercial Booth', i: 'ph-fill ph-shopping-bag-open', g: 'comm' }, { k: 'Office', i: 'ph-fill ph-briefcase', g: 'comm' }, { k: 'Showroom', i: 'ph-fill ph-shopping-cart', g: 'comm' }, { k: 'Industrial Plot', i: 'ph-fill ph-factory', g: 'plot' }];
   HIGHLIGHTS = ['Park Facing', 'Corner', 'Wide Road', 'Prime Location', 'Clear Title', 'GMADA Approved', 'RERA Approved', 'Gated', 'Near Market', 'Ready to Move'];
   RS = { ready: { l: 'Ready to show', c: '#0a6634', b: '#c9f0d9', bd: '#8fdcae', i: 'ph-fill ph-seal-check' }, attention: { l: 'Needs attention', c: '#a33417', b: '#ffdccb', bd: '#f3bb98', i: 'ph-fill ph-warning' }, draft: { l: 'Draft', c: '#6b5320', b: '#f6e6bd', bd: '#e2cd97', i: 'ph-fill ph-note-pencil' }, sold: { l: 'Sold', c: '#0a4a26', b: '#c9f0d9', bd: '#8fdcae', i: 'ph-fill ph-seal-check' } };
@@ -513,11 +445,11 @@ export class Component extends DCLogic {
         addSpec('Built Shed', U(pd.shedArea, 'sq ft'), 'ph-fill ph-warehouse');
         addSpec('Power Load', U(pd.powerLoad, 'KVA'), 'ph-fill ph-lightning');
       } else {
-        addSpec('Open Sides', pd.openSides || (pd.twoSide ? '2 Sides' : (pd.corner ? 'Corner' : '1 Side')), 'ph-fill ph-arrows-out');
+        addSpec('Open Sides', pd.openSides || (pd.twoSide ? '2 Sides' : (pd.corner ? 'Corner' : '')), 'ph-fill ph-arrows-out');
         addSpec('Second Road', has(pd.road2) ? (pd.road2 + ' ft') : (pd.corner ? 'Side road' : ''), 'ph-fill ph-road-horizon');
       }
-      addSpec('Ownership', pd.tenure || 'Freehold', 'ph-fill ph-certificate');
-      addSpec('Approvals', pd.approval || pd.approvalNote || 'GMADA Approved', 'ph-fill ph-seal-check');
+      addSpec('Ownership', pd.tenure, 'ph-fill ph-certificate');
+      addSpec('Approvals', pd.approval || pd.approvalNote, 'ph-fill ph-seal-check');
     } else if (K === 'flat' || K === 'bfloor') {
       addSpec('Configuration', pd.config || (has(pd.beds) ? pd.beds + ' BHK' : ''), 'ph-fill ph-house-line');
       addSpec('Built-up Area', has(pd.builtup) ? (pd.builtup + ' sq ft') : (has(pd.carpet) ? pd.carpet + ' sq ft' : pd.size), 'ph-fill ph-ruler');
@@ -525,8 +457,8 @@ export class Component extends DCLogic {
       addSpec('Washrooms', has(pd.baths) ? (pd.baths + ' Baths') : '', 'ph-fill ph-toilet');
       addSpec('Balconies', has(pd.balconies) ? (pd.balconies + ' Balconies') : '', 'ph-fill ph-wind');
       addSpec('Parking', park(pd.parking), 'ph-fill ph-car');
-      addSpec('Furnishing', pd.furnishing || 'Unfurnished', 'ph-fill ph-armchair');
-      addSpec('Possession', pd.possession || (has(pd.age) ? pd.age + ' Old' : 'Ready to move'), 'ph-fill ph-key');
+      addSpec('Furnishing', pd.furnishing, 'ph-fill ph-armchair');
+      addSpec('Possession', pd.possession || (has(pd.age) ? pd.age + ' Old' : ''), 'ph-fill ph-key');
     } else if (K === 'kothi' || K === 'villa') {
       addSpec(K === 'villa' ? 'Land Area' : 'Plot Size', has(pd.landArea) ? (pd.landArea + ' sq yd') : pd.size, 'ph-fill ph-ruler');
       addSpec('Built-up Area', has(pd.builtup) ? (pd.builtup + ' sq ft') : (has(pd.carpet) ? pd.carpet + ' sq ft' : ''), 'ph-fill ph-buildings');
@@ -543,8 +475,8 @@ export class Component extends DCLogic {
       addSpec('Floors', pd.floorCount || pd.floor, 'ph-fill ph-stack');
       addSpec('Road in Front', has(pd.road) ? (pd.road + ' ft') : '', 'ph-fill ph-road-horizon');
       addSpec('Basement', has(pd.basementArea) ? (pd.basementArea + ' sq ft') : (pd.basement ? 'Yes' : 'None'), 'ph-fill ph-arrow-down');
-      addSpec('Parking & Access', park(pd.parking) || (pd.groundAccess ? 'Ground access' : 'Front parking'), 'ph-fill ph-car');
-      addSpec('Condition / Fitout', pd.fitout || 'Ready', 'ph-fill ph-hammer');
+      addSpec('Parking & Access', park(pd.parking) || (pd.groundAccess ? 'Ground access' : ''), 'ph-fill ph-car');
+      addSpec('Condition / Fitout', pd.fitout, 'ph-fill ph-hammer');
     }
 
     // 3. GROUPED PROPERTY DETAILS
@@ -1221,9 +1153,15 @@ export class Component extends DCLogic {
   componentDidMount() {
     this.initPublished(); this.initContacts(); this.initLinks(); this.animateCount(); this.applyTheme();
     // Canonical data. Every Desk section is being moved onto the repository
-    // boundary one at a time; sellers are live.
+    // boundary one at a time; sellers and inventory are live.
     deskStore.bind(() => this.forceUpdate());
-    deskStore.loadSellers();
+    // Sellers first: the inventory load attaches each property's seller
+    // relationship from that directory rather than querying per property.
+    // Clients and sellers first: the inventory load resolves each sold
+    // property's buyer name and each property's seller relationship from
+    // those, instead of a query per property.
+    Promise.all([deskStore.loadClients(), deskStore.loadSellers()])
+      .then(() => deskStore.loadProperties());
   }
   moneyOn() { const s = this.state; return (s.section === 'properties' && s.invView === 'sold') || (s.section === 'deals' && s.dealView === 'done'); }
   sellerOn() { const s = this.state; return s.section === 'clients' && s.contactMode === 'sellers'; }
@@ -1340,72 +1278,57 @@ export class Component extends DCLogic {
     const dt = new Date(d + 'T00:00:00');
     return dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
   }
-  confirmSold() {
-    const f = this.state.soldForm; const pr = this.properties.find(x => x.id === this.state.soldFor); if (!pr) return;
+  /* Mark Sold. One atomic command marks the property sold, COMPLETES a
+     matching open deal (or writes a canonical completed one) and appends to
+     the buyer's purchase history — previously three separate in-memory
+     writes that could half-apply. Commission may remain due afterwards. */
+  async confirmSold() {
+    const f = this.state.soldForm;
+    const pr = this.properties.find(x => x.id === this.state.soldFor); if (!pr) return;
+    if (this.state.savingSold) return;
     const pv = parseFloat(f.price); const cv = parseFloat(f.comm);
     const price = isNaN(pv) ? pr.price : Math.round(pv * 1e7);
-    const comm = isNaN(cv) ? 0 : Math.round(cv * 1e5);
+    if (!(price > 0)) { this.setState({ soldError: 'Enter the final sold price.' }); return; }
     const buyer = f.buyerId ? this.clients.find(c => c.id === f.buyerId) : null;
-    let buyerName = buyer ? buyer.name : (f.buyerName || '').trim(), buyerPhone = buyer ? buyer.phone : (f.buyerPhone || '').trim(), buyerId = f.buyerId;
-    if (!buyer && buyerName) {
-      const cid = 'C' + (this.clients.length + 1);
-      this.clients.unshift({ id: cid, name: buyerName, phone: buyerPhone || '—', want: pr.want, city: pr.city, budget: price, note: 'Bought ' + pr.type + ' in ' + pr.loc, plots: [pr.id], hot: false });
-      buyerId = cid;
-    }
-    if (!buyerName) buyerName = 'Not recorded';
-    pr.status = 'sold'; pr.published = false;
-    pr.sale = { price, comm, date: this.fmtSaleDate(f.date), buyerName, buyerPhone, buyerId };
-    const when = this.fmtSaleDate(f.date);
-    let ex = this.deals.find(x => x.propId === pr.id && x.stage !== 'lost' && x.stage !== 'closed' && (x.clientId === buyerId || x.client === buyerName));
-    if (!ex) ex = this.deals.find(x => x.propId === pr.id && x.stage !== 'lost' && x.stage !== 'closed');
-    if (ex) {
-      ex.value = price; ex.client = buyerName; ex.clientId = buyerId || ex.clientId; ex.stage = 'closed';
-      ex.closedOn = when; ex.closedDay = this.TODAY; ex.next = null;
-      if (comm) {
-        const tot = Math.round(price * ((ex.cB || 0) + (ex.cS || 0)) / 100);
-        if (!tot) { ex.cB = +(comm / price * 100).toFixed(2); ex.cS = 0; }
-      }
-      (ex.hist = ex.hist || []).push({ s: 'closed', d: when });
-      (ex.log = ex.log || []).unshift({ d: when, t: 'Deal completed — sold at ' + this.inr(price), i: 'ph-fill ph-seal-check', c: '#0a6634' });
-      pr.dealId = ex.id;
-    } else {
-      const did = 'D' + (this.deals.length + 1);
-      const pct = price ? +(comm / price * 100).toFixed(2) : 0;
-      this.deals.unshift({
-        id: did, name: pr.type + ' · ' + pr.loc, client: buyerName, clientId: buyerId || '', prop: pr.type + ' · ' + pr.size, propSub: pr.loc, area: pr.city, propId: pr.id,
-        value: price, comm, token: 0, stage: 'closed', created: when, closedOn: when, closedDay: this.TODAY,
-        cB: pct, cS: 0, registryDay: this.TODAY, next: null, pay: [],
-        hist: [{ s: 'negotiating', d: when }, { s: 'closed', d: when }],
-        docs: [{ n: 'Final registry copy', have: true, d: when }],
-        log: [{ d: when, t: 'Sold and recorded straight from the property', i: 'ph-fill ph-seal-check', c: '#0a6634' }],
-        seller: { name: '—', phone: '—' }
-      });
-      pr.dealId = did;
-    }
+    const buyerName = buyer ? buyer.name : (f.buyerName || '').trim();
+    if (!f.buyerId && !buyerName) { this.setState({ soldError: 'Choose or add the buyer.' }); return; }
+
+    this.setState({ savingSold: true, soldError: '' });
+    const ok = await deskStore.markSold({
+      propertyId: pr.id,
+      soldPrice: price,
+      saleDate: this.isoSaleDate(f.date),
+      ...(f.buyerId ? { buyerId: f.buyerId } : { newBuyer: { name: buyerName, phone: (f.buyerPhone || '').trim() } }),
+      ...(isNaN(cv) ? {} : { commission: Math.round(cv * 1e5) }),
+    });
+    if (!ok) { this.setState({ savingSold: false, soldError: deskStore.lastWriteError }); return; }
+    const comm = isNaN(cv) ? 0 : Math.round(cv * 1e5);
     this.setState({
-      soldFor: null, propDetail: null,
-      celebrate: { kind: 'sold', title: pr.type + ' · ' + pr.size, sub: pr.loc + ' · ' + buyerName, amount: this.inr(price), comm: this.inr(comm) }
+      savingSold: false, soldError: '', soldFor: null, propDetail: null,
+      celebrate: { kind: 'sold', title: pr.type + ' · ' + pr.size, sub: pr.loc + ' · ' + (buyerName || 'Buyer'), amount: this.inr(price), comm: this.inr(comm) }
     });
   }
-  markSold(mine) {
-    const id = this.state.soldFor; const pr = this.properties.find(x => x.id === id);
-    if (pr) { pr.status = 'sold'; pr.published = false; }
-    if (mine && pr) {
-      const did = 'D' + (this.deals.length + 1); const when = this.TODAY + ' Aug';
-      this.deals.unshift({
-        id: did, name: pr.type + ' · ' + pr.loc, client: 'Direct sale', clientId: '', prop: pr.type + ' · ' + pr.size, propSub: pr.loc, area: pr.city, propId: pr.id,
-        value: pr.price, comm: Math.round(pr.price * 0.015), token: 0, stage: 'closed', created: when, closedOn: when, closedDay: this.TODAY,
-        cB: 1.5, cS: 0, registryDay: this.TODAY, next: null, pay: [], hist: [{ s: 'negotiating', d: when }, { s: 'closed', d: when }], docs: [],
-        log: [{ d: when, t: 'Sold and recorded straight from the property', i: 'ph-fill ph-seal-check', c: '#0a6634' }],
-        seller: { name: '—', phone: '—' }
-      });
-      pr.dealId = did;
-    }
-    this.setState({ soldFor: null, propDetail: null, section: mine ? 'deals' : 'properties' });
+  /* The sale command needs a real ISO date; the picker gives a loose value. */
+  isoSaleDate(value) {
+    const raw = String(value || '').trim();
+    if (/^d{4}-d{2}-d{2}$/.test(raw)) return raw;
+    const parsed = raw ? Date.parse(raw) : NaN;
+    const when = Number.isNaN(parsed) ? new Date() : new Date(parsed);
+    return when.toISOString().slice(0, 10);
   }
-  deletePlot(id) {
-    this.properties = this.properties.filter(x => x.id !== id); this.clientLinks = this.clientLinks.map(l => ({ ...l, props: l.props.filter(p => p !== id) })).filter(l => l.props.length > 0);
-    this.setState({ propDetail: null, delPlot: false });
+  /* Delete removes the canonical record. It is refused once the property
+     has sold, because the completed deal, the buyer's purchase history and
+     the seller's sold history all reference it — those must not be
+     orphaned. Take a live property Off Market instead of deleting it. */
+  async deletePlot(id) {
+    const pr = this.properties.find(x => x.id === id);
+    if (pr && pr.status === 'sold') {
+      this.setState({ delPlot: false, propError: 'A sold property keeps its deal and buyer history. Take it off the market instead of deleting it.' });
+      return;
+    }
+    const result = await deskStore.deleteProperty(id);
+    if (!result) { this.setState({ delPlot: false, propError: deskStore.lastWriteError }); return; }
+    this.setState({ propDetail: null, delPlot: false, propError: '' });
   }
   deleteClient(id) {
     const c = this.clients.find(x => x.id === id); this.clients = this.clients.filter(x => x.id !== id);
@@ -1462,37 +1385,47 @@ export class Component extends DCLogic {
     pr.gap = rd.miss.length ? rd.miss.map(m => m.label).join(' · ') : '';
     if (pr.published === undefined) pr.published = pr.ready; return pr;
   }
-  savePlot(closeAfter) {
+  /* Add / Edit Property. One canonical write through the repository
+     boundary — the record survives refresh and re-login, and a property
+     that cannot legally go On Sale is kept as a Draft with the dealer told
+     exactly what is still missing rather than the save failing silently. */
+  async savePlot(closeAfter) {
     const f = this.state.pform; if (!f.city && !f.area) return;
-    let pr = this.state.pEditId ? this.properties.find(x => x.id === this.state.pEditId) : null;
-    if (!pr) {
-      const id = 'P' + (Math.max(0, ...this.properties.map(x => +String(x.id).slice(1) || 0)) + 1);
-      pr = { id, status: 'available', views: 0, price: 0, published: false, photoCount: 0, earth: false, highlights: [] }; this.properties.unshift(pr);
+    if (this.state.savingProp && this.state.savingProp !== false) return;
+    const editId = this.state.pEditId;
+    this.setState({ savingProp: { title: (f.type || 'Property') + (f.size ? ' · ' + f.size + ' ' + (f.unit || '') : ''), loc: [f.area, f.city].filter(Boolean).join(', ') }, propError: '' });
+    const result = await deskStore.saveProperty(f, { id: editId || undefined, lifecycle: f.avail === 'onhold' ? 'archived' : 'on-sale' });
+    if (result.error) { this.setState({ savingProp: false, propError: result.error }); return; }
+    const saved = result.property;
+    if (closeAfter === false) {
+      this.setState({ savingProp: false, pEditId: saved.id, pSaved: true, propError: '', propMissing: result.missing || [] });
+      return;
     }
-    this.applyForm(pr, f);
-    if (closeAfter === false) { this.setState({ pEditId: pr.id, pSaved: true }); return; }
-    const shot = pr;
-    this.setState({ savingProp: { title: pr.type + ' · ' + pr.size, loc: pr.loc } });
-    if (this._saveT) clearTimeout(this._saveT);
-    this._saveT = setTimeout(() => {
-      this.setState({ addPlotOpen: false, pstep: 1, pEditId: null, pSaved: false, section: 'properties', invView: 'live', plotCity: shot.city || 'Mohali', pform: this.blankP(), savingProp: false, propDetail: shot.id, propShot: 0 });
-    }, 1650);
+    this.setState({
+      addPlotOpen: false, pstep: 1, pEditId: null, pSaved: false, section: 'properties',
+      invView: 'live', plotCity: saved.city || 'Mohali', pform: this.blankP(),
+      savingProp: false, propError: '', propMissing: result.missing || [],
+      propDetail: saved.id, propShot: 0,
+    });
   }
-  saveDraft() {
-    const f = this.state.pform; if (!f.city && !f.area) { this.setState({ addPlotOpen: false, pstep: 1, pEditId: null, pform: this.blankP() }); return; }
-    let pr = this.state.pEditId ? this.properties.find(x => x.id === this.state.pEditId) : null;
-    if (!pr) {
-      const id = 'P' + (Math.max(0, ...this.properties.map(x => +String(x.id).slice(1) || 0)) + 1);
-      pr = { id, status: 'available', views: 0, price: 0, published: false, photoCount: 0, earth: false, highlights: [] }; this.properties.unshift(pr);
-    }
-    const wasEdit = !!this.state.pEditId;
-    this.applyForm(pr, f);
-    if (!wasEdit && !pr.ready) { pr.draft = true; pr.published = false; }
-    this.setState({ addPlotOpen: false, pstep: 1, pEditId: null, pSaved: false, section: 'properties', invView: 'live', pform: this.blankP() });
+  /* Save as Draft. Incomplete records are allowed — a draft is a real
+     persisted property, not a local placeholder. */
+  async saveDraft() {
+    const f = this.state.pform;
+    if (!f.city && !f.area) { this.setState({ addPlotOpen: false, pstep: 1, pEditId: null, pform: this.blankP() }); return; }
+    const result = await deskStore.saveProperty(f, { id: this.state.pEditId || undefined, lifecycle: 'draft' });
+    if (result.error) { this.setState({ propError: result.error }); return; }
+    this.setState({ addPlotOpen: false, pstep: 1, pEditId: null, pSaved: false, section: 'properties', invView: 'live', pform: this.blankP(), propError: '' });
   }
-  archiveProp(id) {
-    const pr = this.properties.find(x => x.id === id); if (pr) { pr.status = 'onhold'; pr.published = false; }
-    this.setState({ propDetail: null, cardMenu: null, delPlot: false });
+  /* Off market. Non-destructive: media, papers, seller relationship and
+     any completed deal all survive. */
+  async archiveProp(id) {
+    const done = await deskStore.archiveProperty(id);
+    this.setState({ propDetail: null, cardMenu: null, delPlot: false, propError: done ? '' : deskStore.lastWriteError });
+  }
+  async restoreProp(id) {
+    const done = await deskStore.restoreProperty(id);
+    this.setState({ cardMenu: null, propError: done ? '' : deskStore.lastWriteError });
   }
   blankShare() { return { clientId: '', newName: '', newPhone: '', expiry: '3d', loc: 'area', price: 'hidden', photos: [0, 1, 2, 3], audio: 'none', secs: 0 }; }
   recToggle() {
@@ -1728,7 +1661,12 @@ export class Component extends DCLogic {
     });
     const sm = this.SECMETA[s.section];
 
-    const cstMeta = { active: { l: 'Hot', c: '#b5322a', b: '#f6ded9' }, warm: { l: 'Warm', c: '#b06f0c', b: '#fbeecb' }, cold: { l: 'Cold', c: '#7a7167', b: '#f3eeff' }, closed: { l: 'Done', c: '#0b8f45', b: '#d9f5e3' } };
+    /* Canonical Client.status is 'active' | 'cold' | 'hot'; this map pre-dates
+       that and had no 'hot', so an unmapped status threw and took the whole
+       render down. Unknown values fall back rather than crash. */
+    const CST_FALLBACK = { l: 'Active', c: '#7a7167', b: '#f3eeff' };
+    const cstAll = { active: { l: 'Hot', c: '#b5322a', b: '#f6ded9' }, hot: { l: 'Hot', c: '#b5322a', b: '#f6ded9' }, warm: { l: 'Warm', c: '#b06f0c', b: '#fbeecb' }, cold: { l: 'Cold', c: '#7a7167', b: '#f3eeff' }, closed: { l: 'Done', c: '#0b8f45', b: '#d9f5e3' } };
+    const cstMeta = new Proxy(cstAll, { get: (t, k) => t[k] || CST_FALLBACK });
 
     // Home — who to call (auto-matched, no upkeep)
     const callList = this.clients.filter(c => c.status === 'active' || c.status === 'warm')
@@ -2831,6 +2769,18 @@ export class Component extends DCLogic {
       const inLinks = this.clientLinks.filter(l => l.props.includes(pd.id));
       const rd = this.readinessOf(pd); const rr = this.RS[rd.state];
       const OV = this.buildPropertyOverview(pd);
+      /* `facts` and `hls` are read further down but were never declared —
+         the 4-level Overview redesign removed the definitions and left the
+         references, so every property detail threw inside renderVals() and
+         the try/catch discarded EVERY computed prop for that render. Both
+         are rebuilt from recorded values only: a fact the dealer never
+         entered is omitted rather than invented. */
+      const hls = pd.highlights || [];
+      const facts = [
+        ...(pd.size ? [{ i: 'ph-fill ph-ruler', l: pd.size }] : []),
+        ...(pd.facing && pd.facing !== '—' ? [{ i: 'ph-fill ph-compass', l: pd.facing + ' facing' }] : []),
+        ...(pd.road ? [{ i: 'ph-fill ph-road-horizon', l: pd.road + ' ft road' }] : []),
+      ];
       const merged = {};
       const bump = (name, o) => {
         const m = merged[name] || (merged[name] = { name, opens: 0, last: '', status: 'expired', audio: false, called: false, wa: false, visit: false, ids: [] });
@@ -3886,6 +3836,8 @@ export class Component extends DCLogic {
       soldDateInput: 'width:100%;height:62px;padding:0 18px;border-radius:15px;border:none;background:#fffdf7;box-shadow:inset 0 0 0 2px #e9d3a4;font-size:19px;font-weight:700;color:#241f1c;outline:none',
       soldTodayGo: () => this.setSold({ date: new Date().toISOString().slice(0, 10) }),
       soldConfirm: () => this.confirmSold(),
+      // A refused sale must say why rather than closing as if it worked.
+      soldError: s.soldError || '', savingSold: !!s.savingSold,
       soldConfirmStyle: `width:100%;display:flex;align-items:center;justify-content:center;gap:11px;height:70px;border-radius:18px;font-size:21px;font-weight:800;${s.soldForm.price ? 'background:#0b6f39;background-image:linear-gradient(140deg,#25b567,#0b6f39 55%,#06552b);color:#eafff2;box-shadow:0 18px 36px -16px rgba(6,70,36,.9)' : 'background:#ece2cd;color:#b3a68a;cursor:not-allowed'}`,
       addPlotOpen: s.addPlotOpen,
       openAddPlot: () => this.setState({ addPlotOpen: true, pstep: 1, pEditId: null, pSaved: false, pform: this.blankP() }),

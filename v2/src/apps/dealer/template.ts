@@ -5199,9 +5199,13 @@ export function renderApp(state: any) {
                     </div>
                   \` : '' }
 
+                  \${ soldError ? \`
+                    <div role="alert"
+                      style="margin-bottom:12px;padding:14px 16px;border-radius:14px;background:#ffe4ea;color:#b02a37;font-size:16px;font-weight:800">\${ soldError }</div>
+                  \` : '' }
                   <button onClick="\${__b(soldConfirm)}" style="\${soldConfirmStyle}"
                     style-active="transform:translateY(2px)"><i class="ph-fill ph-seal-check"
-                      style="font-size:25px"></i>Confirm this sale</button>
+                      style="font-size:25px"></i>\${ savingSold ? 'Recording the sale…' : 'Confirm this sale' }</button>
                   <button onClick="\${__b(closeSold)}"
                     style="width:100%;height:52px;border-radius:14px;background:transparent;color:#8a7a52;font-size:16.5px;font-weight:800;margin-top:10px">Cancel</button>
                 </div>

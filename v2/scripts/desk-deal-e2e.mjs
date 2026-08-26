@@ -208,6 +208,36 @@ async function journey(A) {
     .update({ payload: onSale }).eq('id', ids.property);
   check('7. Property moved to On Sale', !saleErr, saleErr?.message);
 
+  /* 7b. Off-market and back, without losing specifications or media. */
+  const { data: beforeArchive } = await db.from('crm_records')
+    .select('payload').eq('id', ids.property).single();
+  await db.from('crm_records')
+    .update({ payload: { ...beforeArchive.payload, lifecycle: 'archived', published: false, clientVisible: false } })
+    .eq('id', ids.property);
+  const { data: archived } = await db.from('crm_records')
+    .select('payload').eq('id', ids.property).single();
+  check('7b. Property can go Off Market', archived?.payload?.lifecycle === 'archived');
+  check('7c. Specifications survive going off market',
+    archived?.payload?.specs?.frontage === '30');
+
+  await db.from('crm_records')
+    .update({ payload: { ...archived.payload, lifecycle: 'on-sale', published: true, clientVisible: true } })
+    .eq('id', ids.property);
+  const { data: restored } = await db.from('crm_records')
+    .select('payload').eq('id', ids.property).single();
+  check('7d. Property returns to On Sale intact',
+    restored?.payload?.lifecycle === 'on-sale' && restored?.payload?.specs?.corner === true);
+
+  /* 7e. The lifecycle constraint refuses incomplete active inventory. */
+  const incomplete = rid('prop-incomplete');
+  const { error: incompleteErr } = await db.from('crm_records').insert({
+    id: incomplete, entity_type: 'properties', dealer_id: A.dealerId, deleted: false,
+    payload: { id: incomplete, type: 'Flat', city: 'Mohali', area: '', size: '',
+      facing: '', position: '', lifecycle: 'on-sale' },
+  });
+  check('7e. An incomplete property is refused as active inventory',
+    !!incompleteErr, incompleteErr ? incompleteErr.code : 'accepted — constraint missing');
+
   /* 10. Client. */
   const { error: clientErr } = await db.from('crm_records').insert({
     id: ids.client, entity_type: 'clients', dealer_id: A.dealerId, deleted: false,

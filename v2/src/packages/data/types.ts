@@ -3,7 +3,28 @@
    Source: data-model.md + design .dc.html seed data
    ═══════════════════════════════════════════════════════════════ */
 
-export type PropertyType = 'Residential Plot' | 'Flat' | 'Floor' | 'Kothi' | 'Villa' | 'Commercial';
+/**
+ * The property types MAPCO actually sells. This mirrors the Desk's own
+ * PTYPES list — the adaptive specification model keys off these, so a
+ * narrower list would collapse Office / Showroom / SCO into one bucket
+ * and lose the fields a buyer of each actually asks about.
+ *
+ * `Floor` and `Commercial` are retained as legacy values so rows written
+ * before the list widened still read.
+ */
+export type PropertyType =
+  | 'Residential Plot'
+  | 'Flat'
+  | 'Builder Floor'
+  | 'Kothi'
+  | 'Villa'
+  | 'Commercial SCO'
+  | 'Commercial Booth'
+  | 'Office'
+  | 'Showroom'
+  | 'Industrial Plot'
+  /** @deprecated legacy values kept readable */
+  | 'Floor' | 'Commercial';
 export type WantType = 'Plot' | 'Flat' | 'Kothi' | 'Villa' | 'Commercial';
 export type Facing = 'East' | 'West' | 'North' | 'South' | 'North-East' | 'North-West' | 'South-East' | 'South-West';
 export type LinkStatus = 'active' | 'revoked' | 'expired';
@@ -93,6 +114,28 @@ export interface Property {
   specs?: import('./property-specs').PropertySpecs;
   /** Private owner details — dealer-only, never projected into a client link. */
   owner?: { name: string; phone: string; priceConfirmedAt?: string };
+
+  /* ── fields common to every property type ──
+     Type-specific answers live in `specs`; these are true of all ten
+     kinds, so they stay first-class rather than being scoped to one. */
+
+  /** Society / project name, where the property sits inside one. */
+  society?: string;
+  /** Street address. Dealer-private: never projected into a client link. */
+  address?: string;
+  /** The size unit the dealer entered ('sq yd', 'sq ft', 'marla', 'kanal'). */
+  sizeUnit?: string;
+  /** Price per unit, as entered or derived from price ÷ size. */
+  rate?: string;
+  /** Marketing-safe highlight chips ("Park Facing", "GMADA Approved"). */
+  highlights?: readonly string[];
+  /** Property video URLs. Photos live in `photos` / `photoStorage`. */
+  videos?: readonly string[];
+  /** Dealer-private working notes. Never client-safe. */
+  privateNotes?: string;
+  /** Registry / approval reference text the dealer recorded. */
+  registryRef?: string;
+  approvalRef?: string;
 }
 
 /** Reusable dealer-private seller; never projected into buyer-facing payloads. */
