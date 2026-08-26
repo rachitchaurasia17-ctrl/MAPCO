@@ -5,3 +5,8 @@
 .env
 .env.local
 .env.*.local
+
+# Curated landmark staging folder — operator drop point.
+# The canonical MAPCO-owned copies are published to v2/public/landmarks/
+# by scripts/import-landmarks.mjs (byte-identical), so this is not tracked.
+landmarks photos/
