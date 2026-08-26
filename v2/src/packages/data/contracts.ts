@@ -21,6 +21,7 @@ import type {
   Seller, PropertySeller, SellerWithProperties, SellerDirectoryEntry, SellerWorkspace,
   PropertyDocument, PropertyDocumentType,
   PropertyDocumentVisibility, PropertyDocumentSafety,
+  LinkStatus,
   PipelineDeal, DealCommission, DealNextAction, DealStageTransition,
   DealPayment, DealPaymentKind, DealWorkspace,
 } from './types';
@@ -626,10 +627,105 @@ export interface ClientLinkRepository {
   /** Public engagement event. The raw token remains closure-scoped in /client. */
   recordEvent(
     token: string,
-    event: 'opened' | 'audio_played' | 'call_clicked' | 'whatsapp_clicked' | 'visit_requested',
+    event: ClientLinkEventKind,
     propertyPublicId?: string,
     opts?: QueryOptions,
   ): Promise<Result<void>>;
+
+  /* ── dealer read models ── */
+
+  /** Every link with its client, status and real activity counts. */
+  directory(opts?: QueryOptions): Promise<Result<readonly ClientLinkSummary[]>>;
+  /** One link with per-property activity and chronological history. */
+  workspace(linkId: string, opts?: QueryOptions): Promise<Result<ClientLinkWorkspace>>;
+}
+
+/**
+ * Every interaction the client page genuinely performs and can attribute.
+ * Nothing here is inferred: an event exists because the buyer did the
+ * thing. There is no interest score and no "warm/hot" derivation.
+ */
+export type ClientLinkEventKind =
+  | 'opened'
+  | 'property_viewed'
+  | 'photos_viewed'
+  | 'map_opened'
+  | 'audio_played'
+  | 'call_clicked'
+  | 'whatsapp_clicked'
+  | 'visit_requested';
+
+export interface ClientLinkActivityCounts {
+  opens: number;
+  propertyViews: number;
+  photoViews: number;
+  mapOpens: number;
+  audioPlays: number;
+  calls: number;
+  whatsapp: number;
+  visitRequests: number;
+}
+
+export interface ClientLinkSummary {
+  id: string;
+  clientId: string;
+  clientName: string;
+  clientPhone: string;
+  propertyIds: readonly string[];
+  status: LinkStatus;
+  createdAt?: string;
+  expiresAt?: string;
+  revokedAt?: string;
+  activity: ClientLinkActivityCounts;
+  /** Most recent real event of any kind. Absent when never touched. */
+  lastActivityAt?: string;
+  firstOpenedAt?: string;
+}
+
+export interface ClientLinkPropertyActivity {
+  propertyId: string;
+  name: string;
+  loc?: string;
+  price?: number;
+  lifecycle: string;
+  views: number;
+  photoViews: number;
+  mapOpens: number;
+  lastViewedAt?: string;
+}
+
+export interface ClientLinkHistoryEntry {
+  kind: ClientLinkEventKind;
+  propertyId?: string;
+  at: string;
+}
+
+export interface ClientLinkWorkspace {
+  summary: ClientLinkSummary;
+  properties: readonly ClientLinkPropertyActivity[];
+  history: readonly ClientLinkHistoryEntry[];
+}
+
+/**
+ * A reason to contact this buyer, derived ONLY from something factual
+ * that happened (or provably did not). Never a score.
+ */
+export type FollowUpReason =
+  | 'visit-requested'
+  | 'called-you'
+  | 'whatsapp-tapped'
+  | 'viewed-again'
+  | 'expiring-soon'
+  | 'never-opened';
+
+export interface ClientLinkFollowUp {
+  link: ClientLinkSummary;
+  reason: FollowUpReason;
+  /** Plain-language explanation of the fact behind it. */
+  detail: string;
+  /** The property the fact is about, when it is about one. */
+  propertyId?: string;
+  at?: string;
 }
 
 /* ───────────────────────────────────────────────────────────────

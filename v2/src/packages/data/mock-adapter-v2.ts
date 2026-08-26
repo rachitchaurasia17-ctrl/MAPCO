@@ -29,6 +29,7 @@ import {
   type PresentationEventsRepository, type PresentationEvent,
   type PredictiveRepository,
   type ClientLinkRepository, type ClientLinkState, type ClientSafePayload, type ClientSafeProperty,
+  type ClientLinkSummary, type ClientLinkWorkspace, type ClientLinkEventKind,
   type MediaRepository, type MediaState,
   type DemandSignalsRepository, type DataAdapterV2,
 } from './contracts';
@@ -1088,7 +1089,75 @@ function buildPayload(link: ClientLink): ClientSafePayload {
   };
 }
 
+/** Real events recorded in mock mode, so the Desk behaves identically. */
+const MOCK_LINK_EVENTS: { linkId: string; kind: ClientLinkEventKind; propertyId?: string; at: string }[] = [];
+
+function mockLinkSummary(link: ClientLink): ClientLinkSummary {
+  const events = MOCK_LINK_EVENTS.filter((e) => e.linkId === link.id);
+  const count = (kind: ClientLinkEventKind) => events.filter((e) => e.kind === kind).length;
+  const opens = count('opened') || link.events?.opens || 0;
+  const last = events.map((e) => e.at).sort().pop();
+  const firstOpen = events.filter((e) => e.kind === 'opened').map((e) => e.at).sort()[0];
+  return {
+    id: link.id,
+    clientId: link.clientId,
+    clientName: link.clientName,
+    clientPhone: CLIENTS.find((c) => c.id === link.clientId)?.phone ?? '',
+    propertyIds: [...link.props],
+    status: link.status,
+    ...(link.createdAt ? { createdAt: link.createdAt } : {}),
+    ...(link.expiry ? { expiresAt: link.expiry } : {}),
+    activity: {
+      opens,
+      propertyViews: count('property_viewed'),
+      photoViews: count('photos_viewed'),
+      mapOpens: count('map_opened'),
+      audioPlays: count('audio_played') || link.events?.played || 0,
+      calls: count('call_clicked') || link.events?.called || 0,
+      whatsapp: count('whatsapp_clicked') || link.events?.wa || 0,
+      visitRequests: count('visit_requested') || link.events?.visit || 0,
+    },
+    ...(last ? { lastActivityAt: last } : {}),
+    ...(firstOpen ? { firstOpenedAt: firstOpen } : {}),
+  };
+}
+
 class MockClientLinkRepository implements ClientLinkRepository {
+  async directory(opts?: QueryOptions): Promise<Result<readonly ClientLinkSummary[]>> {
+    const a = aborted<readonly ClientLinkSummary[]>(opts); if (a) return a;
+    return ok(CLIENT_LINKS.map(mockLinkSummary));
+  }
+
+  async workspace(linkId: string, opts?: QueryOptions): Promise<Result<ClientLinkWorkspace>> {
+    const a = aborted<ClientLinkWorkspace>(opts); if (a) return a;
+    const link = CLIENT_LINKS.find((l) => l.id === linkId);
+    if (!link) return err('not_found', 'That link is no longer available');
+    const events = MOCK_LINK_EVENTS.filter((e) => e.linkId === linkId);
+    return ok({
+      summary: mockLinkSummary(link),
+      properties: link.props.flatMap((propertyId) => {
+        const property = PROPERTIES.find((p) => p.id === propertyId);
+        if (!property) return [];
+        const own = events.filter((e) => e.propertyId === propertyId);
+        const viewed = own.filter((e) => e.kind === 'property_viewed').map((e) => e.at).sort().pop();
+        return [{
+          propertyId,
+          name: property.area || 'Property',
+          ...(property.loc ? { loc: property.loc } : {}),
+          ...(property.price !== undefined ? { price: property.price } : {}),
+          lifecycle: propertyLifecycle(property),
+          views: own.filter((e) => e.kind === 'property_viewed').length,
+          photoViews: own.filter((e) => e.kind === 'photos_viewed').length,
+          mapOpens: own.filter((e) => e.kind === 'map_opened').length,
+          ...(viewed ? { lastViewedAt: viewed } : {}),
+        }];
+      }),
+      history: [...events]
+        .sort((x, y) => y.at.localeCompare(x.at))
+        .map((e) => ({ kind: e.kind, ...(e.propertyId ? { propertyId: e.propertyId } : {}), at: e.at })),
+    });
+  }
+
   async list(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<ClientLink>>> {
     const a = aborted<Page<ClientLink>>(opts); if (a) return a;
     const s = scenarioResult<ClientLink>(); if (s) return s;
@@ -1160,16 +1229,24 @@ class MockClientLinkRepository implements ClientLinkRepository {
 
   async recordEvent(
     token: string,
-    event: 'opened' | 'audio_played' | 'call_clicked' | 'whatsapp_clicked' | 'visit_requested',
-    _propertyPublicId?: string,
+    event: ClientLinkEventKind,
+    propertyPublicId?: string,
     opts?: QueryOptions,
   ): Promise<Result<void>> {
     const a = aborted<void>(opts); if (a) return a;
     const link = CLIENT_LINKS.find((l) => l.id === token || token === `tok-${l.id}`);
     if (!link) return ok(undefined);
+    // Every event is recorded with its property and time, so per-property
+    // activity and the chronological history are real rather than derived.
+    MOCK_LINK_EVENTS.push({
+      linkId: link.id, kind: event,
+      ...(propertyPublicId ? { propertyId: propertyPublicId } : {}),
+      at: new Date().toISOString(),
+    });
     const key = event === 'opened' ? 'opens' : event === 'audio_played' ? 'played'
-      : event === 'call_clicked' ? 'called' : event === 'whatsapp_clicked' ? 'wa' : 'visit';
-    link.events[key] += 1;
+      : event === 'call_clicked' ? 'called' : event === 'whatsapp_clicked' ? 'wa'
+      : event === 'visit_requested' ? 'visit' : null;
+    if (key) link.events[key] += 1;
     persistMock();
     persistDeskMock();
     return ok(undefined);

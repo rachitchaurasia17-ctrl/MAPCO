@@ -25,6 +25,7 @@ import {
   type PresentationEventsRepository, type PresentationEvent,
   type PredictiveRepository,
   type ClientLinkRepository, type ClientLinkState, type ClientSafePayload, type ClientSafeMap,
+  type ClientLinkSummary, type ClientLinkWorkspace, type ClientLinkEventKind,
   type MediaRepository, type MediaState,
   type DemandSignalsRepository,
 } from '../contracts';
@@ -1194,8 +1195,112 @@ function rowToClientLink(r: Record<string, unknown>): ClientLink {
   } as ClientLink;
 }
 
+/** Shape one directory row from the read model into the contract type. */
+function mapLinkSummary(row: Record<string, unknown>): ClientLinkSummary {
+  const n = (key: string) => Number(row[key] ?? 0) || 0;
+  return {
+    id: String(row.id ?? ''),
+    clientId: String(row.client_id ?? ''),
+    clientName: String(row.client_name ?? ''),
+    clientPhone: String(row.client_phone ?? ''),
+    propertyIds: Array.isArray(row.property_ids) ? row.property_ids.map(String) : [],
+    status: (String(row.status ?? 'active') as ClientLink['status']),
+    ...(row.created_at ? { createdAt: String(row.created_at) } : {}),
+    ...(row.expires_at ? { expiresAt: String(row.expires_at) } : {}),
+    ...(row.revoked_at ? { revokedAt: String(row.revoked_at) } : {}),
+    activity: {
+      opens: n('opens'),
+      propertyViews: n('property_views'),
+      photoViews: n('photo_views'),
+      mapOpens: n('map_opens'),
+      audioPlays: n('audio_plays'),
+      calls: n('calls'),
+      whatsapp: n('whatsapp'),
+      visitRequests: n('visit_requests'),
+    },
+    ...(row.last_activity_at ? { lastActivityAt: String(row.last_activity_at) } : {}),
+    ...(row.first_opened_at ? { firstOpenedAt: String(row.first_opened_at) } : {}),
+  };
+}
+
 class SupaClientLinks implements ClientLinkRepository {
   private readonly publicSessionId = `${cryptoId()}${cryptoId()}`;
+
+  async directory(o?: QueryOptions): Promise<Result<readonly ClientLinkSummary[]>> {
+    const a = aborted<readonly ClientLinkSummary[]>(o); if (a) return a;
+    try {
+      const c = await client();
+      const { data, error } = await c.rpc('plotmap_client_link_directory');
+      if (error) return toErr(error);
+      const rows = Array.isArray(data) ? data as Record<string, unknown>[] : [];
+      return ok(rows.map(mapLinkSummary));
+    } catch (error) { return toErr(error); }
+  }
+
+  async workspace(linkId: string, o?: QueryOptions): Promise<Result<ClientLinkWorkspace>> {
+    const a = aborted<ClientLinkWorkspace>(o); if (a) return a;
+    try {
+      const c = await client();
+      const { data, error } = await c.rpc('plotmap_client_link_workspace', { p_link_id: linkId });
+      if (error) return toErr(error);
+      const env = (data ?? {}) as Record<string, unknown>;
+      if (env.ok !== true) return err('not_found', 'That link is no longer available');
+
+      const link = (env.link ?? {}) as Record<string, unknown>;
+      const clientRow = (env.client ?? null) as { payload?: Record<string, unknown> } | null;
+      const summary = mapLinkSummary({
+        id: link.id, client_id: link.clientId,
+        client_name: clientRow?.payload?.name ?? '',
+        client_phone: clientRow?.payload?.phone ?? '',
+        property_ids: link.propertyIds,
+        status: link.status, created_at: link.createdAt,
+        expires_at: link.expiresAt, revoked_at: link.revokedAt,
+      });
+
+      const list = (v: unknown): Record<string, unknown>[] =>
+        Array.isArray(v) ? v.filter((x): x is Record<string, unknown> => !!x && typeof x === 'object') : [];
+
+      const properties = list(env.properties).map((p) => ({
+        propertyId: String(p.propertyId ?? ''),
+        name: String(p.name ?? 'Property'),
+        ...(p.loc ? { loc: String(p.loc) } : {}),
+        ...(p.price != null ? { price: Number(p.price) } : {}),
+        lifecycle: String(p.lifecycle ?? 'draft'),
+        views: Number(p.views ?? 0) || 0,
+        photoViews: Number(p.photoViews ?? 0) || 0,
+        mapOpens: Number(p.mapOpens ?? 0) || 0,
+        ...(p.lastViewedAt ? { lastViewedAt: String(p.lastViewedAt) } : {}),
+      }));
+
+      const history = list(env.history).map((h) => ({
+        kind: String(h.kind ?? 'opened') as ClientLinkEventKind,
+        ...(h.propertyId ? { propertyId: String(h.propertyId) } : {}),
+        at: String(h.at ?? ''),
+      }));
+
+      // Counts on the summary come from the per-property + history data,
+      // so the detail view and the list can never disagree.
+      const count = (kind: ClientLinkEventKind) => history.filter((h) => h.kind === kind).length;
+      return ok({
+        summary: {
+          ...summary,
+          activity: {
+            opens: count('opened'),
+            propertyViews: count('property_viewed'),
+            photoViews: count('photos_viewed'),
+            mapOpens: count('map_opened'),
+            audioPlays: count('audio_played'),
+            calls: count('call_clicked'),
+            whatsapp: count('whatsapp_clicked'),
+            visitRequests: count('visit_requested'),
+          },
+          ...(history[0]?.at ? { lastActivityAt: history[0].at } : {}),
+        },
+        properties,
+        history,
+      });
+    } catch (error) { return toErr(error); }
+  }
 
   async list(p?: PageParams, o?: QueryOptions): Promise<Result<Page<ClientLink>>> {
     const a = aborted<Page<ClientLink>>(o); if (a) return a;
