@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { DCLogic, Router } from '../../framework/dc';
+import { deskStore } from './desk-store';
 
 export class Component extends DCLogic {
   state = {
@@ -21,6 +22,7 @@ export class Component extends DCLogic {
     wiz: { step: 1, clientId: '', useNewClient: false, ncName: '', ncPhone: '', propId: '', useManualProp: false, mpLoc: '', mpSize: '', name: '', value: '', comm: '', stage: 'negotiating', sellerName: '', sellerPhone: '', q1: '', q2: '' },
     cform: { name: '', phone: '', want: 'Plot', city: 'Mohali', budgetFrom: '', budgetTo: '', unit: 'Cr', note: '', plots: [] },
     contactMode: 'clients', cliQ: '', cliFilter: 'all', sellQ: '', addClientBig: false, addSellerOpen: false, sellerProfile: null,
+    savingSeller: false, sellerError: '', sellerEditId: null,
     cliEdit: false, noteDraft: '', cpPick: false, cpPickQ: '', cpGroup: 'shortlisted', linkView: null, linkTab: 'focus', lkQ: '', lkFilter: 'all', linksTab: 'props', arch: null,
     cf: { name: '', phone: '', phone2: '', business: '', city: '', types: [], areas: [], budgetFrom: '', budgetTo: '', sizeFrom: '', sizeTo: '', prefs: [], customPref: '', stage: 'Just looking', note: '', areaDraft: '' },
     sf2: { name: '', phone: '', phone2: '', business: '', kind: 'Individual', city: '', note: '' },
@@ -370,11 +372,11 @@ export class Component extends DCLogic {
       if (pr.highlights === undefined) pr.highlights = this.DEFHL[pr.id] || [];
     }
   }
-  sellers = [
-    { id: 'SL1', name: 'Balwinder Singh', phone: '98146 22107', phone2: '', kind: 'Individual', city: 'Mohali', note: 'Prefers calls after 6 pm.' },
-    { id: 'SL2', name: 'Gurpreet Realtors', phone: '99885 41200', phone2: '0172 456 1188', kind: 'Builder', city: 'New Chandigarh', note: 'Handles the whole Omaxe block.' },
-    { id: 'SL3', name: 'Sukhwinder Kaur', phone: '98722 90514', phone2: '', kind: 'Individual', city: 'Zirakpur', note: '' },
-    { id: 'SL4', name: 'Anand Property Advisors', phone: '98159 33027', phone2: '', kind: 'Broker', city: 'Chandigarh', note: 'Charges 1% from his side.' }];
+  /* Sellers are canonical. This is the store's own array by reference —
+     deskStore.loadSellers() fills it in place from the repository
+     boundary. There is no seller fixture here, so Supabase mode can only
+     ever show real dealer records. */
+  sellers = deskStore.sellers;
   SELLERKINDS = ['Individual', 'Builder', 'Broker', 'Company'];
   DOCKINDS = ['Registry', 'Allotment Letter', 'Possession Letter', 'RERA / Approval', 'Other'];
   QUICKDOCS = [
@@ -945,12 +947,28 @@ export class Component extends DCLogic {
       sellerId: '', askPrice: '', relation: 'Owner', availConfirmed: true, lastConfirmed: 'Today', visitNote: '', sellerPropNote: '', sellerDocs: []
     };
   }
-  addSeller() {
+  /* Add Seller from inside the Add Property flow. Writes the canonical
+     seller, then selects it for this property. An existing seller with the
+     same number is reused instead of creating a second copy. */
+  async addSeller() {
     const f = this.state.nsform; if (!f.name.trim() || !f.phone.trim()) return;
-    const id = 'SL' + (this.sellers.length + 1);
-    this.sellers.unshift({ id, name: f.name.trim(), phone: f.phone.trim(), phone2: f.phone2.trim(), business: (f.business || '').trim(), kind: f.kind, city: f.city.trim(), note: f.note.trim() });
-    this.setP({ sellerId: id }); this.setState({ sellerAdd: false, sellerQ: '', nsform: { name: '', phone: '', phone2: '', business: '', kind: 'Individual', city: '', note: '' } });
+    if (this.state.savingSeller) return;
+    const existing = deskStore.findSellerByPhone(f.phone);
+    if (existing) {
+      this.setP({ sellerId: existing.id });
+      this.setState({ sellerAdd: false, sellerQ: '', nsform: this.blankNS() });
+      return;
+    }
+    this.setState({ savingSeller: true, sellerError: '' });
+    const id = await deskStore.saveSeller({
+      name: f.name, phone: f.phone, phone2: f.phone2,
+      business: f.business, kind: f.kind, city: f.city, note: f.note,
+    });
+    if (!id) { this.setState({ savingSeller: false, sellerError: deskStore.lastWriteError }); return; }
+    this.setP({ sellerId: id });
+    this.setState({ savingSeller: false, sellerError: '', sellerAdd: false, sellerQ: '', nsform: this.blankNS() });
   }
+  blankNS() { return { name: '', phone: '', phone2: '', business: '', kind: 'Individual', city: '', note: '' }; }
   toggleSellerDoc(d) {
     const cur = this.state.pform.sellerDocs || [];
     this.setP({ sellerDocs: cur.includes(d) ? cur.filter(x => x !== d) : [...cur, d] });
@@ -1200,7 +1218,13 @@ export class Component extends DCLogic {
   tel(p) { return 'tel:' + (p || '').replace(/[^0-9+]/g, ''); }
   initialsOf(n) { return (n || '').split(' ').map(x => x[0]).slice(0, 2).join(''); }
   matchPlot(c) { const pool = this.properties.filter(p => p.ready && p.status === 'available' && p.want === c.want && p.price <= c.budgetMax * 1.15); pool.sort((a, b) => Math.abs(a.price - c.budgetMax) - Math.abs(b.price - c.budgetMax)); return pool[0] || null; }
-  componentDidMount() { this.initPublished(); this.initContacts(); this.initLinks(); this.animateCount(); this.applyTheme(); }
+  componentDidMount() {
+    this.initPublished(); this.initContacts(); this.initLinks(); this.animateCount(); this.applyTheme();
+    // Canonical data. Every Desk section is being moved onto the repository
+    // boundary one at a time; sellers are live.
+    deskStore.bind(() => this.forceUpdate());
+    deskStore.loadSellers();
+  }
   moneyOn() { const s = this.state; return (s.section === 'properties' && s.invView === 'sold') || (s.section === 'deals' && s.dealView === 'done'); }
   sellerOn() { const s = this.state; return s.section === 'clients' && s.contactMode === 'sellers'; }
   applyTheme() {
@@ -1556,10 +1580,7 @@ export class Component extends DCLogic {
     const d = String(phone || '').replace(/[^0-9]/g, '').slice(-10); if (d.length < 10) return null;
     return this.clients.find(c => c.id !== skipId && String(c.phone || '').replace(/[^0-9]/g, '').slice(-10) === d) || null;
   }
-  dupSeller(phone) {
-    const d = String(phone || '').replace(/[^0-9]/g, '').slice(-10); if (d.length < 10) return null;
-    return this.sellers.find(x => String(x.phone || '').replace(/[^0-9]/g, '').slice(-10) === d) || null;
-  }
+  dupSeller(phone, skipId) { return deskStore.findSellerByPhone(phone, skipId); }
   setCF(o) { this.setState({ cf: { ...this.state.cf, ...o } }); }
   onCF(e) { this.setCF({ [e.target.name]: e.target.value }); }
   cfToggle(k, v) { const cur = this.state.cf[k] || []; this.setCF({ [k]: cur.includes(v) ? cur.filter(x => x !== v) : [...cur, v] }); }
@@ -1618,13 +1639,42 @@ export class Component extends DCLogic {
   archiveClient(id) { const c = this.clients.find(x => x.id === id); if (c) c.archived = true; this.setState({ selectedClient: null, arch: null }); }
   setSF2(o) { this.setState({ sf2: { ...this.state.sf2, ...o } }); }
   onSF2(e) { this.setSF2({ [e.target.name]: e.target.value }); }
-  saveNewSeller() {
+  /* Add Seller from Contacts. Creating and editing both land here, so a
+     dealer correcting a number updates the same canonical seller rather
+     than creating a second one. */
+  async saveNewSeller() {
     const f = this.state.sf2; if (!f.name.trim() || !f.phone.trim()) return;
-    const id = 'SL' + (Math.max(0, ...this.sellers.map(x => +String(x.id).slice(2) || 0)) + 1);
-    this.sellers.unshift({ id, name: f.name.trim(), phone: f.phone.trim(), phone2: f.phone2, business: f.business, kind: f.kind, city: f.city, note: f.note, archived: false });
-    this.setState({ addSellerOpen: false, sf2: { name: '', phone: '', phone2: '', business: '', kind: 'Individual', city: '', note: '' }, section: 'clients', contactMode: 'sellers', sellerView: id });
+    if (this.state.savingSeller) return;
+    this.setState({ savingSeller: true, sellerError: '' });
+    const id = await deskStore.saveSeller({
+      ...(this.state.sellerEditId ? { id: this.state.sellerEditId } : {}),
+      name: f.name, phone: f.phone, phone2: f.phone2,
+      business: f.business, kind: f.kind, city: f.city, note: f.note,
+    });
+    if (!id) { this.setState({ savingSeller: false, sellerError: deskStore.lastWriteError }); return; }
+    deskStore.loadSellerWorkspace(id);
+    this.setState({
+      savingSeller: false, sellerError: '', addSellerOpen: false, sellerEditId: null,
+      sf2: this.blankNS(), section: 'clients', contactMode: 'sellers', sellerView: id,
+    });
   }
-  archiveSeller(id) { const sl = this.sellers.find(x => x.id === id); if (sl) sl.archived = true; this.setState({ sellerView: null, arch: null }); }
+  /* Open an existing seller in the same approved Add/Edit sheet. */
+  editSeller(id) {
+    const sl = this.sellers.find(x => x.id === id); if (!sl) return;
+    this.setState({
+      addSellerOpen: true, sellerEditId: id, sellerError: '',
+      sf2: { name: sl.name, phone: sl.phone, phone2: sl.phone2 || '', business: sl.business || '', kind: sl.kind, city: sl.city || '', note: sl.note || '' },
+    });
+  }
+  /* Archiving is non-destructive and refused while the seller still holds
+     live inventory, so sold history is never orphaned. */
+  async archiveSeller(id) {
+    this.setState({ sellerError: '' });
+    const done = await deskStore.archiveSeller(id, true);
+    if (!done) { this.setState({ arch: null, sellerError: deskStore.lastWriteError }); return; }
+    deskStore.closeSellerWorkspace();
+    this.setState({ sellerView: null, arch: null });
+  }
   dealListVM(d) {
     const m = this.stageMeta(d.stage);
     return {
@@ -2062,7 +2112,7 @@ export class Component extends DCLogic {
         nextWhenStyle: 'display:inline-flex;align-items:center;height:30px;padding:0 10px;border-radius:9px;font-size:14px;font-weight:800;' + (nx && nx.day < DTODAY ? 'background:#ffdfe2;color:#b02a37' : nx && nx.day === DTODAY ? 'background:#f8a800;color:#241d0c' : 'background:#f3ece0;color:#7a6f60'),
         openBuyer: () => { if (cl.id) this.setState({ section: 'clients', contactMode: 'clients', selectedClient: cl.id, cpTab: 'overview' }); },
         openProp: () => { if (S.pr) this.setState({ section: 'properties', propDetail: S.pr.id, propShot: 0, propTab: 'gallery' }); },
-        openSeller: () => { if (S.sr) this.setState({ section: 'clients', contactMode: 'sellers', sellerView: S.sr.id, svTab: 'overview' }); },
+        openSeller: () => { if (S.sr) { deskStore.loadSellerWorkspace(S.sr.id); this.setState({ section: 'clients', contactMode: 'sellers', sellerView: S.sr.id, svTab: 'overview' }); } },
         update: () => this.openUpdate(d.id),
         open: () => this.setState({ selectedDeal: d.id, dealTab: 'overview' })
       };
@@ -2936,7 +2986,7 @@ export class Component extends DCLogic {
         sellerNote: ps.note || '', hasSellerNote: !!ps.note,
         sellerDocs: (ps.docs || []).map(d => ({ label: d, style: 'display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 14px;border-radius:999px;background:#efe8fb;color:#4a2c99;font-size:14.5px;font-weight:800' })),
         hasSellerDocs: (ps.docs || []).length > 0,
-        goSeller: () => { if (sl) this.setState({ sellerView: sl.id }); },
+        goSeller: () => { if (sl) { deskStore.loadSellerWorkspace(sl.id); this.setState({ sellerView: sl.id }); } },
         addSellerGo: () => this.openEdit(pd.id, 2),
         docs: (pd.docs || []).map((d, i) => ({
           name: d.name, kind: d.kind,
@@ -3682,9 +3732,31 @@ export class Component extends DCLogic {
       lPrice: this.PRICEVIS.map(o => ({ label: o.l, go: () => this.setL({ price: o.k }), style: `height:44px;padding:0 16px;border-radius:12px;font-size:14.5px;font-weight:800;${lf.price === o.k ? 'background:#f8a800;color:#241d0c' : 'background:#f3eeff;color:#4c463d'}` })),
       propDetailOpen: !!propDetail, propDetail,
       sellerViewOpen: !!s.sellerView,
+      sellerViewLoading: !!s.sellerView && deskStore.sellerWorkspaceStatus.state === 'loading',
+      sellerViewError: deskStore.sellerWorkspaceStatus.state === 'error'
+        ? (deskStore.sellerWorkspaceStatus.error || 'Seller could not be loaded') : '',
       sellerView: (() => {
-        const sl = this.sellers.find(x => x.id === s.sellerView); if (!sl) return null;
-        const props = this.properties.filter(pr => pr.ps && pr.ps.sellerId === sl.id);
+        if (!s.sellerView) return null;
+        /* The profile is one canonical round trip: the seller plus every
+           property it is attached to, split into active and sold, each with
+           its private relationship facts. */
+        const ws = deskStore.sellerWorkspace;
+        if (!ws || ws.seller.id !== s.sellerView) return null;
+        const sl = ws.seller;
+        const asRow = (r, sold) => {
+          const lifecycle = r.property.lifecycle || (sold ? 'sold' : 'on-sale');
+          return {
+            ...r.property, ps: r.ps,
+            status: sold ? 'sold' : 'available',
+            // Truthful readiness: a draft must not read as "Ready to show".
+            draft: lifecycle === 'draft',
+            photoCount: (r.property.photos || []).length,
+            earth: !!r.property.location,
+            price: r.property.price, loc: r.property.loc || r.property.area || '',
+            type: r.property.type, size: r.property.size,
+          };
+        };
+        const props = [...ws.active.map(r => asRow(r, false)), ...ws.sold.map(r => asRow(r, true))];
         const live = props.filter(pr => pr.status !== 'sold');
         return {
           name: sl.name, phone: sl.phone, phone2: sl.phone2 || '', hasPhone2: !!sl.phone2,
@@ -4077,9 +4149,12 @@ export class Component extends DCLogic {
         const sq = (s.sellQ || '').toLowerCase().trim();
         const sellCards = liveS.filter(x => !sq || ((x.name + ' ' + x.phone + ' ' + (x.business || '') + ' ' + x.city + ' ' + x.kind).toLowerCase().includes(sq)))
           .map(sl => {
-            const props = this.properties.filter(pr => pr.ps && pr.ps.sellerId === sl.id);
-            const live = props.filter(pr => pr.status !== 'sold'), sold = props.filter(pr => pr.status === 'sold');
-            const cps = live.map(pr => pr.ps).filter(p => p && p.lastConfirmed);
+            /* Counts and availability come from the canonical seller
+               directory, computed server-side in one round trip — never
+               from a local join against a separate property collection. */
+            const props = sl.props || [];
+            const live = props.filter(p => !p.sold), sold = props.filter(p => p.sold);
+            const cps = live.filter(p => p.lastConfirmed);
             const okPs = cps.find(p => p.availConfirmed), stalePs = cps.find(p => !p.availConfirmed);
             const conf = okPs ? okPs.lastConfirmed : ''; const stale = !okPs && stalePs ? stalePs.lastConfirmed : '';
             return {
@@ -4091,13 +4166,14 @@ export class Component extends DCLogic {
               confLine: conf ? ('Availability confirmed ' + conf.toLowerCase()) : (stale ? ('Not confirmed since ' + stale.toLowerCase()) : 'Availability never confirmed'),
               confStyle: `font-size:14.5px;font-weight:700;${conf ? 'color:#0a6634' : 'color:#a3541b'}`,
               note: sl.note || '', hasNote: !!sl.note,
-              chips: live.slice(0, 3).map(pr => ({
-                label: pr.loc.split(',')[0] + ' · ' + this.inr(pr.ps.askPrice || pr.price),
+              chips: live.slice(0, 3).map(p => ({
+                label: (p.loc || 'Property').split(',')[0]
+                  + (p.askPrice || p.price ? ' · ' + this.inr(p.askPrice || p.price) : ''),
                 style: 'display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:999px;background:#f4eeff;color:#4a2c99;font-size:13.5px;font-weight:800'
               })),
               cardStyle: 'min-width:0;text-align:left;background:#fffdf7;border-radius:22px;padding:20px 22px;box-shadow:0 0 0 1.5px #e2d8ee,0 16px 38px -30px rgba(40,30,10,.7);transition:transform .13s;cursor:pointer',
               avStyle: 'width:54px;height:54px;border-radius:17px;flex:none;display:grid;place-items:center;font-size:19px;font-weight:800;background:#efe8fb;color:#4a2c99',
-              open: () => this.setState({ sellerView: sl.id }), stop: (e) => e.stopPropagation()
+              open: () => { deskStore.loadSellerWorkspace(sl.id); this.setState({ sellerView: sl.id }); }, stop: (e) => e.stopPropagation()
             };
           });
         const cf = s.cf, cfDupC = this.dupClient(cf.phone, s.cliEdit ? s.selectedClient : null);
@@ -4401,7 +4477,15 @@ export class Component extends DCLogic {
             };
           }),
           cliCards, cliEmpty: cliCards.length === 0, cliAny: cliCards.length > 0,
-          sellCards, sellEmpty: sellCards.length === 0, sellAny: sellCards.length > 0,
+          sellCards, sellAny: sellCards.length > 0,
+          /* Truthful states: a screen with no sellers because the request is
+             still in flight, or failed, must never read as "no sellers yet". */
+          sellLoading: deskStore.sellersStatus.state === 'loading' && sellCards.length === 0,
+          sellError: deskStore.sellersStatus.state === 'error'
+            ? (deskStore.sellersStatus.error || 'Sellers could not be loaded') : '',
+          sellEmpty: deskStore.sellersStatus.state === 'ready' && sellCards.length === 0,
+          sellQ: s.sellQ || '',
+          sellRetry: () => deskStore.loadSellers(),
           ctAttnN: String(stCount('attention')), ctActiveN: String(stCount('active')),
           addClientBigOpen: !!s.addClientBig,
           openAddClientBig: () => this.setState({ addClientBig: true, cf: this.blankCF() }),
@@ -4431,7 +4515,7 @@ export class Component extends DCLogic {
           sfSave: () => this.saveNewSeller(),
           sfSaveStyle: `display:flex;align-items:center;gap:10px;height:60px;padding:0 30px;border-radius:17px;font-size:18px;font-weight:800;${sfOK ? 'background:#4a2c99;color:#efe8fb;box-shadow:0 16px 30px -16px rgba(74,44,153,.95)' : 'background:#e7e0d2;color:#a89e8b;cursor:not-allowed'}`,
           sfDup: !!sfDupS, sfDupName: sfDupS ? sfDupS.name : '', sfDupSub: sfDupS ? (sfDupS.phone + ' · ' + sfDupS.kind) : '',
-          sfUseDup: () => { if (sfDupS) this.setState({ addSellerOpen: false, contactMode: 'sellers', sellerView: sfDupS.id }); },
+          sfUseDup: () => { if (sfDupS) { deskStore.loadSellerWorkspace(sfDupS.id); this.setState({ addSellerOpen: false, sellerEditId: null, contactMode: 'sellers', sellerView: sfDupS.id }); } },
           cp, cpOpen: !!cp,
           lkTabs: [{ k: 'follow', l: 'Follow-ups', i: 'ph-fill ph-phone-call', n: followList.length, c: '#c0490c', b: '#ffdcbd', card: '#fff5ec', ring: '#f5c9a0' }, { k: 'links', l: 'All links', i: 'ph-fill ph-paper-plane-tilt', n: this.clientLinks.length, c: '#4a2c99', b: '#e7defc', card: '#f6f2ff', ring: '#d5c5f2' }].map(t => {
             const on = (t.k === 'links') === (s.linksTab === 'links');

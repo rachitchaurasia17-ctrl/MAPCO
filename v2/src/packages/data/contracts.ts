@@ -18,7 +18,8 @@
 
 import type {
   Property, PropertyLocationInput, Client, Deal, ClientLink, MapData, DemandSignal,
-  Seller, PropertySeller, SellerWithProperties, PropertyDocument, PropertyDocumentType,
+  Seller, PropertySeller, SellerWithProperties, SellerDirectoryEntry, SellerWorkspace,
+  PropertyDocument, PropertyDocumentType,
   PropertyDocumentVisibility, PropertyDocumentSafety,
   PipelineDeal, DealCommission, DealNextAction, DealStageTransition,
   DealPayment, DealPaymentKind, DealWorkspace,
@@ -225,6 +226,20 @@ export interface SellerRepository {
   save(input: SaveSellerInput, opts?: QueryOptions): Promise<Result<Seller>>;
   assignToProperty(input: AssignPropertySellerInput, opts?: QueryOptions): Promise<Result<PropertySeller>>;
   removeFromProperty(propertyId: string, sellerId: string, opts?: QueryOptions): Promise<Result<void>>;
+
+  /**
+   * The whole Sellers list with live/sold counts per seller, assembled in
+   * one round trip. Prefer this over list() + a query per seller.
+   */
+  directory(includeArchived?: boolean, opts?: QueryOptions): Promise<Result<readonly SellerDirectoryEntry[]>>;
+  /** A Seller profile — the seller plus its active and sold properties. */
+  workspace(sellerId: string, opts?: QueryOptions): Promise<Result<SellerWorkspace>>;
+  /**
+   * Archive or restore. Non-destructive: relationships, documents and deal
+   * references survive. Refused while the seller still holds active
+   * properties, so sold history can never be orphaned by accident.
+   */
+  setArchived(sellerId: string, archived: boolean, opts?: QueryOptions): Promise<Result<void>>;
 }
 
 export interface UploadPropertyDocumentInput {

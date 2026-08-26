@@ -9,7 +9,7 @@
 
 import type {
   Property, PropertyLocationInput, Client, Deal, ClientLink, MapData, DemandSignal,
-  Seller, PropertySeller, SellerWithProperties, PropertyDocument,
+  Seller, PropertySeller, SellerWithProperties, SellerDirectoryEntry, SellerWorkspace, PropertyDocument,
   PipelineDeal, DealPayment, DealPaymentKind, DealStageEvent, DealPaper,
   DealWorkspace, CommissionSide,
 } from './types';
@@ -48,7 +48,7 @@ import {
   propertyLocationPoint,
 } from './property-location';
 import { normalizeCompletedDeal, expectedCommissionSide } from './deal-normalization';
-import { canonicalPropertyLifecycle, propertyLifecycleValidationError } from './property-lifecycle';
+import { canonicalPropertyLifecycle, propertyLifecycle, propertyLifecycleValidationError } from './property-lifecycle';
 import {
   PROPERTY_DOCUMENT_BUCKET,
   propertyDocumentObjectPath,
@@ -61,8 +61,66 @@ const DEFAULT_LIMIT = 12;
 const MAX_LIMIT = 50;
 const MOCK_PROPERTY_PHOTOS = new Map<string, string>();
 const MOCK_PROPERTY_DOCUMENT_OBJECTS = new Map<string, string>();
-const MOCK_SELLERS: Seller[] = [];
-const MOCK_PROPERTY_SELLERS: PropertySeller[] = [];
+/* ── mock-mode demo sellers ───────────────────────────────────────
+   Reusable sellers, each attached to more than one property, so the
+   Contacts design demonstrates the real "one seller, many properties"
+   relationship. These exist ONLY in mock mode — this whole module is
+   never loaded when VITE_DATA_MODE=supabase, so no fake seller can
+   reach real dealer data. ─────────────────────────────────────────── */
+const daysAgo = (n: number): string => new Date(Date.now() - n * 864e5).toISOString();
+
+const MOCK_SELLERS: Seller[] = [
+  { id: 'seller-mock-1', name: 'Balwinder Singh', primaryPhone: '+91 98146 22107',
+    type: 'individual', city: 'Mohali', note: 'Prefers calls after 6 pm.', archived: false },
+  { id: 'seller-mock-2', name: 'Gurpreet Singh', primaryPhone: '+91 99885 41200',
+    alternatePhone: '0172 456 1188', type: 'builder', business: 'Gurpreet Realtors',
+    city: 'New Chandigarh', note: 'Handles the whole Omaxe block.', archived: false },
+  { id: 'seller-mock-3', name: 'Sukhwinder Kaur', primaryPhone: '+91 98722 90514',
+    type: 'individual', city: 'Zirakpur', archived: false },
+  { id: 'seller-mock-4', name: 'Anand Sharma', primaryPhone: '+91 98159 33027',
+    type: 'broker', business: 'Anand Property Advisors', city: 'Chandigarh',
+    note: 'Charges 1% from his side.', archived: false },
+];
+
+const MOCK_PROPERTY_SELLERS: PropertySeller[] = [
+  { id: 'ps-mock-1', propertyId: 'ecocity', sellerId: 'seller-mock-1', askingPrice: 9200000,
+    relationship: 'owner', availability: 'available', lastConfirmedAt: daysAgo(2),
+    siteVisitInstructions: 'Call before coming, the gate stays locked.',
+    note: 'Wants a fast close, will adjust 4–5 lakh.',
+    documentKinds: ['Registry / Sale Deed', 'Possession Letter'], isPrimary: true },
+  { id: 'ps-mock-2', propertyId: 'aero', sellerId: 'seller-mock-1', askingPrice: 7400000,
+    relationship: 'owner', availability: 'unconfirmed', lastConfirmedAt: daysAgo(11),
+    siteVisitInstructions: 'Only Sunday mornings.',
+    note: 'Asked us to keep the price off the internet.',
+    documentKinds: ['Registry / Sale Deed'], isPrimary: true },
+  { id: 'ps-mock-3', propertyId: 'block5', sellerId: 'seller-mock-2', askingPrice: 5200000,
+    relationship: 'builder', availability: 'available', lastConfirmedAt: daysAgo(1),
+    siteVisitInstructions: 'Site office open 10 am – 6 pm, ask for Rajan.',
+    note: 'Builder pays 1% to us on closing.',
+    documentKinds: ['Allotment Letter', 'RERA Certificate'], isPrimary: true },
+  { id: 'ps-mock-4', propertyId: 'omx', sellerId: 'seller-mock-2', askingPrice: 28500000,
+    relationship: 'builder', availability: 'available', lastConfirmedAt: daysAgo(4),
+    siteVisitInstructions: 'Guard has the keys, call the gate first.',
+    documentKinds: ['Registry / Sale Deed', 'Sanctioned Building Plan'], isPrimary: true },
+  { id: 'ps-mock-5', propertyId: 'sec79', sellerId: 'seller-mock-3', askingPrice: 6100000,
+    relationship: 'co-owner', availability: 'unconfirmed', lastConfirmedAt: daysAgo(21),
+    siteVisitInstructions: 'Keys with the neighbour.',
+    note: 'Brother must also sign — confirm before token.',
+    documentKinds: ['Registry / Sale Deed'], isPrimary: true },
+  { id: 'ps-mock-6', propertyId: 'villa1', sellerId: 'seller-mock-3', askingPrice: 15500000,
+    relationship: 'owner', availability: 'available', lastConfirmedAt: daysAgo(5),
+    isPrimary: true },
+  { id: 'ps-mock-7', propertyId: 'sec66', sellerId: 'seller-mock-4', askingPrice: 4900000,
+    relationship: 'authorized-seller', availability: 'available', lastConfirmedAt: daysAgo(5),
+    siteVisitInstructions: 'Any day, give an hour of notice.',
+    documentKinds: ['Registry / Sale Deed', 'RERA Certificate'], isPrimary: true },
+  { id: 'ps-mock-8', propertyId: 'jlpl', sellerId: 'seller-mock-4', askingPrice: 8900000,
+    relationship: 'authorized-seller', availability: 'available', lastConfirmedAt: daysAgo(3),
+    note: 'Two brothers own it jointly, both will sign.',
+    documentKinds: ['Registry / Sale Deed', 'Society NOC / Share Certificate / Maintenance NDC'],
+    isPrimary: true },
+];
+
 const MOCK_PROPERTY_DOCUMENTS: PropertyDocument[] = [];
 
 /* Pipeline deal stores. Empty by construction — a deal only exists once the
@@ -73,6 +131,42 @@ const DEAL_PAYMENTS: (DealPayment & { dealId: string })[] = [];
 const DEAL_PAPERS: (DealPaper & { dealId: string })[] = [];
 let mockSequence = 0;
 const mockId = (prefix: string): string => `${prefix}-${Date.now()}-${++mockSequence}`;
+
+/* ── mock-mode persistence ────────────────────────────────────────
+   mock-adapter.ts mirrors properties/clients/deals/links to
+   localStorage so mock mode feels interlinked across pages. The Desk
+   stores added here need the same treatment, or a seller a dealer adds
+   while QA-ing disappears on refresh and reads as a broken save.
+   Real cross-device persistence is Supabase mode. ─────────────────── */
+const DESK_MOCK_KEY = 'mapco.mock.desk.v1';
+
+function persistDeskMock(): void {
+  try {
+    localStorage.setItem(DESK_MOCK_KEY, JSON.stringify({
+      sellers: MOCK_SELLERS, propertySellers: MOCK_PROPERTY_SELLERS,
+      pipelineDeals: PIPELINE_DEALS, dealStageEvents: DEAL_STAGE_EVENTS,
+      dealPayments: DEAL_PAYMENTS, dealPapers: DEAL_PAPERS,
+    }));
+  } catch { /* storage unavailable (private mode / SSR) — stay in-memory */ }
+}
+
+function hydrateDeskMock(): void {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    const raw = localStorage.getItem(DESK_MOCK_KEY);
+    if (!raw) return;
+    const d = JSON.parse(raw) as Record<string, unknown>;
+    const swap = <T>(target: T[], value: unknown): void => {
+      if (Array.isArray(value)) target.splice(0, target.length, ...value as T[]);
+    };
+    swap(MOCK_SELLERS, d.sellers);
+    swap(MOCK_PROPERTY_SELLERS, d.propertySellers);
+    swap(PIPELINE_DEALS, d.pipelineDeals);
+    swap(DEAL_STAGE_EVENTS, d.dealStageEvents);
+    swap(DEAL_PAYMENTS, d.dealPayments);
+    swap(DEAL_PAPERS, d.dealPapers);
+  } catch { /* corrupt store — fall back to seeds */ }
+}
 
 function hydrateMockProperty(property: Property): Property {
   const privatePhotos = normalizePropertyPhotoStorage(property.photoStorage, property.id)
@@ -106,6 +200,8 @@ function paginate<T extends { id: string }>(
     total: filtered.length,
   };
 }
+
+hydrateDeskMock();
 
 const sc = (): Scenario => activeScenario();
 
@@ -189,6 +285,7 @@ class MockPropertyRepository implements PropertyRepository {
     const i = PROPERTIES.findIndex((p) => p.id === id);
     if (i >= 0) PROPERTIES[i] = row; else PROPERTIES.unshift(row);
     persistMock();
+    persistDeskMock();
     publishResourceInvalidation({ entity: 'property', id });
     return ok(hydrateMockProperty(row));
   }
@@ -198,6 +295,7 @@ class MockPropertyRepository implements PropertyRepository {
     if (index < 0) return err('not_found', 'Property not found');
     PROPERTIES.splice(index, 1);
     persistMock();
+    persistDeskMock();
     publishResourceInvalidation({ entity: 'property', id });
     return ok(undefined);
   }
@@ -220,6 +318,7 @@ class MockPropertyRepository implements PropertyRepository {
       PROPERTIES[index] = withoutLocation as Property;
     }
     persistMock();
+    persistDeskMock();
     publishResourceInvalidation({ entity: 'property', id });
     return ok(hydrateMockProperty(PROPERTIES[index]!));
   }
@@ -244,6 +343,7 @@ class MockCustomerRepository implements CustomerRepository {
     const i = CLIENTS.findIndex((c) => c.id === id);
     if (i >= 0) CLIENTS[i] = row; else CLIENTS.unshift(row);
     persistMock();
+    persistDeskMock();
     publishResourceInvalidation({ entity: 'client', id });
     return ok(row);
   }
@@ -285,6 +385,7 @@ class MockSellerRepository implements SellerRepository {
     if (index >= 0) row.createdAt = MOCK_SELLERS[index]!.createdAt;
     else row.createdAt = now;
     if (index >= 0) MOCK_SELLERS[index] = row; else MOCK_SELLERS.unshift(row);
+    persistDeskMock();
     return ok({ ...row });
   }
   async assignToProperty(input: AssignPropertySellerInput, opts?: QueryOptions): Promise<Result<PropertySeller>> {
@@ -299,6 +400,7 @@ class MockSellerRepository implements SellerRepository {
     const index = MOCK_PROPERTY_SELLERS.findIndex((item) =>
       item.propertyId === input.propertyId && item.sellerId === input.sellerId);
     if (index >= 0) MOCK_PROPERTY_SELLERS[index] = row; else MOCK_PROPERTY_SELLERS.push(row);
+    persistDeskMock();
     return ok({ ...row });
   }
   async removeFromProperty(propertyId: string, sellerId: string, opts?: QueryOptions): Promise<Result<void>> {
@@ -306,6 +408,86 @@ class MockSellerRepository implements SellerRepository {
     const index = MOCK_PROPERTY_SELLERS.findIndex((row) => row.propertyId === propertyId && row.sellerId === sellerId);
     if (index < 0) return err('not_found', 'Seller relationship not found');
     MOCK_PROPERTY_SELLERS.splice(index, 1);
+    persistDeskMock();
+    return ok(undefined);
+  }
+
+  async directory(includeArchived = false, opts?: QueryOptions): Promise<Result<readonly SellerDirectoryEntry[]>> {
+    const a = aborted<readonly SellerDirectoryEntry[]>(opts); if (a) return a;
+    const entries = MOCK_SELLERS
+      .filter((seller) => includeArchived || !seller.archived)
+      .map((seller) => {
+        const rows = MOCK_PROPERTY_SELLERS
+          .filter((row) => row.sellerId === seller.id)
+          .flatMap((relationship) => {
+            const property = PROPERTIES.find((p) => p.id === relationship.propertyId);
+            return property ? [{ property, relationship }] : [];
+          });
+        const confirmedAt = rows
+          .map((r) => r.relationship.lastConfirmedAt)
+          .filter((v): v is string => !!v)
+          .sort()
+          .pop();
+        return {
+          seller: { ...seller },
+          liveCount: rows.filter((r) => propertyLifecycle(r.property) !== 'sold').length,
+          soldCount: rows.filter((r) => propertyLifecycle(r.property) === 'sold').length,
+          ...(confirmedAt ? { lastConfirmedAt: confirmedAt } : {}),
+          anyUnconfirmed: rows.some((r) => r.relationship.availability !== 'available'),
+          properties: rows.map((r) => ({
+            propertyId: r.property.id,
+            lifecycle: propertyLifecycle(r.property),
+            ...(r.property.loc ? { loc: r.property.loc } : {}),
+            ...(r.property.price !== undefined ? { price: r.property.price } : {}),
+            ...(r.relationship.askingPrice !== undefined ? { askingPrice: r.relationship.askingPrice } : {}),
+            availability: r.relationship.availability,
+            ...(r.relationship.lastConfirmedAt ? { lastConfirmedAt: r.relationship.lastConfirmedAt } : {}),
+            isPrimary: r.relationship.isPrimary,
+          })),
+        };
+      });
+    return ok(entries);
+  }
+
+  async workspace(sellerId: string, opts?: QueryOptions): Promise<Result<SellerWorkspace>> {
+    const seller = await this.get(sellerId, opts);
+    if (!seller.ok) return seller;
+    const pairs = MOCK_PROPERTY_SELLERS
+      .filter((row) => row.sellerId === sellerId)
+      .flatMap((relationship) => {
+        const property = PROPERTIES.find((row) => row.id === relationship.propertyId);
+        return property
+          ? [{ property: hydrateMockProperty(property), relationship: { ...relationship } }]
+          : [];
+      });
+    return ok({
+      seller: seller.value,
+      active: pairs.filter((p) => propertyLifecycle(p.property) !== 'sold'),
+      sold: pairs.filter((p) => propertyLifecycle(p.property) === 'sold'),
+    });
+  }
+
+  async setArchived(sellerId: string, archived: boolean, opts?: QueryOptions): Promise<Result<void>> {
+    const a = aborted<void>(opts); if (a) return a;
+    const seller = MOCK_SELLERS.find((row) => row.id === sellerId);
+    if (!seller) return err('not_found', 'Seller not found');
+    if (archived) {
+      // Archiving must never orphan a seller that still holds live inventory.
+      const live = MOCK_PROPERTY_SELLERS
+        .filter((row) => row.sellerId === sellerId)
+        .filter((row) => {
+          const property = PROPERTIES.find((p) => p.id === row.propertyId);
+          return property && propertyLifecycle(property) !== 'sold';
+        }).length;
+      if (live > 0) {
+        return err('validation',
+          `This seller is still attached to ${live} active propert${live === 1 ? 'y' : 'ies'}`);
+      }
+    }
+    seller.archived = archived;
+    seller.updatedAt = new Date().toISOString();
+    persistMock();
+    persistDeskMock();
     return ok(undefined);
   }
 }
@@ -454,6 +636,7 @@ class MockDealRepository implements DealRepository {
       d.propertyId === prop.id && d.buyerId === buyer!.id && d.stage !== 'closed' && d.stage !== 'lost');
     if (openPipeline) openPipeline.stage = 'closed';
     persistMock();
+    persistDeskMock();
     publishResourceInvalidation({ entity: 'inventory', id: prop.id });
 
     return ok(deal);
@@ -518,6 +701,7 @@ class MockDealRepository implements DealRepository {
     PIPELINE_DEALS.unshift(deal);
     DEAL_STAGE_EVENTS.push({ dealId: deal.id, stage: deal.stage, occurredAt: new Date().toISOString(), note: 'Deal created' });
     persistMock();
+    persistDeskMock();
     return ok(deal);
   }
 
@@ -539,6 +723,7 @@ class MockDealRepository implements DealRepository {
       ...(input.note ? { note: input.note } : {}),
     });
     persistMock();
+    persistDeskMock();
     return ok(deal);
   }
 
@@ -554,6 +739,7 @@ class MockDealRepository implements DealRepository {
     };
     DEAL_PAYMENTS.push({ dealId: input.dealId, ...payment });
     persistMock();
+    persistDeskMock();
     return ok(payment);
   }
 
@@ -957,6 +1143,7 @@ class MockClientLinkRepository implements ClientLinkRepository {
       status: 'active', events: { opens: 0, played: 0, called: 0, wa: 0, visit: 0 }, lastOpen: 'not yet',
     } as ClientLink);
     persistMock();
+    persistDeskMock();
     publishResourceInvalidation({ entity: 'client-link', id });
     return ok({ id, token, url: `/client/?token=${token}`, expiresAt: '' });
   }
@@ -966,6 +1153,7 @@ class MockClientLinkRepository implements ClientLinkRepository {
     const link = CLIENT_LINKS.find((l) => l.id === id);
     if (link) link.status = 'revoked';
     persistMock();
+    persistDeskMock();
     publishResourceInvalidation({ entity: 'client-link', id });
     return ok(undefined);
   }
@@ -983,6 +1171,7 @@ class MockClientLinkRepository implements ClientLinkRepository {
       : event === 'call_clicked' ? 'called' : event === 'whatsapp_clicked' ? 'wa' : 'visit';
     link.events[key] += 1;
     persistMock();
+    persistDeskMock();
     return ok(undefined);
   }
 }

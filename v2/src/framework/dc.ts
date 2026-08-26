@@ -84,5 +84,19 @@ export class DCLogic {
     }
 
     this.render();
+
+    // Both app components define componentDidMount() — the dealer Desk uses it
+    // to seed contacts/links/theme and to kick off canonical data loads — but
+    // nothing ever invoked it, so all of that was dead code. Run it once after
+    // the first paint. Errors are contained so a failing hook cannot leave the
+    // screen blank.
+    const didMount = (this as unknown as { componentDidMount?: () => void }).componentDidMount;
+    if (typeof didMount === 'function') {
+      try {
+        didMount.call(this);
+      } catch (error) {
+        console.error('componentDidMount failed:', error);
+      }
+    }
   }
 }

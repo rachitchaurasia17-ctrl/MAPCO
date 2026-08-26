@@ -18,6 +18,7 @@ import {
   type PropertyRepository, type CustomerRepository, type DealRepository, type RecordSaleInput,
   type StartDealInput, type SetDealStageInput, type RecordDealPaymentInput,
   type SellerRepository, type SaveSellerInput, type AssignPropertySellerInput,
+
   type PropertyDocumentRepository, type UploadPropertyDocumentInput,
   type DemandRepository, type DemandRecord, type DemandDraft, type DemandMatch,
   type MapRepository, type PresentationRepository, type PresentationState, type PresentationProperty,
@@ -40,6 +41,9 @@ import type {
   Seller,
   PropertySeller,
   SellerWithProperties,
+  SellerDirectoryEntry,
+  SellerWorkspace,
+  PropertyLifecycle,
   PropertyDocument,
   PropertyDocumentType,
   PropertyDocumentVisibility,
@@ -64,7 +68,7 @@ import {
   propertyLocationValidationError,
 } from '../property-location';
 import { SupabaseAiRepository } from './ai-repository';
-import { canonicalPropertyLifecycle, propertyLifecycleValidationError } from '../property-lifecycle';
+import { canonicalPropertyLifecycle, propertyLifecycle, propertyLifecycleValidationError } from '../property-lifecycle';
 import {
   PROPERTY_DOCUMENT_BUCKET,
   propertyDocumentObjectPath,
@@ -285,14 +289,15 @@ class SupaCustomers implements CustomerRepository {
 
 interface SellerRow {
   id: string; name: string; primary_phone: string; alternate_phone: string | null;
-  seller_type: Seller['type']; city: string | null; note: string | null;
+  seller_type: Seller['type']; business?: string | null; city: string | null; note: string | null;
+  archived?: boolean | null;
   created_at: string; updated_at: string;
 }
 interface PropertySellerRow {
   id: string; property_id: string; seller_id: string; asking_price: number | string | null;
   relationship: PropertySeller['relationship']; availability: PropertySeller['availability'];
   last_confirmed_at: string | null; site_visit_instructions: string | null;
-  note: string | null; document_status: string | null; is_primary: boolean;
+  note: string | null; document_status: string | null; document_kinds?: unknown; is_primary: boolean;
 }
 interface PropertyDocumentRow {
   id: string; property_id: string; title: string; document_type: PropertyDocument['type'];
@@ -304,15 +309,24 @@ interface PropertyDocumentRow {
 const mapSeller = (row: SellerRow): Seller => ({
   id: row.id, name: row.name, primaryPhone: row.primary_phone,
   alternatePhone: row.alternate_phone ?? undefined, type: row.seller_type,
+  business: row.business ?? undefined,
   city: row.city ?? undefined, note: row.note ?? undefined,
+  archived: row.archived === true,
   createdAt: row.created_at, updatedAt: row.updated_at,
 });
+const readDocumentKinds = (value: unknown): readonly string[] | undefined => {
+  if (!Array.isArray(value)) return undefined;
+  const kinds = value.filter((v): v is string => typeof v === 'string' && !!v.trim());
+  return kinds.length ? kinds : undefined;
+};
 const mapPropertySeller = (row: PropertySellerRow): PropertySeller => ({
   id: row.id, propertyId: row.property_id, sellerId: row.seller_id,
   askingPrice: row.asking_price == null ? undefined : Number(row.asking_price), relationship: row.relationship,
   availability: row.availability, lastConfirmedAt: row.last_confirmed_at ?? undefined,
   siteVisitInstructions: row.site_visit_instructions ?? undefined, note: row.note ?? undefined,
-  documentStatus: row.document_status ?? undefined, isPrimary: row.is_primary,
+  documentStatus: row.document_status ?? undefined,
+  ...(readDocumentKinds(row.document_kinds) ? { documentKinds: readDocumentKinds(row.document_kinds)! } : {}),
+  isPrimary: row.is_primary,
 });
 const mapPropertyDocument = (row: PropertyDocumentRow): PropertyDocument => ({
   id: row.id, propertyId: row.property_id, title: row.title, type: row.document_type,
@@ -350,30 +364,111 @@ class SupaSellers implements SellerRepository {
     const a = aborted<readonly { seller: Seller; relationship: PropertySeller }[]>(o); if (a) return a;
     try {
       const c = await client();
-      const { data: relations, error } = await c.from('desk_property_sellers').select('*')
+      // One join instead of a seller query per relation.
+      const { data, error } = await c.from('desk_property_sellers')
+        .select('*,seller:desk_sellers!inner(*)')
         .eq('property_id', propertyId).order('is_primary', { ascending: false });
       if (error) return toErr(error);
-      const output: { seller: Seller; relationship: PropertySeller }[] = [];
-      for (const relation of (relations ?? []) as PropertySellerRow[]) {
-        const seller = await this.get(relation.seller_id, o);
-        if (seller.ok) output.push({ seller: seller.value, relationship: mapPropertySeller(relation) });
-      }
-      return ok(output);
+      const rows = (data ?? []) as (PropertySellerRow & { seller: SellerRow | null })[];
+      return ok(rows.flatMap((row) => row.seller
+        ? [{ seller: mapSeller(row.seller), relationship: mapPropertySeller(row) }]
+        : []));
     } catch (error) { return toErr(error); }
   }
   async getWithProperties(id: string, o?: QueryOptions): Promise<Result<SellerWithProperties>> {
-    const seller = await this.get(id, o); if (!seller.ok) return seller;
+    const workspace = await this.workspace(id, o);
+    if (!workspace.ok) return workspace;
+    return ok({
+      seller: workspace.value.seller,
+      properties: [...workspace.value.active, ...workspace.value.sold],
+    });
+  }
+
+  async directory(includeArchived = false, o?: QueryOptions): Promise<Result<readonly SellerDirectoryEntry[]>> {
+    const a = aborted<readonly SellerDirectoryEntry[]>(o); if (a) return a;
     try {
       const c = await client();
-      const { data, error } = await c.from('desk_property_sellers').select('*').eq('seller_id', id);
+      const { data, error } = await c.rpc('plotmap_seller_directory', {
+        p_include_archived: includeArchived,
+      });
       if (error) return toErr(error);
-      const properties: { property: Property; relationship: PropertySeller }[] = [];
-      const repo = new SupaProperties();
-      for (const relation of (data ?? []) as PropertySellerRow[]) {
-        const property = await repo.get(relation.property_id, o);
-        if (property.ok) properties.push({ property: property.value, relationship: mapPropertySeller(relation) });
-      }
-      return ok({ seller: seller.value, properties });
+      const rows = Array.isArray(data) ? data as Record<string, unknown>[] : [];
+      return ok(rows.map((row) => ({
+        seller: mapSeller({
+          id: String(row.id), name: String(row.name), primary_phone: String(row.primary_phone),
+          alternate_phone: (row.alternate_phone ?? null) as string | null,
+          seller_type: row.seller_type as Seller['type'],
+          business: (row.business ?? null) as string | null,
+          city: (row.city ?? null) as string | null,
+          note: (row.note ?? null) as string | null,
+          archived: row.archived === true,
+          created_at: String(row.created_at ?? ''), updated_at: String(row.updated_at ?? ''),
+        }),
+        liveCount: Number(row.live_count ?? 0),
+        soldCount: Number(row.sold_count ?? 0),
+        ...(row.last_confirmed_at ? { lastConfirmedAt: String(row.last_confirmed_at) } : {}),
+        anyUnconfirmed: row.any_unconfirmed === true,
+        properties: (Array.isArray(row.properties) ? row.properties : [])
+          .filter((p): p is Record<string, unknown> => !!p && typeof p === 'object')
+          .map((p) => ({
+            propertyId: String(p.propertyId ?? ''),
+            lifecycle: String(p.lifecycle ?? 'draft') as PropertyLifecycle,
+            ...(p.loc ? { loc: String(p.loc) } : {}),
+            ...(p.price != null ? { price: Number(p.price) } : {}),
+            ...(p.askingPrice != null ? { askingPrice: Number(p.askingPrice) } : {}),
+            availability: String(p.availability ?? 'unconfirmed') as PropertySeller['availability'],
+            ...(p.lastConfirmedAt ? { lastConfirmedAt: String(p.lastConfirmedAt) } : {}),
+            isPrimary: p.isPrimary === true,
+          })),
+      })));
+    } catch (error) { return toErr(error); }
+  }
+
+  async workspace(sellerId: string, o?: QueryOptions): Promise<Result<SellerWorkspace>> {
+    const a = aborted<SellerWorkspace>(o); if (a) return a;
+    try {
+      const c = await client();
+      const { data, error } = await c.rpc('plotmap_seller_workspace', { p_seller_id: sellerId });
+      if (error) return toErr(error);
+      const env = (data ?? {}) as Record<string, unknown>;
+      if (env.ok !== true) return err('not_found', 'Seller not found');
+
+      const pairs = (Array.isArray(env.properties) ? env.properties : [])
+        .filter((p): p is Record<string, unknown> => !!p && typeof p === 'object')
+        .flatMap((entry) => {
+          const wrapper = entry.property as { id?: unknown; payload?: unknown } | undefined;
+          const payload = wrapper?.payload;
+          if (!payload || typeof payload !== 'object') return [];
+          const property = normalizePropertyLocationOnRead(canonicalPropertyLifecycle({
+            ...(payload as Property), id: String(wrapper?.id ?? (payload as Property).id ?? ''),
+          }));
+          return [{
+            property,
+            relationship: mapPropertySeller(entry.relationship as PropertySellerRow),
+          }];
+        });
+
+      return ok({
+        seller: mapSeller(env.seller as SellerRow),
+        active: pairs.filter((p) => propertyLifecycle(p.property) !== 'sold'),
+        sold: pairs.filter((p) => propertyLifecycle(p.property) === 'sold'),
+      });
+    } catch (error) { return toErr(error); }
+  }
+
+  async setArchived(sellerId: string, archived: boolean, o?: QueryOptions): Promise<Result<void>> {
+    const a = aborted<void>(o); if (a) return a;
+    try {
+      const c = await client();
+      const { data, error } = await c.rpc('plotmap_set_seller_archived', {
+        p_payload: { sellerId, archived },
+      });
+      if (error) return toErr(error);
+      const env = (data ?? {}) as { ok?: boolean; reason?: string };
+      if (env.ok === true) return ok(undefined);
+      return env.reason === 'not_found'
+        ? err('not_found', 'Seller not found')
+        : err('validation', env.reason ?? 'Could not archive this seller');
     } catch (error) { return toErr(error); }
   }
   async save(input: SaveSellerInput, o?: QueryOptions): Promise<Result<Seller>> {
@@ -386,6 +481,7 @@ class SupaSellers implements SellerRepository {
       const { data, error } = await c.from('desk_sellers').upsert({
         id, dealer_id: dealer.value, name: input.name.trim(), primary_phone: input.primaryPhone.trim(),
         alternate_phone: input.alternatePhone?.trim() || null, seller_type: input.type,
+        business: input.business?.trim() || null,
         city: input.city?.trim() || null, note: input.note?.trim() || null,
       }).select('*').single();
       return error ? toErr(error) : ok(mapSeller(data as SellerRow));

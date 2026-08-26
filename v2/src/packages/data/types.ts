@@ -102,8 +102,12 @@ export interface Seller {
   primaryPhone: string;
   alternatePhone?: string;
   type: SellerType;
+  /** Firm / trading name recorded beside a person's name. */
+  business?: string;
   city?: string;
   note?: string;
+  /** Archived sellers keep every relationship, document and deal reference. */
+  archived?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -120,12 +124,47 @@ export interface PropertySeller {
   siteVisitInstructions?: string;
   note?: string;
   documentStatus?: string;
+  /** The paper kinds the seller has handed over — a multi-select in Contacts. */
+  documentKinds?: readonly string[];
   isPrimary: boolean;
 }
 
 export interface SellerWithProperties {
   seller: Seller;
   properties: readonly { property: Property; relationship: PropertySeller }[];
+}
+
+/**
+ * One row of the Sellers list, assembled server-side so the screen does
+ * not issue a query per seller. Counts come from the canonical
+ * property↔seller relationship, never from a cached copy.
+ */
+export interface SellerDirectoryEntry {
+  seller: Seller;
+  /** Properties still on the books (anything whose lifecycle is not sold). */
+  liveCount: number;
+  soldCount: number;
+  /** Most recent availability confirmation across this seller's properties. */
+  lastConfirmedAt?: string;
+  /** True when at least one attached property is not confirmed available. */
+  anyUnconfirmed: boolean;
+  properties: readonly {
+    propertyId: string;
+    lifecycle: PropertyLifecycle;
+    loc?: string;
+    price?: number;
+    askingPrice?: number;
+    availability: SellerAvailability;
+    lastConfirmedAt?: string;
+    isPrimary: boolean;
+  }[];
+}
+
+/** A Seller profile in one dealer-private round trip. */
+export interface SellerWorkspace {
+  seller: Seller;
+  active: readonly { property: Property; relationship: PropertySeller }[];
+  sold: readonly { property: Property; relationship: PropertySeller }[];
 }
 
 /** Canonical metadata for a private property document stored in Storage. */

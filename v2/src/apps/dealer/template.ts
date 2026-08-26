@@ -1080,11 +1080,28 @@ export function renderApp(state: any) {
                       \`).join('') }
                     </div>
                   \` : '' }
+                  \${ sellLoading ? \`
+                    <div
+                      style="margin-top:22px;padding:56px 40px;text-align:center;border-radius:24px;background:#fffdf7;box-shadow:inset 0 0 0 1.5px #d6c6f2">
+                      <i class="ph-fill ph-circle-notch" style="font-size:46px;color:#b9a6e0"></i>
+                      <div style="font-size:20px;font-weight:800;color:#241f1c;margin-top:12px">Loading sellers…</div>
+                    </div>
+                  \` : '' }
+                  \${ sellError ? \`
+                    <div role="alert"
+                      style="margin-top:22px;padding:56px 40px;text-align:center;border-radius:24px;background:#fff5ec;box-shadow:inset 0 0 0 2px #f5c9a0">
+                      <i class="ph-fill ph-warning-circle" style="font-size:46px;color:#c0490c"></i>
+                      <div style="font-size:20px;font-weight:800;color:#241f1c;margin-top:12px">Sellers could not be loaded</div>
+                      <div style="font-size:16.5px;color:#6b6156;margin-top:6px">\${ sellError }</div>
+                      <button onClick="\${__b(sellRetry)}"
+                        style="margin-top:16px;height:52px;padding:0 24px;border-radius:15px;background:#4a2c99;color:#efe8fb;font-size:16.5px;font-weight:800">Try again</button>
+                    </div>
+                  \` : '' }
                   \${ sellEmpty ? \`
                     <div
                       style="margin-top:22px;padding:56px 40px;text-align:center;border-radius:24px;background:#fffdf7;box-shadow:inset 0 0 0 1.5px #d6c6f2">
                       <i class="ph-fill ph-key" style="font-size:46px;color:#b9a6e0"></i>
-                      <div style="font-size:20px;font-weight:800;color:#241f1c;margin-top:12px">No seller here yet</div>
+                      <div style="font-size:20px;font-weight:800;color:#241f1c;margin-top:12px">\${ sellQ ? 'No seller matches that search' : 'No seller here yet' }</div>
                       <div style="font-size:16.5px;color:#6b6156;margin-top:6px">Add a seller once and reuse them on
                         every property they give you.</div>
                     </div>

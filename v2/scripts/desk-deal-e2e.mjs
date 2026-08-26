@@ -143,10 +143,57 @@ async function journey(A) {
     p_payload: {
       propertyId: ids.property, sellerId: ids.seller, askingPrice: 8800000,
       relationship: 'owner', availability: 'available',
-      siteVisitInstructions: 'Call before 6pm', isPrimary: true,
+      lastConfirmedAt: new Date().toISOString(),
+      siteVisitInstructions: 'Call before 6pm',
+      documentKinds: ['Registry / Sale Deed', 'Jamabandi / Fard'],
+      isPrimary: true,
     },
   });
   check('4. Seller attached with property-specific facts', assign?.ok === true, assign?.reason);
+  check('4b. Paper multi-select persisted on the relationship',
+    Array.isArray(assign?.relationship?.document_kinds)
+    && assign.relationship.document_kinds.length === 2,
+    JSON.stringify(assign?.relationship?.document_kinds));
+
+  /* 4c–4f. Reusable seller: the SAME seller on a second property. */
+  const secondProp = rid('prop2');
+  await db.from('crm_records').insert({
+    id: secondProp, entity_type: 'properties', dealer_id: A.dealerId, deleted: false,
+    payload: { id: secondProp, type: 'Flat', want: 'Flat', city: 'Mohali', area: 'E2E Heights',
+      loc: 'E2E Heights, Mohali', sector: '94', size: '1650 sq ft', facing: 'West',
+      position: 'Inside', approvals: [], landmarks: [], price: 6500000, photos: [],
+      published: true, sold: false, lifecycle: 'on-sale', views: 0 },
+  });
+  const { data: assign2 } = await db.rpc('plotmap_assign_property_seller', {
+    p_payload: { propertyId: secondProp, sellerId: ids.seller, askingPrice: 6300000,
+      relationship: 'authorized-seller', availability: 'unconfirmed', isPrimary: true },
+  });
+  check('4c. Same seller reused on a second property', assign2?.ok === true, assign2?.reason);
+
+  const { data: sellerRows } = await db.from('desk_sellers').select('id').eq('id', ids.seller);
+  check('4d. Reuse did not duplicate the seller record',
+    (sellerRows ?? []).length === 1, `rows=${(sellerRows ?? []).length}`);
+
+  const { data: directory } = await db.rpc('plotmap_seller_directory', { p_include_archived: false });
+  const dirRow = (directory ?? []).find((r) => r.id === ids.seller);
+  check('4e. Seller directory read model reports canonical counts',
+    dirRow?.live_count === 2 && dirRow?.sold_count === 0,
+    `live=${dirRow?.live_count} sold=${dirRow?.sold_count}`);
+
+  const { data: sellerWs } = await db.rpc('plotmap_seller_workspace', { p_seller_id: ids.seller });
+  check('4f. Seller workspace returns both properties with private facts',
+    sellerWs?.ok === true && (sellerWs.properties ?? []).length === 2
+    && (sellerWs.properties ?? []).some((p) => p.relationship?.site_visit_instructions === 'Call before 6pm'),
+    `properties=${(sellerWs?.properties ?? []).length}`);
+
+  /* 4g. Archiving is refused while the seller still holds live inventory. */
+  const { data: badArchive } = await db.rpc('plotmap_set_seller_archived', {
+    p_payload: { sellerId: ids.seller, archived: true },
+  });
+  check('4g. Archive refused while the seller holds active properties',
+    badArchive?.ok === false && /active propert/i.test(String(badArchive?.reason)),
+    badArchive?.reason);
+  ids.secondProperty = secondProp;
 
   /* 6–7. Canonical location, then On Sale. */
   const { data: located } = await db.rpc('plotmap_set_property_location', {
@@ -288,6 +335,12 @@ async function journey(A) {
   check('26. Seller keeps its sold-property history',
     (sellerRel ?? []).some((r) => r.property_id === ids.property));
 
+  const { data: dirAfter } = await db.rpc('plotmap_seller_directory', { p_include_archived: false });
+  const rowAfter = (dirAfter ?? []).find((r) => r.id === ids.seller);
+  check('26b. Seller directory moves the sold property out of live counts',
+    rowAfter?.live_count === 1 && rowAfter?.sold_count === 1,
+    `live=${rowAfter?.live_count} sold=${rowAfter?.sold_count}`);
+
   /* Property lifecycle + inventory withdrawal. */
   const { data: soldProp } = await db.from('crm_records')
     .select('payload').eq('id', ids.property).single();
@@ -388,6 +441,25 @@ async function isolation(B, owned) {
     p_payload: { dealId: owned.dealId, kind: 'token', amount: 1 },
   });
   check('ISO payment RPC refuses another dealer', pay?.ok === false, pay?.reason);
+
+  /* Seller read models must not leak another dealer's sellers. */
+  const { data: dirB } = await db.rpc('plotmap_seller_directory', { p_include_archived: true });
+  check('ISO seller directory returns none of another dealer\'s sellers',
+    !(dirB ?? []).some((r) => r.id === owned.seller), `rows=${(dirB ?? []).length}`);
+
+  const { data: wsB } = await db.rpc('plotmap_seller_workspace', { p_seller_id: owned.seller });
+  check('ISO seller workspace RPC refuses another dealer', wsB?.ok === false,
+    JSON.stringify(wsB)?.slice(0, 80));
+
+  const { data: archB } = await db.rpc('plotmap_set_seller_archived', {
+    p_payload: { sellerId: owned.seller, archived: true },
+  });
+  check('ISO seller archive RPC refuses another dealer', archB?.ok === false, archB?.reason);
+
+  const { data: assignB } = await db.rpc('plotmap_assign_property_seller', {
+    p_payload: { propertyId: owned.property, sellerId: owned.seller, relationship: 'owner' },
+  });
+  check('ISO seller assignment RPC refuses another dealer', assignB?.ok === false, assignB?.reason);
 
   const { data: startOther } = await db.rpc('plotmap_start_deal', {
     p_payload: { propertyId: owned.property, buyerId: owned.client, value: 1 },
