@@ -226,6 +226,34 @@ export interface PropertyDocument {
   updatedAt?: string;
 }
 
+/**
+ * What the dealer has actually been told the buyer wants. Every field is
+ * optional: a client created from a phone call has a name and a number
+ * and nothing else, and that must stay truthful rather than being filled
+ * with defaults. Money is stored in RUPEES, matching Property.price.
+ */
+export interface ClientRequirements {
+  /** Property types the buyer is looking at, in Desk vocabulary. */
+  types?: readonly string[];
+  /** Preferred localities / sectors. */
+  areas?: readonly string[];
+  budgetMin?: number;
+  budgetMax?: number;
+  sizeMin?: string;
+  sizeMax?: string;
+  /** "Corner", "Park facing", "Ready to move"… */
+  preferences?: readonly string[];
+  /** Where the buyer is in their search. */
+  stage?: string;
+}
+
+/** A dated dealer note. Newest first. */
+export interface ClientNote {
+  /** ISO timestamp. */
+  at: string;
+  text: string;
+}
+
 export interface Client {
   id: string;
   name: string;
@@ -249,6 +277,18 @@ export interface Client {
   /** Minimal sale-created buyers remain truthful until the dealer completes them. */
   profileCompleteness?: 'complete' | 'needs-attention';
   missingFields?: string[];
+
+  /* ── what the dealer knows ── */
+
+  alternatePhone?: string;
+  /** Firm name, when the buyer is buying through or for a business. */
+  business?: string;
+  /** Stated requirements. Absent until the dealer records something. */
+  requirements?: ClientRequirements;
+  /** Dealer's own notes, newest first. Dealer-private. */
+  notes?: readonly ClientNote[];
+  /** Archived clients keep every link, deal and purchase reference. */
+  archived?: boolean;
 }
 
 export interface DealDocument { name: string; kind?: string; url?: string; }

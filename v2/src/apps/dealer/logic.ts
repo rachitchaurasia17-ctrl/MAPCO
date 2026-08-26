@@ -24,6 +24,7 @@ export class Component extends DCLogic {
     contactMode: 'clients', cliQ: '', cliFilter: 'all', sellQ: '', addClientBig: false, addSellerOpen: false, sellerProfile: null,
     savingSeller: false, sellerError: '', sellerEditId: null,
     savingSold: false, soldError: '', propError: '', propMissing: [],
+    savingClient: false, clientError: '',
     cliEdit: false, noteDraft: '', cpPick: false, cpPickQ: '', cpGroup: 'shortlisted', linkView: null, linkTab: 'focus', lkQ: '', lkFilter: 'all', linksTab: 'props', arch: null,
     cf: { name: '', phone: '', phone2: '', business: '', city: '', types: [], areas: [], budgetFrom: '', budgetTo: '', sizeFrom: '', sizeTo: '', prefs: [], customPref: '', stage: 'Just looking', note: '', areaDraft: '' },
     sf2: { name: '', phone: '', phone2: '', business: '', kind: 'Individual', city: '', note: '' },
@@ -256,7 +257,19 @@ export class Component extends DCLogic {
     const w = c.want || 'Plot'; const m = { Plot: 'Residential Plot', Flat: 'Flat', Kothi: 'Kothi', Villa: 'Villa', Commercial: 'Commercial SCO' };
     return [m[w] || 'Residential Plot'];
   }
-  knownDepth(c) { let n = 0; if ((c.types || []).length) n++; if ((c.areas || []).length) n++; if (c.bFrom || c.budgetMax) n++; if ((c.prefs || []).length) n++; if ((c.notes || []).length) n++; return n; }
+  /* How much the dealer actually knows. Drives Needs Attention, and is
+     computed from what was genuinely recorded — a client with only a name
+     and a number reads as needing details, which is the truth. */
+  knownDepth(c) {
+    let n = 0;
+    if ((c.types || []).length) n++;
+    if ((c.areas || []).length) n++;
+    if (c.bFrom || c.bTo || c.budgetMax) n++;
+    if ((c.prefs || []).length) n++;
+    if ((c.notes || []).length) n++;
+    if (c.sizeFrom || c.sizeTo) n++;
+    return n;
+  }
   contactState(c) {
     const bought = this.properties.some(pr => pr.sale && pr.sale.buyerId === c.id) || this.deals.some(d => d.client === c.name && d.stage === 'closed');
     if (bought) return 'bought';
@@ -1537,39 +1550,55 @@ export class Component extends DCLogic {
     const a = parseFloat(f.budgetFrom), b = parseFloat(f.budgetTo);
     if (!isNaN(a) && !isNaN(b)) return '₹' + a + '–' + b + ' Cr'; if (!isNaN(a)) return '₹' + a + ' Cr+'; if (!isNaN(b)) return 'Up to ₹' + b + ' Cr'; return '—';
   }
-  saveNewClient() {
-    const f = this.state.cf; if (!f.name.trim() || !f.phone.trim()) return;
-    const b = parseFloat(f.budgetTo) || parseFloat(f.budgetFrom) || 0;
-    const c = this.createClient({
-      name: f.name.trim(), phone: f.phone.trim(), phone2: f.phone2, business: f.business, city: f.city,
-      types: f.types, areas: f.areas, bFrom: parseFloat(f.budgetFrom) || null, bTo: parseFloat(f.budgetTo) || null,
-      sizeFrom: f.sizeFrom, sizeTo: f.sizeTo, prefs: f.prefs, stage: f.stage, note: f.note, budget: this.cfBudget(f), budgetMax: b * 1e7
-    });
-    this.setState({ addClientBig: false, cf: this.blankCF(), section: 'clients', contactMode: 'clients', selectedClient: c.id });
+  /* Add Client. Name + phone is the minimum; everything else is optional
+     and stays genuinely absent until the dealer records it. An existing
+     client with the same number is reused rather than duplicated. */
+  async saveNewClient() {
+    const f = this.state.cf;
+    if (!f.name.trim() || !f.phone.trim()) return;
+    if (this.state.savingClient) return;
+    const existing = deskStore.findClientByPhone(f.phone);
+    if (existing) { this.useExistingClient(existing.id); return; }
+    this.setState({ savingClient: true, clientError: '' });
+    const id = await deskStore.saveClient(f);
+    if (!id) { this.setState({ savingClient: false, clientError: deskStore.lastWriteError }); return; }
+    deskStore.loadClientWorkspace(id);
+    this.setState({ savingClient: false, clientError: '', addClientBig: false, cf: this.blankCF(), section: 'clients', contactMode: 'clients', selectedClient: id });
   }
-  useExistingClient(id) { this.setState({ addClientBig: false, cf: this.blankCF(), section: 'clients', contactMode: 'clients', selectedClient: id }); }
-  saveClientEdit() {
-    const f = this.state.cf; const c = this.clients.find(x => x.id === this.state.selectedClient); if (!c) return;
-    c.name = f.name.trim() || c.name; c.phone = f.phone.trim() || c.phone; c.phone2 = f.phone2; c.business = f.business; c.city = f.city;
-    c.types = f.types.slice(); c.want = f.types[0] ? this.wantOf(f.types[0]) : c.want; c.areas = f.areas.slice();
-    c.bFrom = parseFloat(f.budgetFrom) || null; c.bTo = parseFloat(f.budgetTo) || null; c.budget = this.cfBudget(f);
-    c.budgetMax = (parseFloat(f.budgetTo) || parseFloat(f.budgetFrom) || 0) * 1e7;
-    c.sizeFrom = f.sizeFrom; c.sizeTo = f.sizeTo; c.prefs = f.prefs.slice(); c.stage = f.stage;
-    if ((f.note || '').trim()) c.notes = [{ t: 'just now', x: f.note.trim() }, ...(c.notes || [])];
-    this.setState({ cliEdit: false, cf: this.blankCF() });
+  useExistingClient(id) {
+    deskStore.loadClientWorkspace(id);
+    this.setState({ addClientBig: false, cf: this.blankCF(), section: 'clients', contactMode: 'clients', selectedClient: id });
   }
-  addNote() {
+  /* Update the SAME canonical client — correcting a number never creates
+     a second copy of the person. */
+  async saveClientEdit() {
+    const f = this.state.cf; const id = this.state.selectedClient;
+    if (!id || this.state.savingClient) return;
+    this.setState({ savingClient: true, clientError: '' });
+    const saved = await deskStore.saveClient(f, id);
+    if (!saved) { this.setState({ savingClient: false, clientError: deskStore.lastWriteError }); return; }
+    this.setState({ savingClient: false, clientError: '', cliEdit: false, cf: this.blankCF() });
+  }
+  async addNote() {
     const v = (this.state.noteDraft || '').trim(); if (!v) return;
-    const c = this.clients.find(x => x.id === this.state.selectedClient); if (!c) return;
-    c.notes = [{ t: 'just now', x: v }, ...(c.notes || [])]; this.setState({ noteDraft: '' });
+    const id = this.state.selectedClient; if (!id) return;
+    const ok = await deskStore.addClientNote(id, v);
+    this.setState({ noteDraft: ok ? '' : this.state.noteDraft, clientError: ok ? '' : deskStore.lastWriteError });
   }
-  toggleLike(cid, pid) {
+  async toggleLike(cid, pid) {
     const c = this.clients.find(x => x.id === cid); if (!c) return;
     const arr = (c.interest || []).slice(); const i = arr.indexOf(pid);
     if (i >= 0) arr.splice(i, 1); else arr.push(pid);
     c.interest = arr; this.forceUpdate();
+    await deskStore.setClientInterest(cid, arr);
   }
-  archiveClient(id) { const c = this.clients.find(x => x.id === id); if (c) c.archived = true; this.setState({ selectedClient: null, arch: null }); }
+  /* Archiving is non-destructive — links, deals and purchases survive. */
+  async archiveClient(id) {
+    const done = await deskStore.archiveClient(id);
+    if (!done) { this.setState({ arch: null, clientError: deskStore.lastWriteError }); return; }
+    deskStore.closeClientWorkspace();
+    this.setState({ selectedClient: null, arch: null, clientError: '' });
+  }
   setSF2(o) { this.setState({ sf2: { ...this.state.sf2, ...o } }); }
   onSF2(e) { this.setSF2({ [e.target.name]: e.target.value }); }
   /* Add Seller from Contacts. Creating and editing both land here, so a
@@ -1679,7 +1708,7 @@ export class Component extends DCLogic {
           matchText: pl ? ('Show: ' + pl.type + ' · ' + this.inr(pl.price)) : 'No stock yet — source one',
           matchIcon: pl ? 'ph-fill ph-map-pin-line' : 'ph ph-warning-circle',
           matchStyle: `display:none;align-items:center;gap:6px;padding:8px 12px;border-radius:11px;font-size:12.5px;font-weight:700;flex:none;max-width:230px;${pl ? 'background:#d9f5e3;color:#0b8f45' : 'background:#f6ded9;color:#b5322a'};@media(min-width:900px){display:inline-flex}`,
-          open: () => this.setState({ section: 'clients', selectedClient: c.id }), stop: (e) => e.stopPropagation()
+          open: () => { deskStore.loadClientWorkspace(c.id); this.setState({ section: 'clients', selectedClient: c.id }); }, stop: (e) => e.stopPropagation()
         };
       });
     // matchStyle can't use media query inline; simplify:
@@ -2048,7 +2077,7 @@ export class Component extends DCLogic {
         nextLabel: nx ? nx.k : 'Set a next action', nextIcon: nx ? (this.NEXTICON[nx.k] || 'ph-fill ph-note-pencil') : 'ph-fill ph-plus-circle',
         nextWhen: nx ? this.dayLabel(nx.day) : '',
         nextWhenStyle: 'display:inline-flex;align-items:center;height:30px;padding:0 10px;border-radius:9px;font-size:14px;font-weight:800;' + (nx && nx.day < DTODAY ? 'background:#ffdfe2;color:#b02a37' : nx && nx.day === DTODAY ? 'background:#f8a800;color:#241d0c' : 'background:#f3ece0;color:#7a6f60'),
-        openBuyer: () => { if (cl.id) this.setState({ section: 'clients', contactMode: 'clients', selectedClient: cl.id, cpTab: 'overview' }); },
+        openBuyer: () => { if (cl.id) { deskStore.loadClientWorkspace(cl.id); this.setState({ section: 'clients', contactMode: 'clients', selectedClient: cl.id, cpTab: 'overview' }); } },
         openProp: () => { if (S.pr) this.setState({ section: 'properties', propDetail: S.pr.id, propShot: 0, propTab: 'gallery' }); },
         openSeller: () => { if (S.sr) { deskStore.loadSellerWorkspace(S.sr.id); this.setState({ section: 'clients', contactMode: 'sellers', sellerView: S.sr.id, svTab: 'overview' }); } },
         update: () => this.openUpdate(d.id),
@@ -2586,7 +2615,7 @@ export class Component extends DCLogic {
       initials: this.initialsOf(c.name), isNew: this.newClients.includes(c.id), photoId: 'client-photo-' + c.id,
       dealCount: this.deals.filter(d => d.client === c.name).length,
       statusLabel: cstMeta[c.status].l, statusStyle: `display:inline-flex;padding:5px 12px;border-radius:999px;font-size:12.5px;font-weight:800;background:${cstMeta[c.status].b};color:${cstMeta[c.status].c}`,
-      open: () => this.setState({ selectedClient: c.id }), stop: (e) => e.stopPropagation()
+      open: () => { deskStore.loadClientWorkspace(c.id); this.setState({ selectedClient: c.id }); }, stop: (e) => e.stopPropagation()
     });
     const filterDefs = [{ k: 'all', l: 'Everyone' }, { k: 'active', l: 'Hot' }, { k: 'warm', l: 'Warm' }, { k: 'cold', l: 'Cold' }, { k: 'closed', l: 'Done' }];
     const clientFilterChips = filterDefs.map(fd => {
@@ -4084,7 +4113,7 @@ export class Component extends DCLogic {
               boughtLine: bought.length ? (bought.length === 1 ? 'Bought 1 property' : 'Bought ' + bought.length + ' properties') : '',
               hasBought: bought.length > 0,
               needsWork: st === 'attention',
-              keyOpen: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); this.setState({ selectedClient: c.id, cpTab: 'overview' }); } },
+              keyOpen: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); deskStore.loadClientWorkspace(c.id); this.setState({ selectedClient: c.id, cpTab: 'overview' }); } },
               sendLink: (e) => {
                 if (e && e.stopPropagation) e.stopPropagation();
                 this.setState({ selectedClient: null, linkBuild: 'new', lstep: 3, lSearchQ: '', lSearchQ2: '', lform: { ...this.blankL(), clientId: c.id } });

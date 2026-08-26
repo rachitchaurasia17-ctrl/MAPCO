@@ -25,6 +25,7 @@ import { adapter, activeDataMode } from '../../packages/data/adapter';
 import type {
   SellerDirectoryEntry, SellerWorkspace, SellerType, SellerRelationship,
   SellerAvailability, Property, PropertySeller, PropertyLifecycle,
+  Client, ClientRequirements,
 } from '../../packages/data/types';
 import type { RepoError } from '../../packages/data/contracts';
 import { normalizePropertySpecs } from '../../packages/data/property-specs';
@@ -360,6 +361,160 @@ export function toCanonicalProperty(
     ...(form.registry ? { registryRef: String(form.registry) } : {}),
     ...(form.approval ? { approvalRef: String(form.approval) } : {}),
   } as Property;
+}
+
+/* ── Desk-shaped client ──────────────────────────────────────────
+   Contacts reads a client flat (`c.types`, `c.areas`, `c.bFrom`), while
+   canonically those live under `requirements`. Same round-trip shape as
+   properties: flatten on read, lift on write. Budget is stored in RUPEES
+   canonically and shown in crore by the Desk. */
+
+export interface ClientFormDraft {
+  name?: string; phone?: string; phone2?: string; business?: string; city?: string;
+  types?: readonly string[]; areas?: readonly string[];
+  budgetFrom?: string; budgetTo?: string;
+  sizeFrom?: string; sizeTo?: string;
+  preferences?: readonly string[]; prefs?: readonly string[];
+  stage?: string; note?: string;
+  [key: string]: unknown;
+}
+
+const CRORE = 1e7;
+const crore = (rupees: number | undefined): string =>
+  rupees === undefined || rupees === null ? '' : String(+(rupees / CRORE).toFixed(3));
+
+/** "₹1.2–1.8 Cr" from what was actually recorded — never a made-up band. */
+export function budgetLabel(min: number | undefined, max: number | undefined): string {
+  const fmt = (v: number) => {
+    const cr = v / CRORE;
+    return cr >= 1 ? `${+cr.toFixed(2)} Cr` : `${Math.round(v / 1e5)} L`;
+  };
+  if (min && max && min !== max) return `₹${fmt(min).replace(/ (Cr|L)$/, '')}–${fmt(max)}`;
+  if (max) return `₹${fmt(max)}`;
+  if (min) return `₹${fmt(min)}+`;
+  return '';
+}
+
+export function toDeskClient(client: Client): Record<string, unknown> {
+  const r = client.requirements ?? {};
+  return {
+    ...client,
+    phone2: client.alternatePhone ?? '',
+    business: client.business ?? '',
+    types: [...(r.types ?? [])],
+    areas: [...(r.areas ?? [])],
+    bFrom: r.budgetMin !== undefined ? r.budgetMin / CRORE : null,
+    bTo: r.budgetMax !== undefined ? r.budgetMax / CRORE : null,
+    sizeFrom: r.sizeMin ?? '',
+    sizeTo: r.sizeMax ?? '',
+    prefs: [...(r.preferences ?? [])],
+    stage: r.stage ?? '',
+    // Desk renders `notes` as {t,x}; canonical stores {at,text}.
+    notes: (client.notes ?? []).map((n) => ({ t: n.at, x: n.text })),
+    budget: client.budget || budgetLabel(r.budgetMin, r.budgetMax),
+    budgetMax: client.budgetMax || r.budgetMax || 0,
+    plots: [...(client.purchased ?? [])],
+    hot: client.status === 'hot',
+    archived: client.archived === true,
+  };
+}
+
+export function toCanonicalClient(
+  form: ClientFormDraft,
+  existing?: Client,
+  id?: string,
+): Client {
+  const num = (v: unknown): number | undefined => {
+    const parsed = parseFloat(String(v ?? ''));
+    return Number.isFinite(parsed) && parsed > 0 ? Math.round(parsed * CRORE) : undefined;
+  };
+  const budgetMin = num(form.budgetFrom);
+  const budgetMax = num(form.budgetTo);
+  const types = [...(form.types ?? [])].filter(Boolean);
+  const areas = [...(form.areas ?? [])].filter(Boolean);
+  const preferences = [...(form.preferences ?? form.prefs ?? [])].filter(Boolean);
+  const stage = String(form.stage ?? '').trim();
+  const sizeMin = String(form.sizeFrom ?? '').trim();
+  const sizeMax = String(form.sizeTo ?? '').trim();
+
+  const requirements: ClientRequirements = {
+    ...(types.length ? { types } : {}),
+    ...(areas.length ? { areas } : {}),
+    ...(budgetMin !== undefined ? { budgetMin } : {}),
+    ...(budgetMax !== undefined ? { budgetMax } : {}),
+    ...(sizeMin ? { sizeMin } : {}),
+    ...(sizeMax ? { sizeMax } : {}),
+    ...(preferences.length ? { preferences } : {}),
+    ...(stage ? { stage } : {}),
+  };
+  const hasRequirements = Object.keys(requirements).length > 0;
+
+  // A brand-new note is prepended; existing notes are preserved.
+  const noteText = String(form.note ?? '').trim();
+  const notes = noteText
+    ? [{ at: new Date().toISOString(), text: noteText }, ...(existing?.notes ?? [])].slice(0, 200)
+    : existing?.notes;
+
+  const want = types[0] ? deskWantOf(types[0]) : (existing?.want ?? '');
+
+  return {
+    ...(existing ?? {}),
+    id: id ?? existing?.id ?? '',
+    name: String(form.name ?? existing?.name ?? '').trim(),
+    phone: String(form.phone ?? existing?.phone ?? '').trim(),
+    city: String(form.city ?? existing?.city ?? '').trim(),
+    want: want as Client['want'],
+    budget: budgetLabel(budgetMin, budgetMax) || existing?.budget || '',
+    budgetMax: budgetMax ?? existing?.budgetMax ?? 0,
+    status: existing?.status ?? 'active',
+    seen: existing?.seen ?? '',
+    note: existing?.note ?? '',
+    viewed: existing?.viewed ?? [],
+    interest: existing?.interest ?? [],
+    purchased: existing?.purchased ?? [],
+    ...(String(form.phone2 ?? '').trim() ? { alternatePhone: String(form.phone2).trim() } : {}),
+    ...(String(form.business ?? '').trim() ? { business: String(form.business).trim() } : {}),
+    ...(hasRequirements ? { requirements } : {}),
+    ...(notes?.length ? { notes } : {}),
+  } as Client;
+}
+
+/** Desk property type → the buyer's `want` bucket. */
+function deskWantOf(type: string): string {
+  const t = type.toLowerCase();
+  if (t.includes('plot')) return 'Plot';
+  if (t.includes('kothi')) return 'Kothi';
+  if (t.includes('villa')) return 'Villa';
+  if (t.includes('sco') || t.includes('booth') || t.includes('office') || t.includes('showroom')) return 'Commercial';
+  return 'Flat';
+}
+
+/**
+ * How much the dealer actually knows about this buyer. Drives "Needs
+ * attention": a client with a name and a number and nothing else needs
+ * completing, and saying so is more useful than pretending otherwise.
+ */
+export function clientKnownDepth(client: Client): number {
+  const r = client.requirements ?? {};
+  let depth = 0;
+  if ((r.types ?? []).length) depth++;
+  if ((r.areas ?? []).length) depth++;
+  if (r.budgetMin !== undefined || r.budgetMax !== undefined || client.budgetMax) depth++;
+  if ((r.preferences ?? []).length) depth++;
+  if ((client.notes ?? []).length) depth++;
+  if (r.sizeMin || r.sizeMax) depth++;
+  return depth;
+}
+
+/** The specific things still missing, so the UI can name them truthfully. */
+export function clientMissingFields(client: Client): string[] {
+  const r = client.requirements ?? {};
+  const missing: string[] = [];
+  if (!String(client.city ?? '').trim()) missing.push('city');
+  if (!(r.types ?? []).length) missing.push('property type');
+  if (!(r.areas ?? []).length) missing.push('preferred areas');
+  if (r.budgetMin === undefined && r.budgetMax === undefined && !client.budgetMax) missing.push('budget');
+  return missing;
 }
 
 /** A dealer-facing message. Transport detail never reaches the screen. */
@@ -707,15 +862,140 @@ export class DeskStore {
       this.clients.splice(0, this.clients.length);
       this.clientsStatus = { state: 'error', error: message(result.error, 'Clients could not be loaded') };
     } else {
-      this.clients.splice(0, this.clients.length, ...result.value.items.map((c) => ({
-        ...c,
-        // The Desk reads these two names; canonical uses purchased/note.
-        plots: [...(c.purchased ?? [])],
-        hot: c.status === 'hot',
-      })));
+      this.clients.splice(0, this.clients.length,
+        ...result.value.items.filter((c) => !c.archived).map(toDeskClient));
       this.clientsStatus = { state: 'ready' };
     }
     this.notify();
+  }
+
+  /**
+   * Create or update a client. `id` present = update, so correcting a
+   * number never creates a second copy of the same person.
+   */
+  async saveClient(form: ClientFormDraft, id?: string): Promise<string | null> {
+    this.lastWriteError = '';
+    if (!String(form.name ?? '').trim() || !String(form.phone ?? '').trim()) {
+      this.lastWriteError = 'A client needs at least a name and a phone number.';
+      this.notify();
+      return null;
+    }
+    const existing = id ? await this.readCanonicalClient(id) : undefined;
+    const result = await adapter.customers.save(toCanonicalClient(form, existing, id));
+    if (!result.ok) {
+      this.lastWriteError = message(result.error, 'Could not save this client');
+      this.notify();
+      return null;
+    }
+    await this.loadClients();
+    if (this.clientWorkspaceId === result.value.id) await this.loadClientWorkspace(result.value.id);
+    return result.value.id;
+  }
+
+  private async readCanonicalClient(id: string): Promise<Client | undefined> {
+    const result = await adapter.customers.get(id);
+    return result.ok ? result.value : undefined;
+  }
+
+  /** Append a dated note. Notes are dealer-private and never client-safe. */
+  async addClientNote(id: string, text: string): Promise<boolean> {
+    this.lastWriteError = '';
+    const trimmed = text.trim();
+    if (!trimmed) return false;
+    const existing = await this.readCanonicalClient(id);
+    if (!existing) { this.lastWriteError = 'This client is no longer available.'; this.notify(); return false; }
+    const result = await adapter.customers.save({
+      ...existing,
+      notes: [{ at: new Date().toISOString(), text: trimmed }, ...(existing.notes ?? [])].slice(0, 200),
+    });
+    if (!result.ok) {
+      this.lastWriteError = message(result.error, 'Could not save this note');
+      this.notify();
+      return false;
+    }
+    await this.loadClients();
+    if (this.clientWorkspaceId === id) await this.loadClientWorkspace(id);
+    return true;
+  }
+
+  /** Archive is non-destructive: links, deals and purchases all survive. */
+  async archiveClient(id: string): Promise<boolean> {
+    this.lastWriteError = '';
+    const existing = await this.readCanonicalClient(id);
+    if (!existing) { this.lastWriteError = 'This client is no longer available.'; this.notify(); return false; }
+    const result = await adapter.customers.save({ ...existing, archived: true });
+    if (!result.ok) {
+      this.lastWriteError = message(result.error, 'Could not archive this client');
+      this.notify();
+      return false;
+    }
+    await this.loadClients();
+    return true;
+  }
+
+  /** Shortlist toggle. Persisted so it survives a refresh. */
+  async setClientInterest(id: string, propertyIds: readonly string[]): Promise<boolean> {
+    this.lastWriteError = '';
+    const existing = await this.readCanonicalClient(id);
+    if (!existing) return false;
+    const result = await adapter.customers.save({ ...existing, interest: [...propertyIds] });
+    if (!result.ok) {
+      this.lastWriteError = message(result.error, 'Could not update the shortlist');
+      this.notify();
+      return false;
+    }
+    await this.loadClients();
+    return true;
+  }
+
+  /** Existing client with the same 10-digit number, so Add does not duplicate. */
+  findClientByPhone(phone: string, skipId?: string): Record<string, unknown> | null {
+    const digits = String(phone ?? '').replace(/[^0-9]/g, '').slice(-10);
+    if (digits.length < 10) return null;
+    return this.clients.find((c) =>
+      c.id !== skipId && String(c.phone ?? '').replace(/[^0-9]/g, '').slice(-10) === digits) ?? null;
+  }
+
+  /* ── client profile ── */
+
+  clientWorkspace: Record<string, unknown> | null = null;
+  clientWorkspaceId: string | null = null;
+  clientWorkspaceStatus: SectionStatus = { state: 'idle' };
+
+  /**
+   * A client profile assembled from canonical relationships: the client,
+   * the properties they have actually bought, and their deals. Link
+   * activity joins this when Client Links is wired — until then the
+   * behaviour panel shows a truthful empty state rather than invented
+   * opens.
+   */
+  async loadClientWorkspace(clientId: string): Promise<void> {
+    this.clientWorkspaceId = clientId;
+    this.clientWorkspaceStatus = { state: 'loading' };
+    this.notify();
+    const client = await adapter.customers.get(clientId);
+    if (this.clientWorkspaceId !== clientId) return;
+    if (!client.ok) {
+      this.clientWorkspace = null;
+      this.clientWorkspaceStatus = { state: 'error', error: message(client.error, 'Client could not be loaded') };
+      this.notify();
+      return;
+    }
+    const purchasedIds = new Set(client.value.purchased ?? []);
+    const purchased = this.properties.filter((p) => purchasedIds.has(String(p.id)));
+    this.clientWorkspace = {
+      client: toDeskClient(client.value),
+      purchased,
+      canonical: client.value,
+    };
+    this.clientWorkspaceStatus = { state: 'ready' };
+    this.notify();
+  }
+
+  closeClientWorkspace(): void {
+    this.clientWorkspaceId = null;
+    this.clientWorkspace = null;
+    this.clientWorkspaceStatus = { state: 'idle' };
   }
 
   /** Remove a property that has not sold. Sold records keep their history. */
