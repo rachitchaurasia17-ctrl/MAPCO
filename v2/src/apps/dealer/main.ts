@@ -3,6 +3,9 @@ import '../../packages/ui/reset.css';
 import { Component } from './logic';
 import { renderApp, globalHead } from './template';
 import { requireSession } from '../../packages/data/session';
+import { setupAppFullscreenSync } from '../../packages/ui/fullscreen';
+
+setupAppFullscreenSync();
 
 const app = document.getElementById('app');
 if (app) {

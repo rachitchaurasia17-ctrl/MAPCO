@@ -1,6 +1,6 @@
 export class DCLogic {
   state: any = {};
-  
+
   constructor() {
     this.setState = this.setState.bind(this);
     this.forceUpdate = this.forceUpdate.bind(this);
@@ -24,10 +24,10 @@ export class DCLogic {
   render() {
     const root = document.getElementById('app');
     if (!root) return;
-    
+
     // We bind all methods of this instance into the scope so that the template compiler can access them via 'props'
     const props = { ...this.state };
-    
+
     // Get all prototype methods (except constructor and standard Object methods)
     let proto = Object.getPrototypeOf(this);
     while (proto && proto !== Object.prototype) {
@@ -38,7 +38,7 @@ export class DCLogic {
       });
       proto = Object.getPrototypeOf(proto);
     }
-    
+
     if (typeof (this as any).renderVals === 'function') {
       try {
         const computed = (this as any).renderVals();
@@ -49,7 +49,7 @@ export class DCLogic {
         console.error("renderVals failed:", err);
       }
     }
-    
+
     // Also include class properties directly mapped
     Object.keys(this).forEach(key => {
       if (key !== 'state') {
@@ -74,7 +74,7 @@ export class DCLogic {
 
   mount(rootElement: HTMLElement, templateFn: (props: any) => string) {
     (this as any).__templateFn = templateFn;
-    
+
     // Create global head if not present (templateFn might provide globalHead)
     if (!document.getElementById('global-head') && (templateFn as any).globalHead) {
       const d = document.createElement('div');

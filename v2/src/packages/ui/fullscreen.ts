@@ -107,3 +107,41 @@ export function mountFullscreenButton(host: HTMLElement, opts: FullscreenButtonO
     btn.remove();
   };
 }
+
+/** Keep fullscreen mode synchronized and support Ctrl+F11 / F11 shortcuts. */
+export function setupAppFullscreenSync(): void {
+  const tryEnter = async () => {
+    const doc = document as any;
+    const el = document.documentElement as any;
+    if (!doc.fullscreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+      try {
+        if (el.requestFullscreen) await el.requestFullscreen();
+        else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+        else if (el.msRequestFullscreen) await el.msRequestFullscreen();
+      } catch {
+        // browser may require user gesture
+      }
+    }
+  };
+
+  if (sessionStorage.getItem('mapco_wants_fullscreen') === '1') {
+    void tryEnter();
+    const onUserGesture = () => {
+      void tryEnter();
+      window.removeEventListener('pointerdown', onUserGesture, true);
+      window.removeEventListener('keydown', onUserGesture, true);
+      window.removeEventListener('click', onUserGesture, true);
+    };
+    window.addEventListener('pointerdown', onUserGesture, { capture: true, once: true });
+    window.addEventListener('keydown', onUserGesture, { capture: true, once: true });
+    window.addEventListener('click', onUserGesture, { capture: true, once: true });
+  }
+
+  // Ctrl+F11 / F11 keyboard shortcut support
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'F11' || (e.ctrlKey && (e.key === 'F11' || e.key === 'f11'))) {
+      e.preventDefault();
+      void toggleFullscreen();
+    }
+  });
+}

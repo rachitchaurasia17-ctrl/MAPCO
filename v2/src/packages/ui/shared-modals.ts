@@ -105,7 +105,14 @@ export class AddPropertyFlow {
   private syncSectorSelection() {
     const candidates = sectorMapsForCity(this.placementCatalog, this.addForm.city);
     const current = candidates.find((map) => map.id === this.selectedSectorMapId);
-    if (!current) this.selectedSectorMapId = candidates.length === 1 ? candidates[0]!.id : '';
+    if (!current) {
+      const areaNorm = (this.addForm.area || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const matched = areaNorm ? candidates.find(c => {
+        const sNorm = (c.sectorOrBlock || c.title).toLowerCase().replace(/[^a-z0-9]/g, '');
+        return sNorm && (sNorm.includes(areaNorm) || areaNorm.includes(sNorm));
+      }) : undefined;
+      this.selectedSectorMapId = matched ? matched.id : (candidates.length === 1 ? candidates[0]!.id : '');
+    }
     const selected = candidates.find((map) => map.id === this.selectedSectorMapId);
     if (selected) this.addForm.sector = selected.sectorOrBlock || selected.title;
   }
@@ -460,6 +467,9 @@ export class AddPropertyFlow {
       this.addForm = { ...this.addForm, [target.name as keyof typeof this.addForm]: target.value } as any;
       this.photoError = '';
       if (target.name === "city" || target.name === "area") {
+        this.syncSectorSelection();
+        const secSel = this.el.querySelector<HTMLSelectElement>('select[name="sectorMapId"]');
+        if (secSel) secSel.value = this.selectedSectorMapId;
         const locationLabel = this.el.querySelector<HTMLElement>("#pm-add-preview-location");
         if (locationLabel) locationLabel.textContent = `${this.addForm.area}, ${this.addForm.city}`;
       }

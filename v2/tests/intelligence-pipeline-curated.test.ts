@@ -108,12 +108,14 @@ describe('live pipeline — curated City Reach', () => {
     }
   });
 
-  it('presents five to six City Reach anchors', async () => {
+  /* Count is capped, never padded. Proximity is a hard filter now, so a
+     location with few genuinely nearby anchors correctly returns few. */
+  it('presents at most six City Reach anchors and never pads', async () => {
     const { deps } = makeDeps(SECTOR_78);
     const result = await runPropertyIntelligence({
       dealerId: 'd1', propertyId: 'p1', point: SECTOR_78,
     } as never, deps);
-    expect(result.viewModel.cityReach.length).toBeGreaterThanOrEqual(5);
+    expect(result.viewModel.cityReach.length).toBeGreaterThan(0);
     expect(result.viewModel.cityReach.length).toBeLessThanOrEqual(6);
   });
 

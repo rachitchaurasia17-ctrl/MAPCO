@@ -8,6 +8,7 @@ import type { CuratedLandmark } from '../src/packages/property-intelligence/land
 import {
   shortlistCityReach, finalizeCityReach, haversineKm,
   type RoutedCandidate,
+  CITY_REACH_DISTANCE,
 } from '../src/packages/property-intelligence/landmarks/city-reach-selector';
 
 const INDEX = new URL('../public/landmarks/index.json', import.meta.url);
@@ -117,23 +118,23 @@ describe('City Reach shortlisting (local geometry, no API cost)', () => {
     expect(picked.some((c) => c.landmark.category === 'airport')).toBe(true);
   });
 
-  it('keeps the shortlist varied instead of returning one category', () => {
-    const picked = shortlistCityReach(ORIGINS.sector78Mohali, library, { shortlistSize: 10, maxPerCategory: 2 });
-    const counts = new Map<string, number>();
-    for (const c of picked) counts.set(c.landmark.category, (counts.get(c.landmark.category) ?? 0) + 1);
-    for (const [, n] of counts) expect(n).toBeLessThanOrEqual(2);
-    expect(counts.size).toBeGreaterThanOrEqual(4);
+  /* Variety is no longer FORCED — a cap would let a weak anchor in ahead
+     of a strong one. A dense location still produces a varied answer
+     naturally, which is what this now checks. */
+  it('produces a naturally varied answer for a dense location', () => {
+    const picked = shortlistCityReach(ORIGINS.sector78Mohali, library, { shortlistSize: 10 });
+    const categories = new Set(picked.map((c) => c.landmark.category));
+    expect(categories.size).toBeGreaterThanOrEqual(3);
   });
 
-  it('lets connectivity anchors reach further than a mall', () => {
-    // The airport is ~9km from Sector 78 but a mall that far would be cut.
+  /* Connectivity used to be allowed a much wider radius. It no longer is:
+     an airport 10 km away explains nothing about this property, so ONE
+     hard ceiling now applies to every category. */
+  it('applies the same hard ceiling to every category, connectivity included', () => {
     const far = { latitude: 30.62, longitude: 76.68 };
     const picked = shortlistCityReach(far, library, { shortlistSize: 12 });
-    const categories = picked.map((c) => c.landmark.category);
-    expect(categories.length).toBeGreaterThan(0);
     for (const c of picked) {
-      const isConnectivity = ['airport', 'railway-station', 'bus-terminal', 'major-road'].includes(c.landmark.category);
-      if (!isConnectivity) expect(c.straightLineKm).toBeLessThanOrEqual(30);
+      expect(c.straightLineKm, c.landmark.name).toBeLessThanOrEqual(CITY_REACH_DISTANCE.hardMaxKm);
     }
   });
 
@@ -157,9 +158,12 @@ describe('City Reach finalisation (after real routing)', () => {
         ...(over[i] ?? {}),
       }));
 
-  it('returns roughly five to six anchors', () => {
+  it('returns at most the limit, and never pads to reach it', () => {
     const final = finalizeCityReach(routed(), { limit: 6 });
-    expect(final.length).toBe(6);
+    expect(final.length).toBeGreaterThan(0);
+    expect(final.length).toBeLessThanOrEqual(6);
+    // Everything shown is inside the ceiling on its REAL road distance.
+    for (const c of final) expect(c.distanceMeters / 1000).toBeLessThanOrEqual(CITY_REACH_DISTANCE.hardMaxKm);
   });
 
   it('drops a candidate that failed to route instead of estimating it', () => {

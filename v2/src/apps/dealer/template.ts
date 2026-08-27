@@ -284,10 +284,10 @@ export function renderApp(state: any) {
 
       <aside ref="\${asideRef}"
         style="width:212px;flex:none;height:100%;min-height:0;overflow:hidden;background:rgba(252,250,255,.82);background-image:linear-gradient(180deg,rgba(253,251,255,.95),rgba(243,236,255,.76) 55%,rgba(236,227,255,.66));backdrop-filter:blur(16px);box-shadow:inset -1px 0 0 rgba(88,52,168,.14);display:flex;flex-direction:column;border-right:1px solid #ddd2f5">
-        <div style="display:flex;align-items:center;gap:10px;padding:20px 16px 14px">
-          <img src="assets/mapco-logo.png" alt="MAPCO" style="width:34px;height:auto;flex:none;display:block">
+        <a href="/" title="Back to Homescreen" style="display:flex;align-items:center;gap:11px;padding:18px 16px 14px;text-decoration:none;cursor:pointer;transition:transform .15s" style-hover="transform:scale(1.03)">
+          <img src="/assets/mapco-logo.png" alt="MAPCO" style="width:44px;height:auto;flex:none;display:block;mix-blend-mode:multiply;filter:drop-shadow(0 4px 10px rgba(90,40,150,.25))">
           <div style="\${logoTextStyle}">MAPCO</div>
-        </div>
+        </a>
         <nav data-scroll=""
           style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:3px;padding:4px 11px 8px">
           \${ (navItems || []).map(n => \`
@@ -2150,17 +2150,19 @@ export function renderApp(state: any) {
                 </div>
 
                 <div data-scroll=""
-                  style="flex:none;display:flex;align-items:center;gap:9px;padding:12px 24px;background:linear-gradient(180deg,#3b1464 0%,#2f1050 100%);border-bottom:2px solid rgba(255,255,255,.1);overflow-x:auto">
-                  \${ (cp.tabs || []).map(t => \`
-                    <button onClick="\${__b(t.go)}" style="\${t.style}">
-                      <i class="\${t.icon}" style="font-size:20px;flex:none"></i>
-                      <span
-                        style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.2;white-space:nowrap">
-                        <span style="font-size:16px;font-weight:800">\${t.label}</span>
-                        <span style="\${t.subStyle}">\${t.sub}</span>
-                      </span>
-                    </button>
-                  \`).join('') }
+                  style="flex:none;display:flex;align-items:center;padding:12px 24px;background:linear-gradient(180deg,#3b1464 0%,#2f1050 100%);border-bottom:2px solid rgba(255,255,255,.1);overflow-x:auto">
+                  <div style="display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:18px;background:rgba(0,0,0,.32);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)">
+                    \${ (cp.tabs || []).map(t => \`
+                      <button onClick="\${__b(t.go)}" style="\${t.style}">
+                        <i class="\${t.icon}" style="font-size:20px;flex:none"></i>
+                        <span
+                          style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.2;white-space:nowrap">
+                          <span style="font-size:15.5px;font-weight:800">\${t.label}</span>
+                          <span style="\${t.subStyle}">\${t.sub}</span>
+                        </span>
+                      </button>
+                    \`).join('') }
+                  </div>
                 </div>
 
                 <div data-scroll=""
@@ -3098,15 +3100,15 @@ export function renderApp(state: any) {
                 style="position:relative;width:1280px;max-width:100%;height:100%;display:flex;flex-direction:column;background:#f5f1fd;border-radius:26px;overflow:hidden;box-shadow:0 50px 110px -30px rgba(0,0,0,.78);">
 
                 <div
-                  style="flex:none;display:flex;align-items:center;gap:16px;padding:16px 20px;background:#ffefd2;flex-wrap:wrap">
+                  style="flex:none;display:flex;align-items:center;gap:16px;padding:16px 22px;background:linear-gradient(180deg,#3b1464 0%,#2f1050 100%);flex-wrap:wrap">
                   <div style="flex:1 1 300px;min-width:0">
                     <h2
-                      style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:29px;line-height:1.1;letter-spacing:-.015em;color:#241f1c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                      style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:29px;line-height:1.1;letter-spacing:-.015em;color:#ffffff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
                       \${propDetail.title} · \${propDetail.size}</h2>
                     <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:3px">
                       <span
-                        style="display:flex;align-items:center;gap:6px;font-size:15.5px;font-weight:700;color:#7a6f60"><i
-                          class="ph-fill ph-map-pin" style="font-size:17px;color:#a3541b"></i>\${propDetail.loc}</span>
+                        style="display:flex;align-items:center;gap:6px;font-size:15.5px;font-weight:700;color:#d1bbf8"><i
+                          class="ph-fill ph-map-pin" style="font-size:17px;color:#ffcb45"></i>\${propDetail.loc}</span>
                       \${ propDetail.isBooked ? \`<button onClick="\${__b(propDetail.openBookedDeal)}"
                           style="\${propDetail.bookedStyle}" style-hover="background:#154a8c"><i
                             class="ph-fill ph-lock-key" style="font-size:15px"></i>\${propDetail.bookedIn}</button>\` : '' }
@@ -3132,8 +3134,8 @@ export function renderApp(state: any) {
                     \` : '' }
                     <div style="position:relative">
                       <button onClick="\${__b(propDetail.toggleMore)}" title="More"
-                        style="width:46px;height:46px;border-radius:14px;background:#f0e5cd;color:#5c4a22;display:grid;place-items:center"
-                        style-hover="background:#e7d9ba"><i class="ph-bold ph-dots-three"
+                        style="width:46px;height:46px;border-radius:14px;background:rgba(255,255,255,.14);color:#ffffff;display:grid;place-items:center"
+                        style-hover="background:rgba(255,255,255,.24)"><i class="ph-bold ph-dots-three"
                           style="font-size:20px"></i></button>
                       \${ propDetail.moreOpen ? \`
                         <div
@@ -3164,15 +3166,16 @@ export function renderApp(state: any) {
                       \` : '' }
                     </div>
                     <button onClick="\${__b(propDetail.close)}" title="Close"
-                      style="width:46px;height:46px;border-radius:14px;background:#f8a800;color:#241d0c;display:grid;place-items:center"><i
+                      style="width:46px;height:46px;border-radius:14px;background:rgba(255,255,255,.14);color:#ffffff;display:grid;place-items:center"
+                      style-hover="background:rgba(255,255,255,.24)"><i
                         class="ph-bold ph-x" style="font-size:20px"></i></button>
                   </div>
                 </div>
 
 
                 <div data-scroll=""
-                  style="flex:none;display:flex;align-items:center;padding:12px 20px;background:#ffefd2;border-bottom:2px solid #f0c96a;overflow-x:auto">
-                  <div style="display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:18px;background:#fff3d6;box-shadow:inset 0 0 0 1.5px rgba(120,100,60,.16);">
+                  style="flex:none;display:flex;align-items:center;padding:10px 22px;background:#2f1050;border-bottom:2px solid rgba(255,255,255,.1);overflow-x:auto">
+                  <div style="display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:18px;background:rgba(0,0,0,.32);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);">
                     \${ (propDetail.tabs || []).map(t => \`
                       <button onClick="\${__b(t.go)}" style="\${t.style}">
                         <i class="\${t.icon}" style="font-size:20px;flex:none"></i>
@@ -4107,11 +4110,11 @@ export function renderApp(state: any) {
 
           \${ addPlotOpen ? \`
             <div
-              style="position:fixed;inset:0;z-index:84;display:flex;justify-content:center;align-items:flex-start;padding:28px 24px;overflow-y:auto">
+              style="position:fixed;inset:0;z-index:84;display:flex;justify-content:center;align-items:center;padding:16px;overflow:hidden">
               <div onClick="\${__b(closeAddPlot)}"
                 style="position:fixed;inset:0;background:rgba(60,44,12,.58);animation:omVeil .2s ease both"></div>
               <div
-                style="position:relative;width:100%;max-width:1180px;height:92vh;display:flex;flex-direction:column;border-radius:30px;background:#faf2e2;box-shadow:0 0 0 1px rgba(120,90,30,.2),0 50px 100px -30px rgba(40,26,2,.85);overflow:hidden;">
+                style="position:relative;width:100%;max-width:1180px;height:90vh;max-height:860px;display:flex;flex-direction:column;border-radius:28px;background:#faf2e2;box-shadow:0 0 0 1px rgba(120,90,30,.2),0 50px 100px -30px rgba(40,26,2,.85);overflow:hidden;">
                 <div
                   style="flex:none;display:flex;align-items:center;gap:14px;padding:12px 18px;background:#f4e7cd;background-image:linear-gradient(120deg,#fbf0da,#e9d7b2)">
                   <span
@@ -4142,7 +4145,7 @@ export function renderApp(state: any) {
                 </div>
 
                 <div data-scroll=""
-                  style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:22px 26px 26px">
+                  style="flex:1;min-height:0;\${ pS4 ? 'display:flex;flex-direction:column;overflow:hidden;padding:0' : 'overflow-y:auto;overflow-x:hidden;padding:22px 26px 26px' }">
 
                   \${ pS1 ? \`
                     <div style="max-width:1060px;margin:0 auto">
@@ -4623,61 +4626,72 @@ export function renderApp(state: any) {
 
                   \${ pS4 ? \`
                     <div
-                      style="border-radius:22px;overflow:hidden;background:#0f2417;box-shadow:0 24px 48px -28px rgba(0,0,0,.8)">
-                      <div onClick="\${__b(pMapClick)}" data-scroll=""
-                        style="position:relative;height:calc(92vh - 190px);min-height:400px;cursor:crosshair;overflow:auto;\${pMapBg}">
+                      style="flex:1;min-height:0;width:100%;height:100%;display:flex;flex-direction:column;position:relative;overflow:hidden;background:#0f2417">
+                      <div id="dealer-earth-map"
+                        style="position:absolute;inset:0;width:100%;height:100%;background-image:url('/assets/earth-sat.png');background-size:cover;background-position:center;z-index:1"></div>
+                      <div
+                        style="position:absolute;inset:0;width:100%;height:100%;overflow:hidden;pointer-events:none;z-index:2">
+
+                        <!-- Top Floating Controls -->
                         <div
-                          style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,20,12,.26),rgba(6,20,12,.5))">
-                        </div>
-                        <div style="\${pPinStyle}">
-                          <span style="\${pPinGlow}"><i class="ph-fill ph-map-pin" style="\${pPinColor}"></i></span>
-                        </div>
-                        <div
-                          style="position:sticky;top:0;left:0;right:0;z-index:3;display:flex;gap:10px;align-items:center;padding:14px">
-                          <input name="earthQ" value="\${pform.earthQ}" onInput="\${__b(onPForm)}"
-                            placeholder="Search the spot — Sector 79, Mohali"
-                            style="flex:1;height:54px;padding:0 18px;border-radius:14px;border:none;background:rgba(255,253,247,.96);font-size:17px;font-weight:700;color:#241f1c;outline:none">
-                          <div
-                            style="display:flex;gap:6px;padding:5px;border-radius:14px;background:rgba(15,36,23,.7);flex:none">
-                            <button onClick="\${__b(pSatGo)}" style="\${pSatStyle}">Satellite</button>
-                            <button onClick="\${__b(pMapGo)}" style="\${pMapStyle}">Map</button>
-                          </div>
+                          style="position:absolute;top:0;left:0;right:0;z-index:4;display:flex;gap:10px;align-items:center;padding:14px 16px;pointer-events:none">
+                          <input id="dealer-earth-search" name="earthQ" value="\${pform.earthQ}" onInput="\${__b(onPForm)}"
+                            placeholder="Search spot — Sector 79, Mohali"
+                            style="max-width:320px;height:38px;padding:0 14px;border-radius:10px;border:none;background:rgba(255,253,247,.96);font-size:14px;font-weight:700;color:#241f1c;outline:none;box-shadow:0 4px 14px rgba(0,0,0,.3);pointer-events:auto">
+                          
                           <span
-                            style="display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 16px;border-radius:999px;background:rgba(15,36,23,.72);color:#cfe9d8;font-size:15px;font-weight:800;flex:none"><i
-                              class="ph-fill ph-hand-tap" style="font-size:17px"></i>Tap to place the pin</span>
+                            style="display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-radius:999px;background:rgba(15,36,23,.82);color:#cfe9d8;font-size:13.5px;font-weight:800;backdrop-filter:blur(8px);pointer-events:none"><i
+                              class="ph-fill ph-hand-tap" style="font-size:15px"></i>Tap anywhere to place pin</span>
+
+                          <div style="flex:1"></div>
+
+                          <!-- Zoom Controls -->
+                          <div style="display:flex;gap:5px;pointer-events:auto">
+                            <button onClick="\${__b(pMapZoomIn)}" title="Zoom In"
+                              style="width:36px;height:36px;border-radius:10px;background:rgba(15,36,23,.85);color:#fff;font-size:18px;font-weight:800;display:grid;place-items:center;border:none;cursor:pointer;backdrop-filter:blur(8px);box-shadow:0 3px 10px rgba(0,0,0,.3)"><i class="ph-bold ph-plus"></i></button>
+                            <button onClick="\${__b(pMapZoomOut)}" title="Zoom Out"
+                              style="width:36px;height:36px;border-radius:10px;background:rgba(15,36,23,.85);color:#fff;font-size:18px;font-weight:800;display:grid;place-items:center;border:none;cursor:pointer;backdrop-filter:blur(8px);box-shadow:0 3px 10px rgba(0,0,0,.3)"><i class="ph-bold ph-minus"></i></button>
+                          </div>
                         </div>
-                      </div>
-                      <div style="display:flex;align-items:center;gap:13px;padding:14px 18px;flex-wrap:wrap">
-                        <span style="flex:1;min-width:180px;font-size:16.5px;font-weight:700;color:#e9f7ee">\${pEarthLine}</span>
-                        \${ pEarthOff ? \`<button
-                            onClick="\${__b(pEarthConfirm)}"
-                            style="height:56px;padding:0 24px;border-radius:15px;background:#f8a800;color:#241d0c;font-size:17.5px;font-weight:800;flex:none"><i
-                              class="ph-fill ph-check-circle"
-                              style="font-size:20px;vertical-align:-3px;margin-right:8px"></i>Confirm this
-                            spot</button>\` : '' }
-                        \${ pEarthOn ? \`<span
-                            style="display:inline-flex;align-items:center;gap:9px;height:56px;padding:0 20px;border-radius:15px;background:#0a6634;color:#eafff2;font-size:17px;font-weight:800;flex:none"><i
-                              class="ph-fill ph-check-circle" style="font-size:20px"></i>Confirmed</span>\` : '' }
-                        \${ pEarthOn ? \`<button onClick="\${__b(pEarthRedo)}"
-                            style="height:56px;padding:0 20px;border-radius:15px;background:rgba(255,253,247,.92);color:#4c463d;font-size:16.5px;font-weight:800;flex:none">Move
-                            the pin</button>\` : '' }
+
+                        <!-- Bottom Floating Controls Overlay -->
+                        <div
+                          style="position:absolute;bottom:0;left:0;right:0;z-index:4;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;background:linear-gradient(0deg,rgba(10,24,16,.75),transparent);pointer-events:none">
+                          <button onClick="\${__b(pBack)}"
+                            style="height:42px;padding:0 20px;border-radius:12px;background:rgba(255,253,247,.95);color:#241f1c;font-size:15px;font-weight:800;border:none;box-shadow:0 4px 14px rgba(0,0,0,.35);cursor:pointer;pointer-events:auto;backdrop-filter:blur(8px)">Back</button>
+
+                          <div style="display:flex;align-items:center;gap:10px;pointer-events:auto">
+                            \${ pEarthOff ? \`<button
+                                onClick="\${__b(pEarthConfirm)}"
+                                style="height:42px;padding:0 18px;border-radius:12px;background:#f8a800;color:#241d0c;font-size:14.5px;font-weight:800;border:none;box-shadow:0 4px 14px rgba(0,0,0,.35);cursor:pointer;display:inline-flex;align-items:center;gap:6px"><i
+                                  class="ph-fill ph-check-circle" style="font-size:18px"></i>Confirm this spot</button>\` : '' }
+                            \${ pEarthOn ? \`<span
+                                style="display:inline-flex;align-items:center;gap:6px;height:42px;padding:0 16px;border-radius:12px;background:rgba(10,102,52,.92);color:#eafff2;font-size:14px;font-weight:800;backdrop-filter:blur(8px)"><i
+                                  class="ph-fill ph-check-circle" style="font-size:17px"></i>Confirmed</span>\` : '' }
+                            \${ pEarthOn ? \`<button onClick="\${__b(pEarthRedo)}"
+                                style="height:42px;padding:0 14px;border-radius:12px;background:rgba(255,253,247,.9);color:#4c463d;font-size:14px;font-weight:800;border:none;cursor:pointer">Move pin</button>\` : '' }
+                            <button onClick="\${__b(pSave)}"
+                              style="height:42px;padding:0 22px;border-radius:12px;background:#148347;color:#fff;font-size:15px;font-weight:800;border:none;box-shadow:0 4px 14px rgba(0,0,0,.4);cursor:pointer;display:inline-flex;align-items:center;gap:8px"><i
+                                class="ph-fill ph-check-circle" style="font-size:19px"></i>Save this property</button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   \` : '' }
 
                 </div>
 
-                <div
-                  style="flex:none;display:flex;align-items:center;gap:10px;padding:11px 18px;background:#f4e7cd;background-image:linear-gradient(120deg,#f7eeda,#e9d7b2)">
-                  \${ pNotS1 ? \`<button onClick="\${__b(pBack)}"
-                      style="height:54px;padding:0 20px;border-radius:15px;background:#fffdf7;color:#4c463d;font-size:17px;font-weight:800">Back</button>\` : '' }
-                  <div style="flex:1"></div>
-                  \${ pNotS4 ? \`<button onClick="\${__b(pNext)}"
+                \${ pNotS4 ? \`
+                  <div
+                    style="flex:none;display:flex;align-items:center;gap:10px;padding:11px 18px;background:#f4e7cd;background-image:linear-gradient(120deg,#f7eeda,#e9d7b2)">
+                    \${ pNotS1 ? \`<button onClick="\${__b(pBack)}"
+                        style="height:54px;padding:0 20px;border-radius:15px;background:#fffdf7;color:#4c463d;font-size:17px;font-weight:800">Back</button>\` : '' }
+                    <div style="flex:1"></div>
+                    <button onClick="\${__b(pNext)}"
                       style="\${pNextStyle}">\${pNextLabel}<i class="ph-bold ph-arrow-right"
-                        style="font-size:19px"></i></button>\` : '' }
-                  \${ pS4 ? \`<button onClick="\${__b(pSave)}" style="\${pFinishStyle}"><i
-                        class="ph-fill ph-check-circle" style="font-size:21px"></i>Save this property</button>\` : '' }
-                </div>
+                        style="font-size:19px"></i></button>
+                  </div>
+                \` : '' }
               </div>
             </div>
           \` : '' }

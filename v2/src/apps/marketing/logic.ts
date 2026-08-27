@@ -49,7 +49,8 @@ export class Component extends DCLogic {
       { id: 'r3', pi: 2, prod: 'editing', dur: '', sub: 'Submitted yesterday' }
     ],
     reelIdx: 0, playing: false, used: 3,
-    upload: false, upStep: 1, upPi: null, upFile: '', upNote: ''
+    upload: false, upStep: 1, upPi: null, upFile: '', upNote: '',
+    audioRec: false, audioDone: false
   };
 
   curId() {
@@ -67,10 +68,10 @@ export class Component extends DCLogic {
     const id = 'r' + (s.reels.length + 1);
     this.setState(st => ({
       reels: [...st.reels, { id, pi: st.upPi, prod: 'received', dur: '', sub: 'Submitted just now' }],
-      used: Math.min(4, st.used + 1), reelIdx: st.reels.length,
-      upload: false, upStep: 1, upPi: null, upFile: '', upNote: '', playing: false
+      used: Math.min(8, st.used + 1), reelIdx: st.reels.length,
+      upload: false, upStep: 1, upPi: null, upFile: '', upNote: '', audioRec: false, audioDone: false, playing: false
     }));
-    this.say('Video received. MAPCO will start editing.');
+    this.say('Video received with voice instructions. MAPCO will start editing.');
   }
 
   componentDidMount() {
@@ -271,7 +272,6 @@ export class Component extends DCLogic {
         go: () => this.setState({ reelIdx: i, playing: false, timeOpen: false })
       };
     });
-    const quotaFull = s.used >= 4;
     const upProps = P.map((p, i) => ({
       title: p.title, sub: p.sub, on: s.upPi === i,
       photoStyle: this.thumb(p.photo, 42, 10),
@@ -338,23 +338,25 @@ export class Component extends DCLogic {
         ]
       };
     };
-    const noun = (n) => { const w = s.libKind === 'reels' ? 'reel' : (s.libKind === 'posts' ? 'post' : 'item'); return n + ' ' + w + (n === 1 ? '' : 's'); };
+    const currentKind = s.libKind === 'posts' ? 'posts' : 'reels';
+    const noun = (n) => { const w = currentKind === 'reels' ? 'reel' : 'post'; return n + ' ' + w + (n === 1 ? '' : 's'); };
     const grpWrap = 'margin-top:26px;animation:omRise .45s cubic-bezier(.2,.8,.2,1) both';
-    const libGroups = (s.libKind === 'reels')
-      ? (libVisible.length ? [{ label: 'Finished reels', date: 'August', count: noun(libVisible.length), showHeader: false, wrapStyle: 'margin-top:14px;animation:omRise .45s cubic-bezier(.2,.8,.2,1) both', hasReels: true, reels: libVisible.map(mkReel), hasPosts: false, posts: [] }] : [])
+    const libVisibleFiltered = LP.filter(a => (currentKind === 'reels' ? a.kind === 'reel' : a.kind !== 'reel'))
+      .filter(a => s.libProp === 'all' || String(a.pi) === s.libProp);
+    const libGroups = (currentKind === 'reels')
+      ? (libVisibleFiltered.length ? [{ label: 'Finished reels', date: 'August', count: noun(libVisibleFiltered.length), showHeader: false, wrapStyle: 'margin-top:14px;animation:omRise .45s cubic-bezier(.2,.8,.2,1) both', hasReels: true, reels: libVisibleFiltered.map(mkReel), hasPosts: false, posts: [] }] : [])
       : GRP.map(g => {
-        const items = libVisible.filter(a => a.grp === g.k); if (!items.length) return null;
-        const ps = items.filter(a => a.kind !== 'reel'), rs = items.filter(a => a.kind === 'reel');
+        const items = libVisibleFiltered.filter(a => a.grp === g.k); if (!items.length) return null;
         return {
           label: g.label, date: g.date, count: noun(items.length), showHeader: true, wrapStyle: grpWrap,
-          hasReels: rs.length > 0, reels: rs.map(mkReel),
-          hasPosts: ps.length > 0, posts: ps.map(mkCard)
+          hasReels: false, reels: [],
+          hasPosts: true, posts: items.map(mkCard)
         };
       }).filter(Boolean);
-    const kindTabs = [{ k: 'all', label: 'All', icon: 'ph-squares-four' }, { k: 'posts', label: 'Posts', icon: 'ph-image' }, { k: 'reels', label: 'Reels', icon: 'ph-film-reel' }].map(t => {
-      const on = s.libKind === t.k; return {
+    const kindTabs = [{ k: 'reels', label: 'Reels', icon: 'ph-film-reel' }, { k: 'posts', label: 'Posts', icon: 'ph-image' }].map(t => {
+      const on = currentKind === t.k; return {
         label: t.label, icon: (on ? 'ph-fill ' : 'ph ') + t.icon,
-        style: `display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:10px;font-size:13px;font-weight:800;transition:all .15s;${on ? 'background:#1c1430;color:#ffcb45' : 'color:#5a3a1c;background:transparent'}`,
+        style: `display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border-radius:10px;font-size:13.5px;font-weight:800;transition:all .15s;${on ? 'background:#1c1430;color:#ffcb45;box-shadow:0 6px 14px -6px rgba(28,20,48,.8)' : 'color:#5a3a1c;background:transparent'}`,
         go: () => this.setState({ libKind: t.k })
       };
     });
@@ -403,6 +405,8 @@ export class Component extends DCLogic {
       barStyle: `height:100%;width:${Math.round(r.n / fmax * 100)}%;border-radius:6px;background:${CH[r.k].c}`
     }));
 
+    const quotaFull = s.used >= 8;
+
     return {
       isToday: s.section === 'today', isReels: isReels, isLibrary: s.section === 'library', isPerf: s.section === 'performance',
       contentStyle: (s.section === 'today' || isReels) ? 'flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;position:relative' : 'flex:1;min-height:0;overflow-y:auto;position:relative',
@@ -410,16 +414,16 @@ export class Component extends DCLogic {
       reel, reelTabs,
       reelPrev: () => this.cycleReel(-1), reelNext: () => this.cycleReel(1),
       reelPublishable: crReady, reelPending: !crReady,
-      quotaLabel: s.used + ' of 4 reels used this month',
+      quotaLabel: s.used + ' of 8 reels used this month',
       quotaStyle: `display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:12px;background:rgba(255,255,255,.55);border:1px solid rgba(230,150,0,.24);font-size:12.5px;font-weight:800;color:${quotaFull ? '#c0402e' : '#8a5a2e'}`,
       uploadBtnStyle: `display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:13px;font-size:14px;font-weight:800;transition:transform .16s;${quotaFull ? 'background:rgba(122,47,224,.12);color:#9a8aa8;cursor:not-allowed' : 'background:#1c1430;color:#ffcb45;box-shadow:0 14px 28px -14px rgba(28,20,48,.8)'}`,
-      openUpload: () => { if (s.used >= 4) { this.say('All 4 reels for this month are used.'); return; } this.setState({ upload: true, upStep: 1 }); },
-      uploadOpen: !!s.upload, closeUpload: () => this.setState({ upload: false }),
+      openUpload: () => { if (s.used >= 8) { this.say('All 8 reels for this month are used.'); return; } this.setState({ upload: true, upStep: 1, audioRec: false, audioDone: false }); },
+      uploadOpen: !!s.upload, closeUpload: () => this.setState({ upload: false, audioRec: false }),
       upProps,
       isStep1: (s.upStep || 1) === 1, isStep2: (s.upStep || 1) === 2,
       stepLabel: (s.upStep || 1) === 1 ? 'Step 1 of 2' : 'Step 2 of 2',
-      stepTitle: (s.upStep || 1) === 1 ? 'Which property?' : 'Upload the raw video',
-      stepSub: (s.upStep || 1) === 1 ? 'Pick the plot this video is of.' : 'Send us footage straight from your phone — MAPCO edits it into a finished reel.',
+      stepTitle: (s.upStep || 1) === 1 ? 'Which property?' : 'Upload raw footage & voice note',
+      stepSub: (s.upStep || 1) === 1 ? 'Pick the plot this video is of.' : 'Send footage and record a voice instruction — MAPCO edits it into a finished reel.',
       dot1Style: 'height:4px;border-radius:3px;flex:1;background:#7a2fe0',
       dot2Style: `height:4px;border-radius:3px;flex:1;background:${(s.upStep || 1) === 2 ? '#7a2fe0' : 'rgba(122,47,224,.2)'}`,
       nextStep: () => { if (s.upPi === null) { this.say('Pick a property first.'); return; } this.setState({ upStep: 2 }); },
@@ -432,6 +436,19 @@ export class Component extends DCLogic {
       fileTitle: s.upFile || 'Choose video',
       fileSub: s.upFile ? 'Ready to send · tap to replace' : 'MP4 or MOV straight from your phone',
       chooseFile: () => this.setState({ upFile: 'IMG_4821.MOV · 42 MB' }),
+      audioRec: !!s.audioRec,
+      audioDone: !!s.audioDone,
+      toggleAudioRecord: () => {
+        if (this.state.audioRec) {
+          this.setState({ audioRec: false, audioDone: true });
+          this.say('Voice note recorded (0:18s).');
+        } else {
+          this.setState({ audioRec: true, audioDone: false });
+        }
+      },
+      deleteAudio: () => {
+        this.setState({ audioRec: false, audioDone: false });
+      },
       setNote: e => { this._note = e.target.value; },
       submitStyle: `width:100%;margin-top:22px;display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:16px 24px;border-radius:16px;font-size:16.5px;font-weight:800;transition:transform .16s;${(s.upPi !== null && s.upFile) ? 'background:linear-gradient(100deg,#7a2fe0,#e0473a 55%,#f0a83c);color:#fff;box-shadow:0 22px 40px -14px rgba(224,71,58,.6)' : 'background:rgba(122,47,224,.14);color:#9a8aa8'}`,
       submitUpload: () => this.submitUpload(),

@@ -1,26 +1,35 @@
 /* ═══════════════════════════════════════════════════════════════
    MAPCO — City Reach selector
    ---------------------------------------------------------------
-   Turns ~50 curated landmarks into the 5–6 that genuinely explain
-   where THIS property sits in the region, without routing all of them.
+   City Reach answers ONE question:
 
-       property.location
-         → cheap local geometry (haversine, our own code, ₹0)
-         → shortlist 8–12 plausible anchors
-         → Route Matrix on the shortlist ONLY
-         → final 5–6 by real travel time + category diversity
+     "What major, recognisable places are genuinely CLOSE to this
+      property — close enough to explain where it sits in the city?"
 
-   Ranking is factual and internal. It weighs how far a landmark is, how
-   widely it is recognised, whether it connects the property to the wider
-   region, and whether the set stays varied. It never produces a locality
-   score, an investment score, or any number shown to a user — the output
-   is an ordered list of real places.
+   It is not "famous places somewhere in the Tri-City". A monument 12 km
+   away explains nothing about Sector 78, however well known it is.
+
+   So proximity is a HARD FILTER, applied before anything else:
+
+     ~1–3 km   strongest
+     ~3–5 km   still relevant
+     beyond    excluded, regardless of fame
+
+   Only what survives that gate is ranked, by
+
+     prominence × usefulness × proximity
+
+   multiplicatively — a landmark that is weak on any one of the three
+   cannot be rescued by the other two.
+
+   Count is never padded. If three strong anchors survive the gate, the
+   answer is three anchors.
    ═══════════════════════════════════════════════════════════════ */
 import type { CuratedLandmark, LandmarkCategory } from './types.ts';
 
 export interface GeoPoint { latitude: number; longitude: number }
 
-/** Straight-line km. Used ONLY to shortlist before routing — never displayed. */
+/** Straight-line km. Used ONLY to gate and shortlist — never displayed. */
 export function haversineKm(a: GeoPoint, b: GeoPoint): number {
   const R = 6371;
   const toRad = (d: number) => (d * Math.PI) / 180;
@@ -32,24 +41,71 @@ export function haversineKm(a: GeoPoint, b: GeoPoint): number {
   return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
-/**
- * Categories that explain regional CONNECTIVITY. These stay relevant from
- * further away — an airport 20 km out still matters; a mall 20 km out
- * usually does not.
- */
-const CONNECTIVITY: ReadonlySet<LandmarkCategory> = new Set([
-  'airport', 'railway-station', 'bus-terminal', 'major-road',
-]);
+/** The distance rule. Everything beyond `hardMaxKm` is excluded outright. */
+export const CITY_REACH_DISTANCE = {
+  /** Inside this, proximity is not a penalty at all. */
+  strongKm: 3,
+  /** Still relevant, with a falling proximity score. */
+  relevantKm: 5,
+  /** Absolute ceiling. Nothing past this appears, however famous. */
+  hardMaxKm: 6,
+} as const;
 
-/** How far a category stays meaningful, in km. */
-function relevanceRadiusKm(category: LandmarkCategory): number {
-  if (CONNECTIVITY.has(category)) return 45;
-  if (category === 'hospital' || category === 'university'
-    || category === 'employment-hub' || category === 'business-district') return 30;
-  return 22;
+/**
+ * How much a category helps EXPLAIN a location to a buyer. A hospital or
+ * a mall anchors a neighbourhood in someone's mind; a rose garden does
+ * not, even when it is well known.
+ */
+const CATEGORY_USEFULNESS: Record<LandmarkCategory, number> = {
+  hospital: 1.00,
+  mall: 0.95,
+  'major-market': 0.92,
+  airport: 0.90,
+  'employment-hub': 0.90,
+  'business-district': 0.88,
+  university: 0.85,
+  'railway-station': 0.85,
+  'bus-terminal': 0.72,
+  'major-road': 0.70,
+  civic: 0.58,
+  institution: 0.52,
+  recreation: 0.48,
+  other: 0.38,
+};
+
+const RECOGNITION_PROMINENCE = { regional: 1.0, city: 0.78, local: 0.42 } as const;
+
+/** Prominence, refined by curated importance where an operator set one. */
+function prominenceOf(landmark: CuratedLandmark): number {
+  const base = RECOGNITION_PROMINENCE[landmark.recognition];
+  if (landmark.importance === 'regional') return Math.max(base, 1.0);
+  if (landmark.importance === 'city') return Math.max(base, 0.78);
+  if (landmark.importance === 'local') return Math.min(base, 0.42);
+  return base;
 }
 
-const RECOGNITION_WEIGHT = { regional: 1.0, city: 0.72, local: 0.45 } as const;
+/**
+ * Proximity score under the distance rule. Full marks inside the strong
+ * band, falling away across the relevant band, zero past the ceiling.
+ */
+export function proximityScore(km: number): number {
+  const { strongKm, relevantKm } = CITY_REACH_DISTANCE;
+  if (km <= strongKm) return 1;
+  if (km >= relevantKm) return 0.25;
+  // Linear falloff between the two bands.
+  return 1 - 0.75 * ((km - strongKm) / (relevantKm - strongKm));
+}
+
+/**
+ * Does this landmark claim relevance to the property's locality? Curated
+ * `relevantTo` is an operator statement about which pockets a landmark
+ * actually serves. Absent metadata is neutral, never a penalty.
+ */
+function localityBoost(landmark: CuratedLandmark, locality: string | undefined): number {
+  if (!locality || !landmark.relevantTo?.length) return 1;
+  const text = locality.toLowerCase();
+  return landmark.relevantTo.some((zone) => text.includes(zone.toLowerCase())) ? 1.15 : 1;
+}
 
 export interface CityReachCandidate {
   landmark: CuratedLandmark;
@@ -61,72 +117,52 @@ export interface CityReachCandidate {
 export interface ShortlistOptions {
   /** How many candidates to send to Route Matrix. */
   shortlistSize?: number;
-  /** Hard cap on straight-line distance for any anchor. */
+  /** Override the hard distance ceiling (km). */
   maxKm?: number;
-  /** At most this many anchors from any one category in the shortlist. */
-  maxPerCategory?: number;
+  /** The property's locality/sector text, for curated relevance. */
+  locality?: string;
+  /**
+   * Minimum rank to be worth a route call. Stops a weak, far anchor
+   * being routed just to fill a slot.
+   */
+  minRank?: number;
 }
 
 /**
  * Cheap local shortlist. No API calls, no cost.
  *
- * A landmark earns its place by being close RELATIVE TO WHAT IT IS: an
- * airport is allowed to be far, a market is not. That is what stops a
- * Mohali property and a New Chandigarh property receiving the same list.
+ * Distance gates first; nothing beyond the ceiling is considered at all.
  */
 export function shortlistCityReach(
   origin: GeoPoint,
   landmarks: readonly CuratedLandmark[],
   options: ShortlistOptions = {},
 ): CityReachCandidate[] {
+  const maxKm = options.maxKm ?? CITY_REACH_DISTANCE.hardMaxKm;
   const shortlistSize = options.shortlistSize ?? 10;
-  const maxKm = options.maxKm ?? 45;
-  const maxPerCategory = options.maxPerCategory ?? 2;
+  const minRank = options.minRank ?? 0.22;
 
   const scored: CityReachCandidate[] = [];
   for (const landmark of landmarks) {
     if (!landmark.active) continue;
     const straightLineKm = haversineKm(origin, landmark);
+    // THE hard rule. Fame does not buy an exception.
     if (straightLineKm > maxKm) continue;
-    const radius = relevanceRadiusKm(landmark.category);
-    if (straightLineKm > radius) continue;
 
-    // Proximity relative to what this category is allowed to be — so a
-    // 15 km airport still ranks well while a 15 km mall does not.
-    const proximity = 1 - Math.min(1, straightLineKm / radius);
-    const recognition = RECOGNITION_WEIGHT[landmark.recognition];
-    // Connectivity anchors explain regional position, which is what City
-    // Reach is for, so they carry a little extra weight.
-    const connectivity = CONNECTIVITY.has(landmark.category) ? 0.15 : 0;
-    scored.push({
-      landmark,
-      straightLineKm,
-      rank: proximity * 0.55 + recognition * 0.30 + connectivity,
-    });
+    const rank = prominenceOf(landmark)
+      * CATEGORY_USEFULNESS[landmark.category]
+      * proximityScore(straightLineKm)
+      * localityBoost(landmark, options.locality);
+
+    if (rank < minRank) continue;
+    scored.push({ landmark, straightLineKm, rank });
   }
 
   scored.sort((a, b) => (b.rank - a.rank) || (a.straightLineKm - b.straightLineKm));
-
-  // Enforce variety while filling the shortlist: a list of four hospitals
-  // explains less than a hospital, a mall, a university and the airport.
-  const perCategory = new Map<LandmarkCategory, number>();
-  const picked: CityReachCandidate[] = [];
-  for (const candidate of scored) {
-    if (picked.length >= shortlistSize) break;
-    const category = candidate.landmark.category;
-    const used = perCategory.get(category) ?? 0;
-    if (used >= maxPerCategory) continue;
-    perCategory.set(category, used + 1);
-    picked.push(candidate);
-  }
-  // If diversity capping left room, top up with the best of what is left.
-  if (picked.length < shortlistSize) {
-    for (const candidate of scored) {
-      if (picked.length >= shortlistSize) break;
-      if (!picked.includes(candidate)) picked.push(candidate);
-    }
-  }
-  return picked;
+  /* No diversity padding. Category variety is a nice property of a good
+     answer, not a target to hit — forcing it is how a weak anchor gets in
+     ahead of a strong one. */
+  return scored.slice(0, shortlistSize);
 }
 
 export interface RoutedCandidate extends CityReachCandidate {
@@ -137,53 +173,39 @@ export interface RoutedCandidate extends CityReachCandidate {
 }
 
 export interface FinalizeOptions {
-  /** Final City Reach row count. */
+  /** Upper bound on rows. Fewer is correct when fewer are strong. */
   limit?: number;
-  maxPerCategory?: number;
+  /** Road distance ceiling (km) — the real number, not the straight line. */
+  maxKm?: number;
 }
 
 /**
- * Final selection, after Route Matrix has returned real travel times.
+ * Final selection, once Route Matrix has returned real travel.
  *
- * A candidate that failed to route is dropped, never estimated from the
- * straight-line distance we used to shortlist it.
+ * The road distance re-applies the ceiling: a landmark 4 km away in a
+ * straight line but 9 km by road does not explain this location either.
+ * A candidate that failed to route is dropped, never estimated.
  */
 export function finalizeCityReach(
   routed: readonly RoutedCandidate[],
   options: FinalizeOptions = {},
 ): RoutedCandidate[] {
   const limit = options.limit ?? 6;
-  const maxPerCategory = options.maxPerCategory ?? 2;
+  const maxKm = options.maxKm ?? CITY_REACH_DISTANCE.hardMaxKm;
 
   const usable = routed.filter((r) =>
     Number.isFinite(r.durationSeconds) && r.durationSeconds > 0
-    && Number.isFinite(r.distanceMeters) && r.distanceMeters > 0);
+    && Number.isFinite(r.distanceMeters) && r.distanceMeters > 0
+    && r.distanceMeters / 1000 <= maxKm);
 
-  // Re-rank on the real number now that we have it: actual drive time
-  // relative to what the category is allowed to be, plus recognition.
   const ranked = [...usable].sort((a, b) => {
-    const score = (c: RoutedCandidate) => {
-      const minutes = c.durationSeconds / 60;
-      const budget = CONNECTIVITY.has(c.landmark.category) ? 50 : 32;
-      const proximity = 1 - Math.min(1, minutes / budget);
-      return proximity * 0.6 + RECOGNITION_WEIGHT[c.landmark.recognition] * 0.4;
-    };
-    return score(b) - score(a) || a.durationSeconds - b.durationSeconds;
+    const score = (c: RoutedCandidate) =>
+      prominenceOf(c.landmark)
+      * CATEGORY_USEFULNESS[c.landmark.category]
+      * proximityScore(c.distanceMeters / 1000);
+    return score(b) - score(a) || a.distanceMeters - b.distanceMeters;
   });
 
-  const perCategory = new Map<LandmarkCategory, number>();
-  const picked: RoutedCandidate[] = [];
-  for (const candidate of ranked) {
-    if (picked.length >= limit) break;
-    const used = perCategory.get(candidate.landmark.category) ?? 0;
-    if (used >= maxPerCategory) continue;
-    perCategory.set(candidate.landmark.category, used + 1);
-    picked.push(candidate);
-  }
-  for (const candidate of ranked) {
-    if (picked.length >= limit) break;
-    if (!picked.includes(candidate)) picked.push(candidate);
-  }
   // Present nearest-first: that is how a dealer reads connectivity.
-  return picked.sort((a, b) => a.durationSeconds - b.durationSeconds);
+  return ranked.slice(0, limit).sort((a, b) => a.durationSeconds - b.durationSeconds);
 }

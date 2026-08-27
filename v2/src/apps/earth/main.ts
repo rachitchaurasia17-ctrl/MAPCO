@@ -193,6 +193,7 @@ function renderShell(container: HTMLElement): void {
 type Sheet = null | 'props' | 'sectors';
 let sheet: Sheet = null;
 let sheetCity = 'all';
+let sectorSearchQuery = '';
 
 function wireSheetButtons(): void {
   $('e-open-props').addEventListener('click', () => openSheet('props'));
@@ -202,6 +203,7 @@ function wireSheetButtons(): void {
 function openSheet(next: Sheet): void {
   sheet = sheet === next ? null : next;
   sheetCity = 'all';
+  sectorSearchQuery = '';
   if (sheet) {
     state.selId = null; // hide sidebar if opening sheet
   }
@@ -221,9 +223,9 @@ function closeSheets(): void {
 }
 
 const chip = (label: string, count: number, on: boolean): string =>
-  `<button data-chip="${escapeHtml(label)}" style="display:inline-flex;align-items:center;gap:8px;padding:9px 15px;border-radius:999px;border:none;cursor:pointer;font:800 14px 'Hanken Grotesk',sans-serif;letter-spacing:.01em;${
-    on ? 'background:#1c1533;color:#fff8e6' : 'background:rgba(255,253,249,.86);color:#4a4160;box-shadow:inset 0 0 0 1px rgba(139,96,232,.22)'
-  }">${escapeHtml(label)}<span style="font-variant-numeric:tabular-nums;font-size:12.5px;${on ? 'color:#c8b9f5' : 'color:#8a7fae'}">${count}</span></button>`;
+  `<button data-chip="${escapeHtml(label)}" style="display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 18px;border-radius:12px;border:none;cursor:pointer;font:800 14.5px 'Hanken Grotesk',sans-serif;letter-spacing:.01em;transition:all .18s ease;${
+    on ? 'background:#1c1533;color:#fff8e6;box-shadow:0 8px 24px -8px rgba(28,21,51,.7)' : 'background:rgba(255,253,249,.92);color:#4a4160;box-shadow:0 0 0 1px rgba(139,96,232,.22),0 4px 12px -4px rgba(28,21,51,.1)'
+  }">${escapeHtml(label)}<span style="font-variant-numeric:tabular-nums;font-size:12.5px;padding:2px 8px;border-radius:999px;${on ? 'background:rgba(255,255,255,.16);color:#fff' : 'background:rgba(139,96,232,.12);color:#6f6489'}">${count}</span></button>`;
 
 const SHEET_WRAP = 'position:absolute;inset:0;overflow-y:auto;z-index:40;background:#ede4f7;background-image:radial-gradient(62% 50% at -2% -4%,rgba(139,96,232,.65),transparent 62%),radial-gradient(54% 44% at 101% 4%,rgba(56,138,186,.6),transparent 62%),radial-gradient(66% 48% at 46% 108%,rgba(255,190,48,.55),transparent 64%),radial-gradient(40% 34% at 86% 66%,rgba(236,120,168,.45),transparent 68%)';
 
@@ -239,12 +241,23 @@ async function renderSheet(): Promise<void> {
     const all = allProperties();
     const cities = [...new Set(all.map((p) => p.city).filter(Boolean))];
     const shown = sheetCity === 'all' ? all : all.filter((p) => p.city === sheetCity);
-    host.innerHTML = `<div data-scroll style="${SHEET_WRAP}"><div style="max-width:1260px;margin:0 auto;padding:84px 34px 56px">
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        ${chip('All', all.length, sheetCity === 'all')}
-        ${cities.map((c) => chip(c, all.filter((p) => p.city === c).length, sheetCity === c)).join('')}
+    host.innerHTML = `<div data-scroll style="${SHEET_WRAP}"><div style="max-width:1260px;margin:0 auto;padding:24px 34px 56px">
+      <!-- Single-Line Header: Logo | Filters -->
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:nowrap;margin-bottom:22px;width:100%">
+        <button id="e-props-sheet-logo" class="e-brand e-glass" type="button" aria-label="Close sheet" style="flex:none;height:44px;padding:6px 14px 6px 10px;border-radius:12px;border:1px solid rgba(221,210,245,.95);display:flex;align-items:center;gap:10px;cursor:pointer">
+          <img class="e-brand-logo" src="/assets/mapco-logo.png" alt="" width="32" height="32" />
+          <div class="e-brand-text" style="text-align:left">
+            <div class="e-brand-name" style="font-size:16px;line-height:1">MAPCO</div>
+            <div class="e-brand-sub" style="font-size:8.5px;line-height:1">EARTH</div>
+          </div>
+          <i class="ph-bold ph-arrow-left e-brand-back" aria-hidden="true" style="font-size:14px"></i>
+        </button>
+        <div style="display:flex;gap:8px;align-items:center;flex:none;overflow-x:auto">
+          ${chip('All', all.length, sheetCity === 'all')}
+          ${cities.map((c) => chip(c, all.filter((p) => p.city === c).length, sheetCity === c)).join('')}
+        </div>
       </div>
-      ${shown.length ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(298px,1fr));gap:20px;margin-top:22px">
+      ${shown.length ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(298px,1fr));gap:20px;margin-top:16px">
         ${shown.map((p) => {
           const shot = p.photos[0] || '';
           return `<button data-prop="${escapeHtml(p.id)}" style="min-width:0;display:block;padding:0;border:none;cursor:pointer;text-align:left;border-radius:22px;overflow:hidden;background:rgba(255,253,249,.96);box-shadow:0 0 0 1px rgba(139,96,232,.16),0 3px 4px rgba(40,26,2,.05),0 30px 54px -34px rgba(139,96,232,.5);transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s ease" onmouseover="this.style.transform='translateY(-8px)'" onmouseout="this.style.transform='none'">
@@ -266,19 +279,50 @@ async function renderSheet(): Promise<void> {
         }).join('')}
       </div>` : `<div style="margin-top:22px;padding:40px;text-align:center;border-radius:20px;background:rgba(255,253,249,.8);color:#6f6489;font-size:15px">No properties here yet.</div>`}
     </div></div>`;
+
+    host.querySelector('#e-props-sheet-logo')?.addEventListener('click', () => {
+      closeSheets();
+    });
   } else {
     await loadPlanCatalog();
     const maps = sectorMaps();
     const cities = [...new Set(maps.map((m) => m.city).filter(Boolean))];
-    const shown = sheetCity === 'all' ? maps : maps.filter((m) => m.city === sheetCity);
+    const q = sectorSearchQuery.toLowerCase().trim();
+    const shown = maps.filter((m) => {
+      const cityMatch = sheetCity === 'all' || m.city === sheetCity;
+      if (!cityMatch) return false;
+      if (!q) return true;
+      return m.title.toLowerCase().includes(q) || m.sectorOrBlock.toLowerCase().includes(q) || m.city.toLowerCase().includes(q);
+    });
     const plotsOn = (mapId: string): number =>
       allProperties().filter((p) => p.canonicalRecord?.mapPlacement?.mapId === mapId).length;
-    host.innerHTML = `<div data-scroll style="${SHEET_WRAP}"><div style="max-width:1260px;margin:0 auto;padding:84px 34px 56px">
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        ${chip('All', maps.length, sheetCity === 'all')}
-        ${cities.map((c) => chip(c, maps.filter((m) => m.city === c).length, sheetCity === c)).join('')}
+    host.innerHTML = `<div data-scroll style="${SHEET_WRAP}"><div style="max-width:1260px;margin:0 auto;padding:24px 34px 56px">
+      <!-- Single-Line Header: Logo | Search Box | City Filters Bar -->
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:nowrap;margin-bottom:22px;width:100%">
+        <button id="e-sector-sheet-logo" class="e-brand e-glass" type="button" aria-label="Close sheet" style="flex:none;height:44px;padding:6px 14px 6px 10px;border-radius:12px;border:1px solid rgba(221,210,245,.95);display:flex;align-items:center;gap:10px;cursor:pointer">
+          <img class="e-brand-logo" src="/assets/mapco-logo.png" alt="" width="32" height="32" />
+          <div class="e-brand-text" style="text-align:left">
+            <div class="e-brand-name" style="font-size:16px;line-height:1">MAPCO</div>
+            <div class="e-brand-sub" style="font-size:8.5px;line-height:1">EARTH</div>
+          </div>
+          <i class="ph-bold ph-arrow-left e-brand-back" aria-hidden="true" style="font-size:14px"></i>
+        </button>
+
+        <div style="flex:1;min-width:240px">
+          <div style="display:flex;align-items:center;gap:10px;height:44px;padding:0 16px;border-radius:12px;background:rgba(255,253,249,.96);box-shadow:0 0 0 1.5px rgba(139,96,232,.22),0 8px 24px -12px rgba(28,21,51,.25)">
+            <i class="ph ph-magnifying-glass" style="font-size:18px;color:#8a7fae"></i>
+            <input id="e-sector-sheet-search" type="text" value="${escapeHtml(sectorSearchQuery)}" placeholder="Search sector, phase, project or locality…" style="flex:1;min-width:0;border:none;outline:none;background:transparent;font:600 14.5px 'Hanken Grotesk',sans-serif;color:#1c1533" />
+            ${sectorSearchQuery ? `<i class="ph ph-x" id="e-sector-sheet-clear" style="cursor:pointer;font-size:16px;color:#8a7fae" title="Clear"></i>` : ''}
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;align-items:center;flex:none">
+          ${chip('All', maps.length, sheetCity === 'all')}
+          ${cities.map((c) => chip(c, maps.filter((m) => m.city === c).length, sheetCity === c)).join('')}
+        </div>
       </div>
-      ${shown.length ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(288px,1fr));gap:20px;margin-top:22px">
+
+      ${shown.length ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(288px,1fr));gap:20px;margin-top:16px">
         ${shown.map((m) => {
           const plots = plotsOn(m.id);
           return `<button data-sector="${escapeHtml(m.id)}" style="min-width:0;display:block;padding:0;border:none;cursor:pointer;text-align:left;border-radius:22px;overflow:hidden;background:rgba(255,253,249,.96);box-shadow:0 0 0 1px rgba(139,96,232,.16),0 3px 4px rgba(40,26,2,.05),0 30px 54px -34px rgba(107,63,212,.55);transition:transform .28s cubic-bezier(.2,.8,.2,1)" onmouseover="this.style.transform='translateY(-8px)'" onmouseout="this.style.transform='none'">
@@ -294,8 +338,32 @@ async function renderSheet(): Promise<void> {
             </span>
           </button>`;
         }).join('')}
-      </div>` : `<div style="margin-top:22px;padding:40px;text-align:center;border-radius:20px;background:rgba(255,253,249,.8);color:#6f6489;font-size:15px">No sector maps are published yet.</div>`}
+      </div>` : `<div style="margin-top:22px;padding:40px;text-align:center;border-radius:20px;background:rgba(255,253,249,.8);color:#6f6489;font-size:15px">No sector maps found for "${escapeHtml(sectorSearchQuery)}".</div>`}
     </div></div>`;
+
+    host.querySelector('#e-sector-sheet-logo')?.addEventListener('click', () => {
+      closeSheets();
+    });
+
+    const searchInput = host.querySelector<HTMLInputElement>('#e-sector-sheet-search');
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        sectorSearchQuery = searchInput.value;
+        void renderSheet();
+        const nextInput = host.querySelector<HTMLInputElement>('#e-sector-sheet-search');
+        if (nextInput) {
+          nextInput.focus();
+          nextInput.selectionStart = nextInput.selectionEnd = nextInput.value.length;
+        }
+      });
+    }
+    const clearBtn = host.querySelector<HTMLElement>('#e-sector-sheet-clear');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        sectorSearchQuery = '';
+        void renderSheet();
+      });
+    }
   }
 
   host.querySelectorAll<HTMLElement>('[data-chip]').forEach((el) => {
@@ -468,6 +536,9 @@ function setView(v: View): void {
 }
 function renderPlanOverlay(): void {
   const plan = $('e-plan');
+  const isSector = !isLiveMapView(state.view) && state.planMapId !== null;
+  document.querySelector('.e-root')?.classList.toggle('e-root--sector', isSector);
+
   if (isLiveMapView(state.view)) {
     plan.style.display = 'none';
     // Free the raster engine, its listeners and cached imagery while the
@@ -476,9 +547,40 @@ function renderPlanOverlay(): void {
     return;
   }
   plan.style.display = 'block';
-  // The real authored masterplan / 3D sheets, rendered by the shared map
-  // engine. A specific sector sheet can be requested from the Sector picker.
-  void showPlan(plan, state.view === '3d' ? 'threeD' : 'masterplan', state.planMapId ?? undefined);
+  void showPlan(
+    plan,
+    state.view === '3d' ? 'threeD' : 'masterplan',
+    state.planMapId ?? undefined,
+    {
+      onBackToSectors: () => {
+        state.planMapId = null;
+        setView('earth');
+        openSheet('sectors');
+      },
+      onSelectProperty: (pid: string) => {
+        const prop = allProperties().find((p) => p.id === pid);
+        if (prop) openPropertyDetail(prop);
+      },
+      onToggleMode: (mode) => {
+        setView(mode === 'threeD' ? '3d' : 'masterplan');
+      },
+      getPlots: (mapEntry) => {
+        return allProperties().filter((p) => {
+          if (p.canonicalRecord?.mapPlacement?.mapId === mapEntry.id) return true;
+          if (p.canonicalRecord?.sectorMapId === mapEntry.id) return true;
+          const sNorm = (mapEntry.sectorOrBlock || mapEntry.title || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+          const pSecNorm = (p.sector || p.canonicalRecord?.area || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+          const pCityNorm = (p.city || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+          const mapCityNorm = (mapEntry.city || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+          if (pCityNorm && mapCityNorm && !pCityNorm.includes(mapCityNorm) && !mapCityNorm.includes(pCityNorm)) {
+            return false;
+          }
+          if (sNorm && pSecNorm && (sNorm.includes(pSecNorm) || pSecNorm.includes(sNorm))) return true;
+          return false;
+        });
+      },
+    },
+  );
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1528,6 +1630,9 @@ function hideStatus(): void { $('e-status').style.display = 'none'; }
 /* ═══════════════════════════════════════════════════════════════
    BOOT
    ═══════════════════════════════════════════════════════════════ */
+import { setupAppFullscreenSync } from '../../packages/ui/fullscreen';
+setupAppFullscreenSync();
+
 const appEl = document.getElementById('app');
 if (appEl) {
   void requireSession(appEl, async () => {

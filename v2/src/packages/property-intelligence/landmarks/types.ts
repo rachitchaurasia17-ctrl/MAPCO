@@ -60,6 +60,27 @@ export interface CuratedLandmark {
    */
   image: string | null;
   active: boolean;
+
+  /* ── curated relevance ──
+     Optional operator knowledge that stops all 50 landmarks being
+     treated as equal points on a map. Every field is a statement about
+     the place itself, never a prediction about a property. */
+
+  /** What this landmark IS to the region, in plain words. */
+  role?: string;
+  /**
+   * How widely it anchors a location. Overrides `recognition` for
+   * ranking when an operator has been explicit.
+   */
+  importance?: 'regional' | 'city' | 'local';
+  /**
+   * Localities this landmark genuinely serves — "Aerocity", "Sector 78",
+   * "central Mohali". A property in one of these gets a small relevance
+   * lift. Absent means neutral, never a penalty.
+   */
+  relevantTo?: readonly string[];
+  /** Who it is useful to: "families", "commuters", "business". */
+  usefulFor?: readonly string[];
   createdAt?: string;
   updatedAt?: string;
 }

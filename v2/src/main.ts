@@ -60,7 +60,7 @@ function initLanding(container: HTMLElement) {
     <div style="position:absolute;inset:0;background:radial-gradient(105% 78% at 50% 42%,rgba(255,250,238,.62) 0%,rgba(247,236,214,.2) 52%,rgba(240,226,196,.62) 100%)"></div>
   </div>
 
-  <div style="position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:clamp(12px,1.8vh,18px) clamp(20px,3vw,40px);flex:none;animation:lFade .8s ease both">
+  <div id="pm-land-topbar" style="position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:clamp(12px,1.8vh,18px) clamp(20px,3vw,40px);flex:none;animation:lFade .8s ease both;transition:opacity .25s ease,transform .25s ease">
     <div style="display:flex;align-items:center;gap:9px">
       <span style="position:relative;width:9px;height:9px;flex:none;display:block">
         <span style="position:absolute;inset:0;border-radius:50%;background:#12a150"></span>
@@ -278,7 +278,66 @@ function initLanding(container: HTMLElement) {
     if (event.key === 'Enter') { event.preventDefault(); void submitActivation(); }
   });
 
+  // Card click handlers: Fullscreen on click + in-place seamless app launch (prevents browser from exiting fullscreen)
+  const cards = container.querySelectorAll<HTMLAnchorElement>('.pm-land-cards a');
+  cards.forEach((card) => {
+    card.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const href = card.getAttribute('href');
+      sessionStorage.setItem('mapco_wants_fullscreen', '1');
+
+      // 1. Request browser fullscreen mode on this user gesture synchronously
+      try {
+        const doc = document as any;
+        const el = document.documentElement as any;
+        const isAlreadyFs = !!(doc.fullscreenElement || doc.webkitFullscreenElement || doc.msFullscreenElement);
+        if (!isAlreadyFs) {
+          if (el.requestFullscreen) {
+            el.requestFullscreen({ navigationUI: "hide" }).catch(() => {});
+          } else if (el.webkitRequestFullscreen) {
+            el.webkitRequestFullscreen();
+          } else if (el.msRequestFullscreen) {
+            el.msRequestFullscreen();
+          }
+        }
+      } catch (e) {
+        console.error("Fullscreen request failed", e);
+      }
+
+      // 2. Load app inside the fullscreen viewport container so Chrome doesn't drop fullscreen on navigation
+      if (href) {
+        let appFrame = document.getElementById('pm-app-frame') as HTMLIFrameElement | null;
+        if (!appFrame) {
+          appFrame = document.createElement('iframe');
+          appFrame.id = 'pm-app-frame';
+          appFrame.setAttribute('allow', 'fullscreen; camera; geolocation; microphone; display-capture');
+          appFrame.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;border:none;z-index:9999;background:#fff;display:none;';
+          document.body.appendChild(appFrame);
+        }
+        appFrame.src = href;
+        appFrame.style.display = 'block';
+        window.history.pushState({ mapcoApp: href }, '', href);
+      }
+    });
+  });
+
+  window.addEventListener('popstate', (e) => {
+    const appFrame = document.getElementById('pm-app-frame') as HTMLIFrameElement | null;
+    if (appFrame) {
+      if (window.location.pathname === '/' || window.location.pathname === '/index.html') {
+        appFrame.style.display = 'none';
+        appFrame.src = 'about:blank';
+      } else if (e.state?.mapcoApp) {
+        appFrame.src = e.state.mapcoApp;
+        appFrame.style.display = 'block';
+      }
+    }
+  });
+
 }
+
+import { setupAppFullscreenSync } from './packages/ui/fullscreen';
+setupAppFullscreenSync();
 
 const app = document.getElementById('app');
 if (app) {

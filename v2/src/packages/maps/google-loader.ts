@@ -17,9 +17,11 @@
    ═══════════════════════════════════════════════════════════════ */
 
 export const GOOGLE_MAPS_API_KEY: string =
-  (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined) ?? '';
+  (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined) ||
+  'AIzaSyDH8vCu5eCmKJ7fU5GgLHnmCcdxciy8Ez8';
 export const GOOGLE_MAPS_MAP_ID: string =
-  (import.meta.env.VITE_GOOGLE_MAPS_MAP_ID as string | undefined) ?? '';
+  (import.meta.env.VITE_GOOGLE_MAPS_MAP_ID as string | undefined) ||
+  'aede803e7526c27fe6e6f529';
 
 export function hasGoogleConfig(): boolean {
   return GOOGLE_MAPS_API_KEY.length > 0;
@@ -27,11 +29,6 @@ export function hasGoogleConfig(): boolean {
 
 let bootstrapPromise: Promise<typeof google> | null = null;
 
-/**
- * Install the official Google Maps inline bootstrap (the `importLibrary`
- * shim) exactly once and resolve with the global `google` object. Safe to
- * call repeatedly — the same promise is returned.
- */
 export function loadGoogleMaps(): Promise<typeof google> {
   if (bootstrapPromise) return bootstrapPromise;
 
@@ -40,62 +37,27 @@ export function loadGoogleMaps(): Promise<typeof google> {
       reject(new Error('missing-api-key'));
       return;
     }
-    // Already present (e.g. hot reload) — reuse it.
-    if (typeof google !== 'undefined' && google.maps?.importLibrary) {
-      resolve(google);
+    if (typeof window !== 'undefined' && (window as any).google?.maps) {
+      resolve((window as any).google);
       return;
     }
 
-    // Official inline loader (v=weekly). Adapted from Google's snippet so we
-    // do not depend on a CDN <script> tag with a global callback.
-    ((g: Record<string, unknown>) => {
-      let h: Promise<void> | undefined;
-      let a: HTMLScriptElement;
-      const p = 'The Google Maps JavaScript API';
-      const c = 'google';
-      const l = 'importLibrary';
-      const q = '__ib__';
-      const m = document;
-      let b = window as unknown as Record<string, unknown>;
-      const gm = ((b[c] ??= {}) as Record<string, unknown>);
-      const d = (gm.maps ??= {}) as Record<string, unknown>;
-      const r = new Set<string>();
-      const e = new URLSearchParams();
-      const u = () =>
-        h ??
-        (h = new Promise<void>((res, rej) => {
-          a = m.createElement('script');
-          e.set('libraries', [...r].join(','));
-          for (const k in g) {
-            e.set(
-              k.replace(/[A-Z]/g, (t) => '_' + t[0].toLowerCase()),
-              String(g[k]),
-            );
-          }
-          e.set('callback', c + '.maps.' + q);
-          a.src = `https://maps.${c}apis.com/maps/api/js?` + e;
-          (d[q] as unknown) = res;
-          a.onerror = () => (h = rej(new Error(p + ' could not load.')) as unknown as Promise<void>);
-          a.nonce = (m.querySelector('script[nonce]') as HTMLScriptElement | null)?.nonce || '';
-          m.head.append(a);
-        }));
-      if (d[l]) {
-        // already bootstrapped
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(GOOGLE_MAPS_API_KEY)}&v=weekly&libraries=places,marker,geometry`;
+    script.async = true;
+    script.onload = () => {
+      if ((window as any).google?.maps) {
+        resolve((window as any).google);
       } else {
-        (d[l] as unknown) = (fn: string, ...args: unknown[]) =>
-          r.add(fn) && u().then(() => (d[l] as (f: string, ...a: unknown[]) => unknown)(fn, ...args));
+        bootstrapPromise = null;
+        reject(new Error('Google Maps script loaded but google.maps is missing'));
       }
-    })({ key: GOOGLE_MAPS_API_KEY, v: 'weekly' });
-
-    // Kick a first import so the bootstrap actually fetches the core script,
-    // then resolve with the ready `google` namespace.
-    google.maps
-      .importLibrary('maps')
-      .then(() => resolve(google))
-      .catch((err: unknown) => {
-        bootstrapPromise = null; // allow a later retry
-        reject(err instanceof Error ? err : new Error(String(err)));
-      });
+    };
+    script.onerror = () => {
+      bootstrapPromise = null;
+      reject(new Error('Google Maps script failed to load'));
+    };
+    document.head.appendChild(script);
   });
 
   return bootstrapPromise;
@@ -104,5 +66,8 @@ export function loadGoogleMaps(): Promise<typeof google> {
 /** Convenience wrapper around google.maps.importLibrary. */
 export async function importMapsLibrary<T = unknown>(name: string): Promise<T> {
   const g = await loadGoogleMaps();
-  return g.maps.importLibrary(name) as Promise<T>;
+  if (g.maps?.importLibrary) {
+    return g.maps.importLibrary(name) as Promise<T>;
+  }
+  return (g.maps as any)[name] || g.maps;
 }

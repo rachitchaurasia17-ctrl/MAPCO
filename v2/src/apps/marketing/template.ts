@@ -63,9 +63,10 @@ export function renderApp(state: any) {
 <div style="position:relative;z-index:1;height:100vh;display:flex;flex-direction:column;overflow:hidden">
 
   <header style="flex:none;padding:14px 32px;display:flex;align-items:center;gap:22px">
-    <a href="./Dealer Dashboard.dc.html" style="display:flex;align-items:center;gap:12px;flex:none;text-decoration:none" style-hover="opacity:.82">
-      <img src="assets/mapco-logo.png" alt="MAPCO" style="height:36px;width:auto;display:block;filter:drop-shadow(0 7px 12px rgba(90,40,150,.3))">
-      <div style="line-height:1"><div style="font-size:20px;font-weight:800;letter-spacing:-.01em;color:#241833">MAPCO</div><div style="font-size:9.5px;font-weight:800;letter-spacing:.42em;color:#7a2fe0;margin-top:2px">MARKETING</div></div>
+    <a href="/" title="Return to MAPCO Homescreen" style="display:flex;align-items:center;gap:12px;flex:none;text-decoration:none;cursor:pointer;transition:transform .16s ease" style-hover="transform:scale(1.03)">
+      <span style="width:34px;height:34px;border-radius:11px;background:rgba(122,47,224,.12);display:grid;place-items:center;color:#7a2fe0;flex:none"><i class="ph-bold ph-arrow-left" style="font-size:17px"></i></span>
+      <img src="/assets/mapco-logo.png" alt="MAPCO" style="height:46px;width:auto;display:block;filter:drop-shadow(0 7px 12px rgba(90,40,150,.3))">
+      <div style="line-height:1"><div style="font-size:22px;font-weight:800;letter-spacing:-.01em;color:#241833">MAPCO</div><div style="font-size:10px;font-weight:800;letter-spacing:.42em;color:#7a2fe0;margin-top:2px">MARKETING</div></div>
     </a>
 
     <nav style="display:flex;align-items:center;gap:3px;margin:0 auto;background:rgba(255,255,255,.55);border:1px solid rgba(122,47,224,.16);border-radius:17px;padding:5px;box-shadow:0 14px 32px -22px rgba(60,30,90,.6);backdrop-filter:blur(8px)">
@@ -95,24 +96,15 @@ export function renderApp(state: any) {
     <div style="flex:none;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 2px 10px">
       <div style="display:flex;align-items:center;gap:10px">
         <span style="width:9px;height:9px;border-radius:50%;background:#e0473a;box-shadow:0 0 0 4px rgba(224,71,58,.18)"></span>
-        <div style="font-size:12.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#7a2fe0">Wednesday · 19 August — 2 posts ready</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;flex:none">
-        \${ (postTabs || []).map(pt => \`
-          <button onClick="\${__b(pt.go)}" style="\${pt.style}">
-            <span style="\${pt.dotStyle}"></span>
-            <div style="text-align:left;line-height:1.05"><div style="font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.75">Post \${pt.num}</div><div style="font-size:13.5px;font-weight:800">\${pt.name}</div></div>
-            \${ pt.live ? \`<i class="ph-fill ph-check-circle" style="font-size:15px;color:#22c55e"></i>\` : '' }
-          </button>
-        \`).join('') }
+        <div style="font-size:12.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#7a2fe0">Today's Post · 1 post every day</div>
       </div>
     </div>
 
     <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center;gap:14px">
       <button onClick="\${__b(goPrev)}" title="Previous post" style="width:52px;height:52px;flex:none;border-radius:50%;background:rgba(255,255,255,.8);color:#7a2fe0;display:grid;place-items:center;box-shadow:0 14px 28px -14px rgba(90,40,150,.6);border:1px solid rgba(122,47,224,.18)" style-hover="background:#fff;transform:scale(1.06)"><i class="ph-bold ph-caret-left" style="font-size:22px"></i></button>
 
-      <div style="\${active.wrapStyle}">
-        <div style="\${active.creativeStyle}" style-hover="transform:translateY(-4px);box-shadow:0 54px 90px -34px rgba(40,15,70,.75)">
+      <div style="\${active.wrapStyle};max-height:calc(100vh - 210px)">
+        <div style="\${active.creativeStyle};max-height:calc(100vh - 210px)" style-hover="transform:translateY(-4px);box-shadow:0 54px 90px -34px rgba(40,15,70,.75)">
           \${ active.split ? \`
             <div style="\${active.photoStyle}"></div>
             <div style="position:absolute;left:0;right:0;bottom:0;height:55%;background:linear-gradient(155deg,#221a3e,#14101f);border-top-left-radius:26cqw;box-shadow:0 -30px 50px -30px rgba(0,0,0,.6);display:flex;flex-direction:column;justify-content:center;padding:2% 9% 9%;color:#fff">
@@ -220,18 +212,9 @@ export function renderApp(state: any) {
     <div style="flex:none;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 2px 10px">
       <div style="display:flex;align-items:center;gap:10px;min-width:0">
         <span style="width:9px;height:9px;border-radius:50%;background:#7a2fe0;box-shadow:0 0 0 4px rgba(122,47,224,.18);flex:none"></span>
-        
-        <div style="display:flex;align-items:center;gap:8px;margin-left:6px;min-width:0">
-          \${ (reelTabs || []).map(rt => \`
-            <button onClick="\${__b(rt.go)}" style="\${rt.style}">
-              <span style="\${rt.dotStyle}"></span>
-              <div style="text-align:left;line-height:1.05"><div style="font-size:9px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;opacity:.75">\${rt.stage}</div><div style="font-size:13.5px;font-weight:800">\${rt.name}</div></div>
-            </button>
-          \`).join('') }
-        </div>
+        <div style="font-size:12.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#7a2fe0">Reel Schedule · 2 a week (8 a month)</div>
       </div>
       <div style="display:flex;align-items:center;gap:12px;flex:none">
-        
         <button onClick="\${__b(openUpload)}" style="\${uploadBtnStyle}" style-hover="transform:translateY(-1px)"><i class="ph-bold ph-plus" style="font-size:16px"></i>Upload Video</button>
       </div>
     </div>
@@ -239,8 +222,8 @@ export function renderApp(state: any) {
     <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center;gap:14px">
       <button onClick="\${__b(reelPrev)}" title="Previous reel" style="width:52px;height:52px;flex:none;border-radius:50%;background:rgba(255,255,255,.8);color:#7a2fe0;display:grid;place-items:center;box-shadow:0 14px 28px -14px rgba(90,40,150,.6);border:1px solid rgba(122,47,224,.18)" style-hover="background:#fff;transform:scale(1.06)"><i class="ph-bold ph-caret-left" style="font-size:22px"></i></button>
 
-      <div style="height:100%;min-width:0;display:flex;flex-direction:column;align-items:center;animation:omSlideX .3s cubic-bezier(.2,.8,.2,1) both">
-        <div style="flex:1;min-height:0;aspect-ratio:9/16;position:relative;border-radius:26px;overflow:hidden;background:#14101f;box-shadow:0 44px 84px -34px rgba(40,15,70,.75)">
+      <div style="height:100%;max-height:calc(100vh - 210px);min-width:0;display:flex;flex-direction:column;align-items:center;animation:omSlideX .3s cubic-bezier(.2,.8,.2,1) both">
+        <div style="height:100%;max-height:calc(100vh - 210px);aspect-ratio:9/16;position:relative;border-radius:26px;overflow:hidden;background:#14101f;box-shadow:0 44px 84px -34px rgba(40,15,70,.75)">
           <div style="\${reel.photoStyle}"></div>
           <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(12,9,22,.9) 4%,rgba(12,9,22,.12) 42%,rgba(12,9,22,.45))"></div>
 
@@ -277,7 +260,6 @@ export function renderApp(state: any) {
         </div>
       </div>
 
-      <button onClick="\${__b(reelNext)}" title="Next reel" style="width:52px;height:52px;flex:none;border-radius:50%;background:rgba(255,255,255,.8);color:#7a2fe0;display:grid;place-items:center;box-shadow:0 14px 28px -14px rgba(90,40,150,.6);border:1px solid rgba(122,47,224,.18)" style-hover="background:#fff;transform:scale(1.06)"><i class="ph-bold ph-caret-right" style="font-size:22px"></i></button>
     </div>
 
     <div style="flex:none;max-width:1120px;width:100%;margin:12px auto 0;border-radius:20px;background:linear-gradient(120deg,rgba(255,240,196,.82),rgba(236,219,255,.82) 55%,rgba(214,251,227,.82));border:1px solid rgba(255,255,255,.7);padding:13px 18px;box-shadow:0 26px 54px -28px rgba(40,15,70,.55);backdrop-filter:blur(10px)">
@@ -381,9 +363,9 @@ export function renderApp(state: any) {
         </div>
         \` : '' }
         \${ g.hasReels ? \`
-        <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:26px;margin:0 auto 8px;max-width:calc(max((100vh - 310px) * 9 / 16, 250px) * 2 + 30px)">
+        <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:28px;margin:0 auto 16px;max-width:1200px">
           \${ (g.reels || []).map(r => \`
-            <div style="width:max(calc((100vh - 310px) * 9 / 16), 250px);">
+            <div style="width:min(100%, 380px);flex:1 1 340px;max-width:420px">
               <div style="\${r.mediaStyle}">
                 <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(12,9,22,.88) 2%,rgba(12,9,22,.05) 40%,rgba(12,9,22,.4))"></div>
                 <span style="\${r.statusStyle}"><i class="\${r.statusIcon}" style="font-size:12px"></i>\${r.statusLabel}</span>
@@ -562,20 +544,63 @@ export function renderApp(state: any) {
 
       \${ isStep2 ? \`
       <div style="margin-top:18px;">
-        <div style="display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.7);border:1px solid rgba(122,47,224,.14)">
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:18px;background:linear-gradient(135deg,#fff8e6,#ffe8b8);border:1.5px solid #f6cf7a;box-shadow:0 10px 24px -12px rgba(220,130,20,.35)">
           <div style="\${chosenPhotoStyle}"></div>
-          <div style="flex:1;min-width:0"><div style="font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#a8571e">Property</div><div style="font-size:14px;font-weight:800;color:#1c1430">\${chosenTitle}</div></div>
-          <button onClick="\${__b(backStep)}" style="padding:7px 12px;border-radius:9px;background:rgba(122,47,224,.12);color:#5a18c0;font-size:12px;font-weight:800" style-hover="background:rgba(122,47,224,.22)">Change</button>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#a8571e">Property</div>
+            <div style="font-size:15px;font-weight:800;color:#241833">\${chosenTitle}</div>
+          </div>
+          <button onClick="\${__b(backStep)}" style="padding:7px 14px;border-radius:10px;background:#e07e10;color:#fff;font-size:12.5px;font-weight:800;box-shadow:0 4px 10px -4px rgba(224,126,16,.6)" style-hover="background:#c26a09">Change</button>
         </div>
 
-        <button onClick="\${__b(chooseFile)}" style="\${fileBtnStyle}" style-hover="border-color:#7a2fe0;background:rgba(255,255,255,.92)">
-          <span style="width:44px;height:44px;flex:none;border-radius:13px;background:rgba(122,47,224,.12);display:grid;place-items:center"><i class="\${fileIcon}" style="font-size:22px;color:#7a2fe0"></i></span>
-          <div style="text-align:left"><div style="font-size:14.5px;font-weight:800;color:#1c1430">\${fileTitle}</div><div style="font-size:12px;color:#8a7862;margin-top:1px">\${fileSub}</div></div>
+        <button onClick="\${__b(chooseFile)}" style="width:100%;margin-top:12px;display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:18px;background:linear-gradient(135deg,#f5eeff,#e8d6ff);border:2px dashed #9333ea;box-shadow:0 10px 24px -12px rgba(147,51,234,.35);transition:all .15s;cursor:pointer" style-hover="transform:translateY(-1px);background:linear-gradient(135deg,#ede0ff,#dcbeff)">
+          <span style="width:46px;height:46px;flex:none;border-radius:14px;background:linear-gradient(135deg,#7a2fe0,#9333ea);color:#fff;display:grid;place-items:center;box-shadow:0 8px 16px -8px rgba(122,47,224,.8)"><i class="\${fileIcon}" style="font-size:22px"></i></span>
+          <div style="text-align:left;flex:1;min-width:0">
+            <div style="font-size:15px;font-weight:800;color:#241833">\${fileTitle}</div>
+            <div style="font-size:12.5px;font-weight:600;color:#6b46c1;margin-top:1px">\${fileSub}</div>
+          </div>
+          \${ upFile ? \`<span style="padding:4px 9px;border-radius:8px;background:#16a34a;color:#fff;font-size:11px;font-weight:800">READY</span>\` : '' }
         </button>
 
-        <div style="margin-top:18px">
-          <div style="font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#a8571e">Note for the MAPCO team <span style="font-weight:700;letter-spacing:0;text-transform:none;color:#a99a86">· optional</span></div>
-          <textarea onInput="\${__b(setNote)}" placeholder="Anything we should know? e.g. show the park side first." style="width:100%;margin-top:10px;min-height:64px;resize:vertical;padding:13px 15px;border-radius:14px;border:1.5px solid rgba(122,47,224,.16);background:rgba(255,255,255,.8);font-size:14px;font-weight:600;color:#1c1430;outline:none"></textarea>
+        <div style="margin-top:16px">
+          <div style="font-size:11.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#7a2fe0">Record voice note <span style="font-weight:700;color:#9b82be">· audio instructions for MAPCO editors</span></div>
+          
+          <div style="margin-top:9px;padding:14px 16px;border-radius:18px;background:linear-gradient(135deg,#fff0f3,#ffe0e6);border:1.5px solid #fda4af;box-shadow:0 10px 24px -12px rgba(244,63,94,.35)">
+            \${ audioRec ? \`
+              <div style="display:flex;align-items:center;gap:14px">
+                <span style="width:42px;height:42px;border-radius:50%;background:#ef4444;color:#fff;display:grid;place-items:center;animation:omPulse 1s ease-in-out infinite;box-shadow:0 0 0 6px rgba(239,68,68,.25)"><i class="ph-fill ph-microphone" style="font-size:22px"></i></span>
+                <div style="flex:1;min-width:0">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;animation:omPulse .8s infinite"></span>
+                    <span style="font-size:14px;font-weight:800;color:#991b1b">Recording voice note… 0:18</span>
+                  </div>
+                  <div style="font-size:12px;color:#b91c1c;margin-top:2px">Speak instructions clearly (e.g. highlight north facing & road width).</div>
+                </div>
+                <button onClick="\${__b(toggleAudioRecord)}" style="padding:9px 16px;border-radius:12px;background:#ef4444;color:#fff;font-size:13px;font-weight:800;flex:none;box-shadow:0 4px 12px rgba(239,68,68,.4)">Stop &amp; Save</button>
+              </div>
+            \` : audioDone ? \`
+              <div style="display:flex;align-items:center;gap:14px">
+                <span style="width:42px;height:42px;border-radius:50%;background:#16a34a;color:#fff;display:grid;place-items:center;box-shadow:0 4px 14px rgba(22,163,74,.4)"><i class="ph-fill ph-check" style="font-size:22px"></i></span>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:14.5px;font-weight:800;color:#166534">Voice note recorded (0:18s)</div>
+                  <div style="font-size:12px;color:#15803d;margin-top:1px">Attached to reel upload for MAPCO studio.</div>
+                </div>
+                <button onClick="\${__b(toggleAudioRecord)}" title="Re-record" style="padding:8px 12px;border-radius:10px;background:rgba(22,163,74,.15);color:#15803d;font-size:12.5px;font-weight:800;flex:none" style-hover="background:rgba(22,163,74,.25)"><i class="ph-bold ph-arrow-clockwise" style="font-size:14px"></i> Re-record</button>
+                <button onClick="\${__b(deleteAudio)}" title="Delete" style="width:32px;height:32px;border-radius:9px;background:rgba(239,68,68,.12);color:#dc2626;display:grid;place-items:center;flex:none"><i class="ph-bold ph-trash" style="font-size:14px"></i></button>
+              </div>
+            \` : \`
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:14px">
+                <div style="display:flex;align-items:center;gap:12px">
+                  <span style="width:42px;height:42px;border-radius:50%;background:rgba(225,29,72,.14);color:#e11d48;display:grid;place-items:center"><i class="ph-fill ph-microphone" style="font-size:22px"></i></span>
+                  <div>
+                    <div style="font-size:14px;font-weight:800;color:#881337">Record audio note for editor</div>
+                    <div style="font-size:12px;color:#9f1239;margin-top:1px">Tap mic to speak voice directions directly.</div>
+                  </div>
+                </div>
+                <button onClick="\${__b(toggleAudioRecord)}" style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:12px;background:linear-gradient(135deg,#e11d48,#be123c);color:#fff;font-size:13.5px;font-weight:800;flex:none;box-shadow:0 8px 18px -8px rgba(225,29,72,.8)" style-hover="transform:scale(1.03)"><i class="ph-fill ph-microphone" style="font-size:16px"></i>Record voice</button>
+              </div>
+            \` }
+          </div>
         </div>
 
         <div style="display:flex;align-items:center;gap:10px;margin-top:20px">

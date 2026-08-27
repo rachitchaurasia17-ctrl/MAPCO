@@ -360,6 +360,20 @@ export function toCanonicalProperty(
     ...(form.notes ? { privateNotes: String(form.notes) } : {}),
     ...(form.registry ? { registryRef: String(form.registry) } : {}),
     ...(form.approval ? { approvalRef: String(form.approval) } : {}),
+    ...(form.mapPlacement ? { mapPlacement: form.mapPlacement } : (form.sectorMapId ? { mapPlacement: { mapId: form.sectorMapId, x: (typeof form.sectorPinX === 'number' ? form.sectorPinX / 100 : 0.5), y: (typeof form.sectorPinY === 'number' ? form.sectorPinY / 100 : 0.5) } } : (existing?.mapPlacement ? { mapPlacement: existing.mapPlacement } : {}))),
+    ...(form.sectorMapId ? { sectorMapId: String(form.sectorMapId) } : (existing?.sectorMapId ? { sectorMapId: existing.sectorMapId } : {})),
+    ...(form.location ? { location: form.location } : (
+      (form.earth || form.pinSet) && typeof form.pinX === 'number' && typeof form.pinY === 'number'
+        ? {
+            location: {
+              latitude: +(30.82 - (form.pinY / 100) * 0.20).toFixed(6),
+              longitude: +(76.65 + (form.pinX / 100) * 0.20).toFixed(6),
+              source: 'dealer-selected' as const,
+              updatedAt: new Date().toISOString(),
+            }
+          }
+        : (existing?.location ? { location: existing.location } : {})
+    )),
   } as Property;
 }
 

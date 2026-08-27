@@ -181,9 +181,7 @@ export function mapEntryFromData(d: MapCatalogInput): MapEntry | null {
   const ow = d.assets?.original?.w ?? d.dims?.original?.w ?? 0;
   const oh = d.assets?.original?.h ?? d.dims?.original?.h ?? 0;
   if (!ow || !oh) return null; // incompatible/unknown dimensions → skip, never distort
-  // Sector maps no longer carry a 3D rendering: the heavy 3D sector rasters were
-  // dropped to keep the map fast. Masterplan 3D is retained. (2026-08 decision)
-  const threeDPath = d.kind === 'sector' ? undefined : d.assets?.threeD?.path;
+  const threeDPath = d.assets?.threeD?.path;
   const overlayPath = d.assets?.overlay?.path;
   // The overlay viewBox: prefer explicit calibration, then the stored overlay
   // asset dims, then the raster dims (aligned exports share both).

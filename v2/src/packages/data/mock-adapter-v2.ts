@@ -897,6 +897,37 @@ class MockDemandRepository implements DemandRepository {
    MAPS / PRESENTATION / EVENTS
    ═══════════════════════════════════════════════════════════════ */
 
+import { MAP_REGISTRY as CANONICAL_SECTOR_MAPS } from '../maps/sector-map-registry';
+
+const CANONICAL_MAP_DATA: MapData[] = CANONICAL_SECTOR_MAPS.map((m) => {
+  const isMohaliMaster = m.id === 'mohali-masterplan' || m.name.toLowerCase().includes('mohali masterplan');
+  const threeDAsset = isMohaliMaster
+    ? { path: '/maps-pilot/mohali-3d.png', w: 1448, h: 1086 }
+    : undefined;
+  return {
+    id: m.id,
+    kind: m.kind === 'MASTERPLAN' ? 'masterplan' : 'sector',
+    city: m.city,
+    sector: m.sector || m.project || m.name,
+    area: m.project || m.sector || m.name,
+    label: m.name,
+    raster: m.image,
+    dims: {
+      original: { w: m.dimensions.width, h: m.dimensions.height },
+      ...(threeDAsset ? { threeD: { w: threeDAsset.w, h: threeDAsset.h } } : {}),
+    },
+    assets: {
+      original: { path: m.image, w: m.dimensions.width, h: m.dimensions.height },
+      ...(threeDAsset ? { threeD: threeDAsset } : {}),
+    },
+    calibration: { status: 'unavailable', overlayViewBox: null, raster: { w: m.dimensions.width, h: m.dimensions.height } },
+    published: m.active,
+    hidden: false,
+    linkedProperties: [],
+    sets: [],
+  };
+});
+
 const MAP_REGISTRY: MapData[] = [
   {
     id: 'mohali-master', kind: 'masterplan', city: 'Mohali', sector: 'Master Plan',
@@ -921,10 +952,6 @@ const MAP_REGISTRY: MapData[] = [
       }
     ]
   },
-];
-
-const MAP_PLACEMENT_REGISTRY: MapData[] = [
-  ...MAP_REGISTRY,
   {
     id: 'mohali-sector-90-91', kind: 'sector', city: 'Mohali', sector: 'Sector 90-91',
     area: 'Janta Township', parentMapId: 'mohali-master', label: 'Mohali — Sector 90-91',
@@ -934,6 +961,11 @@ const MAP_PLACEMENT_REGISTRY: MapData[] = [
     calibration: { status: 'unavailable', overlayViewBox: null, raster: { w: 1024, h: 724 } },
     published: true, hidden: false, linkedProperties: [], sets: [],
   },
+  ...CANONICAL_MAP_DATA,
+];
+
+const MAP_PLACEMENT_REGISTRY: MapData[] = [
+  ...MAP_REGISTRY,
 ];
 
 class MockMapRepository implements MapRepository {

@@ -369,6 +369,119 @@
 }
 .e-plan-stage:active { cursor: grabbing; }
 
+/* ── Dedicated Sector Map View (matching design) ─────────────────── */
+.e-root--sheet .e-top,
+.e-root--sector .e-top,
+.e-root--sector .e-controls,
+.e-root--sector .e-minebtn,
+.e-root--sector .e-card,
+.e-root--sector .e-panel,
+.e-root--sector .e-vignette {
+  display: none !important;
+}
+
+.e-sector-view {
+  position: absolute; inset: 0; z-index: 60;
+  display: flex; flex-direction: column;
+  background: radial-gradient(circle at 100% 0%, #291d12 0%, #15111d 55%, #0e0a16 100%);
+  padding: 16px 22px; box-sizing: border-box; gap: 14px;
+  font-family: 'Hanken Grotesk', system-ui, sans-serif;
+  color: #fff8e6;
+  animation: eFade .25s ease both;
+}
+.e-sector-topbar {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex: none;
+}
+.e-sector-topbar-left {
+  display: flex; align-items: center; gap: 12px;
+}
+.e-sector-btn-back {
+  display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 16px;
+  border-radius: 13px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14);
+  color: #fff8e6; font-size: 14px; font-weight: 700; cursor: pointer;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  transition: background .18s, border-color .18s, transform .15s;
+}
+.e-sector-btn-back:hover {
+  background: rgba(255,255,255,.16); border-color: rgba(255,201,60,.45); transform: translateY(-1px);
+}
+.e-sector-badge {
+  display: inline-flex; align-items: center; gap: 8px; height: 42px; padding: 0 18px;
+  border-radius: 13px; background: rgba(255,201,60,.16); border: 1px solid rgba(255,201,60,.38);
+  color: #ffc93c; font-size: 14.5px; font-weight: 800; letter-spacing: .01em;
+}
+.e-sector-topbar-right {
+  display: flex; align-items: center; gap: 12px;
+}
+.e-sector-mode-toggle {
+  display: flex; align-items: center; background: rgba(0,0,0,.45); padding: 4px;
+  border-radius: 14px; border: 1px solid rgba(255,255,255,.12); gap: 4px;
+}
+.e-sector-mode-btn {
+  display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 14px;
+  border-radius: 10px; border: none; background: transparent; color: rgba(255,255,255,.65);
+  font-size: 13.5px; font-weight: 700; cursor: pointer; transition: all .18s ease;
+}
+.e-sector-mode-btn:hover:not(.on) {
+  color: #fff; background: rgba(255,255,255,.08);
+}
+.e-sector-mode-btn.on {
+  background: #ffc21e; color: #1c1503; font-weight: 800; box-shadow: 0 2px 10px rgba(255,194,30,.4);
+}
+.e-sector-body {
+  display: flex; gap: 20px; flex: 1; min-height: 0; width: 100%;
+}
+.e-sector-stage-wrap {
+  flex: 1; min-width: 0; min-height: 0; position: relative;
+  border-radius: 20px; overflow: hidden; background: #fbf8f0;
+  box-shadow: 0 20px 50px -16px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.1);
+}
+.e-sector-stage-wrap .e-plan-stage {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+}
+.e-sector-sidebar {
+  width: 320px; flex: none; display: flex; flex-direction: column; gap: 14px;
+  overflow-y: auto; padding-right: 4px;
+}
+.e-sector-sidebar-header {
+  padding: 4px 6px;
+}
+.e-sector-kicker {
+  font-size: 11px; font-weight: 800; letter-spacing: .2em; text-transform: uppercase; color: #d4a84f;
+}
+.e-sector-title {
+  font-family: 'Newsreader', Georgia, serif; font-size: 29px; font-weight: 500; letter-spacing: -.02em; color: #fff8e6; margin-top: 2px;
+}
+.e-sector-plots {
+  display: flex; flex-direction: column; gap: 14px;
+}
+.e-sector-plot-card {
+  display: block; border-radius: 18px; overflow: hidden; background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12); cursor: pointer; text-align: left;
+  transition: transform .2s cubic-bezier(.2,.8,.2,1), background .2s, border-color .2s;
+  color: inherit;
+}
+.e-sector-plot-card:hover {
+  transform: translateY(-4px); background: rgba(255,255,255,.1); border-color: rgba(255,201,60,.4);
+}
+.e-sector-plot-media {
+  height: 140px; background: #231b2d; position: relative;
+}
+.e-sector-plot-info {
+  padding: 14px 16px;
+}
+.e-sector-plot-name {
+  font-size: 17px; font-weight: 700; color: #fff8e6; line-height: 1.2;
+}
+.e-sector-plot-specs {
+  font-size: 13.5px; font-weight: 600; color: #b8ab98; margin-top: 4px;
+}
+.e-sector-empty-plots {
+  padding: 36px 20px; text-align: center; border-radius: 18px;
+  background: rgba(255,255,255,.04); border: 1px dashed rgba(255,255,255,.12);
+  color: #a89cb8; font-size: 14px; line-height: 1.5;
+}
+
 /* ── Masterplan / 3D message overlay (no maps published, 3D missing) ── */
 .e-plan {
   position: absolute; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; overflow: hidden;

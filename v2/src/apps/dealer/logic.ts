@@ -1,6 +1,8 @@
 // @ts-nocheck
 import { DCLogic, Router } from '../../framework/dc';
 import { deskStore } from './desk-store';
+import { MAP_REGISTRY as CANONICAL_SECTOR_MAPS } from '../../packages/maps/sector-map-registry';
+import { loadGoogleMaps, importMapsLibrary, GOOGLE_MAPS_MAP_ID } from '../../packages/maps/google-loader';
 
 export class Component extends DCLogic {
   state = {
@@ -851,13 +853,13 @@ export class Component extends DCLogic {
   }
   sellerOf(pr) { return pr && pr.ps ? this.sellers.find(x => x.id === pr.ps.sellerId) || null : null; }
   MKT = {
-    P1: { created: 8, approved: 6, published: 5, scheduled: 1, reels: 2, perf: { reach: 18400, impr: 26100, eng: 1240, clicks: 312 }, assets: [{ kind: 'Reel', date: '12 Aug', plat: 'Instagram · Facebook', status: 'Published', img: 'assets/mkt-prop-1.jpg' }, { kind: 'Post', date: '9 Aug', plat: 'Instagram', status: 'Published', img: 'assets/mkt-prop-2.jpg' }, { kind: 'Post', date: '14 Aug', plat: 'Facebook', status: 'Scheduled', img: 'assets/mkt-prop-3.webp' }] },
-    P5: { created: 5, approved: 4, published: 3, scheduled: 0, reels: 1, perf: { reach: 11200, impr: 15800, eng: 730, clicks: 184 }, assets: [{ kind: 'Reel', date: '10 Aug', plat: 'Instagram', status: 'Published', img: 'assets/mkt-prop-4.jpg' }, { kind: 'Post', date: '6 Aug', plat: 'Instagram', status: 'Published', img: 'assets/mkt-prop-2.jpg' }] },
-    P9: { created: 3, approved: 3, published: 1, scheduled: 2, reels: 1, perf: null, assets: [{ kind: 'Reel', date: '16 Aug', plat: 'Instagram', status: 'Scheduled', img: 'assets/mkt-prop-3.webp' }, { kind: 'Post', date: '11 Aug', plat: 'Facebook', status: 'Published', img: 'assets/mkt-prop-1.jpg' }] },
-    P10: { created: 4, approved: 2, published: 0, scheduled: 0, reels: 1, perf: null, assets: [{ kind: 'Reel', date: '—', plat: 'Instagram', status: 'Ready', img: 'assets/mkt-prop-4.jpg' }, { kind: 'Post', date: '—', plat: 'Instagram', status: 'Ready', img: 'assets/mkt-prop-2.jpg' }] },
-    P2: { created: 6, approved: 5, published: 4, scheduled: 1, reels: 2, perf: { reach: 9400, impr: 13100, eng: 512, clicks: 141 }, assets: [{ kind: 'Post', date: '8 Aug', plat: 'Instagram', status: 'Published', img: 'assets/mkt-prop-2.jpg' }, { kind: 'Reel', date: '13 Aug', plat: 'Instagram · Facebook', status: 'Published', img: 'assets/mkt-prop-1.jpg' }, { kind: 'Post', date: '18 Aug', plat: 'Facebook', status: 'Scheduled', img: 'assets/mkt-prop-3.webp' }] },
-    P13: { created: 7, approved: 6, published: 4, scheduled: 2, reels: 3, perf: { reach: 24800, impr: 34600, eng: 1810, clicks: 427 }, assets: [{ kind: 'Reel', date: '15 Aug', plat: 'Instagram', status: 'Published', img: 'assets/mkt-prop-3.webp' }, { kind: 'Post', date: '12 Aug', plat: 'Facebook', status: 'Published', img: 'assets/mkt-prop-4.jpg' }, { kind: 'Reel', date: '20 Aug', plat: 'Instagram', status: 'Scheduled', img: 'assets/mkt-prop-1.jpg' }] },
-    P12: { created: 9, approved: 9, published: 7, scheduled: 0, reels: 3, perf: { reach: 31200, impr: 44900, eng: 2260, clicks: 588 }, assets: [{ kind: 'Reel', date: '2 Aug', plat: 'Instagram · Facebook', status: 'Published', img: 'assets/mkt-prop-4.jpg' }, { kind: 'Post', date: '29 Jul', plat: 'Instagram', status: 'Published', img: 'assets/mkt-prop-1.jpg' }, { kind: 'Post', date: '5 Aug', plat: 'Facebook', status: 'Published', img: 'assets/mkt-prop-2.jpg' }] }
+    P1: { created: 8, approved: 6, published: 5, scheduled: 1, reels: 2, perf: { reach: 18400, impr: 26100, eng: 1240, clicks: 312 }, assets: [{ kind: 'Reel', date: '12 Aug', plat: 'Instagram · Facebook', status: 'Published', img: '/assets/mkt-prop-1.jpg' }, { kind: 'Post', date: '9 Aug', plat: 'Instagram', status: 'Published', img: '/assets/mkt-prop-2.jpg' }, { kind: 'Post', date: '14 Aug', plat: 'Facebook', status: 'Scheduled', img: '/assets/mkt-prop-3.webp' }] },
+    P5: { created: 5, approved: 4, published: 3, scheduled: 0, reels: 1, perf: { reach: 11200, impr: 15800, eng: 730, clicks: 184 }, assets: [{ kind: 'Reel', date: '10 Aug', plat: 'Instagram', status: 'Published', img: '/assets/mkt-prop-4.jpg' }, { kind: 'Post', date: '6 Aug', plat: 'Instagram', status: 'Published', img: '/assets/mkt-prop-2.jpg' }] },
+    P9: { created: 3, approved: 3, published: 1, scheduled: 2, reels: 1, perf: null, assets: [{ kind: 'Reel', date: '16 Aug', plat: 'Instagram', status: 'Scheduled', img: '/assets/mkt-prop-3.webp' }, { kind: 'Post', date: '11 Aug', plat: 'Facebook', status: 'Published', img: '/assets/mkt-prop-1.jpg' }] },
+    P10: { created: 4, approved: 2, published: 0, scheduled: 0, reels: 1, perf: null, assets: [{ kind: 'Reel', date: '—', plat: 'Instagram', status: 'Ready', img: '/assets/mkt-prop-4.jpg' }, { kind: 'Post', date: '—', plat: 'Instagram', status: 'Ready', img: '/assets/mkt-prop-2.jpg' }] },
+    P2: { created: 6, approved: 5, published: 4, scheduled: 1, reels: 2, perf: { reach: 9400, impr: 13100, eng: 512, clicks: 141 }, assets: [{ kind: 'Post', date: '8 Aug', plat: 'Instagram', status: 'Published', img: '/assets/mkt-prop-2.jpg' }, { kind: 'Reel', date: '13 Aug', plat: 'Instagram · Facebook', status: 'Published', img: '/assets/mkt-prop-1.jpg' }, { kind: 'Post', date: '18 Aug', plat: 'Facebook', status: 'Scheduled', img: '/assets/mkt-prop-3.webp' }] },
+    P13: { created: 7, approved: 6, published: 4, scheduled: 2, reels: 3, perf: { reach: 24800, impr: 34600, eng: 1810, clicks: 427 }, assets: [{ kind: 'Reel', date: '15 Aug', plat: 'Instagram', status: 'Published', img: '/assets/mkt-prop-3.webp' }, { kind: 'Post', date: '12 Aug', plat: 'Facebook', status: 'Published', img: '/assets/mkt-prop-4.jpg' }, { kind: 'Reel', date: '20 Aug', plat: 'Instagram', status: 'Scheduled', img: '/assets/mkt-prop-1.jpg' }] },
+    P12: { created: 9, approved: 9, published: 7, scheduled: 0, reels: 3, perf: { reach: 31200, impr: 44900, eng: 2260, clicks: 588 }, assets: [{ kind: 'Reel', date: '2 Aug', plat: 'Instagram · Facebook', status: 'Published', img: '/assets/mkt-prop-4.jpg' }, { kind: 'Post', date: '29 Jul', plat: 'Instagram', status: 'Published', img: '/assets/mkt-prop-1.jpg' }, { kind: 'Post', date: '5 Aug', plat: 'Facebook', status: 'Published', img: '/assets/mkt-prop-2.jpg' }] }
   };
   openEdit(id, step) {
     const pr = this.properties.find(x => x.id === id); if (!pr) return;
@@ -891,6 +893,13 @@ export class Component extends DCLogic {
       city: '', area: '', society: '', address: '', type: 'Residential Plot', size: '', unit: 'sq yd', carpet: '', rate: '', pooja: false, store: false, servant: false, lift: false, powerBackup: false, cornerShop: false, shutters: '', washrooms: '', facing: 'East', road: '', plotNo: '', showPlotNo: true, corner: false, parkFacing: false, tenure: 'Freehold', beds: '3', baths: '2', floor: '', totalFloors: '', balconies: '1', parking: '1', furnishing: 'Unfurnished', age: 'New', possession: 'Ready to move', frontage: '', use: '', mainRoad: false, avail: 'available', price: '', photos: [], cover: 0, video: false, videos: [], docs: [], highlights: [], customHl: '', registry: '', approval: '', notes: '', earth: false, earthQ: '', sector: '',
       sellerId: '', askPrice: '', relation: 'Owner', availConfirmed: true, lastConfirmed: 'Today', visitNote: '', sellerPropNote: '', sellerDocs: []
     };
+  }
+  setP(patch) {
+    this.setState({ pform: { ...this.state.pform, ...patch } });
+  }
+  onPForm(e) {
+    const { name, value, type, checked } = e.target;
+    this.setP({ [name]: type === 'checkbox' ? checked : value });
   }
   /* Add Seller from inside the Add Property flow. Writes the canonical
      seller, then selects it for this property. An existing seller with the
@@ -940,11 +949,39 @@ export class Component extends DCLogic {
   addPhotoSlot() { const cur = (this.state.pform.photos || []); this.setP({ photos: [...cur, cur.length ? Math.max(...cur) + 1 : 0] }); }
   addVideoSlot() { const cur = (this.state.pform.videos || []); this.setP({ videos: [...cur, cur.length] }); }
   removeVideo(i) { const cur = (this.state.pform.videos || []).slice(); cur.splice(i, 1); this.setP({ videos: cur }); }
+  findMatchingSectorMap(city, sectorOrArea) {
+    if (!sectorOrArea) return null;
+    const q = String(sectorOrArea).toLowerCase().replace(/[^a-z0-9]/g, '');
+    const cNorm = String(city || '').toLowerCase();
+    return CANONICAL_SECTOR_MAPS.find((m) => {
+      if (cNorm && m.city && !m.city.toLowerCase().includes(cNorm) && !cNorm.includes(m.city.toLowerCase())) {
+        return false;
+      }
+      const mSec = (m.sector || m.project || m.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const mName = m.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+      return (mSec && (q.includes(mSec) || mSec.includes(q))) || (mName && (q.includes(mName) || mName.includes(q)));
+    }) || null;
+  }
   mapClick(e) {
     const r = e.currentTarget.getBoundingClientRect();
-    const x = Math.max(3, Math.min(97, (e.clientX - r.left) / r.width * 100));
-    const y = Math.max(4, Math.min(96, (e.clientY - r.top) / r.height * 100));
-    this.setP({ pinX: x, pinY: y, pinSet: true, earth: false });
+    const zoom = this.state.mapZoom || 1;
+    const offX = e.clientX - r.left;
+    const offY = e.clientY - r.top;
+    const midX = r.width / 2;
+    const midY = r.height / 2;
+    const relX = (offX - midX) / zoom + midX;
+    const relY = (offY - midY) / zoom + midY;
+    const x = Math.max(3, Math.min(97, +(relX / r.width * 100).toFixed(2)));
+    const y = Math.max(4, Math.min(96, +(relY / r.height * 100).toFixed(2)));
+    if (this.state.pinMode === 'sector') {
+      const mapId = this.state.pform.sectorMapId;
+      this.setP({
+        pinX: x, pinY: y, sectorPinX: x, sectorPinY: y, pinSet: true,
+        mapPlacement: mapId ? { mapId, x: +(x / 100).toFixed(4), y: +(y / 100).toFixed(4) } : undefined
+      });
+    } else {
+      this.setP({ pinX: x, pinY: y, pinSet: true, earth: true });
+    }
   }
   setNS(o) { this.setState({ nsform: { ...this.state.nsform, ...o } }); }
   onNS(e) { this.setNS({ [e.target.name]: e.target.value }); }
@@ -1198,7 +1235,8 @@ export class Component extends DCLogic {
   }
   animateCount() {
     if (this._raf) cancelAnimationFrame(this._raf);
-    if (typeof document !== 'undefined' && document.hidden) { this.setState({ p: 1 }); return; } const t0 = performance.now(), dur = 1050; const tick = (t) => { let k = Math.min(1, (t - t0) / dur); k = 1 - Math.pow(1 - k, 3); this.setState({ p: k }); if (k < 1) this._raf = requestAnimationFrame(tick); }; this.setState({ p: 0 }); this._raf = requestAnimationFrame(tick);
+    this._raf = null;
+    this.setState({ p: 1 });
   }
   celebrateSold(id) {
     const pr = this.properties.find(x => x.id === id); if (!pr) return; pr.status = 'sold'; pr.published = false;
@@ -1210,8 +1248,148 @@ export class Component extends DCLogic {
     this.setState({ selectedDeal: null, dealEdit: false, delArm: false, celebrate: { kind: 'closed', title: d.name || d.prop, sub: d.client + ' · ' + d.propSub, amount: this.inr(d.value), comm: d.comm ? this.inr(d.comm) : '—' } });
   }
   closeCelebrate() { this.setState({ celebrate: null }); }
-  componentDidUpdate() { this.applyTheme(); }
-  go(k) { this.setState({ section: k, selectedDeal: null, dealEdit: false, selectedClient: null, plotCityOpen: false }); this.animateCount(); }
+  componentDidUpdate() {
+    this.applyTheme();
+    this.syncEarthMap();
+  }
+  async syncEarthMap() {
+    const el = document.getElementById('dealer-earth-map');
+    if (!el) {
+      if (this._gMap) {
+        this._gMap = null;
+        this._gMarker = null;
+      }
+      return;
+    }
+    if (el.dataset.mounted === 'true') return;
+    el.dataset.mounted = 'true';
+
+    try {
+      await loadGoogleMaps();
+      const mapsLib = await importMapsLibrary('maps');
+      const markerLib = await importMapsLibrary('marker');
+      const placesLib = await importMapsLibrary('places');
+
+      const pf = this.state.pform || {};
+      const defLat = pf.lat || (typeof pf.pinY === 'number' ? +(30.82 - (pf.pinY / 100) * 0.20).toFixed(6) : 30.7046);
+      const defLng = pf.lng || (typeof pf.pinX === 'number' ? +(76.65 + (pf.pinX / 100) * 0.20).toFixed(6) : 76.7179);
+      const center = { lat: defLat, lng: defLng };
+
+      const MapClass = (mapsLib as any)?.Map || (window as any).google?.maps?.Map;
+      const gMap = new MapClass(el, {
+        center,
+        zoom: 17,
+        mapTypeId: 'hybrid',
+        tilt: 0,
+        disableDefaultUI: true,
+        gestureHandling: 'greedy',
+        clickableIcons: false,
+        keyboardShortcuts: false,
+        mapId: GOOGLE_MAPS_MAP_ID || undefined,
+      });
+      this._gMap = gMap;
+
+      let marker = null;
+      const AdvMarker = (markerLib as any)?.AdvancedMarkerElement || (window as any).google?.maps?.marker?.AdvancedMarkerElement;
+      if (AdvMarker && GOOGLE_MAPS_MAP_ID) {
+        const pinElement = document.createElement('div');
+        pinElement.innerHTML = '<div style="display:grid;place-items:center;cursor:grab"><span style="width:52px;height:52px;border-radius:50%;background:rgba(232,104,28,.38);display:grid;place-items:center;animation:omGlow 2s ease-in-out infinite"><i class="ph-fill ph-map-pin" style="font-size:36px;color:#ff8a3c;filter:drop-shadow(0 4px 8px rgba(0,0,0,.7))"></i></span></div>';
+        marker = new AdvMarker({
+          map: gMap,
+          position: center,
+          gmpDraggable: true,
+          content: pinElement.firstElementChild,
+        });
+        marker.addListener('dragend', () => {
+          const pos = marker.position;
+          if (pos) {
+            const lat = typeof pos.lat === 'function' ? pos.lat() : pos.lat;
+            const lng = typeof pos.lng === 'function' ? pos.lng() : pos.lng;
+            this.state.pform.lat = lat;
+            this.state.pform.lng = lng;
+            this.state.pform.earth = true;
+            this.state.pform.pinSet = true;
+          }
+        });
+      } else {
+        const MarkerClass = (window as any).google?.maps?.Marker;
+        marker = new MarkerClass({
+          map: gMap,
+          position: center,
+          draggable: true,
+          title: 'Property Location',
+        });
+        marker.addListener('dragend', (e) => {
+          const lat = e.latLng.lat();
+          const lng = e.latLng.lng();
+          this.state.pform.lat = lat;
+          this.state.pform.lng = lng;
+          this.state.pform.earth = true;
+          this.state.pform.pinSet = true;
+        });
+      }
+      this._gMarker = marker;
+
+      gMap.addListener('click', (e) => {
+        const lat = e.latLng.lat();
+        const lng = e.latLng.lng();
+        if (marker) {
+          if (marker.setPosition) marker.setPosition({ lat, lng });
+          else marker.position = { lat, lng };
+        }
+        this.state.pform.lat = lat;
+        this.state.pform.lng = lng;
+        this.state.pform.earth = true;
+        this.state.pform.pinSet = true;
+      });
+
+      const searchInput = document.getElementById('dealer-earth-search');
+      if (searchInput && (window as any).google?.maps?.places?.Autocomplete) {
+        const autocomplete = new (window as any).google.maps.places.Autocomplete(searchInput, {
+          bounds: new (window as any).google.maps.LatLngBounds(
+            new (window as any).google.maps.LatLng(30.55, 76.55),
+            new (window as any).google.maps.LatLng(30.90, 76.95)
+          ),
+          componentRestrictions: { country: 'in' },
+          fields: ['geometry', 'name', 'formatted_address']
+        });
+        autocomplete.addListener('place_changed', () => {
+          const place = autocomplete.getPlace();
+          if (place && place.geometry && place.geometry.location) {
+            const loc = place.geometry.location;
+            const lat = loc.lat();
+            const lng = loc.lng();
+            gMap.setCenter({ lat, lng });
+            gMap.setZoom(17);
+            if (marker) {
+              if (marker.setPosition) marker.setPosition({ lat, lng });
+              else marker.position = { lat, lng };
+            }
+            this.state.pform.lat = lat;
+            this.state.pform.lng = lng;
+            this.state.pform.earth = true;
+            this.state.pform.pinSet = true;
+            this.state.pform.earthQ = searchInput.value;
+          }
+        });
+      }
+
+      window.setTimeout(() => {
+        if ((window as any).google?.maps?.event) {
+          (window as any).google.maps.event.trigger(gMap, 'resize');
+          gMap.setCenter(center);
+        }
+      }, 80);
+    } catch (err) {
+      if (el) el.dataset.mounted = '';
+      console.warn('Google Maps satellite load error:', err);
+    }
+  }
+  go(k) {
+    if (this._raf) cancelAnimationFrame(this._raf);
+    this._raf = null;
+    this.setState({ section: k, selectedDeal: null, dealEdit: false, selectedClient: null, plotCityOpen: false, p: 1 });
+  }
   setS(patch) { this.setState({ sform: { ...this.state.sform, ...patch } }); }
   onSForm(e) { this.setS({ [e.target.name]: e.target.value }); }
   blankL() {
@@ -1350,7 +1528,18 @@ export class Component extends DCLogic {
   }
   setP(o) {
     if (o.config) { const b = String(o.config).match(/^(\d+)/); if (b) o.beds = b[1]; }
-    this.setState({ pform: { ...this.state.pform, ...o } });
+    const curF = this.state.pform || {};
+    const nextCity = o.city || curF.city || 'Mohali';
+    const nextSec = o.sector !== undefined ? o.sector : (o.area !== undefined ? o.area : (curF.sector || curF.area || ''));
+    if (!o.sectorMapId && nextSec) {
+      const match = this.findMatchingSectorMap(nextCity, nextSec);
+      if (match) {
+        o.sectorMapId = match.id;
+        o.sectorMapName = match.name;
+        o.sectorMapImg = match.image;
+      }
+    }
+    this.setState({ pform: { ...curF, ...o } });
   }
   onPForm(e) {
     const p = { [e.target.name]: e.target.value };
@@ -1393,6 +1582,10 @@ export class Component extends DCLogic {
     } : null;
     pr.highlights = (f.highlights || []).slice(); pr.registry = f.registry; pr.approval = f.approval; pr.notes = f.notes; pr.sellerNote = f.sellerNote;
     pr.earth = !!f.earth;
+    if (f.sectorMapId) {
+      pr.sectorMapId = f.sectorMapId;
+      pr.mapPlacement = f.mapPlacement || { mapId: f.sectorMapId, x: (f.sectorPinX !== undefined ? f.sectorPinX / 100 : 0.5), y: (f.sectorPinY !== undefined ? f.sectorPinY / 100 : 0.5) };
+    }
     if (f.sector) this.PROPMAP[pr.id] = f.sector; else delete this.PROPMAP[pr.id];
     const rd = this.readinessOf(pr); pr.draft = false; pr.ready = rd.miss.length === 0;
     pr.gap = rd.miss.length ? rd.miss.map(m => m.label).join(' · ') : '';
@@ -1538,7 +1731,6 @@ export class Component extends DCLogic {
     const v = (this.state.cf.customPref || '').trim(); if (!v) return;
     const cur = this.state.cf.prefs || []; if (!cur.includes(v)) this.setCF({ prefs: [...cur, v], customPref: '' }); else this.setCF({ customPref: '' });
   }
-  blankCF() { return { name: '', phone: '', phone2: '', business: '', city: '', types: [], areas: [], budgetFrom: '', budgetTo: '', sizeFrom: '', sizeTo: '', prefs: [], customPref: '', stage: 'Just looking', note: '', areaDraft: '' }; }
   cfFrom(c) {
     return {
       name: c.name, phone: c.phone === '—' ? '' : c.phone, phone2: c.phone2 || '', business: c.business || '', city: c.city || '',
@@ -2865,8 +3057,8 @@ export class Component extends DCLogic {
       const pdTabs = PDT.map(t => {
         const on = pdTab === t.k; return {
           label: t.l, icon: t.i, sub: t.sub, go: () => this.setState({ pdTab: t.k, cardMenu: null }),
-          style: `display:flex;align-items:center;gap:8px;height:46px;padding:0 18px;border-radius:14px;font-size:15.5px;font-weight:800;white-space:nowrap;flex:none;transition:all .16s;${on ? 'background:#241d0c;color:#f8c200;box-shadow:0 8px 18px -8px rgba(36,29,12,.9)' : 'background:transparent;color:#786950;'}`,
-          subStyle: `font-size:13.5px;font-weight:700;${on ? 'color:rgba(255,255,255,.82)' : 'opacity:.72'}`
+          style: `display:flex;align-items:center;gap:8px;height:42px;padding:0 18px;border-radius:14px;font-size:15.5px;font-weight:800;white-space:nowrap;flex:none;transition:all .15s;${on ? 'background:#ffffff;color:#3b1464;box-shadow:0 4px 12px rgba(0,0,0,.3);' : 'background:transparent;color:rgba(255,255,255,.75);'}`,
+          subStyle: `font-size:13.5px;font-weight:700;${on ? 'color:#6d28d9' : 'color:rgba(255,255,255,.6)'}`
         };
       });
       return {
@@ -2878,7 +3070,7 @@ export class Component extends DCLogic {
         prevShot: () => this.setState({ propShot: (s.propShot + 5) % 6 }),
         nextShot: () => this.setState({ propShot: (s.propShot + 1) % 6 }),
         mediaIsPhotos: med === 'photos', mediaIsEarth: med === 'earth', mediaIsMap: med === 'map',
-        mediaStyle: `position:absolute;inset:0;background-size:cover;background-position:center;background-image:url('${med === 'earth' ? 'assets/earth-sat.png' : med === 'map' ? 'assets/newchandigarh-map.png' : this.plotPhoto(pd, shot)}')`,
+        mediaStyle: `position:absolute;inset:0;background-size:cover;background-position:center;background-image:url('${med === 'earth' ? '/assets/earth-sat.png' : med === 'map' ? '/assets/newchandigarh-map.png' : this.plotPhoto(pd, shot)}')`,
         mediaTabs: [{ k: 'photos', l: 'Photos', i: 'ph-fill ph-image' }, { k: 'earth', l: 'Satellite view', i: 'ph-fill ph-globe-hemisphere-east' }, { k: 'map', l: 'Sector map', i: 'ph-fill ph-map-trifold' }]
           .map(m => ({
             label: m.l, icon: m.i, go: () => this.setState({ pdMedia: m.k }),
@@ -2909,8 +3101,8 @@ export class Component extends DCLogic {
           }));
         })(),
         bigPhoto: `position:relative;background:#4a3f2c;background-image:url('${this.plotPhoto(pd, shot)}');background-size:cover;background-position:center`,
-        earthTile: `position:relative;overflow:hidden;background-image:url('assets/earth-sat.png');background-size:cover;background-position:center;box-shadow:inset -1px -1px 0 rgba(255,255,255,.14)`,
-        sheetTile: `position:relative;overflow:hidden;background-image:url('assets/newchandigarh-map.png');background-size:cover;background-position:center;box-shadow:inset -1px 0 0 rgba(255,255,255,.14)`,
+        earthTile: `position:relative;overflow:hidden;background-image:url('/assets/earth-sat.png');background-size:cover;background-position:center;box-shadow:inset -1px -1px 0 rgba(255,255,255,.14)`,
+        sheetTile: `position:relative;overflow:hidden;background-image:url('/assets/newchandigarh-map.png');background-size:cover;background-position:center;box-shadow:inset -1px 0 0 rgba(255,255,255,.14)`,
         orangeStat: 'display:flex;flex-direction:column;gap:3px;padding:14px 16px;border-radius:15px;background:#fff6ee;box-shadow:inset 0 0 0 1.5px #f5d3ba',
         mktReels: mk ? String(mk.reels) : '0',
         noRecentAct: recentAct.length === 0,
@@ -2946,8 +3138,8 @@ export class Component extends DCLogic {
         availStyle2: `display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 13px;border-radius:11px;font-size:14.5px;font-weight:800;white-space:nowrap;flex:none;${pd.status === 'available' ? 'background:rgba(217,245,227,.94);color:#0a6634' : 'background:rgba(255,230,207,.94);color:#a3541b'}`,
         priceWord: isSold ? 'Sold for' : 'Asking',
         priceHead: isSold && sale ? this.inr(sale.price) : this.inr(pd.price),
-        priceWordStyle: `font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${isSold ? '#0a6634' : '#8a7f6e'}`,
-        priceValStyle: `font-family:'Newsreader',serif;font-weight:600;font-size:30px;line-height:1.05;white-space:nowrap;color:${isSold ? '#0a6634' : '#241f1c'}`,
+        priceWordStyle: `font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${isSold ? '#4ade80' : 'rgba(255,255,255,.68)'}`,
+        priceValStyle: `font-family:'Newsreader',serif;font-weight:600;font-size:30px;line-height:1.05;white-space:nowrap;color:${isSold ? '#4ade80' : '#ffcb45'}`,
         blueStat: 'display:flex;flex-direction:column;gap:3px;padding:14px 16px;border-radius:15px;background:#f3f7fd;box-shadow:inset 0 0 0 1.5px #d3e2f5',
         mktSub: mk ? [mk.created + ' creatives', mk.published + ' published', mk.scheduled + ' scheduled', mk.reels + (mk.reels === 1 ? ' reel' : ' reels')].join(' · ') : 'Nothing made yet',
         showAvail: pd.status !== 'sold',
@@ -2969,7 +3161,7 @@ export class Component extends DCLogic {
         addSellerGo: () => this.openEdit(pd.id, 2),
         docs: (pd.docs || []).map((d, i) => ({
           name: d.name, kind: d.kind,
-          thumbStyle: `height:96px;border-radius:13px;background-image:url('assets/ph-${this.groupOf(pd.type) === 'plot' ? 'plot' : this.groupOf(pd.type) === 'comm' ? 'landmark' : 'project'}-${((d.img || 0) % 3) + 1}.png');background-size:cover;background-position:center;filter:saturate(.3) brightness(.92)`
+          thumbStyle: `height:96px;border-radius:13px;background-image:url('/assets/ph-${this.groupOf(pd.type) === 'plot' ? 'plot' : this.groupOf(pd.type) === 'comm' ? 'landmark' : 'project'}-${((d.img || 0) % 3) + 1}.png');background-size:cover;background-position:center;filter:saturate(.3) brightness(.92)`
         })),
         hasDocs: (pd.docs || []).length > 0, noDocs: (pd.docs || []).length === 0,
         docCount: (() => { const n = (pd.docs || []).length; return n === 1 ? '1 document' : n + ' documents'; })(),
@@ -2977,8 +3169,8 @@ export class Component extends DCLogic {
         openDocs: () => this.setState({ pdTab: 'papers', cardMenu: null }),
         heroStyle2: `height:340px;border-radius:22px;overflow:hidden;position:relative;background:#e7dcc8;background-image:url('${this.plotPhoto(pd, shot)}');background-size:cover;background-position:center`,
         sellerBusiness: sl && sl.business ? sl.business : '', hasSellerBusiness: !!(sl && sl.business),
-        earthMini: `position:relative;height:170px;border-radius:18px;overflow:hidden;background-image:url('assets/earth-sat.png');background-size:cover;background-position:center`,
-        sheetMini: `position:relative;height:170px;border-radius:18px;overflow:hidden;background-image:url('assets/newchandigarh-map.png');background-size:cover;background-position:center`,
+        earthMini: `position:relative;height:170px;border-radius:18px;overflow:hidden;background-image:url('/assets/earth-sat.png');background-size:cover;background-position:center`,
+        sheetMini: `position:relative;height:170px;border-radius:18px;overflow:hidden;background-image:url('/assets/newchandigarh-map.png');background-size:cover;background-position:center`,
         addDocsGo: () => this.openEdit(pd.id, 3),
         actStyle, actOpens: String(pd.views || 0), actLinkOpens: String(totalOpens), actPublished: String(mkPub), actLast: lastAct,
         recentAct: recentAct.slice(0, 4).map(a => ({ ...a, style: 'display:flex;align-items:center;gap:11px;padding:12px 15px;border-radius:14px;background:#fffdf7;box-shadow:inset 0 0 0 1.5px #ecdcc0;font-size:16.5px;font-weight:700;color:#2f2a2d' })),
@@ -3093,7 +3285,9 @@ export class Component extends DCLogic {
 
     // Add a plot
     const pf = s.pform; const pstep = s.pstep;
-    const sheetsFor = pf.city ? (this.SECTORMAPS[pf.city] || []) : [];
+    const sheetsFor = pf.city
+      ? CANONICAL_SECTOR_MAPS.filter(m => m.city && m.city.toLowerCase() === pf.city.toLowerCase())
+      : CANONICAL_SECTOR_MAPS;
     const TYPES = ['Residential Plot', '3 BHK Flat', 'Builder Floor', 'Kothi', 'Villa', 'Commercial SCO', 'Commercial Booth'];
     const FACING = ['East', 'West', 'North', 'South', 'North-East', 'North-West'];
     const pg = this.groupOf(pf.type);
@@ -3130,7 +3324,7 @@ export class Component extends DCLogic {
       const isCover = pf.cover === i;
       return {
         isCover, notCover: !isCover,
-        style: `position:relative;height:150px;border-radius:16px;overflow:hidden;background-image:url('assets/ph-${pkind}-${(i % 3) + 1}.png');background-size:cover;background-position:center;box-shadow:0 0 0 ${isCover ? '4px #e8681c' : '2px #e6d6b4'}`,
+        style: `position:relative;height:150px;border-radius:16px;overflow:hidden;background-image:url('/assets/ph-${pkind}-${(i % 3) + 1}.png');background-size:cover;background-position:center;box-shadow:0 0 0 ${isCover ? '4px #e8681c' : '2px #e6d6b4'}`,
         remove: () => this.togglePhoto(i), setCover: () => this.setP({ cover: i }),
         left: () => this.movePhoto(i, -1), right: () => this.movePhoto(i, 1)
       };
@@ -3138,7 +3332,7 @@ export class Component extends DCLogic {
     const pPhotoCount = (pf.photos || []).length;
     const pVideos = (pf.videos || []).map((v, i) => ({
       label: 'Video ' + (i + 1), remove: () => this.removeVideo(i),
-      style: `position:relative;height:150px;border-radius:16px;overflow:hidden;background-image:url('assets/ph-${pkind}-${(i % 3) + 1}.png');background-size:cover;background-position:center;box-shadow:0 0 0 2px #4a2c99`
+      style: `position:relative;height:150px;border-radius:16px;overflow:hidden;background-image:url('/assets/ph-${pkind}-${(i % 3) + 1}.png');background-size:cover;background-position:center;box-shadow:0 0 0 2px #4a2c99`
     }));
     const pQuickDocs = this.QUICKDOCS.map(q => {
       const have = (pf.docs || []).filter(d => d.kind === q.k);
@@ -3157,7 +3351,7 @@ export class Component extends DCLogic {
     const pDocs = (pf.docs || []).map((d) => ({
       id: d.id, name: d.name, kind: d.kind,
       photoLine: (d.photos || []).length === 1 ? '1 photo' : ((d.photos || []).length + ' photos'),
-      thumbStyle: `height:110px;border-radius:14px;background-image:url('assets/ph-${pkind}-${(((d.img || 0)) % 3) + 1}.png');background-size:cover;background-position:center;filter:saturate(.3) brightness(.94)`,
+      thumbStyle: `height:110px;border-radius:14px;background-image:url('/assets/ph-${pkind}-${(((d.img || 0)) % 3) + 1}.png');background-size:cover;background-position:center;filter:saturate(.3) brightness(.94)`,
       open: () => this.setState({ docOpen: d.id }), remove: () => this.removeDocById(d.id)
     }));
     const docOpenRec = (pf.docs || []).find(d => d.id === s.docOpen) || null;
@@ -3173,9 +3367,9 @@ export class Component extends DCLogic {
       style: 'display:inline-flex;align-items:center;gap:9px;height:52px;padding:0 8px 0 18px;border-radius:15px;background:#0a6634;color:#eafff2;font-size:16.5px;font-weight:800'
     }));
     const pSheetList = sheetsFor.map(sh => {
-      const on = pf.sector === sh;
+      const on = pf.sectorMapId === sh.id || pf.sector === sh.name;
       return {
-        label: sh, go: () => this.setP({ sector: on ? '' : sh }),
+        label: sh.name, go: () => this.setP({ sector: on ? '' : sh.name, sectorMapId: on ? '' : sh.id, sectorMapName: on ? '' : sh.name, sectorMapImg: on ? '' : sh.image }),
         style: `width:100%;display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:16px;text-align:left;transition:all .15s;${on ? 'background:#0a6634;color:#eafff2' : 'background:#fffdf7;color:#4c463d;box-shadow:inset 0 0 0 2px #e6d6b4'}`,
         iconStyle: `width:44px;height:44px;border-radius:13px;flex:none;display:grid;place-items:center;font-size:22px;${on ? 'background:rgba(255,255,255,.2);color:#fff' : 'background:#f7efdf;color:#a3541b'}`
       };
@@ -3344,7 +3538,7 @@ export class Component extends DCLogic {
       topIconStyle: 'font-size:21px;color:' + (mny ? '#f8a800' : '#d95d1e'),
       topNameStyle: 'font-size:17px;font-weight:800;letter-spacing:-.01em;color:' + (mny ? '#f6efdd' : '#2f2a2d'),
       topDateStyle: 'display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:600;color:' + (mny ? '#a9b6d6' : '#6b6156'),
-      logoTextStyle: 'font-weight:800;font-size:24px;letter-spacing:-.01em;color:#1f1a12',
+      logoTextStyle: "font-family:var(--pm-font-display,'Newsreader',serif);font-weight:600;font-size:26px;letter-spacing:-.02em;color:#1a2f24;line-height:1",
       sideKickerStyle: 'font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;padding:0 4px 9px;color:#9a8f7c',
       ownerNameStyle: 'font-size:14.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1f1a12',
       bizNameStyle: 'font-size:12.5px;font-weight:600;color:#9a8f7c',
@@ -3929,7 +4123,7 @@ export class Component extends DCLogic {
       docOpen: docOpenRec ? {
         name: docOpenRec.name, kind: docOpenRec.kind,
         photos: (docOpenRec.photos || []).map((p, i) => ({
-          style: `position:relative;height:190px;border-radius:16px;overflow:hidden;background-image:url('assets/ph-${pkind}-${(i % 3) + 1}.png');background-size:cover;background-position:center;box-shadow:0 0 0 2px #d6c6f2;filter:saturate(.3) brightness(.95)`,
+          style: `position:relative;height:190px;border-radius:16px;overflow:hidden;background-image:url('/assets/ph-${pkind}-${(i % 3) + 1}.png');background-size:cover;background-position:center;box-shadow:0 0 0 2px #d6c6f2;filter:saturate(.3) brightness(.95)`,
           remove: () => this.docRemovePhoto(docOpenRec.id, i)
         })),
         countLine: (docOpenRec.photos || []).length === 1 ? '1 photo' : ((docOpenRec.photos || []).length + ' photos'),
@@ -3946,12 +4140,49 @@ export class Component extends DCLogic {
       pPinStyle: `position:absolute;left:${pf.pinX === undefined ? 50 : pf.pinX}%;top:${pf.pinY === undefined ? 52 : pf.pinY}%;transform:translate(-50%,-100%);display:grid;place-items:center;pointer-events:none;transition:left .12s,top .12s`,
       pPinGlow: pf.earth ? 'width:86px;height:86px;border-radius:50%;background:rgba(26,155,82,.34);display:grid;place-items:center' : 'width:86px;height:86px;border-radius:50%;background:rgba(232,104,28,.3);display:grid;place-items:center;animation:omGlow 2.2s ease-in-out infinite',
       pPinColor: pf.earth ? 'font-size:52px;color:#3ce07f;filter:drop-shadow(0 6px 12px rgba(0,0,0,.7))' : 'font-size:52px;color:#ff8a3c;filter:drop-shadow(0 6px 12px rgba(0,0,0,.7))',
-      pSatOn: s.mapSat !== false, pSatOff: s.mapSat === false,
-      pSatGo: () => this.setState({ mapSat: true }), pMapGo: () => this.setState({ mapSat: false }),
-      pMapBg: s.mapSat === false ? "background-image:url('assets/newchandigarh-map.png');background-size:cover;background-position:center" : "background-image:url('assets/earth-sat.png');background-size:cover;background-position:center",
-      pSatStyle: `height:44px;padding:0 16px;border-radius:12px;font-size:15.5px;font-weight:800;${s.mapSat !== false ? 'background:#fffdf7;color:#241f1c' : 'background:rgba(255,253,247,.28);color:#fff'}`,
-      pMapStyle: `height:44px;padding:0 16px;border-radius:12px;font-size:15.5px;font-weight:800;${s.mapSat === false ? 'background:#fffdf7;color:#241f1c' : 'background:rgba(255,253,247,.28);color:#fff'}`,
-      pEarthStatus: pf.earth ? 'Exact location confirmed' : 'Not confirmed yet',
+      pSatOn: s.pinMode !== 'sector' && s.mapSat !== false, pSatOff: s.mapSat === false,
+      pPinMode: s.pinMode || 'sat',
+      pHasSectorMap: !!(pf.sectorMapId || this.findMatchingSectorMap(pf.city, pf.sector || pf.area)),
+      pSectorMapName: (() => {
+        const m = pf.sectorMapId ? CANONICAL_SECTOR_MAPS.find(x => x.id === pf.sectorMapId) : this.findMatchingSectorMap(pf.city, pf.sector || pf.area);
+        return m ? m.name : 'Sector map';
+      })(),
+      pSatGo: () => this.setState({ pinMode: 'sat', mapSat: true }),
+      pMapGo: () => this.setState({ pinMode: 'earth', mapSat: false }),
+      pSectorMapGo: () => {
+        const m = pf.sectorMapId ? CANONICAL_SECTOR_MAPS.find(x => x.id === pf.sectorMapId) : this.findMatchingSectorMap(pf.city, pf.sector || pf.area);
+        if (m && !pf.sectorMapId) {
+          this.setP({ sectorMapId: m.id, sectorMapName: m.name, sectorMapImg: m.image });
+        }
+        this.setState({ pinMode: 'sector' });
+      },
+      pMapBg: s.mapSat === false ? "background-image:url('/assets/newchandigarh-map.png');background-size:cover;background-position:center" : "background-image:url('/assets/earth-sat.png');background-size:cover;background-position:center",
+      pMapZoom: s.mapZoom || 1,
+      pMapZoomStyle: `transform:scale(${s.mapZoom || 1});transform-origin:center center;transition:transform .08s ease-out;width:100%;height:100%;position:absolute;inset:0`,
+      pMapZoomIn: () => {
+        if (this._gMap && typeof this._gMap.getZoom === 'function') {
+          this._gMap.setZoom((this._gMap.getZoom() || 17) + 1);
+        } else {
+          this.setState({ mapZoom: Math.min(3.5, +((this.state.mapZoom || 1) + 0.25).toFixed(2)) });
+        }
+      },
+      pMapZoomOut: () => {
+        if (this._gMap && typeof this._gMap.getZoom === 'function') {
+          this._gMap.setZoom((this._gMap.getZoom() || 17) - 1);
+        } else {
+          this.setState({ mapZoom: Math.max(0.75, +((this.state.mapZoom || 1) - 0.25).toFixed(2)) });
+        }
+      },
+      pMapWheel: (e) => {
+        if (e && typeof e.preventDefault === 'function') e.preventDefault();
+        const delta = (e && e.deltaY < 0) ? 0.2 : -0.2;
+        const next = Math.max(0.75, Math.min(3.5, +((this.state.mapZoom || 1) + delta).toFixed(2)));
+        this.setState({ mapZoom: next });
+      },
+      pSatStyle: `height:44px;padding:0 16px;border-radius:12px;font-size:15.5px;font-weight:800;${s.pinMode !== 'sector' && s.mapSat !== false ? 'background:#fffdf7;color:#241f1c' : 'background:rgba(255,253,247,.28);color:#fff'}`,
+      pMapStyle: `height:44px;padding:0 16px;border-radius:12px;font-size:15.5px;font-weight:800;${s.pinMode !== 'sector' && s.mapSat === false ? 'background:#fffdf7;color:#241f1c' : 'background:rgba(255,253,247,.28);color:#fff'}`,
+      pSectorMapStyle: `height:44px;padding:0 16px;border-radius:12px;font-size:15.5px;font-weight:800;${s.pinMode === 'sector' ? 'background:#ffc21e;color:#1c1503;box-shadow:0 6px 14px -4px rgba(255,194,30,.8)' : 'background:rgba(255,253,247,.28);color:#fff'}`,
+      pEarthStatus: pf.earth ? (s.pinMode === 'sector' ? 'Pinned on Sector Map' : 'Exact location confirmed') : (s.pinMode === 'sector' ? 'Sector Map selected' : 'Not confirmed yet'),
       pEarthStatusStyle: pf.earth ? 'display:inline-flex;align-items:center;gap:9px;height:52px;padding:0 20px;border-radius:15px;background:#d9f5e3;color:#0a6634;font-size:17px;font-weight:800' : 'display:inline-flex;align-items:center;gap:9px;height:52px;padding:0 20px;border-radius:15px;background:#ffdccb;color:#a33417;font-size:17px;font-weight:800',
       pSaved: s.pSaved,
       pNext: () => { this.savePlot(false); if (pstep < 4) this.setState({ pstep: pstep + 1 }); },
@@ -4216,8 +4447,8 @@ export class Component extends DCLogic {
           const cpTabs = CPT.map(t => {
             const on = cpTab === t.k; return {
               label: t.l, icon: t.i, sub: t.sub, go: () => this.setState({ cpTab: t.k }),
-              style: `display:flex;align-items:center;gap:10px;height:52px;padding:0 18px;border-radius:14px;flex:none;transition:all .16s;${on ? 'background:#ffffff;color:#3b1464;box-shadow:0 6px 20px rgba(0,0,0,.3);' : 'background:rgba(255,255,255,.12);color:#ffffff;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.2);'}`,
-              subStyle: `font-size:12.5px;font-weight:700;${on ? 'color:#6d28d9' : 'color:rgba(255,255,255,.6)'}`
+              style: `display:flex;align-items:center;gap:10px;height:48px;padding:0 20px;border-radius:14px;flex:none;transition:all .15s;${on ? 'background:#ffffff;color:#3b1464;box-shadow:0 4px 14px rgba(0,0,0,.35);' : 'background:transparent;color:rgba(255,255,255,.8);'}`,
+              subStyle: `font-size:12px;font-weight:700;${on ? 'color:#6d28d9' : 'color:rgba(255,255,255,.65)'}`
             };
           });
           cp = {
