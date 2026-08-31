@@ -69,6 +69,15 @@ export class DCLogic {
     // We expect it to be passed in from main.ts. We'll store it on the instance or inject it.
     if ((this as any).__templateFn) {
       root.innerHTML = (this as any).__templateFn(props);
+
+      const didUpdate = (this as unknown as { componentDidUpdate?: () => void }).componentDidUpdate;
+      if (typeof didUpdate === 'function') {
+        try {
+          didUpdate.call(this);
+        } catch (error) {
+          console.error('componentDidUpdate failed:', error);
+        }
+      }
     }
   }
 

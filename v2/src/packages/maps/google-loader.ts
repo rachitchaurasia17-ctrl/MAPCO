@@ -17,11 +17,9 @@
    ═══════════════════════════════════════════════════════════════ */
 
 export const GOOGLE_MAPS_API_KEY: string =
-  (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined) ||
-  'AIzaSyDH8vCu5eCmKJ7fU5GgLHnmCcdxciy8Ez8';
+  (import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined) || '';
 export const GOOGLE_MAPS_MAP_ID: string =
-  (import.meta.env.VITE_GOOGLE_MAPS_MAP_ID as string | undefined) ||
-  'aede803e7526c27fe6e6f529';
+  (import.meta.env.VITE_GOOGLE_MAPS_MAP_ID as string | undefined) || '';
 
 export function hasGoogleConfig(): boolean {
   return GOOGLE_MAPS_API_KEY.length > 0;

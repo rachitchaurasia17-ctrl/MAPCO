@@ -1395,8 +1395,11 @@ export class Component extends DCLogic {
           gMap.setCenter(center);
         }
       }, 80);
-    } catch (err) {
-      if (el) el.dataset.mounted = '';
+    } catch (err: any) {
+      if (el) {
+        el.dataset.mounted = '';
+        el.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:rgba(255,255,255,0.7);font-size:14px;background:#1a2315;text-align:center;padding:20px;line-height:1.5;">Failed to load Google Maps.<br/>${err?.message || String(err)}<br/><br/><span style="font-size:12px;opacity:0.6;">Check API key or billing restrictions in Vercel.</span></div>`;
+      }
       console.warn('Google Maps satellite load error:', err);
     }
   }
