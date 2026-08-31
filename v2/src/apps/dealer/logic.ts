@@ -1026,32 +1026,32 @@ export class Component extends DCLogic {
   };
   clientLinks = [
     {
-      id: 'L1', clientId: 'C2', props: ['P5', 'P7'], created: '24 Jul', expires: '27 Jul', status: 'active', audio: true, loc: 'area', price: 'hidden',
-      events: [{ m: 12, k: 'view', p: 'P5' }, { m: 13, k: 'earth', p: 'P5' }, { m: 15, k: 'open' }, { m: 186, k: 'photos', p: 'P5' }, { m: 190, k: 'view', p: 'P5' }, { m: 193, k: 'audio' }, { m: 196, k: 'open' }, { m: 1380, k: 'visit', p: 'P5' }, { m: 1392, k: 'view', p: 'P5' }, { m: 1400, k: 'view', p: 'P7' }, { m: 1410, k: 'open' }, { m: 2760, k: 'view', p: 'P5' }, { m: 2770, k: 'open' }]
+      id: 'L1', clientId: 'c2', client: 'Priya Mehta', props: ['sec79', 'aero'], created: '24 Jul', expires: '27 Jul', status: 'active', audio: true, loc: 'area', price: 'hidden',
+      events: [{ m: 12, k: 'view', p: 'sec79' }, { m: 13, k: 'earth', p: 'sec79' }, { m: 15, k: 'open' }, { m: 186, k: 'photos', p: 'sec79' }, { m: 190, k: 'view', p: 'sec79' }, { m: 193, k: 'audio' }, { m: 196, k: 'open' }, { m: 1380, k: 'visit', p: 'sec79' }, { m: 1392, k: 'view', p: 'sec79' }, { m: 1400, k: 'view', p: 'aero' }, { m: 1410, k: 'open' }, { m: 2760, k: 'view', p: 'sec79' }, { m: 2770, k: 'open' }]
     },
     {
-      id: 'L2', clientId: 'C1', props: ['P1', 'P2'], created: '22 Jul', expires: '25 Jul', status: 'active', audio: true, loc: 'area', price: 'range',
-      events: [{ m: 96, k: 'view', p: 'P1' }, { m: 99, k: 'wa' }, { m: 104, k: 'open' }, { m: 1520, k: 'view', p: 'P1' }, { m: 1530, k: 'open' }]
+      id: 'L2', clientId: 'c1', client: 'Rajiv Sharma', props: ['ecocity', 'block5'], created: '22 Jul', expires: '25 Jul', status: 'active', audio: true, loc: 'area', price: 'range',
+      events: [{ m: 96, k: 'view', p: 'ecocity' }, { m: 99, k: 'wa' }, { m: 104, k: 'open' }, { m: 1520, k: 'view', p: 'ecocity' }, { m: 1530, k: 'open' }]
     },
     {
-      id: 'L3', clientId: 'C11', props: ['P9', 'P10', 'P13'], created: '18 Jul', expires: '21 Jul', status: 'expired', audio: false, loc: 'approx', price: 'hidden',
-      events: [{ m: 8600, k: 'view', p: 'P9' }, { m: 8620, k: 'earth', p: 'P9' }, { m: 8640, k: 'call' }, { m: 8660, k: 'view', p: 'P9' }, { m: 8700, k: 'view', p: 'P10' }, { m: 8760, k: 'open' }, { m: 10100, k: 'view', p: 'P9' }, { m: 10140, k: 'open' }]
+      id: 'L3', clientId: 'c3', client: 'Amandeep Singh', props: ['omx', 'sec66', 'panchkula20'], created: '18 Jul', expires: '21 Jul', status: 'expired', audio: false, loc: 'approx', price: 'hidden',
+      events: [{ m: 8600, k: 'view', p: 'omx' }, { m: 8620, k: 'earth', p: 'omx' }, { m: 8640, k: 'call' }, { m: 8660, k: 'view', p: 'omx' }, { m: 8700, k: 'view', p: 'sec66' }, { m: 8760, k: 'open' }, { m: 10100, k: 'view', p: 'omx' }, { m: 10140, k: 'open' }]
     },
     {
-      id: 'L4', clientId: 'C5', props: ['P17'], created: '20 Jul', expires: '23 Jul', status: 'revoked', audio: true, loc: 'exact', price: 'exact',
-      events: [{ m: 6100, k: 'audio' }, { m: 6120, k: 'view', p: 'P17' }, { m: 6140, k: 'open' }]
+      id: 'L4', clientId: 'c5', client: 'Suresh Gupta', props: ['sec66a'], created: '20 Jul', expires: '23 Jul', status: 'revoked', audio: true, loc: 'exact', price: 'exact',
+      events: [{ m: 6100, k: 'audio' }, { m: 6120, k: 'view', p: 'sec66a' }, { m: 6140, k: 'open' }]
     },
-    { id: 'L5', clientId: 'C3', props: ['P13', 'P17'], created: '2 Aug', expires: '9 Aug', status: 'active', audio: true, loc: 'area', price: 'hidden', events: [] },
+    { id: 'L5', clientId: 'c4', client: 'Neha Kapoor', props: ['panchkula20', 'sec66a'], created: '2 Aug', expires: '9 Aug', status: 'active', audio: true, loc: 'area', price: 'hidden', events: [] },
     {
-      id: 'L6', clientId: 'C6', props: ['P9'], created: '21 Aug', expires: '28 Aug', status: 'active', audio: false, loc: 'area', price: 'range',
-      events: [{ m: 52, k: 'view', p: 'P9' }, { m: 58, k: 'photos', p: 'P9' }, { m: 60, k: 'open' }]
+      id: 'L6', clientId: 'c6', client: 'Harpreet Kaur', props: ['omx'], created: '21 Aug', expires: '28 Aug', status: 'active', audio: false, loc: 'area', price: 'range',
+      events: [{ m: 52, k: 'view', p: 'omx' }, { m: 58, k: 'photos', p: 'omx' }, { m: 60, k: 'open' }]
     },
   ];
   shares = [
-    { id: 'S1', propId: 'P1', client: 'Simarjeet Kaur', created: '22 Jul', expires: '25 Jul', status: 'active', loc: 'area', price: 'hidden', audio: true, opened: '23 Jul, 9:12 pm', opens: 5, played: true, called: true, wa: false, visit: true },
-    { id: 'S2', propId: 'P1', client: 'Karan Gupta', created: '18 Jul', expires: '21 Jul', status: 'expired', loc: 'approx', price: 'range', audio: true, opened: '19 Jul, 1:40 pm', opens: 3, played: false, called: false, wa: true, visit: false },
-    { id: 'S3', propId: 'P5', client: 'Harpreet Singh Gill', created: '24 Jul', expires: '27 Jul', status: 'active', loc: 'area', price: 'hidden', audio: false, opened: 'not opened yet', opens: 0, played: false, called: false, wa: false, visit: false },
-    { id: 'S4', propId: 'P9', client: 'Baldev Raj Jindal', created: '20 Jul', expires: '23 Jul', status: 'revoked', loc: 'exact', price: 'exact', audio: true, opened: '21 Jul, 11:05 am', opens: 1, played: true, called: true, wa: true, visit: false },
+    { id: 'S1', propId: 'ecocity', client: 'Simarjeet Kaur', created: '22 Jul', expires: '25 Jul', status: 'active', loc: 'area', price: 'hidden', audio: true, opened: '23 Jul, 9:12 pm', opens: 5, played: true, called: true, wa: false, visit: true },
+    { id: 'S2', propId: 'ecocity', client: 'Karan Gupta', created: '18 Jul', expires: '21 Jul', status: 'expired', loc: 'approx', price: 'range', audio: true, opened: '19 Jul, 1:40 pm', opens: 3, played: false, called: false, wa: true, visit: false },
+    { id: 'S3', propId: 'sec79', client: 'Harpreet Singh Gill', created: '24 Jul', expires: '27 Jul', status: 'active', loc: 'area', price: 'hidden', audio: false, opened: 'not opened yet', opens: 0, played: false, called: false, wa: false, visit: false },
+    { id: 'S4', propId: 'omx', client: 'Baldev Raj Jindal', created: '20 Jul', expires: '23 Jul', status: 'revoked', loc: 'exact', price: 'exact', audio: true, opened: '21 Jul, 11:05 am', opens: 1, played: true, called: true, wa: true, visit: false },
   ];
   streakDays = 5;
   ACTIVITY = [
@@ -2547,8 +2547,8 @@ export class Component extends DCLogic {
           lastStageLabel: dsOf(d.stageBeforeLost || 'negotiating').l,
 
           commRows: [
-            { label: 'Buyer commission (' + (d.cB || 1) + '%)', value: this.inr(M.buyer) },
-            { label: 'Seller commission (' + (d.cS || 1) + '%)', value: this.inr(M.seller) },
+            { label: 'Buyer commission (' + (d.cB || 1) + '%)', value: this.inr(M.cB) },
+            { label: 'Seller commission (' + (d.cS || 1) + '%)', value: this.inr(M.cS) },
             { label: 'Already received', value: this.inr(M.got) },
             { label: 'Still due', value: this.inr(M.due) }
           ],
@@ -3072,8 +3072,8 @@ export class Component extends DCLogic {
       const pdTabs = PDT.map(t => {
         const on = pdTab === t.k; return {
           label: t.l, icon: t.i, sub: t.sub, go: () => this.setState({ pdTab: t.k, cardMenu: null }),
-          style: `display:flex;align-items:center;gap:8px;height:42px;padding:0 18px;border-radius:14px;font-size:15.5px;font-weight:800;white-space:nowrap;flex:none;transition:all .15s;${on ? 'background:#ffffff;color:#3b1464;box-shadow:0 4px 12px rgba(0,0,0,.3);' : 'background:transparent;color:rgba(255,255,255,.75);'}`,
-          subStyle: `font-size:13.5px;font-weight:700;${on ? 'color:#6d28d9' : 'color:rgba(255,255,255,.6)'}`
+          style: `display:flex;align-items:center;gap:8px;height:46px;padding:0 18px;border-radius:14px;font-size:15.5px;font-weight:800;white-space:nowrap;flex:none;transition:all .16s;${on ? 'background:#241d0c;color:#f8c200;box-shadow:0 8px 18px -8px rgba(36,29,12,.9)' : 'background:transparent;color:#786950;'}`,
+          subStyle: `font-size:13.5px;font-weight:700;${on ? 'color:rgba(255,255,255,.82)' : 'opacity:.72'}`
         };
       });
       return {

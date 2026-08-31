@@ -2150,19 +2150,17 @@ export function renderApp(state: any) {
                 </div>
 
                 <div data-scroll=""
-                  style="flex:none;display:flex;align-items:center;padding:12px 24px;background:linear-gradient(180deg,#3b1464 0%,#2f1050 100%);border-bottom:2px solid rgba(255,255,255,.1);overflow-x:auto">
-                  <div style="display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:18px;background:rgba(0,0,0,.32);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)">
-                    \${ (cp.tabs || []).map(t => \`
-                      <button onClick="\${__b(t.go)}" style="\${t.style}">
-                        <i class="\${t.icon}" style="font-size:20px;flex:none"></i>
-                        <span
-                          style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.2;white-space:nowrap">
-                          <span style="font-size:15.5px;font-weight:800">\${t.label}</span>
-                          <span style="\${t.subStyle}">\${t.sub}</span>
-                        </span>
-                      </button>
-                    \`).join('') }
-                  </div>
+                  style="flex:none;display:flex;align-items:center;gap:9px;padding:12px 24px;background:linear-gradient(180deg,#3b1464 0%,#2f1050 100%);border-bottom:2px solid rgba(255,255,255,.1);overflow-x:auto">
+                  \${ (cp.tabs || []).map(t => \`
+                    <button onClick="\${__b(t.go)}" style="\${t.style}">
+                      <i class="\${t.icon}" style="font-size:20px;flex:none"></i>
+                      <span
+                        style="display:flex;flex-direction:column;align-items:flex-start;line-height:1.2;white-space:nowrap">
+                        <span style="font-size:16px;font-weight:800">\${t.label}</span>
+                        <span style="\${t.subStyle}">\${t.sub}</span>
+                      </span>
+                    </button>
+                  \`).join('') }
                 </div>
 
                 <div data-scroll=""
@@ -3100,15 +3098,15 @@ export function renderApp(state: any) {
                 style="position:relative;width:1280px;max-width:100%;height:100%;display:flex;flex-direction:column;background:#f5f1fd;border-radius:26px;overflow:hidden;box-shadow:0 50px 110px -30px rgba(0,0,0,.78);">
 
                 <div
-                  style="flex:none;display:flex;align-items:center;gap:16px;padding:16px 22px;background:linear-gradient(180deg,#3b1464 0%,#2f1050 100%);flex-wrap:wrap">
+                  style="flex:none;display:flex;align-items:center;gap:16px;padding:16px 20px;background:#ffefd2;flex-wrap:wrap">
                   <div style="flex:1 1 300px;min-width:0">
                     <h2
-                      style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:29px;line-height:1.1;letter-spacing:-.015em;color:#ffffff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                      style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:29px;line-height:1.1;letter-spacing:-.015em;color:#241f1c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
                       \${propDetail.title} · \${propDetail.size}</h2>
                     <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:3px">
                       <span
-                        style="display:flex;align-items:center;gap:6px;font-size:15.5px;font-weight:700;color:#d1bbf8"><i
-                          class="ph-fill ph-map-pin" style="font-size:17px;color:#ffcb45"></i>\${propDetail.loc}</span>
+                        style="display:flex;align-items:center;gap:6px;font-size:15.5px;font-weight:700;color:#7a6f60"><i
+                          class="ph-fill ph-map-pin" style="font-size:17px;color:#a3541b"></i>\${propDetail.loc}</span>
                       \${ propDetail.isBooked ? \`<button onClick="\${__b(propDetail.openBookedDeal)}"
                           style="\${propDetail.bookedStyle}" style-hover="background:#154a8c"><i
                             class="ph-fill ph-lock-key" style="font-size:15px"></i>\${propDetail.bookedIn}</button>\` : '' }
@@ -3134,8 +3132,8 @@ export function renderApp(state: any) {
                     \` : '' }
                     <div style="position:relative">
                       <button onClick="\${__b(propDetail.toggleMore)}" title="More"
-                        style="width:46px;height:46px;border-radius:14px;background:rgba(255,255,255,.14);color:#ffffff;display:grid;place-items:center"
-                        style-hover="background:rgba(255,255,255,.24)"><i class="ph-bold ph-dots-three"
+                        style="width:46px;height:46px;border-radius:14px;background:#f0e5cd;color:#5c4a22;display:grid;place-items:center"
+                        style-hover="background:#e7d9ba"><i class="ph-bold ph-dots-three"
                           style="font-size:20px"></i></button>
                       \${ propDetail.moreOpen ? \`
                         <div
@@ -3166,20 +3164,19 @@ export function renderApp(state: any) {
                       \` : '' }
                     </div>
                     <button onClick="\${__b(propDetail.openMapcoAi)}" title="\${propDetail.mapcoAiReady ? 'Open Property Intelligence for this property' : 'Set the exact spot on MAPCO Earth to unlock Property Intelligence'}"
-                      style="display:flex;align-items:center;gap:7px;height:46px;padding:0 15px;margin-right:8px;border-radius:14px;background:\${propDetail.mapcoAiReady ? 'linear-gradient(135deg,#ffc21e,#f8a800)' : 'rgba(255,255,255,.14)'};color:\${propDetail.mapcoAiReady ? '#241d0c' : 'rgba(255,255,255,.62)'};font-size:14.5px;font-weight:800;white-space:nowrap"
+                      style="display:flex;align-items:center;gap:7px;height:46px;padding:0 15px;margin-right:8px;border-radius:14px;background:\${propDetail.mapcoAiReady ? 'linear-gradient(135deg,#ffc21e,#f8a800)' : 'rgba(0,0,0,.06)'};color:\${propDetail.mapcoAiReady ? '#241d0c' : 'rgba(92,74,34,.62)'};font-size:14.5px;font-weight:800;white-space:nowrap"
                       style-hover="filter:brightness(1.06)"><i class="ph-fill ph-sparkle"
                         style="font-size:17px"></i>MAPCO AI</button>
                     <button onClick="\${__b(propDetail.close)}" title="Close"
-                      style="width:46px;height:46px;border-radius:14px;background:rgba(255,255,255,.14);color:#ffffff;display:grid;place-items:center"
-                      style-hover="background:rgba(255,255,255,.24)"><i
+                      style="width:46px;height:46px;border-radius:14px;background:#f8a800;color:#241d0c;display:grid;place-items:center"><i
                         class="ph-bold ph-x" style="font-size:20px"></i></button>
                   </div>
                 </div>
 
 
                 <div data-scroll=""
-                  style="flex:none;display:flex;align-items:center;padding:10px 22px;background:#2f1050;border-bottom:2px solid rgba(255,255,255,.1);overflow-x:auto">
-                  <div style="display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:18px;background:rgba(0,0,0,.32);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);">
+                  style="flex:none;display:flex;align-items:center;padding:12px 20px;background:#ffefd2;border-bottom:2px solid #f0c96a;overflow-x:auto">
+                  <div style="display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:18px;background:#fff3d6;box-shadow:inset 0 0 0 1.5px rgba(120,100,60,.16);">
                     \${ (propDetail.tabs || []).map(t => \`
                       <button onClick="\${__b(t.go)}" style="\${t.style}">
                         <i class="\${t.icon}" style="font-size:20px;flex:none"></i>
