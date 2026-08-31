@@ -1,0 +1,8 @@
+{
+  "name": "mapco-root",
+  "private": true,
+  "scripts": {
+    "build": "cd v2 && npm install && npm run build",
+    "install": "cd v2 && npm install"
+  }
+}
