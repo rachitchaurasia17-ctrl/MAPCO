@@ -1,0 +1,2237 @@
+{
+  "schemaVersion": "mapco.phase2.input.v1",
+  "property": {
+    "propertyId": "MOCK_PROP_SECTOR78_001",
+    "propertyType": "RESIDENTIAL",
+    "propertySubtype": "HOUSE_PLOT_OR_RESIDENTIAL_PROPERTY",
+    "latitude": 30.681991,
+    "longitude": 76.702441,
+    "locality": "Sector 78",
+    "city": "Mohali",
+    "profile": {}
+  },
+  "candidateUniverse": [
+    {
+      "candidateId": "L001",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Mohali super market",
+        "entityType": "Supermarket",
+        "category": "Grocery & Daily Needs",
+        "locality": "Sector 78, Mohali",
+        "rating": 4.0,
+        "reviewCount": null,
+        "approxDistanceKm": 0.95
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L001",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Mohali super market, Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L002",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Punjab stores - Supermarket",
+        "entityType": "Supermarket",
+        "category": "Grocery & Daily Needs",
+        "locality": "Sector 79, Mohali",
+        "rating": 4.3,
+        "reviewCount": null,
+        "approxDistanceKm": 1.9
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L002",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Punjab stores - Supermarket, Sector 79, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L003",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Everyday Grocery Store 24X7",
+        "entityType": "Grocery Store",
+        "category": "Grocery & Daily Needs",
+        "locality": "Sector 78 / Sohana, Mohali",
+        "rating": 4.7,
+        "reviewCount": null,
+        "approxDistanceKm": 1.8
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L003",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Everyday Grocery Store 24X7, Sector 78 / Sohana, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L004",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Nanak Super Store",
+        "entityType": "Departmental Store",
+        "category": "Daily Needs",
+        "locality": "Sector 78, Mohali",
+        "rating": 5.0,
+        "reviewCount": null,
+        "approxDistanceKm": 1.4
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L004",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Nanak Super Store, Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L005",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Eight to ten departmental store",
+        "entityType": "Departmental Store",
+        "category": "Grocery & Daily Needs",
+        "locality": "Sector 78, Mohali",
+        "rating": 5.0,
+        "reviewCount": null,
+        "approxDistanceKm": 1.1
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L005",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Eight to ten departmental store, Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L006",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Shree Hans Departmental Store",
+        "entityType": "Departmental Store",
+        "category": "Grocery & Daily Needs",
+        "locality": "Sector 79, Mohali",
+        "rating": 4.8,
+        "reviewCount": null,
+        "approxDistanceKm": 1.1
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L006",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Shree Hans Departmental Store, Sector 79, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L007",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "GMADA 79 sector Shopping Red Booths",
+        "entityType": "Shopping Center",
+        "category": "Local Commercial Market",
+        "locality": "Sector 79, Mohali",
+        "rating": 3.8,
+        "reviewCount": null,
+        "approxDistanceKm": 1.1
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "UNRESOLVED",
+        "placeId": null,
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "GMADA 79 sector Shopping Red Booths, Sector 79, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L008",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Pratap shopping center - Mohali",
+        "entityType": "Shopping Center",
+        "category": "Daily Needs Market",
+        "locality": "Sector 79, Mohali",
+        "rating": 3.8,
+        "reviewCount": null,
+        "approxDistanceKm": 1.9
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L008",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Pratap shopping center - Mohali, Sector 79, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L009",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Sohana Market",
+        "entityType": "Market",
+        "category": "Local Bazaar",
+        "locality": "Sohana, Mohali",
+        "rating": 4.0,
+        "reviewCount": null,
+        "approxDistanceKm": 1.6
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L009",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Sohana Market, Sohana, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L010",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Zone 78",
+        "entityType": "Shopping Complex",
+        "category": "Local Commercial Market",
+        "locality": "Sector 78, Mohali",
+        "rating": 4.5,
+        "reviewCount": null,
+        "approxDistanceKm": 0.95
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L010",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Zone 78, Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L011",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "New Quality Pharmacy",
+        "entityType": "Pharmacy",
+        "category": "Healthcare & Pharmacy",
+        "locality": "Sohana / Sector 78, Mohali",
+        "rating": 5.0,
+        "reviewCount": null,
+        "approxDistanceKm": 0.85
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L011",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "New Quality Pharmacy, Sohana / Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L012",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Sai Medicos",
+        "entityType": "Pharmacy",
+        "category": "Healthcare & Pharmacy",
+        "locality": "Sohana, Mohali",
+        "rating": 5.0,
+        "reviewCount": null,
+        "approxDistanceKm": 1.2
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L012",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Sai Medicos, Sohana, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L013",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Kumar medicos",
+        "entityType": "Pharmacy",
+        "category": "Healthcare & Pharmacy",
+        "locality": "Sector 78 / Sohana, Mohali",
+        "rating": 4.3,
+        "reviewCount": null,
+        "approxDistanceKm": 1.7
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L013",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Kumar medicos, Sector 78 / Sohana, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L014",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Rahbar Pharmacy ( Sohana )",
+        "entityType": "Pharmacy",
+        "category": "Healthcare & 24x7 Pharmacy",
+        "locality": "Sohana, Mohali",
+        "rating": 4.1,
+        "reviewCount": null,
+        "approxDistanceKm": 1.6
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L014",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Rahbar Pharmacy ( Sohana ), Sohana, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L015",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Rai Clinic",
+        "entityType": "Medical Clinic",
+        "category": "Healthcare & Doctors",
+        "locality": "Sohana / Sector 78, Mohali",
+        "rating": 4.0,
+        "reviewCount": null,
+        "approxDistanceKm": 1.0
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L015",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Rai Clinic, Sohana / Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L016",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Jarnail Clinic",
+        "entityType": "Medical Clinic",
+        "category": "Healthcare & Doctors",
+        "locality": "Sohana, Mohali",
+        "rating": 5.0,
+        "reviewCount": null,
+        "approxDistanceKm": 1.4
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L016",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Jarnail Clinic, Sohana, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L017",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "XeneX Hospital",
+        "entityType": "Hospital",
+        "category": "Local Healthcare",
+        "locality": "Sector 77 / Sohana, Mohali",
+        "rating": 4.9,
+        "reviewCount": null,
+        "approxDistanceKm": 1.7
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L017",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "XeneX Hospital, Sector 77 / Sohana, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L018",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Advanced Eye Care Centre - Sohana Hospital",
+        "entityType": "Eye Care Hospital",
+        "category": "Specialist Healthcare",
+        "locality": "Sector 77 / Sohana, Mohali",
+        "rating": 4.4,
+        "reviewCount": null,
+        "approxDistanceKm": 1.7
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L018",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Advanced Eye Care Centre - Sohana Hospital, Sector 77 / Sohana, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L019",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Sohana Hospital",
+        "entityType": "Multispeciality Hospital",
+        "category": "Healthcare & Medical",
+        "locality": "Sector 77 / Sohana, Mohali",
+        "rating": 4.6,
+        "reviewCount": null,
+        "approxDistanceKm": 1.7
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L019",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Sohana Hospital, Sector 77 / Sohana, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L020",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Shivalik Public School",
+        "entityType": "School",
+        "category": "Education",
+        "locality": "Sector 78, Mohali",
+        "rating": null,
+        "reviewCount": null,
+        "approxDistanceKm": 0.65
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L020",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Shivalik Public School, Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L021",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Public Park",
+        "entityType": "Park",
+        "category": "Parks & Recreation",
+        "locality": "Sector 78, Mohali",
+        "rating": 4.7,
+        "reviewCount": null,
+        "approxDistanceKm": 0.65
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "AMBIGUOUS",
+        "placeId": null,
+        "candidatePlaceIds": [
+          "MOCK_L021_A",
+          "MOCK_L021_B"
+        ],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Public Park, Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L022",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Saheed bhagat singh Park number 17",
+        "entityType": "Park",
+        "category": "Parks & Recreation",
+        "locality": "Sector 78, Mohali",
+        "rating": 4.1,
+        "reviewCount": null,
+        "approxDistanceKm": 0.5
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L022",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Saheed bhagat singh Park number 17, Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L023",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Park",
+        "entityType": "Park",
+        "category": "Parks & Recreation",
+        "locality": "Sector 78, Mohali",
+        "rating": 3.9,
+        "reviewCount": null,
+        "approxDistanceKm": 1.5
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "AMBIGUOUS",
+        "placeId": null,
+        "candidatePlaceIds": [
+          "MOCK_L023_A",
+          "MOCK_L023_B"
+        ],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Park, Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L024",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Park 1",
+        "entityType": "Park",
+        "category": "Parks & Recreation",
+        "locality": "Sector 78, Mohali",
+        "rating": 4.2,
+        "reviewCount": null,
+        "approxDistanceKm": 1.6
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "AMBIGUOUS",
+        "placeId": null,
+        "candidatePlaceIds": [
+          "MOCK_L024_A",
+          "MOCK_L024_B"
+        ],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Park 1, Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L025",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Park 2",
+        "entityType": "Park",
+        "category": "Parks & Recreation",
+        "locality": "Sector 78, Mohali",
+        "rating": 4.0,
+        "reviewCount": null,
+        "approxDistanceKm": 1.6
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "AMBIGUOUS",
+        "placeId": null,
+        "candidatePlaceIds": [
+          "MOCK_L025_A",
+          "MOCK_L025_B"
+        ],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Park 2, Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L026",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "GMADA Sports Complex",
+        "entityType": "Sports Complex",
+        "category": "Sports & Fitness",
+        "locality": "Sector 78, Mohali",
+        "rating": 4.2,
+        "reviewCount": null,
+        "approxDistanceKm": 1.7
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L026",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "GMADA Sports Complex, Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L027",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Indoor Stadium",
+        "entityType": "Indoor Stadium",
+        "category": "Sports & Fitness",
+        "locality": "Sector 78, Mohali",
+        "rating": 3.0,
+        "reviewCount": null,
+        "approxDistanceKm": 1.6
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "AMBIGUOUS",
+        "placeId": null,
+        "candidatePlaceIds": [
+          "MOCK_L027_A",
+          "MOCK_L027_B"
+        ],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Indoor Stadium, Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L028",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Oxfit gym and spa",
+        "entityType": "Gym",
+        "category": "Fitness & Wellness",
+        "locality": "Sector 78, Mohali",
+        "rating": 4.7,
+        "reviewCount": null,
+        "approxDistanceKm": 0.9
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L028",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Oxfit gym and spa, Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L029",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Claps Fitness",
+        "entityType": "Gym",
+        "category": "Fitness & Wellness",
+        "locality": "Sector 78, Mohali",
+        "rating": 4.1,
+        "reviewCount": null,
+        "approxDistanceKm": 1.7
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L029",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Claps Fitness, Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L030",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Maxzone kapil fitness - Sohana Mohali",
+        "entityType": "Gym",
+        "category": "Fitness & Wellness",
+        "locality": "Sector 78, Mohali",
+        "rating": 5.0,
+        "reviewCount": null,
+        "approxDistanceKm": 1.6
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L030",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Maxzone kapil fitness - Sohana Mohali, Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L031",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "ALPHA ZONE GYM",
+        "entityType": "Gym",
+        "category": "Fitness & Wellness",
+        "locality": "Sohana, Mohali",
+        "rating": 4.8,
+        "reviewCount": null,
+        "approxDistanceKm": 1.8
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L031",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "ALPHA ZONE GYM, Sohana, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L032",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Trident Gym",
+        "entityType": "Gym",
+        "category": "Fitness & Wellness",
+        "locality": "Sector 79, Mohali",
+        "rating": 4.9,
+        "reviewCount": null,
+        "approxDistanceKm": 1.8
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L032",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Trident Gym, Sector 79, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L033",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "DoubleShot Coffee Roasters Mohali",
+        "entityType": "Cafe",
+        "category": "Food & Dining",
+        "locality": "Sector 78, Mohali",
+        "rating": 4.4,
+        "reviewCount": null,
+        "approxDistanceKm": 1.7
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L033",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "DoubleShot Coffee Roasters Mohali, Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L034",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Triesto Cafe - Coffee Roasters & Italian Kitchen",
+        "entityType": "Restaurant",
+        "category": "Food & Dining",
+        "locality": "Sector 78, Mohali",
+        "rating": 4.5,
+        "reviewCount": null,
+        "approxDistanceKm": 1.7
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L034",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Triesto Cafe - Coffee Roasters & Italian Kitchen, Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L035",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Coffee and Bagels",
+        "entityType": "Cafe",
+        "category": "Food & Dining",
+        "locality": "Sector 79, Mohali",
+        "rating": 4.4,
+        "reviewCount": null,
+        "approxDistanceKm": 1.7
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L035",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Coffee and Bagels, Sector 79, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L036",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Shama Dhaba 78 Mohali",
+        "entityType": "Restaurant",
+        "category": "Food & Dining",
+        "locality": "Sector 78, Mohali",
+        "rating": 3.8,
+        "reviewCount": null,
+        "approxDistanceKm": 1.4
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L036",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Shama Dhaba 78 Mohali, Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L037",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Guru Nanak Sweets",
+        "entityType": "Sweet Shop",
+        "category": "Sweets & Bakery",
+        "locality": "Sector 78, Mohali",
+        "rating": 4.1,
+        "reviewCount": null,
+        "approxDistanceKm": 0.95
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L037",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Guru Nanak Sweets, Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L038",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "RB Bakers",
+        "entityType": "Bakery",
+        "category": "Sweets & Bakery",
+        "locality": "Deep Nagar, Sector 78, Mohali",
+        "rating": 4.8,
+        "reviewCount": null,
+        "approxDistanceKm": 0.85
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L038",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "RB Bakers, Deep Nagar, Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L039",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Sweet n delicious cakery",
+        "entityType": "Cake Shop",
+        "category": "Sweets & Bakery",
+        "locality": "Sector 78, Mohali",
+        "rating": 5.0,
+        "reviewCount": null,
+        "approxDistanceKm": 0.4
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L039",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Sweet n delicious cakery, Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L040",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Lovely Sweet & Bakers",
+        "entityType": "Bakery & Sweet Shop",
+        "category": "Sweets & Bakery",
+        "locality": "Sector 77 / Sohana, Mohali",
+        "rating": 4.3,
+        "reviewCount": null,
+        "approxDistanceKm": 1.8
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L040",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Lovely Sweet & Bakers, Sector 77 / Sohana, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L041",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "27 Sweet Walk",
+        "entityType": "Dessert & Sweet Shop",
+        "category": "Sweets & Bakery",
+        "locality": "Sector 70, Mohali",
+        "rating": 4.8,
+        "reviewCount": null,
+        "approxDistanceKm": 2.0
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L041",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "27 Sweet Walk, Sector 70, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L042",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Whox Salon Mohali",
+        "entityType": "Beauty Salon",
+        "category": "Personal Care & Grooming",
+        "locality": "Sector 78, Mohali",
+        "rating": 4.5,
+        "reviewCount": null,
+        "approxDistanceKm": 0.95
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L042",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Whox Salon Mohali, Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L043",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Spalonx: unisex salon & Academy",
+        "entityType": "Unisex Salon",
+        "category": "Personal Care & Grooming",
+        "locality": "Sohana, Sector 78, Mohali",
+        "rating": 4.9,
+        "reviewCount": null,
+        "approxDistanceKm": 1.5
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L043",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Spalonx: unisex salon & Academy, Sohana, Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L044",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "The Creative Family Salon",
+        "entityType": "Beauty Salon",
+        "category": "Personal Care & Grooming",
+        "locality": "Sector 78, Mohali",
+        "rating": 5.0,
+        "reviewCount": null,
+        "approxDistanceKm": 1.5
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L044",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "The Creative Family Salon, Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L045",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Parthi Chopra’s The Studio",
+        "entityType": "Beauty Salon",
+        "category": "Personal Care & Grooming",
+        "locality": "Sector 78, Mohali",
+        "rating": 4.8,
+        "reviewCount": null,
+        "approxDistanceKm": 1.7
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L045",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Parthi Chopra’s The Studio, Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L046",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Tanu make-over studio",
+        "entityType": "Beauty Salon",
+        "category": "Personal Care & Grooming",
+        "locality": "Sector 78, Mohali",
+        "rating": 5.0,
+        "reviewCount": null,
+        "approxDistanceKm": 0.85
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L046",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Tanu make-over studio, Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L047",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "GURDWARA SINGH SHAHEEDAN ,SOHANA",
+        "entityType": "Gurdwara",
+        "category": "Places of Worship",
+        "locality": "Sohana, Mohali",
+        "rating": 4.8,
+        "reviewCount": null,
+        "approxDistanceKm": 1.7
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L047",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "GURDWARA SINGH SHAHEEDAN ,SOHANA, Sohana, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L048",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Shree Badri Narayan Temple",
+        "entityType": "Hindu Temple",
+        "category": "Places of Worship",
+        "locality": "Sector 78, Mohali",
+        "rating": 4.7,
+        "reviewCount": null,
+        "approxDistanceKm": 1.0
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L048",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Shree Badri Narayan Temple, Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L049",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Shri Thakur Dwara Mandir, Hanuman Mandir",
+        "entityType": "Hindu Temple",
+        "category": "Places of Worship",
+        "locality": "Sohana, Mohali",
+        "rating": 4.8,
+        "reviewCount": null,
+        "approxDistanceKm": 1.4
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L049",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Shri Thakur Dwara Mandir, Hanuman Mandir, Sohana, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L050",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Central Bank of India - Sector 78 Branch",
+        "entityType": "Bank",
+        "category": "Banking & Financial Services",
+        "locality": "Sector 78, Mohali",
+        "rating": 2.0,
+        "reviewCount": null,
+        "approxDistanceKm": 1.4
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L050",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Central Bank of India - Sector 78 Branch, Sector 78, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": true,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L051",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "CENTRAL BANK OF INDIA - ATM",
+        "entityType": "ATM",
+        "category": "Banking & Financial Services",
+        "locality": "Sohana, Mohali",
+        "rating": 2.8,
+        "reviewCount": null,
+        "approxDistanceKm": 1.4
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L051",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "CENTRAL BANK OF INDIA - ATM, Sohana, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L052",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "SBI ATM",
+        "entityType": "ATM",
+        "category": "Banking & Financial Services",
+        "locality": "Sohana, Mohali",
+        "rating": 5.0,
+        "reviewCount": null,
+        "approxDistanceKm": 1.3
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L052",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "SBI ATM, Sohana, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L053",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "YES Bank ATM",
+        "entityType": "ATM",
+        "category": "Banking & Financial Services",
+        "locality": "Sohana, Mohali",
+        "rating": 5.0,
+        "reviewCount": null,
+        "approxDistanceKm": 1.6
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L053",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "YES Bank ATM, Sohana, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L054",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Bank of Baroda ATM",
+        "entityType": "ATM",
+        "category": "Banking & Financial Services",
+        "locality": "Sector 77 / Sohana, Mohali",
+        "rating": 5.0,
+        "reviewCount": null,
+        "approxDistanceKm": 1.7
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L054",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Bank of Baroda ATM, Sector 77 / Sohana, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L055",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "IndianOil",
+        "entityType": "Petrol Station",
+        "category": "Fuel & Auto Services",
+        "locality": "Sector 79, Mohali",
+        "rating": 4.4,
+        "reviewCount": null,
+        "approxDistanceKm": 1.8
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L055",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "IndianOil, Sector 79, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "L056",
+      "discoveredIn": [
+        "LOCAL"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Hindustan Petroleum Corporation Limited",
+        "entityType": "Petrol Station",
+        "category": "Fuel & Auto Services",
+        "locality": "Sector 97 / Sambhalki, Mohali",
+        "rating": 2.8,
+        "reviewCount": null,
+        "approxDistanceKm": 1.1
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_L056",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Hindustan Petroleum Corporation Limited, Sector 97 / Sambhalki, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "C001",
+      "discoveredIn": [
+        "CITY"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "CP67",
+        "entityType": "Shopping Mall & Commercial Hub",
+        "category": "Retail & Entertainment Driver",
+        "locality": "Sector 67 / Airport Road, Mohali",
+        "rating": 4.5,
+        "reviewCount": null,
+        "approxDistanceKm": 2.2
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_C001",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "CP67, Sector 67 / Airport Road, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "C002",
+      "discoveredIn": [
+        "CITY"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Bestech Square Mall",
+        "entityType": "Shopping Mall",
+        "category": "Retail & Commercial Hub",
+        "locality": "Sector 66, Mohali",
+        "rating": 4.3,
+        "reviewCount": null,
+        "approxDistanceKm": 3.9
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_C002",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Bestech Square Mall, Sector 66, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "C003",
+      "discoveredIn": [
+        "CITY"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Fortis Hospital Mohali - Best Hospital in Mohali",
+        "entityType": "Multispeciality Tertiary Care Hospital",
+        "category": "Major Healthcare Driver",
+        "locality": "Sector 62, Mohali",
+        "rating": 4.7,
+        "reviewCount": null,
+        "approxDistanceKm": 3.6
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_C003",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Fortis Hospital Mohali - Best Hospital in Mohali, Sector 62, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "C004",
+      "discoveredIn": [
+        "CITY"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Fortis Cancer Institute, Mohali | Best Cancer Hospital in Punjab",
+        "entityType": "Specialized Oncology Hospital",
+        "category": "Healthcare Value Driver",
+        "locality": "Sector 62, Mohali",
+        "rating": 4.7,
+        "reviewCount": null,
+        "approxDistanceKm": 3.4
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_C004",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Fortis Cancer Institute, Mohali | Best Cancer Hospital in Punjab, Sector 62, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "C005",
+      "discoveredIn": [
+        "CITY"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Fortis Paalna - Best Maternity & Child Care Hospital in Mohali",
+        "entityType": "Maternity Hospital",
+        "category": "Healthcare Driver",
+        "locality": "Sector 62, Mohali",
+        "rating": 5.0,
+        "reviewCount": null,
+        "approxDistanceKm": 3.7
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_C005",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Fortis Paalna - Best Maternity & Child Care Hospital in Mohali, Sector 62, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "C006",
+      "discoveredIn": [
+        "CITY"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "MY Hospital",
+        "entityType": "Multispeciality Hospital",
+        "category": "Healthcare Hub",
+        "locality": "Sector 69, Mohali",
+        "rating": 4.3,
+        "reviewCount": null,
+        "approxDistanceKm": 2.2
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_C006",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "MY Hospital, Sector 69, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "C007",
+      "discoveredIn": [
+        "CITY"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Park Hospital",
+        "entityType": "Super Speciality Hospital",
+        "category": "Healthcare Infrastructure",
+        "locality": "Sector 69, Mohali",
+        "rating": 4.7,
+        "reviewCount": null,
+        "approxDistanceKm": 2.7
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_C007",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Park Hospital, Sector 69, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "C008",
+      "discoveredIn": [
+        "CITY"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "MedPark Hospital - Multi Speciality | Nephrology | Pediatric | ICU | Urology",
+        "entityType": "Multi Speciality Hospital",
+        "category": "Healthcare Infrastructure",
+        "locality": "Phase 8B / Sector 74, Mohali",
+        "rating": 4.7,
+        "reviewCount": null,
+        "approxDistanceKm": 3.9
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_C008",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "MedPark Hospital - Multi Speciality | Nephrology | Pediatric | ICU | Urology, Phase 8B / Sector 74, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "C009",
+      "discoveredIn": [
+        "CITY"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Indian School Of Business, Mohali (ISB Mohali)",
+        "entityType": "Business School & University",
+        "category": "Higher Education Institution",
+        "locality": "Knowledge City, Sector 81, Mohali",
+        "rating": 4.7,
+        "reviewCount": null,
+        "approxDistanceKm": 2.7
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_C009",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Indian School Of Business, Mohali (ISB Mohali), Knowledge City, Sector 81, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "C010",
+      "discoveredIn": [
+        "CITY"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "INDIAN INSTITUTE OF SCIENCE EDUCATION AND RESEARCH",
+        "entityType": "National Research & Educational Institute",
+        "category": "Higher Education Institution",
+        "locality": "Knowledge City, Sector 81, Mohali",
+        "rating": null,
+        "reviewCount": null,
+        "approxDistanceKm": 3.0
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_C010",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "INDIAN INSTITUTE OF SCIENCE EDUCATION AND RESEARCH, Knowledge City, Sector 81, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "C011",
+      "discoveredIn": [
+        "CITY"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Quarkcity India Pvt Ltd.",
+        "entityType": "IT Park & SEZ",
+        "category": "Major IT & Employment Hub",
+        "locality": "Sector 75 / Industrial Focal Point, Mohali",
+        "rating": 4.4,
+        "reviewCount": null,
+        "approxDistanceKm": 3.2
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_C011",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Quarkcity India Pvt Ltd., Sector 75 / Industrial Focal Point, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "C012",
+      "discoveredIn": [
+        "CITY"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "I.S. Bindra Punjab Cricket Association Stadium",
+        "entityType": "International Cricket Stadium",
+        "category": "Major Sports & Event Venue",
+        "locality": "Phase 9, Sector 63, Mohali",
+        "rating": 4.4,
+        "reviewCount": null,
+        "approxDistanceKm": 3.9
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_C012",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "I.S. Bindra Punjab Cricket Association Stadium, Phase 9, Sector 63, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "C013",
+      "discoveredIn": [
+        "CITY"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "GMADA Sports Complex Sector 69 Mohali",
+        "entityType": "Public Sports Complex",
+        "category": "Civic Sports Infrastructure",
+        "locality": "Sector 69, Mohali",
+        "rating": 4.0,
+        "reviewCount": null,
+        "approxDistanceKm": 2.7
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_C013",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "GMADA Sports Complex Sector 69 Mohali, Sector 69, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "C014",
+      "discoveredIn": [
+        "CITY"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Gurudwara Sri Amb Sahib",
+        "entityType": "Historic Gurdwara & Pilgrim Center",
+        "category": "Cultural & Heritage Landmark",
+        "locality": "Sector 62, Mohali",
+        "rating": 4.8,
+        "reviewCount": null,
+        "approxDistanceKm": 3.9
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_C014",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Gurudwara Sri Amb Sahib, Sector 62, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    },
+    {
+      "candidateId": "C015",
+      "discoveredIn": [
+        "CITY"
+      ],
+      "entityKind": "PLACE_ENTITY",
+      "discovery": {
+        "name": "Sahibzada Ajeet Singh Nagar (Mohali)",
+        "entityType": "Railway Station",
+        "category": "Major Transit Hub",
+        "locality": "Industrial Area Phase 9, Mohali",
+        "rating": 4.2,
+        "reviewCount": null,
+        "approxDistanceKm": 4.0
+      },
+      "placesResolution": {
+        "provider": "GOOGLE_PLACES_NEW",
+        "verificationTier": "ID_ONLY",
+        "status": "RESOLVED",
+        "placeId": "MOCK_PLACE_C015",
+        "candidatePlaceIds": [],
+        "fieldMask": [
+          "places.id"
+        ],
+        "queryUsed": "Sahibzada Ajeet Singh Nagar (Mohali), Industrial Area Phase 9, Mohali"
+      },
+      "mapcoContext": {
+        "sameSector": false,
+        "seenBefore": false
+      }
+    }
+  ],
+  "importantSemantics": {
+    "discoveredIn": "Discovery source only; not final Local/City classification.",
+    "discoveryApproxDistance": "Soft Gemini Maps-grounded hint only; Google Routes has not run yet.",
+    "placesResolution": "Identity evidence only. UNRESOLVED/AMBIGUOUS is not an automatic rejection.",
+    "sameSector": "Weak contextual signal only."
+  }
+}

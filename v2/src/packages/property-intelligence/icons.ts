@@ -1,45 +1,78 @@
-/* Phosphor icon mapping — mirrors the icons the finished UI already used in
-   its mock so the design is unchanged. Category/type → icon class. */
-import type { DayToDayCategory, CityReachType } from './types.ts';
+/* ═══════════════════════════════════════════════════════════════
+   MAPCO — Property Intelligence · category icons
+   ---------------------------------------------------------------
+   Phase 2 invents its own category labels ("Daily Needs & Groceries",
+   "Employment & IT Hubs", …) — there is no fixed enum to switch on. So
+   icons are chosen by keyword against the label, with the candidate's
+   own discovery category as a second signal and a neutral fallback.
 
-const DAY_TO_DAY_ICON: Record<DayToDayCategory, string> = {
-  park: 'ph-fill ph-tree',
-  grocery: 'ph-fill ph-shopping-cart',
-  gym: 'ph-fill ph-barbell',
-  school: 'ph-fill ph-graduation-cap',
-  healthcare: 'ph-fill ph-first-aid',
-  daily_market: 'ph-fill ph-storefront',
-};
+   A wrong-looking icon is cosmetic; an invented place is not. Nothing
+   here affects data — this is presentation only.
+   ═══════════════════════════════════════════════════════════════ */
+import type { EntityKind } from './types.ts';
 
-const CITY_REACH_ICON: Record<CityReachType, string> = {
-  mall: 'ph-fill ph-buildings',
-  road: 'ph-fill ph-road-horizon',
-  hospital: 'ph-fill ph-hospital',
-  airport: 'ph-fill ph-airplane-takeoff',
-  stadium: 'ph-fill ph-ticket',
-  business_district: 'ph-fill ph-briefcase',
-  institution: 'ph-fill ph-bank',
-  civic: 'ph-fill ph-buildings',
-  landmark: 'ph-fill ph-map-pin',
-};
+/** Ordered: the FIRST matching rule wins, so specific patterns precede
+ *  general ones ("clinic" before "health", "bakery" before "food"). */
+const RULES: ReadonlyArray<{ test: RegExp; icon: string }> = [
+  // Everyday needs
+  { test: /grocer|supermarket|daily needs|kirana|provision|convenience/i, icon: 'ph-fill ph-shopping-cart' },
+  { test: /market|bazaar|shopping|retail|mall|lifestyle/i, icon: 'ph-fill ph-storefront' },
+  { test: /bakery|sweets|confection|patisserie/i, icon: 'ph-fill ph-cookie' },
+  { test: /cafe|coffee|restaurant|dining|food|eatery/i, icon: 'ph-fill ph-fork-knife' },
 
-export function dayToDayIcon(category: DayToDayCategory): string {
-  return DAY_TO_DAY_ICON[category] ?? 'ph-fill ph-map-pin';
-}
+  // Health
+  { test: /pharmac|chemist|medical store|drug/i, icon: 'ph-fill ph-first-aid-kit' },
+  { test: /clinic|doctor|dentist|diagnostic/i, icon: 'ph-fill ph-stethoscope' },
+  { test: /hospital|healthcare|health|emergency|nursing/i, icon: 'ph-fill ph-hospital' },
 
-export function cityReachIcon(type: CityReachType): string {
-  return CITY_REACH_ICON[type] ?? 'ph-fill ph-map-pin';
-}
+  // Learning
+  { test: /school|education|academy|kindergarten|playschool|tuition/i, icon: 'ph-fill ph-graduation-cap' },
+  { test: /universit|college|research|institute|higher education/i, icon: 'ph-fill ph-student' },
 
-/** Places (New) `includedType` used for a bounded category repair search. */
-export function repairIncludedType(category: DayToDayCategory): string | undefined {
-  switch (category) {
-    case 'park': return 'park';
-    case 'grocery': return 'supermarket';
-    case 'gym': return 'gym';
-    case 'school': return 'school';
-    case 'healthcare': return 'hospital';
-    case 'daily_market': return 'market';
-    default: return undefined;
+  // Outdoors and activity
+  { test: /park|garden|green space|lake|playground/i, icon: 'ph-fill ph-tree' },
+  { test: /gym|fitness|wellness|yoga|spa/i, icon: 'ph-fill ph-barbell' },
+  { test: /sport|stadium|cricket|football|swimming|court/i, icon: 'ph-fill ph-soccer-ball' },
+
+  // Services
+  { test: /salon|grooming|barber|beauty|personal care/i, icon: 'ph-fill ph-scissors' },
+  { test: /worship|temple|gurudwara|gurdwara|mosque|church|religio|spiritual/i, icon: 'ph-fill ph-hands-praying' },
+  { test: /bank|atm|finance|insurance/i, icon: 'ph-fill ph-bank' },
+  { test: /fuel|petrol|gas station|charging|ev\b/i, icon: 'ph-fill ph-gas-pump' },
+
+  // Wider location
+  { test: /it hub|employment|tech park|software|business district|office|corporate/i, icon: 'ph-fill ph-buildings' },
+  { test: /commercial|business|industr/i, icon: 'ph-fill ph-briefcase' },
+  { test: /airport|aviation|aero/i, icon: 'ph-fill ph-airplane-tilt' },
+  { test: /railway|train|metro|station/i, icon: 'ph-fill ph-train' },
+  { test: /bus|transit|transport|connectivity/i, icon: 'ph-fill ph-bus' },
+  { test: /road|corridor|highway|expressway|flyover|bypass/i, icon: 'ph-fill ph-road-horizon' },
+  { test: /infrastructure|civic|municipal|government|administra/i, icon: 'ph-fill ph-building-office' },
+  { test: /landmark|cultural|heritage|museum|monument|tourism/i, icon: 'ph-fill ph-map-pin-area' },
+  { test: /hotel|hospitality|resort/i, icon: 'ph-fill ph-bed' },
+];
+
+const PLACE_FALLBACK = 'ph-fill ph-map-pin';
+const GEOGRAPHIC_FALLBACK = 'ph-fill ph-road-horizon';
+
+/**
+ * Pick an icon for a card.
+ * @param category      Phase 2's category label — the primary signal.
+ * @param discoveryHint The candidate's own Phase 1 category/type.
+ * @param entityKind    Decides the fallback when nothing matches.
+ */
+export function categoryIcon(
+  category: string,
+  discoveryHint?: string | null,
+  entityKind: EntityKind = 'PLACE_ENTITY',
+): string {
+  for (const rule of RULES) {
+    if (rule.test.test(category)) return rule.icon;
   }
+  if (discoveryHint) {
+    for (const rule of RULES) {
+      if (rule.test.test(discoveryHint)) return rule.icon;
+    }
+  }
+  return entityKind === 'GEOGRAPHIC_ENTITY' ? GEOGRAPHIC_FALLBACK : PLACE_FALLBACK;
 }

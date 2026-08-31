@@ -31,7 +31,7 @@ import {
   allProperties, placesStore, locationSource,
   type Property, type LatLng, type SearchEntry, type PlaceKind,
 } from './config';
-import { productRoutes, requestedPropertyId } from '../../packages/ui/product-routes';
+import { productRoutes, requestedAction, requestedPropertyId } from '../../packages/ui/product-routes';
 import { showPlan, teardownPlan, resizePlan, loadPlanCatalog, sectorMaps } from './plan-maps';
 import { openPropertyDetail } from './property-detail';
 import {
@@ -103,6 +103,9 @@ const state: State = {
   laContext: 'dayToDay', roadsOn: false, planMapId: null, sectorOpen: false,
 };
 const requestedProperty = requestedPropertyId(window.location.search);
+/** ?intel=1 opens the property straight into Property Intelligence.
+ *  This is how the Desk MAPCO AI button lands here. */
+const requestedIntel = requestedAction(window.location.search, 'intel');
 
 /* ── Google objects (populated lazily) ─────────────────────────── */
 let map: any = null;
@@ -1649,7 +1652,10 @@ if (appEl) {
       renderMinePanel();
       await mapLoad;
       renderPropMarkers();
-      if (requested) selectProperty(requested.id);
+      if (requested) {
+        selectProperty(requested.id);
+        if (requestedIntel) openPropertyDetail(requested, { mode: 'intel' });
+      }
       else if (requestedProperty) showToast('That property is not available in your inventory');
       if (state.roadsOn) syncRoadLayerForContext();
     } catch (error) {

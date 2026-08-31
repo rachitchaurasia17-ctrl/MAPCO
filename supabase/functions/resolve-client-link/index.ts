@@ -2,6 +2,8 @@
 // The service-role key remains inside Supabase Edge runtime. Public callers
 // receive only the safe RPC snapshot and short-lived signed media URLs.
 
+import { toBuyerSafeIntelligence } from '../../../v2/src/packages/property-intelligence/buyer-safe.ts';
+
 type JsonRecord = Record<string, unknown>;
 
 const SUPABASE_URL = String(Deno.env.get('SUPABASE_URL') || '').replace(/\/$/, '');
@@ -131,6 +133,41 @@ Deno.serve(async (request: Request): Promise<Response> => {
   if (audioPath && link.audio && typeof link.audio === 'object') {
     (link.audio as JsonRecord).url = await sign('client-link-audio', audioPath);
     if (!(link.audio as JsonRecord).url) link.audio = null;
+  }
+
+  // ── Property Intelligence (buyer-safe) ─────────────────────────
+  // Attached by INDEX so no real property id ever reaches the buyer.
+  // The stored dealer payload is reduced by toBuyerSafeIntelligence
+  // before it leaves this runtime: with anything other than an exact
+  // location the origin, polylines, coordinates and distances are all
+  // removed from the PAYLOAD, because exact distances to several known
+  // places trilaterate the property.
+  try {
+    const intel = await rpc(`plotmap_client_link_intelligence`, { p_token: token }, SERVICE_KEY);
+    const envelope = intel.ok && intel.data && typeof intel.data === `object`
+      ? intel.data as JsonRecord : {};
+    if (envelope.ok === true && Array.isArray(envelope.properties)) {
+      const visibility = String(envelope.locationVisibility || `area`);
+      for (const entry of envelope.properties as JsonRecord[]) {
+        const index = Number(entry.index);
+        const property = Number.isInteger(index) ? properties[index] : undefined;
+        if (!property || entry.status !== `ready`) continue;
+        property.intelligence = toBuyerSafeIntelligence({
+          status: `ready`,
+          generatedAt: String(entry.generatedAt || new Date().toISOString()),
+          schemaVersion: 3,
+          pipelineVersion: ``,
+          provider: ``,
+          model: ``,
+          origin: (entry.origin ?? null) as never,
+          local: (entry.local ?? []) as never,
+          city: (entry.city ?? []) as never,
+        }, visibility as never);
+      }
+    }
+  } catch {
+    // Intelligence is additive. A failure here must never break the
+    // buyer page or the properties it is really there to show.
   }
 
   return json(origin, { ok: true, link }, 200);

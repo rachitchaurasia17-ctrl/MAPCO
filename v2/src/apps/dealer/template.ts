@@ -3165,6 +3165,10 @@ export function renderApp(state: any) {
                         </div>
                       \` : '' }
                     </div>
+                    <button onClick="\${__b(propDetail.openMapcoAi)}" title="\${propDetail.mapcoAiReady ? 'Open Property Intelligence for this property' : 'Set the exact spot on MAPCO Earth to unlock Property Intelligence'}"
+                      style="display:flex;align-items:center;gap:7px;height:46px;padding:0 15px;margin-right:8px;border-radius:14px;background:\${propDetail.mapcoAiReady ? 'linear-gradient(135deg,#ffc21e,#f8a800)' : 'rgba(255,255,255,.14)'};color:\${propDetail.mapcoAiReady ? '#241d0c' : 'rgba(255,255,255,.62)'};font-size:14.5px;font-weight:800;white-space:nowrap"
+                      style-hover="filter:brightness(1.06)"><i class="ph-fill ph-sparkle"
+                        style="font-size:17px"></i>MAPCO AI</button>
                     <button onClick="\${__b(propDetail.close)}" title="Close"
                       style="width:46px;height:46px;border-radius:14px;background:rgba(255,255,255,.14);color:#ffffff;display:grid;place-items:center"
                       style-hover="background:rgba(255,255,255,.24)"><i
@@ -4628,7 +4632,7 @@ export function renderApp(state: any) {
                     <div
                       style="flex:1;min-height:0;width:100%;height:100%;display:flex;flex-direction:column;position:relative;overflow:hidden;background:#0f2417">
                       <div id="dealer-earth-map"
-                        style="position:absolute;inset:0;width:100%;height:100%;background-image:url('/assets/earth-sat.png');background-size:cover;background-position:center;z-index:1"></div>
+                        style="position:absolute;inset:0;width:100%;height:100%;background:#0f2417;z-index:1"></div>
                       <div
                         style="position:absolute;inset:0;width:100%;height:100%;overflow:hidden;pointer-events:none;z-index:2">
 

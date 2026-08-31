@@ -1,125 +1,116 @@
 /* ═══════════════════════════════════════════════════════════════
    MAPCO — Property Intelligence · Google Routes client
    ---------------------------------------------------------------
-   Real road distances + drivable route geometry. Two calls only:
-     • computeRouteMatrix — one origin × up to 12 destinations, the
-       single batched request that fills every row's road distance.
-     • computeRoutes      — one detailed route (encoded polyline) drawn
-       when the dealer clicks a destination.
-   Live-verified shapes (2026-08): matrix wraps points as
-   {waypoint:{placeId|location.latLng}}, computeRoutes uses the point
-   DIRECTLY as origin/destination (no waypoint wrapper).
+   ONE operation: computeRoutes from the property's canonical coordinate
+   to one destination, returning the three things a card needs —
+   distanceMeters, duration and the encoded road polyline.
+
+   Deliberately Essentials-tier: no routingPreference, no traffic-aware
+   routing, no traffic-coloured polylines. MAPCO does not need live
+   traffic for "how far is the school", and those options move the call
+   to a materially more expensive SKU.
+
+   The value this returns is the ONLY distance MAPCO ever displays. The
+   Phase 1 approximate proximity is a discovery signal and never reaches
+   a card.
+
+   Server-key only. This module must never be imported by browser code.
    ═══════════════════════════════════════════════════════════════ */
-import type {
-  RouteMatrixClient, RouteClient, RoutePoint, MatrixElement, RouteLine,
-} from '../types.ts';
+import type { GeoPoint, RoutesPort } from '../types.ts';
 
 export interface GoogleRoutesConfig {
   apiKey: string;
   fetchImpl?: typeof fetch;
-  travelMode?: 'DRIVE' | 'WALK' | 'BICYCLE' | 'TWO_WHEELER';
+  /** Default travel mode when a call does not specify one. */
+  travelMode?: 'DRIVE' | 'WALK';
+  regionCode?: string;
 }
 
-function waypoint(p: RoutePoint): Record<string, unknown> {
-  if (p.placeId) return { placeId: p.placeId };
-  return { location: { latLng: { latitude: p.latitude, longitude: p.longitude } } };
+export class RoutesError extends Error {
+  readonly code: string;
+  readonly detail?: string;
+  constructor(code: string, detail?: string) {
+    super(detail ? `${code}: ${detail}` : code);
+    this.name = 'RoutesError';
+    this.code = code;
+    this.detail = detail;
+  }
 }
 
 /** "855s" → 855. */
 function parseDuration(value: unknown): number {
-  const m = String(value ?? '').match(/([\d.]+)s/);
-  return m ? Math.round(parseFloat(m[1]!)) : 0;
+  const match = String(value ?? '').match(/([\d.]+)s/);
+  return match ? Math.round(parseFloat(match[1]!)) : 0;
 }
 
-export class GoogleRoutesClient implements RouteMatrixClient, RouteClient {
+interface ComputeRoutesResponse {
+  routes?: Array<{
+    distanceMeters?: number;
+    duration?: string;
+    polyline?: { encodedPolyline?: string };
+  }>;
+}
+
+export class GoogleRoutesClient implements RoutesPort {
   private readonly cfg: GoogleRoutesConfig;
   private readonly fetchImpl: typeof fetch;
-  private readonly travelMode: string;
 
   constructor(cfg: GoogleRoutesConfig) {
     this.cfg = cfg;
     this.fetchImpl = cfg.fetchImpl ?? fetch;
-    this.travelMode = cfg.travelMode ?? 'DRIVE';
-  }
-
-  async computeMatrix(
-    origin: RoutePoint,
-    destinations: RoutePoint[],
-    opts: { signal?: AbortSignal } = {},
-  ): Promise<MatrixElement[]> {
-    const result: MatrixElement[] = destinations.map(() => ({ ok: false, distanceMeters: 0, durationSeconds: 0 }));
-    if (!destinations.length) return result;
-    const body = {
-      origins: [{ waypoint: waypoint(origin) }],
-      destinations: destinations.map((d) => ({ waypoint: waypoint(d) })),
-      travelMode: this.travelMode,
-    };
-    const res = await this.fetchImpl('https://routes.googleapis.com/distanceMatrix/v2:computeRouteMatrix', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'X-Goog-Api-Key': this.cfg.apiKey,
-        'X-Goog-FieldMask': 'originIndex,destinationIndex,distanceMeters,duration,condition',
-      },
-      body: JSON.stringify(body),
-      signal: opts.signal,
-    });
-    if (!res.ok) throw new RoutesError(`matrix_http_${res.status}`, (await res.text().catch(() => '')).slice(0, 200));
-    // computeRouteMatrix streams a JSON array of elements.
-    const rows = await res.json().catch(() => null) as Array<{
-      destinationIndex?: number; distanceMeters?: number; duration?: string; condition?: string;
-    }> | null;
-    for (const row of Array.isArray(rows) ? rows : []) {
-      const idx = row.destinationIndex ?? -1;
-      if (idx < 0 || idx >= result.length) continue;
-      const ok = row.condition === 'ROUTE_EXISTS' && typeof row.distanceMeters === 'number';
-      result[idx] = {
-        ok,
-        distanceMeters: ok ? row.distanceMeters! : 0,
-        durationSeconds: ok ? parseDuration(row.duration) : 0,
-      };
-    }
-    return result;
   }
 
   async computeRoute(
-    origin: RoutePoint,
-    destination: RoutePoint,
-    opts: { signal?: AbortSignal } = {},
-  ): Promise<RouteLine | null> {
+    origin: GeoPoint,
+    destination: { placeId?: string; latitude: number; longitude: number },
+    opts: { travelMode?: 'DRIVE' | 'WALK'; signal?: AbortSignal } = {},
+  ): Promise<{ distanceMeters: number; durationSeconds: number; encodedPolyline: string } | null> {
+    // A stable place id routes to the place's own entrance; a raw
+    // coordinate is the fallback when identity was never resolved.
+    const destinationPoint = destination.placeId
+      ? { placeId: destination.placeId }
+      : {
+        location: {
+          latLng: { latitude: destination.latitude, longitude: destination.longitude },
+        },
+      };
+
     const body = {
-      origin: waypoint(origin),
-      destination: waypoint(destination),
-      travelMode: this.travelMode,
+      origin: { location: { latLng: { latitude: origin.latitude, longitude: origin.longitude } } },
+      destination: destinationPoint,
+      travelMode: opts.travelMode ?? this.cfg.travelMode ?? 'DRIVE',
       polylineEncoding: 'ENCODED_POLYLINE',
+      ...(this.cfg.regionCode ? { regionCode: this.cfg.regionCode } : {}),
     };
+
     const res = await this.fetchImpl('https://routes.googleapis.com/directions/v2:computeRoutes', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
         'X-Goog-Api-Key': this.cfg.apiKey,
+        // Exactly the three fields a card needs. A wider mask would raise
+        // the SKU tier without adding anything MAPCO displays.
         'X-Goog-FieldMask': 'routes.distanceMeters,routes.duration,routes.polyline.encodedPolyline',
       },
       body: JSON.stringify(body),
       signal: opts.signal,
     });
-    if (!res.ok) return null;
-    const json = await res.json().catch(() => null) as {
-      routes?: Array<{ distanceMeters?: number; duration?: string; polyline?: { encodedPolyline?: string } }>;
-    } | null;
+
+    if (!res.ok) {
+      // A failed route is a truthful "unavailable" on the card, never a
+      // fallback to the Phase 1 approximate distance.
+      return null;
+    }
+
+    const json = await res.json().catch(() => null) as ComputeRoutesResponse | null;
     const route = json?.routes?.[0];
-    if (!route?.polyline?.encodedPolyline || typeof route.distanceMeters !== 'number') return null;
+    if (!route?.polyline?.encodedPolyline || typeof route.distanceMeters !== 'number') {
+      return null;
+    }
     return {
       distanceMeters: route.distanceMeters,
       durationSeconds: parseDuration(route.duration),
       encodedPolyline: route.polyline.encodedPolyline,
     };
-  }
-}
-
-export class RoutesError extends Error {
-  constructor(readonly code: string, readonly detail?: string) {
-    super(code);
-    this.name = 'RoutesError';
   }
 }

@@ -10,7 +10,10 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:security": "vitest run tests/security-phase1 tests/session-security.test.ts tests/protected-route-entrypoints.test.ts",
-    "security:verify": "node scripts/security-verify.mjs"
+    "security:verify": "node scripts/security-verify.mjs",
+    "pi:prompts": "node scripts/sync-pi-prompts.mjs",
+    "pi:smoke": "node scripts/property-intelligence-smoke.mjs",
+    "test:pi": "vitest run tests/property-intelligence-phases.test.ts tests/property-intelligence-pipeline.test.ts tests/property-intelligence-security.test.ts tests/property-intelligence-provider.test.ts"
   },
   "devDependencies": {
     "jsdom": "^30.0.1",

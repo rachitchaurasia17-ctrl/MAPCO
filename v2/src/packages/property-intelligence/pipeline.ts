@@ -1,290 +1,464 @@
 /* ═══════════════════════════════════════════════════════════════
-   MAPCO — Property Intelligence · orchestrator
+   MAPCO — Property Intelligence · pipeline orchestrator
    ---------------------------------------------------------------
-   canonical point
-     → ONE Gemini discovery (6 Day-to-Day + 6 City Reach)
-     → resolve/normalize ONLY those final destinations
-        (roads via MAPCO GeoJSON, everything else via Google Places)
-     → dedupe / bounded repair / verify
-     → ONE Google Route Matrix (1 origin × ≤12 destinations)
-     → real road distance + duration
-     → ViewModel + usage/cost + input digest
-   Never invents a place or a distance to keep six rows: an unresolved,
-   duplicate, or route-less destination is dropped, not faked.
+   REAL MAPCO PROPERTY
+     → PHASE 1   Gemini + Google Maps grounding (high recall)
+     → NORMALIZE deterministic: ids, Places identity, exact-id dedupe,
+                 sameSector, Phase 2 input contract
+     → PHASE 2   Gemini, FRESH request (no Phase 1 context carried over)
+     → VALIDATE  strict; one controlled repair attempt, then fail truthfully
+     → PHASE 3   deterministic: Places details, persistent Place Photos,
+                 Google Routes (distance / duration / polyline), cost ledger
+     → PERSISTED FINAL PROPERTY INTELLIGENCE
+     → EXISTING MAPCO PROPERTY INTELLIGENCE UI
+
+   There are exactly TWO AI phases. Phase 3 contains no AI.
+
+   Every failure produces a truthful state. Nothing in this file invents a
+   place, a distance, a duration or a photo to fill a gap.
    ═══════════════════════════════════════════════════════════════ */
-import type {
-  PipelineInput, PipelineDeps, PipelineResult, PropertyIntelligenceViewModel,
-  IntelligencePlace, DiscoveryCandidate, ResolvedDestination, RoutePoint,
-  DayToDayCategory, RunUsage,
+import {
+  DEFAULT_LIMITS,
+  PROPERTY_INTELLIGENCE_PIPELINE_VERSION,
+  PROPERTY_INTELLIGENCE_SCHEMA_VERSION,
+  type GenerationStage,
+  type IntelligencePlace,
+  type IntelUnavailableReason,
+  type LocalCategoryView,
+  type NormalizedCandidate,
+  type Phase2Output,
+  type PipelineDeps,
+  type PipelineInput,
+  type PipelineResult,
+  type PropertyIntelligenceViewModel,
+  type RunUsage,
 } from './types.ts';
-import { DAY_TO_DAY_ORDER, PROPERTY_INTELLIGENCE_SCHEMA_VERSION } from './types.ts';
-import { formatDistance, formatDuration } from './geo.ts';
-import { resolveRoad } from './roads.ts';
-import { dayToDayIcon, cityReachIcon, repairIncludedType } from './icons.ts';
+import {
+  PHASE1_PROMPT_VERSION, PHASE2_PROMPT, PHASE2_PROMPT_VERSION, buildPhase1Prompt,
+} from './prompts/index.ts';
+import { indexGroundedPlaces, parsePhase1Output } from './phase1/parse.ts';
+import { buildPhase2Input, knownPlaceIdsFrom, normalizeCandidates } from './normalize/index.ts';
+import { validatePhase2Output } from './phase2/validate.ts';
+import { enrichSelections, type Selection } from './enrich/index.ts';
+import { CostLedger } from './cost/ledger.ts';
+import { DEFAULT_PRICING } from './cost/pricing.ts';
+import { categoryIcon } from './icons.ts';
 import { computeInputDigest } from './cache-key.ts';
-import { shortlistCityReach, finalizeCityReach, type RoutedCandidate } from './landmarks/city-reach-selector.ts';
-import { costMicroUsd, DEFAULT_RATES, type CostRates } from './cost.ts';
 
-/** Beyond this, an everyday destination is realistically driven, not walked. */
-const WALKABLE_METERS = 1200;
+/** Below this the area is genuinely too sparse to present anything useful. */
+export const MIN_CANDIDATES = 6;
 
-const REPAIR_QUERY: Record<DayToDayCategory, string> = {
-  park: 'park', grocery: 'supermarket', gym: 'gym',
-  school: 'school', healthcare: 'hospital', daily_market: 'local market',
-};
-
-interface Slot {
-  group: 'dayToDay' | 'cityReach';
-  category?: DayToDayCategory;
-  destinationType: string;
-  displayName: string;
-  resolved: ResolvedDestination;
-  reason?: string;
-  /** Present on curated City Reach rows: supplies the MAPCO-owned photo. */
-  landmark?: import('./landmarks/types.ts').CuratedLandmark;
+/** A truthful failure reason, carried out of the pipeline unchanged.
+ *  Written without TypeScript parameter properties so the package runs
+ *  unchanged under Node type-stripping, Deno and the browser bundler. */
+export class PipelineError extends Error {
+  readonly reason: IntelUnavailableReason;
+  readonly detail?: string;
+  constructor(reason: IntelUnavailableReason, detail?: string) {
+    super(reason);
+    this.name = 'PipelineError';
+    this.reason = reason;
+    this.detail = detail;
+  }
 }
 
-function toRoutePoint(r: ResolvedDestination): RoutePoint {
-  return r.placeId
-    ? { placeId: r.placeId, latitude: r.latitude, longitude: r.longitude }
-    : { latitude: r.latitude, longitude: r.longitude };
+function randomRunId(): string {
+  const bytes = new Uint8Array(8);
+  crypto.getRandomValues(bytes);
+  return `pir_${Array.from(bytes).map((b) => b.toString(16).padStart(2, '0')).join('')}`;
 }
 
-export interface RunOptions { rates?: CostRates }
+export interface RunOptions {
+  /** Reported in the run record; does not change behaviour. */
+  cacheOutcome?: RunUsage['cacheOutcome'];
+  /** Hosted Edge continuation checkpoint. The ordinary/local pipeline omits it. */
+  stopAfter?: 'normalization' | 'phase2';
+  /** Trusted server-owned state persisted by an earlier fenced stage. */
+  resume?: {
+    candidateUniverse: NormalizedCandidate[];
+    phase2Output?: Phase2Output | null;
+  };
+}
 
 export async function runPropertyIntelligence(
   input: PipelineInput,
   deps: PipelineDeps,
   options: RunOptions = {},
 ): Promise<PipelineResult> {
-  const started = Date.now();
-  const rates = options.rates ?? DEFAULT_RATES;
+  const startedAt = Date.now();
   const log = deps.log ?? (() => {});
-  const tally = {
-    inputTokens: 0, outputTokens: 0, groundingQueries: 0,
-    placesCalls: 0, matrixElements: 0, routeCalls: 0, repairAttempts: 0,
-    cityReachPlacesCalls: 0,
-  };
+  const limits = deps.limits ?? DEFAULT_LIMITS;
+  const ledger = new CostLedger(deps.pricing ?? DEFAULT_PRICING);
+  const runId = deps.makeId ? deps.makeId('run') : randomRunId();
 
-  const digest = await computeInputDigest({
-    dealerId: input.dealerId, propertyId: input.propertyId, point: input.point,
+  let stage: GenerationStage = 'queued';
+  let candidateUniverse: NormalizedCandidate[] = [];
+  let phase2Output: Phase2Output | null = null;
+  let repairAttempts = 0;
+  let resolvedCount = 0;
+  let photosReused = 0;
+  let photosFetched = 0;
+  let routesReused = 0;
+  let routesComputed = 0;
+
+  const inputDigest = await computeInputDigest({
+    dealerId: input.dealerId,
+    propertyId: input.propertyId,
+    point: input.point,
     locationUpdatedAt: input.locationUpdatedAt,
-    provider: deps.discovery.name, model: deps.discovery.model,
+    provider: deps.model.name,
+    model: deps.model.model,
+    pipelineVersion: PROPERTY_INTELLIGENCE_PIPELINE_VERSION,
+    phase1PromptVersion: PHASE1_PROMPT_VERSION,
+    phase2PromptVersion: PHASE2_PROMPT_VERSION,
   });
 
-  // 1) Discovery ---------------------------------------------------
-  const discovery = await deps.discovery.discover(input.point, {
-    regionHint: input.regionHint, signal: deps.signal,
+  const finish = (
+    status: RunUsage['status'],
+    viewModel: PropertyIntelligenceViewModel,
+    selectedCount: number,
+    error?: string,
+  ): PipelineResult => ({
+    viewModel,
+    usage: {
+      runId,
+      provider: deps.model.name,
+      model: deps.model.model,
+      pipelineVersion: PROPERTY_INTELLIGENCE_PIPELINE_VERSION,
+      phase1PromptVersion: PHASE1_PROMPT_VERSION,
+      phase2PromptVersion: PHASE2_PROMPT_VERSION,
+      stage,
+      events: [...ledger.events],
+      totalMicroUsd: ledger.totalMicroUsd(),
+      totalInr: ledger.totalInr(),
+      inrPerUsd: ledger.pricing.inrPerUsd,
+      pricingVersion: ledger.pricing.version,
+      cacheOutcome: options.cacheOutcome ?? 'miss',
+      refreshReason: input.refreshReason,
+      latencyMs: Date.now() - startedAt,
+      status,
+      error,
+      candidateCount: candidateUniverse.length,
+      resolvedCount,
+      selectedCount,
+      photosReused,
+      photosFetched,
+      routesReused,
+      routesComputed,
+      repairAttempts,
+    },
+    inputDigest,
+    candidateUniverse,
+    phase2Output,
   });
-  tally.inputTokens += discovery.usage.inputTokens;
-  tally.outputTokens += discovery.usage.outputTokens;
-  tally.groundingQueries += discovery.usage.groundingQueries;
-  log('info', 'pi.discovery', { candidates: discovery.candidates.length });
 
-  const dayByCategory = new Map<DayToDayCategory, DiscoveryCandidate>();
-  const cityCandidates: DiscoveryCandidate[] = [];
-  for (const c of discovery.candidates) {
-    if (c.group === 'dayToDay' && c.category) {
-      if (!dayByCategory.has(c.category)) dayByCategory.set(c.category, c);
-    } else if (c.group === 'cityReach') {
-      cityCandidates.push(c);
-    }
-  }
-
-  const seenPlaceIds = new Set<string>();
-  const seenCoordKeys = new Set<string>();
-  const coordKey = (r: ResolvedDestination) => `${r.latitude.toFixed(4)},${r.longitude.toFixed(4)}`;
-  const claim = (r: ResolvedDestination): boolean => {
-    const pk = r.placeId ? `p:${r.placeId}` : '';
-    const ck = coordKey(r);
-    if (pk && seenPlaceIds.has(pk)) return false;
-    if (seenCoordKeys.has(ck)) return false;
-    if (pk) seenPlaceIds.add(pk);
-    seenCoordKeys.add(ck);
-    return true;
+  const unavailable = (reason: IntelUnavailableReason, error?: string): PipelineResult => {
+    stage = 'failed';
+    return finish('unavailable', {
+      status: 'unavailable',
+      reason,
+      generatedAt: deps.now(),
+      schemaVersion: PROPERTY_INTELLIGENCE_SCHEMA_VERSION,
+      pipelineVersion: PROPERTY_INTELLIGENCE_PIPELINE_VERSION,
+      provider: deps.model.name,
+      model: deps.model.model,
+      origin: input.point,
+      local: [],
+      city: [],
+    }, 0, error);
   };
 
-  // 2) Resolve Day-to-Day (bounded repair per missing/failed category)
-  const daySlots: Slot[] = [];
-  for (const category of DAY_TO_DAY_ORDER) {
-    const candidate = dayByCategory.get(category);
-    let resolved: ResolvedDestination | null = null;
-    if (candidate) {
-      resolved = await deps.resolver.resolvePlace(candidate.name, input.point, { signal: deps.signal });
-      tally.placesCalls++;
-    }
-    if (!resolved || !claimPreview(resolved, seenPlaceIds, seenCoordKeys)) {
-      // Bounded repair: one category search near the property.
-      resolved = await deps.resolver.resolvePlace(REPAIR_QUERY[category], input.point, {
-        includedType: repairIncludedType(category), signal: deps.signal,
-      });
-      tally.placesCalls++;
-      tally.repairAttempts++;
-    }
-    if (!resolved || !claim(resolved)) {
-      log('warn', 'pi.dayToDay.dropped', { category });
-      continue;
-    }
-    daySlots.push({
-      group: 'dayToDay', category, destinationType: category,
-      displayName: resolved.name, resolved, reason: candidate?.reason,
-    });
-  }
-
-  /* 3) City Reach — MAPCO's curated landmark library.
-     No Places discovery, no Place Photos: the landmark, its canonical
-     coordinate and its photo are all ours. Google is used only to turn
-     the shortlist into real travel times, in the shared matrix below.
-     The curated coordinate is used as supplied and never re-verified. */
-  const citySlots: Slot[] = [];
-  const curated = deps.landmarks ?? [];
-  if (curated.length) {
-    const shortlist = shortlistCityReach(input.point, curated, { shortlistSize: 10 });
-    for (const candidate of shortlist) {
-      const landmark = candidate.landmark;
-      const resolved: ResolvedDestination = {
-        kind: 'curated-landmark',
-        name: landmark.name,
-        latitude: landmark.latitude,
-        longitude: landmark.longitude,
-      };
-      if (!claim(resolved)) continue;
-      citySlots.push({
-        group: 'cityReach',
-        destinationType: landmark.category,
-        displayName: landmark.name,
-        resolved,
-        landmark,
-      });
-    }
-    log('info', 'pi.cityReach.curated', { shortlisted: citySlots.length, library: curated.length });
-  } else {
-    // No curated library supplied: show nothing rather than falling back
-    // to paid discovery the new architecture deliberately removed.
-    log('warn', 'pi.cityReach.noLibrary');
-  }
-
-  // 4) One Route Matrix: property × all resolved destinations --------
-  const allSlots = [...daySlots, ...citySlots];
-  const origin: RoutePoint = { latitude: input.point.latitude, longitude: input.point.longitude };
-  const elements = allSlots.length
-    ? await deps.matrix.computeMatrix(origin, allSlots.map((s) => toRoutePoint(s.resolved)), { signal: deps.signal })
-    : [];
-  tally.matrixElements += allSlots.length;
-
-  /* 5) Assemble rows; drop any destination with no real route.
-     City Reach is shortlisted wide (10) but presented narrow: the final
-     5–6 are chosen from REAL travel times, so a landmark that routes
-     badly loses its place to one that does not. A landmark that failed
-     to route is dropped, never estimated from the straight line. */
-  const cityKeep = new Set<string>();
-  if (citySlots.length) {
-    const routedCity: RoutedCandidate[] = [];
-    citySlots.forEach((slot) => {
-      const index = allSlots.indexOf(slot);
-      const el = elements[index];
-      if (!slot.landmark || !el || !el.ok) return;
-      routedCity.push({
-        landmark: slot.landmark,
-        straightLineKm: 0,
-        rank: 0,
-        distanceMeters: el.distanceMeters,
-        durationSeconds: el.durationSeconds,
-      });
-    });
-    for (const kept of finalizeCityReach(routedCity, { limit: 6 })) cityKeep.add(kept.landmark.id);
-    log('info', 'pi.cityReach.final', { routed: routedCity.length, kept: cityKeep.size });
-  }
-
-  const dayToDay: IntelligencePlace[] = [];
-  const cityReach: IntelligencePlace[] = [];
-  allSlots.forEach((slot, i) => {
-    const el = elements[i];
-    if (!el || !el.ok) { log('warn', 'pi.route.missing', { name: slot.displayName }); return; }
-    if (slot.group === 'cityReach' && slot.landmark && !cityKeep.has(slot.landmark.id)) return;
-    const isDay = slot.group === 'dayToDay';
-    const idx = (isDay ? dayToDay.length : cityReach.length) + 1;
-    const place: IntelligencePlace = {
-      id: isDay ? `d${idx}` : `c${idx}`,
-      group: slot.group,
-      destinationType: slot.destinationType,
-      category: slot.category,
-      name: slot.displayName,
-      icon: isDay
-        ? dayToDayIcon(slot.category as DayToDayCategory)
-        : cityReachIcon(slot.destinationType as any),
-      distanceMeters: el.distanceMeters,
-      distanceLabel: formatDistance(el.distanceMeters),
-      durationSeconds: el.durationSeconds,
-      durationLabel: formatDuration(el.durationSeconds),
-      latitude: slot.resolved.latitude,
-      longitude: slot.resolved.longitude,
-      placeId: slot.resolved.placeId,
-      // City Reach uses MAPCO's own asset — never a Google Place Photo.
-      ...(slot.landmark
-        ? { image: slot.landmark.image, imageSource: 'mapco-curated' as const }
-        : {}),
-      // Everyday destinations are walked when they are genuinely walkable.
-      travelMode: isDay && el.distanceMeters <= WALKABLE_METERS ? 'WALK' as const : 'DRIVE' as const,
-      routeTarget: {
-        kind: slot.resolved.kind,
-        placeId: slot.resolved.placeId,
-        latitude: slot.resolved.latitude,
-        longitude: slot.resolved.longitude,
-      },
-    };
-    (isDay ? dayToDay : cityReach).push(place);
-  });
-
-  const ready = dayToDay.length >= 1 && cityReach.length >= 1 && (dayToDay.length + cityReach.length) >= 4;
-  const generatedAt = deps.now();
-  const viewModel: PropertyIntelligenceViewModel = {
-    status: ready ? 'ready' : 'unavailable',
-    reason: ready ? undefined : 'insufficient_results',
-    generatedAt,
+  const checkpoint = (): PipelineResult => finish('succeeded', {
+    status: 'generating',
+    reason: 'busy',
+    generatedAt: deps.now(),
     schemaVersion: PROPERTY_INTELLIGENCE_SCHEMA_VERSION,
-    provider: deps.discovery.name,
-    model: deps.discovery.model,
+    pipelineVersion: PROPERTY_INTELLIGENCE_PIPELINE_VERSION,
+    provider: deps.model.name,
+    model: deps.model.model,
     origin: input.point,
-    dayToDay,
-    cityReach,
-  };
+    local: [],
+    city: [],
+  }, 0);
 
-  const cost = costMicroUsd(tally, rates);
-  const usage: RunUsage = {
-    provider: deps.discovery.name,
-    model: deps.discovery.model,
-    inputTokens: tally.inputTokens,
-    outputTokens: tally.outputTokens,
-    groundingQueries: tally.groundingQueries,
-    placesCalls: tally.placesCalls,
-    matrixElements: tally.matrixElements,
-    routeCalls: tally.routeCalls,
-    repairAttempts: tally.repairAttempts,
-    // Curated City Reach issues no Places request at all.
-    cityReachPlacesCalls: tally.cityReachPlacesCalls,
-    placePhotoCalls: dayToDay.length,
-    costMicroUsd: cost,
-    cacheOutcome: input.refreshReason ? 'refresh' : 'miss',
-    refreshReason: input.refreshReason,
-    latencyMs: Date.now() - started,
-    status: ready ? 'succeeded' : 'unavailable',
-  };
-
-  log('info', 'pi.done', {
-    dayToDay: dayToDay.length, cityReach: cityReach.length,
-    costMicroUsd: cost, latencyMs: usage.latencyMs,
+  if (options.resume?.candidateUniverse?.length) {
+    candidateUniverse = options.resume.candidateUniverse;
+    resolvedCount = candidateUniverse.filter(
+      (candidate) => candidate.placesResolution.status === 'RESOLVED',
+    ).length;
+    log('info', 'pi.normalization.resumed', { runId, candidates: candidateUniverse.length });
+  } else {
+  /* ── PHASE 1 — Gemini + Google Maps grounding ─────────────────── */
+  stage = 'phase1';
+  log('info', 'pi.phase1.start', {
+    runId, propertyId: input.propertyId, locality: input.locality, city: input.city,
   });
 
-  return { viewModel, usage, inputDigest: digest };
+  const phase1Prompt = buildPhase1Prompt({
+    latitude: input.point.latitude,
+    longitude: input.point.longitude,
+    locality: input.locality,
+    city: input.city,
+  });
+
+  let phase1Text: string;
+  let groundedPlaceIds: Record<string, string>;
+  try {
+    const response = await deps.model.generate(phase1Prompt, {
+      grounding: { latitude: input.point.latitude, longitude: input.point.longitude },
+      temperature: 0.4,
+      maxOutputTokens: 16384,
+      thinkingBudget: 2048,
+      signal: deps.signal,
+    });
+    ledger.recordModelTurn('phase1', response.usage);
+    phase1Text = response.text;
+    groundedPlaceIds = indexGroundedPlaces(response.groundedPlaces);
+  } catch (error) {
+    const message = (error as Error).message ?? 'phase1 failed';
+    log('error', 'pi.phase1.failed', { runId, error: message });
+    return unavailable(classifyProviderError(message, 'phase1_failed'), message);
+  }
+
+  const parsed = parsePhase1Output(phase1Text);
+  const discovered = parsed.local.length + parsed.city.length;
+  log('info', 'pi.phase1.parsed', {
+    runId, local: parsed.local.length, city: parsed.city.length,
+    grounded: Object.keys(groundedPlaceIds).length,
+  });
+  if (discovered === 0) {
+    return unavailable('phase1_unparseable', phase1Text.slice(0, 300));
+  }
+
+  /* ── NORMALIZATION — deterministic MAPCO, no AI ───────────────── */
+  stage = 'normalization';
+  // One batched registry read tells us which place ids MAPCO already knows,
+  // which feeds the `seenBefore` signal Phase 2 sees.
+  let knownPlaceIds = new Set<string>();
+  try {
+    const seeded = await deps.store.getPlaceMedia([]);
+    knownPlaceIds = knownPlaceIdsFrom(seeded);
+  } catch { /* the registry is an optimisation; never fail the run on it */ }
+
+  const identityBudget = Math.min(
+    limits.maxIdentityResolutions,
+    ledger.remainingUnits(limits.maxGenerationInr, 'places_identity'),
+  );
+
+  const normalized = await normalizeCandidates(parsed, deps.places, {
+    point: input.point,
+    propertySector: input.propertySector,
+    propertyLocality: input.locality,
+    groundedPlaceIds,
+    knownPlaceIds,
+    maxIdentityResolutions: identityBudget,
+    signal: deps.signal,
+    onIdentityRequest: () => ledger.record('places_identity', 1),
+    log,
+  });
+  candidateUniverse = normalized.candidates;
+  resolvedCount = normalized.stats.resolved;
+
+  log('info', 'pi.normalize.done', { runId, ...normalized.stats });
+  }
+
+  if (candidateUniverse.length < MIN_CANDIDATES) {
+    return unavailable('insufficient_candidates',
+      `only ${candidateUniverse.length} candidates survived normalization`);
+  }
+
+  if (options.stopAfter === 'normalization') {
+    stage = 'normalization';
+    return checkpoint();
+  }
+
+  if (options.resume?.phase2Output) {
+    phase2Output = options.resume.phase2Output;
+    stage = 'phase2';
+    log('info', 'pi.phase2.resumed', {
+      runId,
+      localCategories: phase2Output.localCategories.length,
+      cityPlaces: phase2Output.cityPlaces.length,
+    });
+  } else {
+  const phase2Input = buildPhase2Input({
+    propertyId: input.propertyId,
+    propertyType: input.propertyType,
+    propertySubtype: input.propertySubtype,
+    point: input.point,
+    locality: input.locality,
+    city: input.city,
+    candidates: candidateUniverse,
+  });
+
+  // The ceiling is checked BEFORE committing the second paid AI turn.
+  // Phase 1 has already been billed and cannot be refunded, but there is no
+  // reason to spend Phase 2 on top of a budget that is already gone.
+  if (ledger.totalInr() > limits.maxGenerationInr) {
+    log('warn', 'pi.cost.capReached', {
+      runId, spentInr: Number(ledger.totalInr().toFixed(2)), capInr: limits.maxGenerationInr,
+    });
+    return unavailable('cost_cap_reached',
+      `spent ₹${ledger.totalInr().toFixed(2)} of ₹${limits.maxGenerationInr} before Phase 2`);
+  }
+
+  /* ── PHASE 2 — Gemini, fresh request, NO grounding ────────────── */
+  stage = 'phase2';
+  const phase2Body = `${PHASE2_PROMPT}\n\nINPUT JSON:\n${JSON.stringify(phase2Input)}`;
+
+  let validation = await callAndValidatePhase2(phase2Body, candidateUniverse, deps, ledger, 'phase2');
+
+  if (!validation.ok) {
+    // ONE controlled repair attempt with the schema errors fed back. MAPCO
+    // never patches the response itself — a repaired-by-code result would be
+    // MAPCO's judgment wearing Phase 2's name.
+    stage = 'validation';
+    repairAttempts = 1;
+    log('warn', 'pi.phase2.invalid', {
+      runId, issues: validation.issues.slice(0, 8).map((i) => `${i.code}@${i.path}`),
+    });
+    const repairPrompt = `${phase2Body}\n\n${validation.feedback ?? ''}`;
+    validation = await callAndValidatePhase2(
+      repairPrompt, candidateUniverse, deps, ledger, 'phase2-repair',
+    );
+    if (!validation.ok) {
+      log('error', 'pi.phase2.repairFailed', {
+        runId, issues: validation.issues.slice(0, 8).map((i) => `${i.code}@${i.path}`),
+      });
+      return unavailable('phase2_invalid',
+        validation.issues.slice(0, 5).map((i) => `${i.code}@${i.path}`).join('; '));
+    }
+  }
+
+  phase2Output = validation.value!;
+  log('info', 'pi.phase2.ok', {
+    runId,
+    localCategories: phase2Output.localCategories.length,
+    cityPlaces: phase2Output.cityPlaces.length,
+  });
+  }
+
+  if (options.stopAfter === 'phase2') {
+    stage = 'phase2';
+    return checkpoint();
+  }
+
+  /* ── PHASE 3 — deterministic enrichment ───────────────────────── */
+  stage = 'enrichment';
+  const byId = new Map(candidateUniverse.map((c) => [c.candidateId, c]));
+  const selections: Selection[] = [];
+
+  for (const category of phase2Output.localCategories) {
+    for (const place of category.places) {
+      const candidate = byId.get(place.candidateId);
+      if (!candidate) continue; // validation guarantees this, belt and braces
+      selections.push({ candidate, group: 'local', category: category.category, rank: place.rank });
+    }
+  }
+  for (const place of phase2Output.cityPlaces) {
+    const candidate = byId.get(place.candidateId);
+    if (!candidate) continue;
+    selections.push({ candidate, group: 'city', category: place.category });
+  }
+
+  const enriched = await enrichSelections(selections, {
+    places: deps.places,
+    routes: deps.routes,
+    store: deps.store,
+    ledger,
+    origin: input.point,
+    maxEnrichedPlaces: limits.maxEnrichedPlaces,
+    maxRouteCalls: limits.maxRouteCalls,
+    maxGenerationInr: limits.maxGenerationInr,
+    now: deps.now,
+    signal: deps.signal,
+    log,
+  });
+  photosReused = enriched.stats.photosReused;
+  photosFetched = enriched.stats.photosFetched;
+  routesReused = enriched.stats.routesReused;
+  routesComputed = enriched.stats.routesComputed;
+
+  log('info', 'pi.enrich.done', {
+    runId, ...enriched.stats,
+    totalInr: Number(ledger.totalInr().toFixed(2)),
+    savedInr: Number(ledger.savedInr().toFixed(2)),
+  });
+
+  /* ── assemble the view model ──────────────────────────────────── */
+  const cardsByKey = new Map(enriched.places.map((p) => [p.id, p]));
+
+  const local: LocalCategoryView[] = phase2Output.localCategories.map((category) => {
+    const places = category.places
+      .map((p) => cardsByKey.get(`local:${p.candidateId}`))
+      .filter((p): p is IntelligencePlace => Boolean(p))
+      .sort((a, b) => (a.rank ?? 99) - (b.rank ?? 99));
+    return { category: category.category, icon: categoryIcon(category.category), places };
+  }).filter((c) => c.places.length > 0);
+
+  const city = phase2Output.cityPlaces
+    .map((p) => cardsByKey.get(`city:${p.candidateId}`))
+    .filter((p): p is IntelligencePlace => Boolean(p));
+
+  stage = 'complete';
+
+  const viewModel: PropertyIntelligenceViewModel = {
+    status: 'ready',
+    generatedAt: deps.now(),
+    schemaVersion: PROPERTY_INTELLIGENCE_SCHEMA_VERSION,
+    pipelineVersion: PROPERTY_INTELLIGENCE_PIPELINE_VERSION,
+    provider: deps.model.name,
+    model: deps.model.model,
+    origin: input.point,
+    local,
+    city,
+  };
+
+  return finish('succeeded', viewModel, enriched.places.length);
 }
 
-/** Preview whether a resolved destination would survive dedupe, WITHOUT
- *  claiming it — used to decide whether a Day-to-Day slot needs repair. */
-function claimPreview(r: ResolvedDestination, placeIds: Set<string>, coords: Set<string>): boolean {
-  const pk = r.placeId ? `p:${r.placeId}` : '';
-  const ck = `${r.latitude.toFixed(4)},${r.longitude.toFixed(4)}`;
-  if (pk && placeIds.has(pk)) return false;
-  if (coords.has(ck)) return false;
-  return true;
+/** One Phase 2 turn plus strict validation of whatever came back. */
+async function callAndValidatePhase2(
+  prompt: string,
+  universe: readonly NormalizedCandidate[],
+  deps: PipelineDeps,
+  ledger: CostLedger,
+  label: string,
+) {
+  try {
+    const response = await deps.model.generate(prompt, {
+      // NO grounding: Phase 2 judges the supplied universe only, and the
+      // enormous Phase 1 Maps context must not contaminate its judgment.
+      temperature: 0.2,
+      maxOutputTokens: 8192,
+      thinkingBudget: 2048,
+      signal: deps.signal,
+    });
+    ledger.recordModelTurn(label, response.usage);
+    return validatePhase2Output(response.text, universe);
+  } catch (error) {
+    const message = (error as Error).message ?? 'phase2 failed';
+    return {
+      ok: false as const,
+      issues: [{ code: 'not_json' as const, path: '$', detail: message }],
+      feedback: undefined,
+    };
+  }
+}
+
+/** Map a provider error string onto a truthful unavailable reason. */
+function classifyProviderError(
+  message: string, fallback: IntelUnavailableReason,
+): IntelUnavailableReason {
+  const text = message.toLowerCase();
+  if (text.includes('429') || text.includes('quota') || text.includes('resource_exhausted')) {
+    return 'provider_quota';
+  }
+  if (text.includes('timeout') || text.includes('deadline') || text.includes('abort')) {
+    return 'provider_timeout';
+  }
+  if (text.includes('503') || text.includes('unavailable') || text.includes('overload')) {
+    return 'busy';
+  }
+  return fallback;
 }

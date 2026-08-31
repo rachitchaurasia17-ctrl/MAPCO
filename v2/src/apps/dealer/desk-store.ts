@@ -75,6 +75,18 @@ export const toDeskRelation = (relationship: SellerRelationship | undefined): st
  * real timestamp. Confirming sets the timestamp to now — the label is
  * derived on read, never stored.
  */
+/**
+ * A usable geographic coordinate: both halves present, finite, in range,
+ * and not the 0,0 null island that a partially-filled form produces.
+ */
+function isRealCoordinate(lat: unknown, lng: unknown): boolean {
+  const latitude = Number(lat);
+  const longitude = Number(lng);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return false;
+  if (latitude === 0 && longitude === 0) return false;
+  return latitude >= -90 && latitude <= 90 && longitude >= -180 && longitude <= 180;
+}
+
 export const toCanonicalAvailability = (confirmed: boolean | undefined): SellerAvailability =>
   confirmed === true ? 'available' : 'unconfirmed';
 
@@ -362,18 +374,31 @@ export function toCanonicalProperty(
     ...(form.approval ? { approvalRef: String(form.approval) } : {}),
     ...(form.mapPlacement ? { mapPlacement: form.mapPlacement } : (form.sectorMapId ? { mapPlacement: { mapId: form.sectorMapId, x: (typeof form.sectorPinX === 'number' ? form.sectorPinX / 100 : 0.5), y: (typeof form.sectorPinY === 'number' ? form.sectorPinY / 100 : 0.5) } } : (existing?.mapPlacement ? { mapPlacement: existing.mapPlacement } : {}))),
     ...(form.sectorMapId ? { sectorMapId: String(form.sectorMapId) } : (existing?.sectorMapId ? { sectorMapId: existing.sectorMapId } : {})),
-    ...(form.location ? { location: form.location } : (
-      (form.earth || form.pinSet) && typeof form.pinX === 'number' && typeof form.pinY === 'number'
+    /* ── canonical Earth location ────────────────────────────────────
+       ONE source of truth: a real WGS84 coordinate the dealer placed on
+       the live Google satellite map in step 4 (logic.ts syncEarthMap
+       writes it to pform.lat / pform.lng).
+
+       A pin dropped on a RASTER sector sheet is NOT a geographic
+       coordinate — it is an image placement, and it is carried by
+       mapPlacement above. The previous build interpolated raster pin
+       percentages into a hardcoded lat/lng box and stamped the result
+       'dealer-selected', which produced plausible but wrong coordinates
+       for every property. That fabrication is deliberately gone: if the
+       dealer never placed a real map pin, the property simply has no
+       Earth location and the UI says so. */
+    ...(form.location
+      ? { location: form.location }
+      : (isRealCoordinate(form.lat, form.lng)
         ? {
             location: {
-              latitude: +(30.82 - (form.pinY / 100) * 0.20).toFixed(6),
-              longitude: +(76.65 + (form.pinX / 100) * 0.20).toFixed(6),
+              latitude: +Number(form.lat).toFixed(6),
+              longitude: +Number(form.lng).toFixed(6),
               source: 'dealer-selected' as const,
               updatedAt: new Date().toISOString(),
-            }
+            },
           }
-        : (existing?.location ? { location: existing.location } : {})
-    )),
+        : (existing?.location ? { location: existing.location } : {}))),
   } as Property;
 }
 

@@ -17,7 +17,7 @@ import { hasGoogleConfig, loadGoogleMaps, importMapsLibrary, GOOGLE_MAPS_MAP_ID 
 import { showPlan, teardownPlan, sectorMaps } from './plan-maps';
 import { RoadLayer, globalRoadLayerItems } from './road-layer';
 import { ROAD_SPECS } from './intel/road-network';
-import { fetchPropertyIntelligence, fetchRoute, type IntelClientResult } from './intel/property-intelligence-client';
+import { allPlaces, fetchPropertyIntelligence, type IntelClientResult } from './intel/property-intelligence-client';
 import { decodePolyline } from '../../packages/property-intelligence';
 import type { IntelligencePlace, PropertyIntelligenceViewModel } from '../../packages/property-intelligence';
 
@@ -32,7 +32,10 @@ const PCAPS = ['Site view', 'Approach road', 'Surroundings', 'Front road', 'Wide
 
 type SeeTab = 'photos' | 'earth' | 'sector' | 'plan' | 'street' | 'route';
 type Mode = 'details' | 'intel';
-type IntelMode = 'dayToDay' | 'cityReach';
+/** The two tabs the dealer sees. Local Reach is category-based with a
+   rank-1 default plus switchable alternatives; City Reach is a flat,
+   unranked set of wider-location landmarks. */
+type IntelMode = 'local' | 'city';
 
 interface DetailState {
   see: SeeTab;
@@ -41,6 +44,10 @@ interface DetailState {
   intelMode: IntelMode;
   intelRouteId: string | null;
   savedSeeBeforeRoute: SeeTab | null;
+  /** category label -> candidateId the dealer switched to. Absent means the
+   *  Phase 2 rank-1 default. This is a VIEW preference only; it never
+   *  changes the stored ranking. */
+  intelAlt: Record<string, string>;
 }
 
 /* Property Intelligence is loaded lazily the first time the dealer opens the
@@ -65,11 +72,23 @@ function getIntelPlace(id: string | null): IntelligencePlace | undefined {
   if (!id) return undefined;
   const vm = currentVM();
   if (!vm) return undefined;
-  return vm.dayToDay.find((p) => p.id === id) || vm.cityReach.find((p) => p.id === id);
+  return allPlaces(vm).find((place) => place.id === id);
 }
 
-async function ensureIntelLoaded(p: Property, opts: { refresh?: boolean } = {}): Promise<void> {
-  if (!opts.refresh && intel.propertyId === p.id && intel.status !== 'idle') return;
+/** The card currently shown for a Local category: the dealer's chosen
+ *  alternative, else the Phase 2 rank-1 default. */
+function shownFor(
+  category: { category: string; places: IntelligencePlace[] },
+): IntelligencePlace | undefined {
+  const chosen = state.intelAlt[category.category];
+  return category.places.find((place) => place.candidateId === chosen) ?? category.places[0];
+}
+
+async function ensureIntelLoaded(
+  p: Property,
+  opts: { refresh?: boolean; retry?: boolean } = {},
+): Promise<void> {
+  if (!opts.refresh && !opts.retry && intel.propertyId === p.id && intel.status !== 'idle') return;
   const pos = propertyPos(p);
   // Canonical location ONLY. No coordinate is ever inferred from sector,
   // address, masterplan or map centre — without it, Intelligence is unavailable.
@@ -79,16 +98,32 @@ async function ensureIntelLoaded(p: Property, opts: { refresh?: boolean } = {}):
     return;
   }
   const seq = ++intelSeq;
+  if (intel.propertyId !== p.id) state.intelAlt = {};
   intel = { status: 'loading', vm: intel.propertyId === p.id ? intel.vm : null, propertyId: p.id };
   render();
   try {
     const vm = await fetchPropertyIntelligence(
-      p.id,
-      { latitude: pos.lat, longitude: pos.lng },
-      p.canonicalRecord?.location?.updatedAt,
+      {
+        propertyId: p.id,
+        point: { latitude: pos.lat, longitude: pos.lng },
+        locality: p.sector || '',
+        city: p.city || '',
+        locationUpdatedAt: p.canonicalRecord?.location?.updatedAt,
+      },
       { refresh: opts.refresh },
     );
     if (seq !== intelSeq || current?.id !== p.id) return;
+    if (vm.status === 'generating') {
+      intel = { status: 'loading', vm: null, propertyId: p.id, reason: 'busy' };
+      render();
+      globalThis.setTimeout(() => {
+        if (seq === intelSeq && current?.id === p.id
+            && intel.propertyId === p.id && intel.status === 'loading') {
+          void ensureIntelLoaded(p, { retry: true });
+        }
+      }, 2_000);
+      return;
+    }
     intel = {
       status: vm.status === 'ready' ? 'ready' : 'unavailable',
       vm, propertyId: p.id, reason: vm.reason,
@@ -119,7 +154,7 @@ interface Group { title: string; icon: string; rows: { k: string; v: string }[] 
 
 let host: HTMLElement | null = null;
 let current: Property | null = null;
-const state: DetailState = { see: 'photos', mode: 'details', shot: 0, intelMode: 'dayToDay', intelRouteId: null, savedSeeBeforeRoute: null };
+const state: DetailState = { see: 'photos', mode: 'details', shot: 0, intelMode: 'local', intelRouteId: null, savedSeeBeforeRoute: null, intelAlt: {} };
 
 let panorama: any = null;
 let streetViewService: any = null;
@@ -470,22 +505,28 @@ async function initRouteView(p: Property): Promise<void> {
   await initEarthMap(p); // ensures the persistent map + property pin, mounted here
   if (seq !== routeSeq || !earthMap) return;
 
-  let line: Awaited<ReturnType<typeof fetchRoute>>;
-  try {
-    line = await fetchRoute({ latitude: origin.lat, longitude: origin.lng }, place.routeTarget);
-  } catch {
-    line = { ok: false };
-  }
-  if (seq !== routeSeq || !earthMap) return;
-
   clearRoute();
-  if (!line.ok || !line.encodedPolyline) {
-    setRouteStatus('Route unavailable');
+
+  // Routes are computed ONCE during generation and persist with the card,
+  // so selecting a place costs nothing and works from the cached payload.
+  // A place whose route genuinely failed says so rather than falling back
+  // to the Phase 1 approximate distance.
+  if (place.routeStatus !== 'ok' || !place.encodedPolyline) {
+    setRouteStatus(
+      place.routeStatus === 'not_applicable'
+        ? 'Shown as an area landmark'
+        : 'Route unavailable',
+    );
+    if (typeof place.latitude === 'number' && typeof place.longitude === 'number') {
+      earthMap.setCenter({ lat: place.latitude, lng: place.longitude });
+      earthMap.setZoom(15);
+    }
     return;
   }
   setRouteStatus(null);
 
-  const path = decodePolyline(line.encodedPolyline).map((pt) => ({ lat: pt.latitude, lng: pt.longitude }));
+  const path = decodePolyline(place.encodedPolyline)
+    .map((pt) => ({ lat: pt.latitude, lng: pt.longitude }));
   routePolyline = new google.maps.Polyline({
     path, map: earthMap, strokeColor: '#ffc21e', strokeOpacity: 0.95, strokeWeight: 5, zIndex: 20,
   });
@@ -496,7 +537,7 @@ async function initRouteView(p: Property): Promise<void> {
     el.innerHTML = destPinMarkup(place.name);
     routeDestMarker = new AdvancedMarkerElement({
       map: earthMap,
-      position: { lat: place.latitude, lng: place.longitude },
+      position: { lat: place.latitude ?? origin.lat, lng: place.longitude ?? origin.lng },
       content: el.firstElementChild as HTMLElement,
     });
   } catch { /* destination marker is optional */ }
@@ -504,55 +545,78 @@ async function initRouteView(p: Property): Promise<void> {
   const bounds = new google.maps.LatLngBounds();
   bounds.extend({ lat: origin.lat, lng: origin.lng });
   path.forEach((pt) => bounds.extend(pt));
-  bounds.extend({ lat: place.latitude, lng: place.longitude });
+  if (typeof place.latitude === 'number' && typeof place.longitude === 'number') {
+    bounds.extend({ lat: place.latitude, lng: place.longitude });
+  }
   earthMap.fitBounds(bounds, 90);
 }
 
 function intelRowMarkup(place: IntelligencePlace): string {
   const isSelected = state.intelRouteId === place.id;
-  
-  const coreIcon = place.icon.replace(/ph-(fill|bold|light|thin) /, '');
-  const placePhotos: Record<string, string> = {
-    'ph-tree': 'https://images.unsplash.com/photo-1542273917363-3b1817f69a5d?q=80&w=600',
-    'ph-shopping-cart': 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?q=80&w=600',
-    'ph-barbell': 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=600',
-    'ph-graduation-cap': 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=600',
-    'ph-airplane-tilt': 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=600',
-    'ph-train': 'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?q=80&w=600',
-    'ph-buildings': 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=600',
-    'ph-hospital': 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?q=80&w=600',
-    'ph-bus': 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=600'
-  };
-  const photo = placePhotos[coreIcon] || 'https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=600';
-  
   const border = isSelected ? '1px solid #ffc21e' : '1px solid rgba(255,201,60,.15)';
-  const ring = isSelected ? 'box-shadow: 0 0 0 4px rgba(255,194,30,.2)' : 'box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2)';
-  
-  return `<div data-pd="intel-row" data-id="${place.id}" style="position:relative;height:240px;border-radius:18px;overflow:hidden;cursor:pointer;border:${border};${ring};transition:all .2s;background:#151006;margin-bottom:12px" onmouseover="if('${state.intelRouteId}'!=='${place.id}') this.style.border='1px solid rgba(255,201,60,.4)'" onmouseout="if('${state.intelRouteId}'!=='${place.id}') this.style.border='${border}'">
-      
-      <div style="position:absolute;inset:0;background:url('${photo}') center/cover;opacity:${isSelected ? '1' : '0.8'};transition:opacity .2s"></div>
+  const ring = isSelected
+    ? 'box-shadow: 0 0 0 4px rgba(255,194,30,.2)'
+    : 'box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2)';
+
+  // The photo is MAPCO's stored copy of the REAL place's Google Place Photo.
+  // When Google has none, the card shows an honest tinted panel with the
+  // category icon - never another place's picture.
+  const hasPhoto = Boolean(place.image);
+  const backdrop = hasPhoto
+    ? `<div style="position:absolute;inset:0;background:url('${esc(place.image!)}') center/cover;opacity:${isSelected ? '1' : '0.8'};transition:opacity .2s"></div>`
+    : `<div style="position:absolute;inset:0;background:radial-gradient(120% 110% at 20% 0%,rgba(255,201,60,.20),rgba(21,16,6,.96) 62%)"></div>
+       <div style="position:absolute;inset:0;display:grid;place-items:center;opacity:.20"><i class="${esc(place.icon)}" style="font-size:88px;color:#ffd76b"></i></div>`;
+
+  // Google requires attribution to be displayed with a Place Photo.
+  const attribution = hasPhoto && place.imageAttributions.length
+    ? `<div style="position:absolute;right:10px;bottom:8px;max-width:52%;font-size:9.5px;font-weight:600;color:rgba(255,253,247,.72);text-align:right;text-shadow:0 1px 3px rgba(0,0,0,.9);line-height:1.25;pointer-events:none">${esc(place.imageAttributions.slice(0, 2).join(', '))}</div>`
+    : '';
+
+  // A card only ever shows a distance Google Routes actually returned.
+  const measure = place.routeStatus === 'ok' && place.distanceLabel
+    ? `<div style="display:flex;align-items:center;gap:6px;padding:8px 16px;background:#ffc21e;color:#151006;border-radius:12px;font-size:18px;font-weight:900;box-shadow:0 0 16px rgba(255,194,30,0.6), 0 4px 12px rgba(0,0,0,0.5);letter-spacing:0.02em">
+         <i class="ph-bold ph-car-simple" style="font-size:22px"></i>${esc(place.distanceLabel)}
+       </div>
+       ${place.durationLabel ? `<div style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fffdf7;border-radius:10px;font-size:14px;font-weight:700;border:1px solid rgba(255,255,255,0.15)"><i class="ph-bold ph-clock" style="font-size:16px"></i>${esc(place.durationLabel)}</div>` : ''}`
+    : `<div style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#e2cf9f;border-radius:11px;font-size:13px;font-weight:800;border:1px solid rgba(255,255,255,.14)">
+         <i class="ph-bold ${place.routeStatus === 'not_applicable' ? 'ph-map-trifold' : 'ph-warning-circle'}" style="font-size:15px"></i>${place.routeStatus === 'not_applicable' ? 'Area landmark' : 'Distance unavailable'}
+       </div>`;
+
+  return `<div data-pd="intel-row" data-id="${esc(place.id)}" style="position:relative;height:240px;border-radius:18px;overflow:hidden;cursor:pointer;border:${border};${ring};transition:all .2s;background:#151006;margin-bottom:12px">
+      ${backdrop}
       <div style="position:absolute;inset:0;background:linear-gradient(to right, rgba(15,11,3,0.95) 15%, rgba(15,11,3,0.6) 60%, rgba(15,11,3,0.1) 100%)"></div>
-      
+
       <div style="position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:16px">
-        
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="display:flex;align-items:center;gap:6px;padding:8px 16px;background:#ffc21e;color:#151006;border-radius:12px;font-size:18px;font-weight:900;box-shadow:0 0 16px rgba(255,194,30,0.6), 0 4px 12px rgba(0,0,0,0.5);letter-spacing:0.02em">
-            <i class="ph-bold ph-person-simple-walk" style="font-size:22px"></i>${esc(place.distanceLabel)}
-          </div>
-          ${(place as any).durationLabel ? `<div style="display:flex;align-items:center;gap:4px;padding:6px 12px;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#fffdf7;border-radius:10px;font-size:14px;font-weight:700;border:1px solid rgba(255,255,255,0.15)"><i class="ph-bold ph-clock" style="font-size:16px"></i>${esc((place as any).durationLabel)}</div>` : ''}
-        </div>
-        
+        <div style="display:flex;align-items:center;gap:8px">${measure}</div>
+
         <div style="display:flex;align-items:center;gap:10px;width:90%">
           <div style="flex:none;width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.15);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.3)">
             <i class="${esc(place.icon)}" style="font-size:18px;color:#fffdf7"></i>
           </div>
           <h3 style="margin:0;font-size:17px;font-weight:700;color:#fffdf7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 2px 4px rgba(0,0,0,0.8)">${esc(place.name)}</h3>
         </div>
-        
       </div>
-      
+      ${attribution}
       ${isSelected ? `<div style="position:absolute;inset:0;background:linear-gradient(90deg, rgba(255,201,60,0.2), transparent);pointer-events:none"></div>` : ''}
     </div>`;
+}
+
+/** Rank 2-4 alternatives for one Local category, as compact switch pills.
+ *  Switching changes which place the card shows; it never changes the
+ *  stored Phase 2 ranking. */
+function intelAltMarkup(
+  category: { category: string; places: IntelligencePlace[] },
+  shown: IntelligencePlace,
+): string {
+  if (category.places.length < 2) return '';
+  const pills = category.places.map((place) => {
+    const on = place.candidateId === shown.candidateId;
+    const style = on
+      ? 'background:rgba(255,201,60,.18);color:#ffd76b;border:1px solid rgba(255,201,60,.42)'
+      : 'background:rgba(255,255,255,.04);color:#a99775;border:1px solid rgba(255,255,255,.08)';
+    return `<button data-pd="intel-alt" data-cat="${esc(category.category)}" data-cid="${esc(place.candidateId)}" title="${esc(place.name)}" style="flex:0 1 auto;max-width:48%;display:flex;align-items:center;gap:6px;height:30px;padding:0 11px;border-radius:999px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:all .18s;${style}">${esc(place.name)}</button>`;
+  }).join('');
+  return `<div style="display:flex;flex-wrap:wrap;gap:6px;margin:-4px 0 14px">${pills}</div>`;
 }
 
 function intelInfoMarkup(icon: string, title: string, body: string): string {
@@ -568,7 +632,7 @@ function intelUnavailableMarkup(reason?: string): string {
     case 'location_not_set':
       return intelInfoMarkup('ph-fill ph-map-pin-area', 'Location not set',
         "Set this property's exact location on MAPCO Earth to unlock Property Intelligence.");
-    case 'insufficient_results':
+    case 'insufficient_candidates':
       return intelInfoMarkup('ph-fill ph-binoculars', 'Not enough nearby anchors',
         'This area is sparse — MAPCO could not verify enough genuine destinations to show.');
     case 'server_not_configured':
@@ -576,59 +640,80 @@ function intelUnavailableMarkup(reason?: string): string {
         'Property Intelligence is not configured on this server yet.');
     case 'busy':
       return intelInfoMarkup('ph-fill ph-hourglass-medium', 'MAPCO is busy',
-        'The intelligence service is rate-limited right now. Try Refresh in a moment.');
+        'Another generation is finishing for this property. MAPCO will check again automatically.');
     default:
       return intelInfoMarkup('ph-fill ph-warning-circle', 'Unavailable right now',
         "Property Intelligence couldn't be loaded. Try Refresh in a moment.");
   }
 }
 
-function intelLoadingMarkup(): string {
+function intelLoadingMarkup(reason?: string): string {
   const row = `<div style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:14px;box-shadow:inset 0 -1px 0 rgba(255,201,60,.08)">
       <span style="width:20px;height:20px;border-radius:6px;background:rgba(255,201,60,.14)"></span>
       <span style="flex:1;height:13px;border-radius:6px;background:rgba(255,201,60,.12)"></span>
       <span style="width:52px;height:13px;border-radius:6px;background:rgba(123,224,164,.16)"></span>
     </div>`;
   return `<div style="margin-top:12px;display:flex;flex-direction:column;gap:4px;opacity:.75;animation:pdVeil .3s ease both">${row.repeat(6)}
-    <div style="margin-top:14px;display:flex;align-items:center;justify-content:center;gap:8px;color:#ffd76b;font-size:13px;font-weight:800"><i class="ph-fill ph-spinner-gap" style="font-size:15px"></i>Reading the neighbourhood…</div>
+    <div style="margin-top:14px;display:flex;align-items:center;justify-content:center;gap:8px;color:#ffd76b;font-size:13px;font-weight:800"><i class="ph-fill ph-spinner-gap" style="font-size:15px"></i>${reason === 'busy' ? 'Finishing the current generation…' : 'Reading the neighbourhood…'}</div>
   </div>`;
 }
 
 function intelPanelMarkup(): string {
   const vm = currentVM();
-  const list = state.intelMode === 'dayToDay' ? (vm?.dayToDay ?? []) : (vm?.cityReach ?? []);
-  const loading = intel.status === 'loading';
-  
-  const tabBtn = (on: boolean, icon: string, label: string) => `
-    <button data-pd="intel-mode" data-imode="${label === 'Day to Day' ? 'dayToDay' : 'cityReach'}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;height:34px;border-radius:999px;font-size:13.5px;font-weight:700;transition:all .2s;${
-      on 
-        ? 'background:rgba(255,255,255,.08);color:#fffdf7;box-shadow:0 2px 4px rgba(0,0,0,.15);border:1px solid rgba(255,255,255,.1)' 
+  const loading = intel.status === ('loading' as typeof intel.status);
+  const categories = vm?.local ?? [];
+  const cityPlaces = vm?.city ?? [];
+  const hasContent = state.intelMode === 'local' ? categories.length > 0 : cityPlaces.length > 0;
+
+  const tabBtn = (on: boolean, icon: string, label: string, mode: IntelMode) => `
+    <button data-pd="intel-mode" data-imode="${mode}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;height:34px;border-radius:999px;font-size:13.5px;font-weight:700;transition:all .2s;${
+      on
+        ? 'background:rgba(255,255,255,.08);color:#fffdf7;box-shadow:0 2px 4px rgba(0,0,0,.15);border:1px solid rgba(255,255,255,.1)'
         : 'background:transparent;color:#a99775;border:1px solid transparent'
-    }" onmouseover="if(!${on}) this.style.background='rgba(255,255,255,.04)';this.style.color='#e9dfc9'" onmouseout="if(!${on}) this.style.background='transparent';this.style.color='#a99775'">
+    }">
       <i class="${icon}" style="font-size:16px"></i> ${label}
     </button>`;
 
   const toggle = `
     <div style="display:flex;align-items:center;gap:8px;margin-top:14px">
       <div style="flex:1;display:flex;gap:4px;padding:4px;border-radius:999px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)">
-        ${tabBtn(state.intelMode === 'dayToDay', 'ph-bold ph-calendar-blank', 'Day to Day')}
-        ${tabBtn(state.intelMode === 'cityReach', 'ph-bold ph-map-trifold', 'City Reach')}
+        ${tabBtn(state.intelMode === 'local', 'ph-bold ph-calendar-blank', 'Day to Day', 'local')}
+        ${tabBtn(state.intelMode === 'city', 'ph-bold ph-map-trifold', 'City Reach', 'city')}
       </div>
+      <button data-pd="intel-refresh" ${loading ? 'disabled' : ''} title="Regenerate Property Intelligence" style="flex:none;display:flex;align-items:center;justify-content:center;gap:6px;height:34px;padding:0 12px;border-radius:999px;border:1px solid rgba(255,201,60,.24);background:rgba(255,201,60,.08);color:#ffd76b;font-size:12px;font-weight:800;cursor:${loading ? 'wait' : 'pointer'};opacity:${loading ? '.55' : '1'}"><i class="ph-bold ph-arrows-clockwise"></i>${hasContent ? 'Regenerate' : 'Retry'}</button>
     </div>`;
 
   let body: string;
-  if (intel.status === 'unavailable' && list.length === 0) {
+  if (intel.status === 'unavailable' && !hasContent) {
     body = intelUnavailableMarkup(intel.reason ?? vm?.reason);
-  } else if (intel.status === 'error' && list.length === 0) {
+  } else if (intel.status === 'error' && !hasContent) {
     body = intelUnavailableMarkup('error');
-  } else if (loading && list.length === 0) {
-    body = intelLoadingMarkup();
+  } else if (loading && !hasContent) {
+    body = intelLoadingMarkup(intel.reason);
+  } else if (state.intelMode === 'local') {
+    // Local Reach: one group per Phase 2 category. The rank-1 place is the
+    // default hero; ranks 2-4 are switchable alternatives beneath it.
+    const groups = categories.map((category) => {
+      const shown = shownFor(category);
+      if (!shown) return '';
+      return `<div style="margin-top:16px">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:9px">
+          <i class="${esc(category.icon)}" style="font-size:15px;color:#ffd76b"></i>
+          <span style="font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#c7b189">${esc(category.category)}</span>
+          <span style="flex:1;height:1px;background:rgba(255,201,60,.14)"></span>
+          ${category.places.length > 1 ? `<span style="font-size:11.5px;font-weight:700;color:#8d7d5e">${category.places.length} options</span>` : ''}
+        </div>
+        ${intelRowMarkup(shown)}
+        ${intelAltMarkup(category, shown)}
+      </div>`;
+    }).join('');
+    body = `<div style="${loading ? 'opacity:.55' : ''}">${groups}</div>`;
   } else {
-    body = `<div style="margin-top:12px;display:flex;flex-direction:column;gap:4px;${loading ? 'opacity:.55' : ''}">${list.map(intelRowMarkup).join('')}</div>`;
+    // City Reach: a flat, unranked set. Every selected landmark is shown.
+    body = `<div style="margin-top:12px;display:flex;flex-direction:column;gap:4px;${loading ? 'opacity:.55' : ''}">${cityPlaces.map(intelRowMarkup).join('')}</div>`;
   }
   return toggle + body;
 }
-
 function render(): void {
   if (!current || !host) return;
   const p = current;
@@ -742,6 +827,21 @@ function render(): void {
   host.querySelectorAll<HTMLElement>('[data-pd="intel-row"]').forEach((el) =>
     el.addEventListener('click', () => {
       setIntelRoute(el.dataset.id as string);
+      render();
+    }));
+  host.querySelectorAll<HTMLElement>('[data-pd="intel-alt"]').forEach((el) =>
+    el.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const category = el.dataset.cat;
+      const candidateId = el.dataset.cid;
+      if (!category || !candidateId) return;
+      // A view preference only. The stored Phase 2 ranking is untouched.
+      state.intelAlt = { ...state.intelAlt, [category]: candidateId };
+      // Switching the shown place must switch the route with it.
+      const vm = currentVM();
+      const group = vm?.local.find((entry) => entry.category === category);
+      const next = group?.places.find((place) => place.candidateId === candidateId);
+      if (next) setIntelRoute(next.id);
       render();
     }));
   host.querySelector('[data-pd="intel-refresh"]')?.addEventListener('click', () => {
@@ -872,18 +972,23 @@ function onKey(event: KeyboardEvent): void {
 }
 
 /** Open the detail panel for a property. */
-export function openPropertyDetail(property: Property): void {
+export function openPropertyDetail(
+  property: Property,
+  opts: { mode?: 'details' | 'intel' } = {},
+): void {
   current = property;
   state.see = 'photos';
-  state.mode = 'details';
+  state.mode = opts.mode === 'intel' ? 'intel' : 'details';
   state.shot = 0;
-  state.intelMode = 'dayToDay';
+  state.intelMode = 'local';
   state.intelRouteId = null;
   state.savedSeeBeforeRoute = null;
+  state.intelAlt = {};
   intel = { status: 'idle', vm: null, propertyId: null };
   ensureHost();
   window.addEventListener('keydown', onKey);
   render();
+  if (state.mode === 'intel') void ensureIntelLoaded(property);
 }
 
 /** Close and tear down the panel. */

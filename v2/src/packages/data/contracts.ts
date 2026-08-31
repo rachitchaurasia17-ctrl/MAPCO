@@ -525,6 +525,16 @@ export interface ClientSafeProperty {
   readonly masterplanId?: string;
   readonly sectorMapId?: string;
   readonly placement?: { readonly mapId: string; readonly x: number; readonly y: number };
+  /**
+   * Buyer-safe Property Intelligence, attached server-side by
+   * resolve-client-link. It has already passed through
+   * toBuyerSafeIntelligence, so with anything other than an exact
+   * location it carries no origin, no coordinates, no polylines and no
+   * distances — exact distances to several known places would
+   * trilaterate the property. Absent when the property has no generated
+   * intelligence.
+   */
+  readonly intelligence?: import('../property-intelligence').PropertyIntelligenceViewModel;
 }
 
 /** Token-scoped, client-visible map metadata. No overlays or dealer catalog rows. */

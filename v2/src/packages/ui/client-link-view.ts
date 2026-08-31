@@ -141,6 +141,39 @@ export function renderClientLinkView(
       <div style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#9d8bc7;margin-top:24px">Why this one</div>
       <div style="display:flex;flex-direction:column;gap:12px;margin-top:13px">${p.landmarks.map((lm) => `<div style="display:flex;align-items:center;gap:11px"><i class="ph-fill ph-check-circle" style="font-size:20px;color:#7be0a4;flex:none"></i><span style="flex:1;min-width:0;font-size:15px;font-weight:600;color:#efe7ff">${esc(lm.name)}${lm.distance ? ` · ${esc(lm.distance)}` : ''}</span></div>`).join('')}</div>` : '';
 
+    /* ── Property Intelligence (buyer-safe) ────────────────────────
+       The payload arrives already reduced by toBuyerSafeIntelligence:
+       with anything other than an exact location there is no origin, no
+       coordinate, no polyline and no distance in it at all. This block
+       therefore renders whatever survived and never asks for more. */
+    const intel = p.intelligence;
+    const intelCategories = intel?.status === 'ready' ? intel.local : [];
+    const intelCity = intel?.status === 'ready' ? intel.city : [];
+
+    const intelRow = (place: { name: string; icon: string; category: string; distanceLabel: string | null; image: string | null }) => `
+      <div style="display:flex;align-items:center;gap:11px">
+        ${place.image
+          ? `<span style="flex:none;width:38px;height:38px;border-radius:11px;background-image:url(&quot;${esc(place.image)}&quot;);background-size:cover;background-position:center"></span>`
+          : `<span style="flex:none;width:38px;height:38px;border-radius:11px;background:rgba(255,255,255,.07);display:grid;place-items:center"><i class="${esc(place.icon)}" style="font-size:17px;color:#c9b6ef"></i></span>`}
+        <span style="flex:1;min-width:0">
+          <span style="display:block;font-size:14.5px;font-weight:700;color:#efe7ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(place.name)}</span>
+          <span style="display:block;font-size:11.5px;font-weight:700;color:#9d8bc7">${esc(place.category)}${place.distanceLabel ? ` · ${esc(place.distanceLabel)}` : ''}</span>
+        </span>
+      </div>`;
+
+    const localHtml = intelCategories.length ? `
+      <div style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#9d8bc7;margin-top:24px">Everyday life here</div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:13px">${intelCategories
+        .map((category) => category.places[0])
+        .filter((place): place is NonNullable<typeof place> => Boolean(place))
+        .map(intelRow).join('')}</div>` : '';
+
+    const cityHtml = intelCity.length ? `
+      <div style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#9d8bc7;margin-top:24px">Around the city</div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:13px">${intelCity.map(intelRow).join('')}</div>` : '';
+
+    const intelHtml = localHtml + cityHtml;
+
     // Prefer saved map IDs. Label matching is only a compatibility path for old
     // snapshots that contain no IDs at all; it never overrides real placement.
     const hasSavedMapIds = Boolean(p.masterplanId || p.sectorMapId || p.placement?.mapId);
@@ -223,7 +256,7 @@ export function renderClientLinkView(
       ${p.loc ? `<div style="display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:700;color:#c9b6ef"><i class="ph-fill ph-map-pin" style="font-size:17px;color:#ffc93c"></i>${esc(p.loc)}</div>` : ''}
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px">${factsHtml}</div>
       <div style="display:flex;align-items:center;gap:11px;background:linear-gradient(135deg,#ffc93c,#f4881f);border-radius:16px;padding:15px 18px;margin-top:16px"><i class="ph-fill ph-tag" style="font-size:21px;color:#3a2410"></i><span style="font-size:20px;font-weight:800;color:#241d0c">${priceLabel}</span></div>
-      ${voiceHtml}${whyHtml}${mapsHtml}${moreHtml}
+      ${voiceHtml}${whyHtml}${intelHtml}${mapsHtml}${moreHtml}
       <div style="display:flex;flex-direction:column;gap:10px;margin-top:24px">
         ${callHtml}
         <a data-client-event="whatsapp_clicked" href="${esc(waHref('Hi ' + dealer + ', I am interested in ' + p.area))}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:9px;height:52px;border-radius:15px;background:#0e3b28;color:#7be0a4;font-size:15px;font-weight:800;text-decoration:none;border:1px solid #1c6b47"><i class="ph-fill ph-whatsapp-logo" style="font-size:19px"></i>WhatsApp</a>

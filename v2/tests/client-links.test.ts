@@ -56,6 +56,26 @@ const preciseSnapshot = {
   ],
 };
 
+const intelligenceSnapshot = {
+  status: 'ready', generatedAt: '2026-08-31T00:00:00.000Z',
+  schemaVersion: 3, pipelineVersion: 'pi-v3', provider: 'vertex-gemini', model: 'gemini',
+  origin: { latitude: 30.681991, longitude: 76.702441 },
+  local: [{
+    category: 'Hospitals', icon: 'ph-fill ph-first-aid-kit',
+    places: [{
+      id: 'L001', candidateId: 'L001', name: 'Sohana Hospital', category: 'Hospitals',
+      rank: 1, placeId: 'place-1', sameSector: false,
+      latitude: 30.69, longitude: 76.70, address: 'Mohali',
+      distanceMeters: 1900, distanceLabel: '1.9 km',
+      durationSeconds: 420, durationLabel: '7 min', travelMode: 'DRIVE',
+      encodedPolyline: 'private-origin-polyline', routeTarget: { placeId: 'place-1' },
+      routeStatus: 'ok', image: 'https://img.example/hospital.jpg',
+      imageSource: 'GOOGLE_PLACE_PHOTO', imageAttributions: [],
+    }],
+  }],
+  city: [],
+};
+
 describe('token-scoped client-link projection', () => {
   it('carries two properties, custom prices, safe map IDs and signed audio', () => {
     const state = snapshotToState(preciseSnapshot);
@@ -80,6 +100,37 @@ describe('token-scoped client-link projection', () => {
     expect(state.payload.maps).toBeUndefined();
     expect(state.payload.voiceNote).toBeUndefined();
     expect(state.payload.properties.every((p) => !p.placement && !p.masterplanId && !p.sectorMapId)).toBe(true);
+  });
+
+  it('carries buyer-safe intelligence through the Supabase snapshot adapter', () => {
+    const state = snapshotToState({
+      ...preciseSnapshot,
+      visibility: { price: 'hidden', location: 'area' },
+      properties: preciseSnapshot.properties.map((property, index) =>
+        index === 0 ? { ...property, intelligence: intelligenceSnapshot } : property),
+    });
+    expect(state.kind).toBe('valid');
+    if (state.kind !== 'valid') return;
+    const intelligence = state.payload.properties[0]!.intelligence;
+    expect(intelligence?.buyerSafe).toBe(true);
+    expect(intelligence?.origin).toBeNull();
+    expect(intelligence?.local[0]!.places[0]!.distanceMeters).toBeNull();
+    expect(intelligence?.local[0]!.places[0]!.encodedPolyline).toBeNull();
+    expect(intelligence?.local[0]!.places[0]!.latitude).toBeNull();
+  });
+
+  it('preserves route geometry only when the dealer shares exact location', () => {
+    const state = snapshotToState({
+      ...preciseSnapshot,
+      properties: preciseSnapshot.properties.map((property, index) =>
+        index === 0 ? { ...property, intelligence: intelligenceSnapshot } : property),
+    });
+    expect(state.kind).toBe('valid');
+    if (state.kind !== 'valid') return;
+    const intelligence = state.payload.properties[0]!.intelligence;
+    expect(intelligence?.origin).toEqual(intelligenceSnapshot.origin);
+    expect(intelligence?.local[0]!.places[0]!.distanceMeters).toBe(1900);
+    expect(intelligence?.local[0]!.places[0]!.encodedPolyline).toBe('private-origin-polyline');
   });
 });
 

@@ -1,94 +1,115 @@
 /* ═══════════════════════════════════════════════════════════════
    MAPCO — Property Intelligence · browser client
    ---------------------------------------------------------------
-   Calls the MAPCO-owned server (never a provider directly, never with
-   a secret in the browser):
+   Calls the MAPCO-owned server (never a provider directly, never with a
+   secret in the browser):
      • dev  → the Vite dev middleware at /api/property-intelligence
-     • prod → the Supabase Edge Function functions/v1/property-intelligence
+     • prod → the Supabase Edge Function
+              functions/v1/property-intelligence
+
    The session JWT is forwarded so the server derives the dealer under
-   the caller's own identity (dealer id is never sent in the body).
+   the caller's own identity. The dealer id is NEVER sent in the body,
+   and neither is the coordinate in production — the Edge Function reads
+   the canonical location from the database, so a caller cannot ask for
+   intelligence about a location they do not own.
+
+   Routes are computed server-side during generation and arrive already
+   attached to each card, so clicking a place costs nothing and works
+   offline from the cached payload.
    ═══════════════════════════════════════════════════════════════ */
 import { getSupabase } from '../../../packages/data/supabase/client';
-import type { PropertyIntelligenceViewModel, GeoPoint, RouteTarget } from '../../../packages/property-intelligence';
+import type {
+  GeoPoint, PropertyIntelligenceViewModel,
+} from '../../../packages/property-intelligence';
 
 export interface IntelClientResult extends PropertyIntelligenceViewModel {
+  /** 'hit' | 'miss' | 'busy' — diagnostic only. */
   cache?: string;
-  costMicroUsd?: number;
-}
-
-export interface RouteResult {
-  ok: boolean;
-  encodedPolyline?: string;
-  distanceMeters?: number;
-  durationSeconds?: number;
-  reason?: string;
+  /** Estimated INR for this generation. Absent on a cache hit. */
+  costInr?: number;
 }
 
 const DEV = Boolean((import.meta as { env?: Record<string, unknown> }).env?.DEV);
-const SUPABASE_URL = String((import.meta as { env?: Record<string, string> }).env?.VITE_SUPABASE_URL ?? '').replace(/\/$/, '');
-const ANON = String((import.meta as { env?: Record<string, string> }).env?.VITE_SUPABASE_ANON_KEY ?? '');
+const SUPABASE_URL = String(
+  (import.meta as { env?: Record<string, string> }).env?.VITE_SUPABASE_URL ?? '',
+).replace(/\/$/, '');
+const ANON = String(
+  (import.meta as { env?: Record<string, string> }).env?.VITE_SUPABASE_ANON_KEY ?? '',
+);
 
-const INTEL_URL = DEV ? '/api/property-intelligence' : `${SUPABASE_URL}/functions/v1/property-intelligence`;
-const ROUTE_URL = DEV ? '/api/property-intelligence/route' : `${SUPABASE_URL}/functions/v1/property-intelligence`;
+const INTEL_URL = DEV
+  ? '/api/property-intelligence'
+  : `${SUPABASE_URL}/functions/v1/property-intelligence`;
 
 async function headers(): Promise<Record<string, string>> {
-  const h: Record<string, string> = { 'content-type': 'application/json' };
+  const out: Record<string, string> = { 'content-type': 'application/json' };
   try {
-    const sb = await getSupabase();
-    const token = sb ? (await sb.auth.getSession()).data.session?.access_token : undefined;
-    if (token) h.Authorization = `Bearer ${token}`;
-    if (!DEV && ANON) h.apikey = ANON;
+    const supabase = await getSupabase();
+    const token = supabase
+      ? (await supabase.auth.getSession()).data.session?.access_token
+      : undefined;
+    if (token) out.Authorization = `Bearer ${token}`;
+    if (!DEV && ANON) out.apikey = ANON;
   } catch { /* unauthenticated dev is fine */ }
-  return h;
+  return out;
+}
+
+export function unavailableIntelligence(
+  reason: PropertyIntelligenceViewModel['reason'],
+): IntelClientResult {
+  return {
+    status: 'unavailable',
+    reason,
+    generatedAt: new Date().toISOString(),
+    schemaVersion: 0,
+    pipelineVersion: '',
+    provider: '',
+    model: '',
+    origin: null,
+    local: [],
+    city: [],
+  };
+}
+
+export interface FetchIntelligenceInput {
+  propertyId: string;
+  /** Dev only: the middleware has no database to read the location from. */
+  point: GeoPoint;
+  locality?: string;
+  city?: string;
+  locationUpdatedAt?: string;
 }
 
 export async function fetchPropertyIntelligence(
-  propertyId: string,
-  point: GeoPoint,
-  locationUpdatedAt?: string,
+  input: FetchIntelligenceInput,
   opts: { refresh?: boolean; signal?: AbortSignal } = {},
 ): Promise<IntelClientResult> {
-  const res = await fetch(INTEL_URL, {
-    method: 'POST',
-    headers: await headers(),
-    body: JSON.stringify({
-      propertyId,
-      latitude: point.latitude,
-      longitude: point.longitude,
-      locationUpdatedAt,
-      refresh: opts.refresh === true,
-      ...(DEV ? {} : { intent: 'intelligence' }),
-    }),
-    signal: opts.signal,
-  });
-  if (!res.ok) return unavailable('server_error');
-  return await res.json() as IntelClientResult;
+  try {
+    const response = await fetch(INTEL_URL, {
+      method: 'POST',
+      headers: await headers(),
+      body: JSON.stringify({
+        propertyId: input.propertyId,
+        refresh: opts.refresh === true,
+        // In production the server ignores these and uses the canonical
+        // record; the dev middleware has no database and needs them.
+        latitude: input.point.latitude,
+        longitude: input.point.longitude,
+        locality: input.locality ?? '',
+        city: input.city ?? '',
+        locationUpdatedAt: input.locationUpdatedAt,
+      }),
+      signal: opts.signal,
+    });
+    if (!response.ok) return unavailableIntelligence('error');
+    return await response.json() as IntelClientResult;
+  } catch (error) {
+    if ((error as Error)?.name === 'AbortError') throw error;
+    return unavailableIntelligence('error');
+  }
 }
 
-export async function fetchRoute(
-  origin: GeoPoint,
-  target: RouteTarget,
-  opts: { signal?: AbortSignal } = {},
-): Promise<RouteResult> {
-  const res = await fetch(ROUTE_URL, {
-    method: 'POST',
-    headers: await headers(),
-    body: JSON.stringify({
-      ...(DEV ? {} : { intent: 'route' }),
-      originLat: origin.latitude,
-      originLng: origin.longitude,
-      target: { placeId: target.placeId, latitude: target.latitude, longitude: target.longitude },
-    }),
-    signal: opts.signal,
-  });
-  if (!res.ok) return { ok: false, reason: 'server_error' };
-  return await res.json() as RouteResult;
-}
-
-function unavailable(reason: string): IntelClientResult {
-  return {
-    status: 'unavailable', reason, generatedAt: new Date().toISOString(),
-    schemaVersion: 0, provider: '', model: '',
-    origin: { latitude: 0, longitude: 0 }, dayToDay: [], cityReach: [],
-  };
+/** Every card in the payload, flattened — used for lookups by card id. */
+export function allPlaces(viewModel: PropertyIntelligenceViewModel) {
+  return [...viewModel.local.flatMap((category) => category.places), ...viewModel.city];
 }

@@ -1,274 +1,519 @@
 /* ═══════════════════════════════════════════════════════════════
    MAPCO — Property Intelligence · domain types (runtime-neutral)
    ---------------------------------------------------------------
-   These types are shared verbatim by three runtimes:
-     • the browser client (finished UI in earth/property-detail.ts),
+   Shared verbatim by three runtimes:
+     • the browser client (Earth property detail, Desk, client link),
      • the Vite dev middleware (local-live server),
      • the Supabase Edge Function (production server).
    Nothing here may import a DOM, Node or Deno API. Only plain data.
+
+   FINALIZED ARCHITECTURE (two AI phases; Phase 3 contains NO AI):
+     Phase 1  Gemini + Google Maps grounding  → high-recall universe
+     Normalize (deterministic MAPCO)          → ids, Places identity,
+                                                exact place-id dedupe,
+                                                sameSector
+     Phase 2  Gemini (fresh session)          → final judgment
+     Validate (strict)                        → trust nothing
+     Phase 3  Places + Photos + Routes        → deterministic only
    ═══════════════════════════════════════════════════════════════ */
 
-/** Schema version of a persisted Property Intelligence result. Bump this
- *  whenever the shape or generation contract changes so stale cache rows
- *  are naturally invalidated. */
-export const PROPERTY_INTELLIGENCE_SCHEMA_VERSION = 1;
+/** Bump when the persisted shape or generation contract changes. Part of the
+ *  cache identity, so a bump naturally regenerates every stored result. */
+export const PROPERTY_INTELLIGENCE_SCHEMA_VERSION = 3;
+
+/** Bump when pipeline BEHAVIOUR changes without the shape changing. */
+export const PROPERTY_INTELLIGENCE_PIPELINE_VERSION = 'pi-3.0.0';
+
+/** The Phase 2 input contract these types build. Matches the finalized
+ *  reference document tests/fixtures/phase2-input-sector78.json. */
+export const PHASE2_INPUT_SCHEMA_VERSION = 'mapco.phase2.input.v1';
 
 export interface GeoPoint {
   latitude: number;
   longitude: number;
 }
 
-export type IntelGroup = 'dayToDay' | 'cityReach';
+/* ── Phase 1: raw discovery ─────────────────────────────────────── */
 
-/** The six fixed Day-to-Day categories, in display order. */
-export type DayToDayCategory =
-  | 'park'
-  | 'grocery'
-  | 'gym'
-  | 'school'
-  | 'healthcare'
-  | 'daily_market';
+/** What Phase 1 is allowed to return for each candidate. */
+export type EntityKind = 'PLACE_ENTITY' | 'GEOGRAPHIC_ENTITY';
 
-export const DAY_TO_DAY_ORDER: DayToDayCategory[] = [
-  'park', 'grocery', 'gym', 'school', 'healthcare', 'daily_market',
-];
+/** Where Phase 1 found a candidate. NOT its final classification — Phase 2
+ *  decides that, and may promote a LOCAL discovery into City or vice versa. */
+export type DiscoveredIn = 'LOCAL' | 'CITY';
 
-/** City Reach destination kinds Gemini may return. No fixed set of PLACES —
- *  only a vocabulary of destination TYPES so the six anchors are location
- *  specific rather than hard-coded. */
-export type CityReachType =
-  | 'mall'
-  | 'road'
-  | 'hospital'
-  | 'airport'
-  | 'stadium'
-  | 'business_district'
-  | 'institution'
-  | 'civic'
-  | 'landmark';
-
-/** Whether a destination routes to a Google Place or to a MAPCO-owned road. */
-export type DestinationKind = 'place' | 'road' | 'curated-landmark';
-
-/** A point the Routes API can route to: a stable Google Place id, or a raw
- *  coordinate (used for MAPCO road access points and grounded fallbacks). */
-export interface RouteTarget {
-  kind: DestinationKind;
-  /** Preferred: stable Google Place id (indefinitely cacheable). */
-  placeId?: string;
-  latitude: number;
-  longitude: number;
-}
-
-/** One row in the finished Property Intelligence UI. The UI renders only
- *  `name`, `icon` and `distanceLabel`; the rest drives real routing. */
-export interface IntelligencePlace {
-  id: string;
-  group: IntelGroup;
-  /** Internal bucket (day-to-day category or city-reach type) — not shown. */
-  destinationType: string;
+/** One parsed row of the Phase 1 pipe-delimited output. Every field is
+ *  exactly what the model said; MAPCO normalizes later, never here. */
+export interface Phase1Candidate {
   name: string;
-  icon: string;
-  distanceMeters: number;
-  distanceLabel: string;
-  durationSeconds: number;
-  durationLabel: string;
-  routeTarget: RouteTarget;
-  /** Provenance — stored, never displayed. */
-  placeId?: string;
-  latitude: number;
-  longitude: number;
-  /** Legacy field kept for the existing UI's category read. */
-  category?: string;
-  /**
-   * The card image. City Reach carries a MAPCO-owned curated asset path
-   * ("/landmarks/…"); Day to Day carries a Google Place Photo resource
-   * resolved through the permitted flow. Null means no photo is
-   * available and the UI must fall back honestly rather than borrowing
-   * another place's image.
-   */
-  image?: string | null;
-  /** Where the image came from, so attribution is never mislabelled. */
-  imageSource?: 'mapco-curated' | 'google-place-photo';
-  /** The travel mode the displayed time was actually computed with. */
-  travelMode?: 'WALK' | 'DRIVE';
+  entityKind: EntityKind;
+  /** Free-text bucket the model chose (e.g. "Supermarket"). Not a MAPCO enum. */
+  entityType: string | null;
+  category: string | null;
+  locality: string | null;
+  rating: number | null;
+  reviewCount: number | null;
+  /** Discovery hint ONLY. Google Routes produces the displayed distance. */
+  approxDistanceKm: number | null;
+  discoveredIn: DiscoveredIn;
 }
 
-export type IntelStatus = 'ready' | 'unavailable';
-
-export interface PropertyIntelligenceViewModel {
-  status: IntelStatus;
-  /** Present when status = 'unavailable'. Machine reason for the truthful
-   *  "unavailable" state — never a fabricated result. */
-  reason?: string;
-  generatedAt: string;
-  schemaVersion: number;
-  provider: string;
-  model: string;
-  origin: GeoPoint;
-  dayToDay: IntelligencePlace[];
-  cityReach: IntelligencePlace[];
+export interface Phase1Result {
+  local: Phase1Candidate[];
+  city: Phase1Candidate[];
+  /** Place ids the model cited in grounding chunks, keyed by normalized name.
+   *  Free identity evidence — saves a paid Places lookup when it matches. */
+  groundedPlaceIds: Record<string, string>;
+  usage: ModelUsage;
+  /** Raw text, retained only for diagnosing a parse failure. */
+  rawText?: string;
 }
 
-/* ── Discovery (Gemini) ─────────────────────────────────────────── */
+/* ── Normalization: Google Places identity ──────────────────────── */
 
-export interface DiscoveryCandidate {
-  group: IntelGroup;
-  /** Day-to-Day only. */
-  category?: DayToDayCategory;
-  /** City Reach only. */
-  destinationType?: CityReachType;
-  /** Exact real place name as it appears in Google Maps. */
-  name: string;
-  reason?: string;
-  /** Place id recovered from grounding chunks, when the model cited it. */
-  groundedPlaceId?: string;
+export type PlacesResolutionStatus =
+  | 'RESOLVED' | 'AMBIGUOUS' | 'UNRESOLVED' | 'NOT_APPLICABLE';
+
+export interface PlacesResolution {
+  provider: 'GOOGLE_PLACES_NEW' | 'GEMINI_GROUNDING' | 'NONE';
+  /** Which field mask was paid for. ID_ONLY is the cheap identity tier. */
+  verificationTier: 'ID_ONLY' | 'GROUNDED' | 'NONE';
+  status: PlacesResolutionStatus;
+  placeId: string | null;
+  /** Populated when several places matched and none was clearly best. */
+  candidatePlaceIds: string[];
+  fieldMask: string[];
+  queryUsed: string | null;
 }
 
-export interface DiscoveryUsage {
-  inputTokens: number;
-  outputTokens: number;
-  /** Google Maps grounding queries billed by this call (best-effort count). */
-  groundingQueries: number;
+export interface MapcoCandidateContext {
+  /** Deterministic: does the candidate locality name the property sector? */
+  sameSector: boolean;
+  /** True when MAPCO global place registry already knows this place id. */
+  seenBefore: boolean;
 }
 
-export interface DiscoveryResult {
-  candidates: DiscoveryCandidate[];
-  usage: DiscoveryUsage;
+/** One normalized candidate — the unit Phase 2 judges. Serialized verbatim
+ *  into the Phase 2 input document. */
+export interface NormalizedCandidate {
+  candidateId: string;
+  discoveredIn: DiscoveredIn[];
+  entityKind: EntityKind;
+  discovery: {
+    name: string;
+    entityType: string | null;
+    category: string | null;
+    locality: string | null;
+    rating: number | null;
+    reviewCount: number | null;
+    approxDistanceKm: number | null;
+  };
+  placesResolution: PlacesResolution;
+  mapcoContext: MapcoCandidateContext;
 }
 
-export interface DiscoverOptions {
-  /** Region/area label to steer the model (e.g. "Tri-City, Punjab, India"). */
-  regionHint?: string;
-  signal?: AbortSignal;
+/** The exact document handed to Phase 2. */
+export interface Phase2Input {
+  schemaVersion: string;
+  property: {
+    propertyId: string;
+    propertyType: string;
+    propertySubtype: string;
+    latitude: number;
+    longitude: number;
+    locality: string;
+    city: string;
+    profile: Record<string, unknown>;
+  };
+  candidateUniverse: NormalizedCandidate[];
+  importantSemantics: Record<string, string>;
 }
 
-export interface PropertyIntelligenceDiscoveryProvider {
-  readonly name: string;
-  readonly model: string;
-  discover(point: GeoPoint, opts?: DiscoverOptions): Promise<DiscoveryResult>;
+/* ── Phase 2: the AI judgment ───────────────────────────────────── */
+
+export interface Phase2LocalPlace {
+  candidateId: string;
+  /** 1 = the default MAPCO displays. 2–4 = switchable alternatives. */
+  rank: number;
 }
 
-/* ── Resolution (Google Places) ─────────────────────────────────── */
-
-export interface ResolvedDestination {
-  kind: DestinationKind;
-  placeId?: string;
-  name: string;
-  latitude: number;
-  longitude: number;
-  primaryType?: string;
+export interface Phase2LocalCategory {
+  category: string;
+  places: Phase2LocalPlace[];
 }
 
-export interface GeoResolver {
-  /** Resolve a free-text place name near a point to a canonical Google Place.
-   *  Returns null when nothing genuine matches (never a guess). */
-  resolvePlace(name: string, near: GeoPoint, opts?: { includedType?: string; signal?: AbortSignal }): Promise<ResolvedDestination | null>;
+export interface Phase2CityPlace {
+  candidateId: string;
+  category: string;
 }
 
-/* ── Routing (Google Routes) ────────────────────────────────────── */
-
-export interface RoutePoint {
-  placeId?: string;
-  latitude?: number;
-  longitude?: number;
+export interface Phase2Output {
+  localCategories: Phase2LocalCategory[];
+  cityPlaces: Phase2CityPlace[];
 }
 
-export interface MatrixElement {
+/** A single, machine-readable reason a Phase 2 payload was rejected. */
+export interface Phase2ValidationIssue {
+  code:
+    | 'not_json' | 'not_object' | 'missing_local' | 'missing_city'
+    | 'unknown_field' | 'bad_category' | 'empty_category'
+    | 'unknown_candidate' | 'bad_rank' | 'duplicate_rank'
+    | 'non_sequential_rank' | 'duplicate_candidate' | 'city_has_rank'
+    | 'too_many_places' | 'no_categories';
+  path: string;
+  detail: string;
+}
+
+export interface Phase2ValidationResult {
   ok: boolean;
-  distanceMeters: number;
-  durationSeconds: number;
+  value?: Phase2Output;
+  issues: Phase2ValidationIssue[];
+  /** Feedback string handed back to the model on the single repair attempt. */
+  feedback?: string;
 }
 
-export interface RouteMatrixClient {
-  computeMatrix(origin: RoutePoint, destinations: RoutePoint[], opts?: { signal?: AbortSignal }): Promise<MatrixElement[]>;
+/* ── Phase 3: deterministic enrichment ──────────────────────────── */
+
+/** Persisted, globally reusable media for one Google Place. Keyed by place
+ *  id, never by property — one download serves every property near it.
+ *  MAPCO holds written Google approval for this persistent storage; see
+ *  docs/google-place-photos-approval.md. */
+export interface PlaceMedia {
+  placeId: string;
+  /** Google photo resource name, e.g. places/X/photos/Y. */
+  googlePhotoName: string | null;
+  source: 'GOOGLE_PLACE_PHOTO';
+  /** Object path inside the MAPCO place-media bucket. */
+  storagePath: string | null;
+  publicUrl: string | null;
+  mimeType: string | null;
+  widthPx: number | null;
+  heightPx: number | null;
+  /** Google requires attribution to be displayed alongside the photo. */
+  attributions: string[];
+  retrievedAt: string | null;
+  status: 'stored' | 'unavailable' | 'pending';
+  /* ── cached place facts ──────────────────────────────────────────
+     Stored alongside the media so a REUSED place costs NOTHING at all.
+     Without these, every reuse would still need a paid Place Details
+     call just to recover the coordinate the route needs. */
+  displayName?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  address?: string | null;
+  primaryType?: string | null;
 }
 
-export interface RouteLine {
+export interface PlaceEnrichment {
+  placeId: string;
+  displayName: string;
+  latitude: number;
+  longitude: number;
+  primaryType: string | null;
+  formattedAddress: string | null;
+  media: PlaceMedia | null;
+}
+
+/** A persisted road route from the property to one destination. */
+export interface RouteResultRecord {
+  destinationKey: string;
   distanceMeters: number;
   durationSeconds: number;
   encodedPolyline: string;
+  travelMode: 'DRIVE' | 'WALK';
+  computedAt: string;
 }
 
-export interface RouteClient {
-  computeRoute(origin: RoutePoint, destination: RoutePoint, opts?: { signal?: AbortSignal }): Promise<RouteLine | null>;
+/* ── The view model the UI renders ──────────────────────────────── */
+
+export type ImageSource = 'google-place-photo' | 'none';
+
+/** A point the Routes API can route to. */
+export interface RouteTarget {
+  kind: 'place' | 'geographic';
+  placeId?: string;
+  latitude: number;
+  longitude: number;
 }
 
-/* ── Road geometry (MAPCO-owned GeoJSON) ────────────────────────── */
+export type RouteStatus = 'ok' | 'unavailable' | 'not_applicable' | 'withheld';
 
-export interface RoadGeometry {
+/** One card in the Property Intelligence UI. */
+export interface IntelligencePlace {
   id: string;
+  /** The normalization candidate id (L001 / C001). Stable across a run. */
+  candidateId: string;
+  group: 'local' | 'city';
+  entityKind: EntityKind;
+  /** Phase 2 category label, shown as the group heading. */
+  category: string;
+  /** Local only: 1 = default, 2–4 = alternatives. Undefined for City. */
+  rank?: number;
   name: string;
-  aliases: string[];
-  /** Ordered path points (lat/lng). */
-  path: GeoPoint[];
+  icon: string;
+  /** Real Google Routes values. Null when routing genuinely failed — MAPCO
+   *  never substitutes the Phase 1 approximate distance here. */
+  distanceMeters: number | null;
+  distanceLabel: string | null;
+  durationSeconds: number | null;
+  durationLabel: string | null;
+  travelMode: 'DRIVE' | 'WALK' | null;
+  /** Encoded road polyline for the map. Null when unavailable or withheld. */
+  encodedPolyline: string | null;
+  routeTarget: RouteTarget | null;
+  routeStatus: RouteStatus;
+  placeId: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  /** MAPCO-stored Google Place Photo URL. Null → honest placeholder. */
+  image: string | null;
+  imageSource: ImageSource;
+  imageAttributions: string[];
+  address: string | null;
+}
+
+export interface LocalCategoryView {
+  category: string;
+  icon: string;
+  /** Ordered by rank. places[0] is always rank 1 — the default. */
+  places: IntelligencePlace[];
+}
+
+export type IntelStatus = 'ready' | 'unavailable' | 'generating';
+
+export type IntelUnavailableReason =
+  | 'location_not_set' | 'no_dealer' | 'forbidden' | 'account_inactive'
+  | 'property_not_found' | 'phase1_failed' | 'phase1_unparseable'
+  | 'phase2_failed' | 'phase2_invalid' | 'insufficient_candidates'
+  | 'server_not_configured' | 'busy' | 'cost_cap_reached'
+  | 'provider_quota' | 'provider_timeout' | 'error';
+
+export interface PropertyIntelligenceViewModel {
+  status: IntelStatus;
+  reason?: IntelUnavailableReason;
+  generatedAt: string;
+  schemaVersion: number;
+  pipelineVersion: string;
+  provider: string;
+  model: string;
+  origin: GeoPoint | null;
+  /** Local Reach — category groups, each with a rank-1 default. */
+  local: LocalCategoryView[];
+  /** City Reach — a flat, unranked set of wider-location landmarks. */
+  city: IntelligencePlace[];
+  /** True when this payload has been reduced for a buyer (no exact origin,
+   *  no polylines, no coordinates). Set by the client-link projection. */
+  buyerSafe?: boolean;
 }
 
 /* ── Usage / cost accounting ────────────────────────────────────── */
 
-export type CacheOutcome = 'hit' | 'miss' | 'refresh' | 'stale_refresh';
-
-export interface RunUsage {
-  provider: string;
-  model: string;
+export interface ModelUsage {
   inputTokens: number;
   outputTokens: number;
+  /** Google Maps grounding queries billed by this call. */
   groundingQueries: number;
-  placesCalls: number;
-  matrixElements: number;
-  routeCalls: number;
-  repairAttempts: number;
-  /**
-   * Places calls attributable to City Reach. The curated library exists to
-   * make this exactly 0 — it is counted separately so a regression that
-   * reintroduces paid City Reach discovery is visible rather than hidden
-   * inside the total.
-   */
-  cityReachPlacesCalls: number;
-  /** Google Place Photo fetches. Day to Day only; City Reach uses our own. */
-  placePhotoCalls: number;
-  costMicroUsd: number;
+}
+
+export type CacheOutcome = 'hit' | 'miss' | 'refresh' | 'stale_refresh';
+
+/** One billable (or cache-avoided) operation. The cost ledger is a list of
+ *  these — nothing is estimated without a recorded unit behind it. */
+export interface CostEvent {
+  provider:
+    | 'google_vertex_gemini' | 'google_places'
+    | 'google_routes' | 'google_maps_grounding';
+  /** Maps to a versioned SKU in cost/pricing.ts. */
+  operation: string;
+  requests: number;
+  inputTokens?: number;
+  outputTokens?: number;
+  /** Billable units for non-token SKUs (calls, elements, photos). */
+  units: number;
+  cacheHit: boolean;
+  /** ESTIMATED from recorded units. Never claimed as billed. */
+  estimatedMicroUsd: number;
+  estimatedInr: number;
+  /** Marginal provider cost avoided because MAPCO reused persisted state. */
+  avoidedMicroUsd: number;
+  avoidedInr: number;
+  detail?: string;
+}
+
+export type GenerationStage =
+  | 'queued' | 'phase1' | 'normalization' | 'phase2'
+  | 'validation' | 'enrichment' | 'complete' | 'failed';
+
+export interface RunUsage {
+  runId: string;
+  provider: string;
+  model: string;
+  pipelineVersion: string;
+  phase1PromptVersion: string;
+  phase2PromptVersion: string;
+  stage: GenerationStage;
+  events: CostEvent[];
+  totalMicroUsd: number;
+  totalInr: number;
+  inrPerUsd: number;
+  pricingVersion: string;
   cacheOutcome: CacheOutcome;
   refreshReason?: string;
   latencyMs: number;
   status: 'succeeded' | 'unavailable' | 'failed';
   error?: string;
+  /** Counts that make cache savings visible. */
+  candidateCount: number;
+  resolvedCount: number;
+  selectedCount: number;
+  photosReused: number;
+  photosFetched: number;
+  routesReused: number;
+  routesComputed: number;
+  repairAttempts: number;
 }
 
-/* ── Pipeline input/deps/result ─────────────────────────────────── */
+/* ── Provider ports (implemented in providers/) ─────────────────── */
+
+export interface ModelResponse {
+  text: string;
+  usage: ModelUsage;
+  /** Recovered from Maps grounding chunks. */
+  groundedPlaces: Array<{ placeId: string; title: string }>;
+}
+
+export interface GenerateOptions {
+  /** Enables the Google Maps grounding tool at the given coordinate. */
+  grounding?: { latitude: number; longitude: number };
+  temperature?: number;
+  maxOutputTokens?: number;
+  thinkingBudget?: number;
+  signal?: AbortSignal;
+}
+
+/** A single-turn text model. Phase 1 and Phase 2 each call this ONCE with a
+ *  fresh request, so Phase 1 grounding context never contaminates Phase 2. */
+export interface TextModelProvider {
+  readonly name: string;
+  readonly model: string;
+  generate(prompt: string, opts?: GenerateOptions): Promise<ModelResponse>;
+}
+
+export interface PlacesIdentityResult {
+  status: PlacesResolutionStatus;
+  placeId: string | null;
+  candidatePlaceIds: string[];
+  fieldMask: string[];
+}
+
+export interface PlaceDetailsResult {
+  displayName: string;
+  latitude: number;
+  longitude: number;
+  primaryType: string | null;
+  formattedAddress: string | null;
+  photoName: string | null;
+  photoAttributions: string[];
+  photoWidthPx: number | null;
+  photoHeightPx: number | null;
+}
+
+export interface PlacesPort {
+  /** Cheap ID_ONLY identity resolution for one candidate name. */
+  resolveIdentity(
+    query: string, near: GeoPoint, opts?: { signal?: AbortSignal },
+  ): Promise<PlacesIdentityResult>;
+  /** Details for a place MAPCO has decided to present. */
+  details(placeId: string, opts?: { signal?: AbortSignal }): Promise<PlaceDetailsResult | null>;
+  /** Download the actual photo bytes for persistent MAPCO storage. */
+  photoBytes(
+    photoName: string, opts?: { maxWidthPx?: number; signal?: AbortSignal },
+  ): Promise<{ bytes: Uint8Array; mimeType: string } | null>;
+}
+
+export interface RoutesPort {
+  computeRoute(
+    origin: GeoPoint,
+    destination: { placeId?: string; latitude: number; longitude: number },
+    opts?: { travelMode?: 'DRIVE' | 'WALK'; signal?: AbortSignal },
+  ): Promise<{ distanceMeters: number; durationSeconds: number; encodedPolyline: string } | null>;
+}
+
+/** Persistent MAPCO state the pipeline reads and writes. Implemented by the
+ *  Edge Function (Supabase) and the dev middleware (filesystem) so the
+ *  pipeline itself stays runtime-neutral and fully testable. */
+export interface IntelligenceStore {
+  /** Global place registry lookup — the reason a photo is downloaded once. */
+  getPlaceMedia(placeIds: string[]): Promise<Map<string, PlaceMedia>>;
+  putPlaceMedia(media: PlaceMedia): Promise<PlaceMedia>;
+  /** Persist photo bytes; returns the stored path and public URL. */
+  storePhoto(
+    placeId: string, bytes: Uint8Array, mimeType: string,
+  ): Promise<{ storagePath: string; publicUrl: string } | null>;
+  /** Route cache keyed by origin key + destination key. */
+  getRoutes(originKey: string, destinationKeys: string[]): Promise<Map<string, RouteResultRecord>>;
+  putRoute(originKey: string, record: RouteResultRecord): Promise<void>;
+}
+
+/* ── Pipeline input / deps / result ─────────────────────────────── */
 
 export interface PipelineInput {
   dealerId: string;
   propertyId: string;
   point: GeoPoint;
+  locality: string;
+  city: string;
+  propertyType?: string;
+  propertySubtype?: string;
+  /** Property sector, used for the deterministic sameSector signal. */
+  propertySector?: string;
   locationUpdatedAt?: string;
-  regionHint?: string;
-  /** Reason a regeneration was requested (audit only). */
   refreshReason?: string;
 }
 
+export interface PipelineLimits {
+  /** Hard ceiling on Places identity resolutions per generation. */
+  maxIdentityResolutions: number;
+  /** Hard ceiling on enriched (details + photo) places per generation. */
+  maxEnrichedPlaces: number;
+  /** Hard ceiling on Routes calls per generation. */
+  maxRouteCalls: number;
+  /** Abort the generation when the running estimate would exceed this. */
+  maxGenerationInr: number;
+}
+
+/** Sized for the finalized architecture: ~50–80 Local + 15–30 City
+ *  candidates resolved, then only the Phase 2 selections enriched. The INR
+ *  ceiling is the product decision (₹40 per generation), overridable per
+ *  dealer and per platform through configuration. */
+export const DEFAULT_LIMITS: PipelineLimits = {
+  maxIdentityResolutions: 140,
+  maxEnrichedPlaces: 70,
+  maxRouteCalls: 70,
+  maxGenerationInr: 40,
+};
+
 export interface PipelineDeps {
-  discovery: PropertyIntelligenceDiscoveryProvider;
-  resolver: GeoResolver;
-  matrix: RouteMatrixClient;
-  roads: RoadGeometry[];
-  /**
-   * MAPCO curated City Reach landmarks. Supplying these replaces Places
-   * discovery for City Reach entirely — zero Places calls, zero Place
-   * Photo calls, and the card photo is our own asset.
-   */
-  landmarks?: readonly import('./landmarks/types.ts').CuratedLandmark[];
-  /** Injected ISO clock (Deno/Node/browser agnostic; keeps the module pure). */
+  model: TextModelProvider;
+  places: PlacesPort;
+  routes: RoutesPort;
+  store: IntelligenceStore;
+  limits?: PipelineLimits;
+  pricing?: import('./cost/pricing.ts').PricingConfig;
   now: () => string;
-  /** Optional deterministic id factory for tests. */
+  /** Deterministic id factory (tests inject a counter). */
   makeId?: (seed: string) => string;
   signal?: AbortSignal;
   log?: (level: 'info' | 'warn' | 'error', event: string, data?: Record<string, unknown>) => void;
 }
 
+/** Everything one generation produced — the UI payload plus everything
+ *  needed to reconstruct it without paying a provider again. */
 export interface PipelineResult {
   viewModel: PropertyIntelligenceViewModel;
   usage: RunUsage;
-  /** sha256 of the discovery inputs — the reuse/cache digest. */
   inputDigest: string;
+  /** Persisted so a regeneration can be diffed and audited. */
+  candidateUniverse: NormalizedCandidate[];
+  phase2Output: Phase2Output | null;
 }

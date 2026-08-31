@@ -31,6 +31,11 @@ import {
 } from '../contracts';
 import type { DealerPredictionSummary, PredictiveActionEvent } from '../../performance';
 import { publishResourceInvalidation } from '../../performance';
+import {
+  toBuyerSafeIntelligence,
+  type LocationVisibility,
+  type PropertyIntelligenceViewModel,
+} from '../../property-intelligence';
 import type {
   Property,
   PropertyLocationInput,
@@ -1449,6 +1454,11 @@ function reasonToState(reason?: string): ClientLinkState {
  *  ClientLinkState. Both return the same snapshot shape. */
 export function snapshotToState(snap: Record<string, unknown>): ClientLinkState {
   const vis = (snap.visibility as { price?: string; location?: string }) ?? {};
+  const intelligenceVisibility: LocationVisibility =
+    vis.location === 'exact' || vis.location === 'approx'
+      || vis.location === 'area' || vis.location === 'hidden'
+      ? vis.location
+      : 'area';
   const priceVisible = vis.price === 'shown';
   const locationVisible = vis.location === 'area' || vis.location === 'exact';
   const precise = vis.location === 'exact';
@@ -1481,6 +1491,15 @@ export function snapshotToState(snap: Record<string, unknown>): ClientLinkState 
       const hasValidPlacement = precise && Boolean(placementMapId)
         && Number.isFinite(placementX) && placementX >= 0 && placementX <= 1
         && Number.isFinite(placementY) && placementY >= 0 && placementY <= 1;
+      const rawIntelligence = p.intelligence;
+      const intelligence = rawIntelligence && typeof rawIntelligence === 'object'
+        && Array.isArray((rawIntelligence as { local?: unknown }).local)
+        && Array.isArray((rawIntelligence as { city?: unknown }).city)
+        ? toBuyerSafeIntelligence(
+          rawIntelligence as PropertyIntelligenceViewModel,
+          intelligenceVisibility,
+        )
+        : undefined;
       return {
         id: String(p.id ?? ''),
         area: String(p.area ?? p.title ?? ''),
@@ -1497,6 +1516,7 @@ export function snapshotToState(snap: Record<string, unknown>): ClientLinkState 
         ...(precise && p.masterplanId ? { masterplanId: String(p.masterplanId) } : {}),
         ...(precise && p.sectorMapId ? { sectorMapId: String(p.sectorMapId) } : {}),
         ...(hasValidPlacement ? { placement: { mapId: placementMapId, x: placementX, y: placementY } } : {}),
+        ...(intelligence ? { intelligence } : {}),
       };
     }),
   };

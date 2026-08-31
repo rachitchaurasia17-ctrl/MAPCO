@@ -28,6 +28,17 @@ export const productRoutes = {
   /** Client Presentation was intentionally consolidated into MAPCO Earth. */
   presentation: (propertyId?: string | null) => withProperty('/app/earth/index.html', propertyId),
   earth: (propertyId?: string | null) => withProperty('/app/earth/index.html', propertyId),
+  /**
+   * MAPCO AI — Property Intelligence for one property. There is ONE
+   * Property Intelligence UI (the Earth property detail); the Desk links
+   * into it rather than growing a second implementation.
+   */
+  propertyIntelligence: (propertyId?: string | null) => {
+    const id = propertyId?.trim();
+    if (!id) return '/app/earth/index.html';
+    const params = new URLSearchParams({ property: id, intel: '1' });
+    return `/app/earth/index.html?${params.toString()}`;
+  },
   privateLink: (propertyId?: string | null) => {
     const base = withProperty('/admin/owner.html', propertyId);
     return `${base}#links`;

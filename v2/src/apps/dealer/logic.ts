@@ -3,6 +3,7 @@ import { DCLogic, Router } from '../../framework/dc';
 import { deskStore } from './desk-store';
 import { MAP_REGISTRY as CANONICAL_SECTOR_MAPS } from '../../packages/maps/sector-map-registry';
 import { loadGoogleMaps, importMapsLibrary, GOOGLE_MAPS_MAP_ID } from '../../packages/maps/google-loader';
+import { productRoutes } from '../../packages/ui/product-routes';
 
 export class Component extends DCLogic {
   state = {
@@ -861,6 +862,17 @@ export class Component extends DCLogic {
     P13: { created: 7, approved: 6, published: 4, scheduled: 2, reels: 3, perf: { reach: 24800, impr: 34600, eng: 1810, clicks: 427 }, assets: [{ kind: 'Reel', date: '15 Aug', plat: 'Instagram', status: 'Published', img: '/assets/mkt-prop-3.webp' }, { kind: 'Post', date: '12 Aug', plat: 'Facebook', status: 'Published', img: '/assets/mkt-prop-4.jpg' }, { kind: 'Reel', date: '20 Aug', plat: 'Instagram', status: 'Scheduled', img: '/assets/mkt-prop-1.jpg' }] },
     P12: { created: 9, approved: 9, published: 7, scheduled: 0, reels: 3, perf: { reach: 31200, impr: 44900, eng: 2260, clicks: 588 }, assets: [{ kind: 'Reel', date: '2 Aug', plat: 'Instagram · Facebook', status: 'Published', img: '/assets/mkt-prop-4.jpg' }, { kind: 'Post', date: '29 Jul', plat: 'Instagram', status: 'Published', img: '/assets/mkt-prop-1.jpg' }, { kind: 'Post', date: '5 Aug', plat: 'Facebook', status: 'Published', img: '/assets/mkt-prop-2.jpg' }] }
   };
+  /**
+   * MAPCO AI — open this property in Property Intelligence.
+   * The Intelligence UI lives in MAPCO Earth (one implementation, one
+   * presentation contract); the Desk navigates into it.
+   */
+  openPropertyIntelligence(id) {
+    const pid = id || this.state.propDetail;
+    if (!pid) return;
+    window.location.assign(productRoutes.propertyIntelligence(pid));
+  }
+
   openEdit(id, step) {
     const pr = this.properties.find(x => x.id === id); if (!pr) return;
     const n = Math.min(6, pr.photoCount || 0); const ps = pr.ps || {};
@@ -1271,8 +1283,11 @@ export class Component extends DCLogic {
       const placesLib = await importMapsLibrary('places');
 
       const pf = this.state.pform || {};
-      const defLat = pf.lat || (typeof pf.pinY === 'number' ? +(30.82 - (pf.pinY / 100) * 0.20).toFixed(6) : 30.7046);
-      const defLng = pf.lng || (typeof pf.pinX === 'number' ? +(76.65 + (pf.pinX / 100) * 0.20).toFixed(6) : 76.7179);
+      // Centre on the dealer's real saved pin when there is one, otherwise on
+      // the Tri-City default. A raster sector pin is NOT a coordinate and is
+      // never used to seed the satellite map.
+      const defLat = Number.isFinite(Number(pf.lat)) && Number(pf.lat) !== 0 ? Number(pf.lat) : 30.7046;
+      const defLng = Number.isFinite(Number(pf.lng)) && Number(pf.lng) !== 0 ? Number(pf.lng) : 76.7179;
       const center = { lat: defLat, lng: defLng };
 
       const MapClass = (mapsLib as any)?.Map || (window as any).google?.maps?.Map;
@@ -3158,6 +3173,8 @@ export class Component extends DCLogic {
         sellerDocs: (ps.docs || []).map(d => ({ label: d, style: 'display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 14px;border-radius:999px;background:#efe8fb;color:#4a2c99;font-size:14.5px;font-weight:800' })),
         hasSellerDocs: (ps.docs || []).length > 0,
         goSeller: () => { if (sl) { deskStore.loadSellerWorkspace(sl.id); this.setState({ sellerView: sl.id }); } },
+      openMapcoAi: () => this.openPropertyIntelligence(pd.id),
+      mapcoAiReady: !!pd.earth,
         addSellerGo: () => this.openEdit(pd.id, 2),
         docs: (pd.docs || []).map((d, i) => ({
           name: d.name, kind: d.kind,
@@ -4134,7 +4151,16 @@ export class Component extends DCLogic {
       pHl, pCustomHls, pHasCustom: pCustomHls.length > 0, pAddHl: () => this.addCustomHl(),
       pSheetList, pNoSheets: pf.city && sheetsFor.length === 0, pHasSheets: sheetsFor.length > 0, pNoCity: !pf.city,
       pEarthOn: !!pf.earth, pEarthOff: !pf.earth, pEarthLine: pEarthLine || 'Fill in the address on step 1 first',
-      pEarthConfirm: () => this.setP({ earth: true, pinSet: true }), pEarthRedo: () => this.setP({ earth: false }),
+      // "Confirm" only means something when a real coordinate was captured
+      // from the satellite map. Without one there is nothing to confirm.
+      pEarthConfirm: () => {
+        const f = this.state.pform || {};
+        const ok = Number.isFinite(Number(f.lat)) && Number.isFinite(Number(f.lng))
+          && !(Number(f.lat) === 0 && Number(f.lng) === 0);
+        if (!ok) { this.setState({ propError: 'Tap the map to place the property pin first.' }); return; }
+        this.setP({ earth: true, pinSet: true });
+      },
+      pEarthRedo: () => this.setP({ earth: false, lat: undefined, lng: undefined, pinSet: false }),
       pMapClick: (e) => this.mapClick(e),
       pPinSet: pf.pinSet !== false, pPinNotSet: pf.pinSet === false,
       pPinStyle: `position:absolute;left:${pf.pinX === undefined ? 50 : pf.pinX}%;top:${pf.pinY === undefined ? 52 : pf.pinY}%;transform:translate(-50%,-100%);display:grid;place-items:center;pointer-events:none;transition:left .12s,top .12s`,

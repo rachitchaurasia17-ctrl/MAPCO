@@ -1,0 +1,109 @@
+I am evaluating a residential property at:
+
+{{LATITUDE}}, {{LONGITUDE}} — {{LOCALITY}}, {{CITY}}.
+
+Use Google Maps grounding explicitly. Do not use ordinary web search.
+
+Build a HIGH-RECALL candidate universe for MAPCO Property Intelligence.
+
+LOCAL:
+
+Deeply explore this exact property location and roughly the surrounding walking 2 km area.
+
+Find real Google Maps places that genuinely matter to someone living here, including:
+
+grocery and daily needs,
+departmental stores,
+local markets,
+fruit/vegetable markets,
+pharmacies,
+doctors,
+clinics,
+hospitals,
+schools,
+parks,
+sports facilities,
+gyms,
+places of worship,
+cafes/restaurants,
+bakeries/sweets,
+salons,
+banks/ATMs,
+fuel stations,
+household services,
+transport,
+and other useful neighbourhood places Maps reveals.
+
+Do not stop after finding one good place in an important category.
+
+For important residential categories such as groceries, markets, healthcare, schools, parks and sports, actively try to find multiple genuine options so MAPCO can later show 2–4 useful alternatives inside each category.
+
+Explore the property's own locality/sector deeply first, then adjoining neighbourhoods/sectors and nearby market/commercial clusters where relevant.
+
+When you find a market or commercial cluster, also explore useful individual places inside and around it.
+
+Aim for roughly 50–80+ genuine LOCAL candidates if Google Maps supports them.
+
+Keep multiple genuine alternatives.
+
+Do not rank or choose winners.
+
+Missing an important real place is worse than returning an extra genuine candidate.
+
+CITY:
+
+Separately explore roughly 1–6 km for major wider-location value drivers.
+
+Look for:
+
+major malls and commercial hubs,
+major hospitals,
+IT parks and employment hubs,
+business/commercial districts,
+universities and research institutions,
+major transport hubs,
+railway stations,
+important infrastructure,
+major roads,
+arterial corridors,
+highways,
+airport-connectivity corridors,
+industrial/business ecosystems,
+institutional districts,
+and major city landmarks that genuinely help explain the property's wider location.
+
+Explicitly look for important roads and connectivity corridors relevant to this property.
+
+Do not stop after only finding obvious malls and hospitals.
+
+Aim for roughly 15–30+ genuine CITY candidates if supported.
+
+Ordinary local businesses should not become City candidates merely because they are farther away.
+
+Every candidate must be a real Google Maps entity or a clearly identifiable real geographic entity surfaced through Maps grounding.
+
+Do not invent, merge or rename places.
+
+For every candidate output only:
+
+Exact Maps Name | Entity Type | Category | Locality | Rating | Review Count | Approx. Proximity
+
+Entity Type must be:
+
+PLACE_ENTITY
+
+or
+
+GEOGRAPHIC_ENTITY
+
+Use UNKNOWN when information is unavailable.
+
+Approximate proximity is only a discovery hint. Google Routes will verify actual distance later.
+
+Output only:
+
+LOCAL CANDIDATE UNIVERSE
+
+CITY CANDIDATE UNIVERSE
+
+Do not rank, summarize or select final places.
