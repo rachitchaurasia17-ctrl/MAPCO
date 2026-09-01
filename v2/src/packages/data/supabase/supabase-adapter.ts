@@ -74,7 +74,9 @@ import {
   propertyLocationValidationError,
 } from '../property-location';
 import { SupabaseAiRepository } from './ai-repository';
-import { canonicalPropertyLifecycle, propertyLifecycle, propertyLifecycleValidationError } from '../property-lifecycle';
+import {
+  canonicalPropertyLifecycle, isHeldProperty, propertyLifecycle, propertyLifecycleValidationError,
+} from '../property-lifecycle';
 import {
   PROPERTY_DOCUMENT_BUCKET,
   propertyDocumentObjectPath,
@@ -456,7 +458,7 @@ class SupaSellers implements SellerRepository {
 
       return ok({
         seller: mapSeller(env.seller as SellerRow),
-        active: pairs.filter((p) => propertyLifecycle(p.property) !== 'sold'),
+        active: pairs.filter((p) => isHeldProperty(p.property)),
         sold: pairs.filter((p) => propertyLifecycle(p.property) === 'sold'),
       });
     } catch (error) { return toErr(error); }

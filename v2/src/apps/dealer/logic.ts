@@ -332,6 +332,18 @@ export class Component extends DCLogic {
      boundary. No property fixture remains, so Supabase mode can only show
      the dealer's real inventory. */
   properties = deskStore.properties;
+  /* Properties the dealer removed without selling. The store keeps these
+     out of `properties` on purpose, so nothing that offers inventory can
+     pick one up; only the Unsold segment reads this array. */
+  unsold = deskStore.unsoldProperties;
+  /* Any record the dealer holds, removed ones included — the property
+     detail sheet has to open an Unsold property to prove its data is
+     still there. */
+  propertyById(id) {
+    return this.properties.find(pr => pr.id === id)
+      || this.unsold.find(pr => pr.id === id)
+      || null;
+  }
   today = { sessions: 3, areas: 9, topArea: 'New Chandigarh' };
   /* Specifications used to be SYNTHESISED here at mount — a whole spec
      sheet invented per property from SEEDDET + dimsFromSize, so the rich
@@ -874,7 +886,7 @@ export class Component extends DCLogic {
   }
 
   openEdit(id, step) {
-    const pr = this.properties.find(x => x.id === id); if (!pr) return;
+    const pr = this.propertyById(id); if (!pr) return;
     const n = Math.min(6, pr.photoCount || 0); const ps = pr.ps || {};
     this.setState({
       addPlotOpen: true, pstep: step || 1, pEditId: id, cardMenu: null, propDetail: null, pSaved: false, sellerAdd: false, sellerQ: '', docName: '', pform: {
@@ -1604,19 +1616,26 @@ export class Component extends DCLogic {
     const when = Number.isNaN(parsed) ? new Date() : new Date(parsed);
     return when.toISOString().slice(0, 10);
   }
-  /* Delete removes the canonical record. It is refused once the property
-     has sold, because the completed deal, the buyer's purchase history and
-     the seller's sold history all reference it — those must not be
-     orphaned. Take a live property Off Market instead of deleting it. */
+  /* Remove a property the dealer never sold. Nothing is destroyed: the
+     record moves to the Unsold lifecycle with its whole payload intact and
+     comes back with Restore. It is still refused once the property has
+     sold, because the completed deal, the buyer's purchase history and the
+     seller's sold history all reference it. */
   async deletePlot(id) {
-    const pr = this.properties.find(x => x.id === id);
+    const pr = this.propertyById(id);
     if (pr && pr.status === 'sold') {
-      this.setState({ delPlot: false, propError: 'A sold property keeps its deal and buyer history. Take it off the market instead of deleting it.' });
+      this.setState({ delPlot: false, propError: 'A sold property keeps its deal and buyer history. Take it off the market instead of removing it.' });
       return;
     }
     const result = await deskStore.deleteProperty(id);
     if (!result) { this.setState({ delPlot: false, propError: deskStore.lastWriteError }); return; }
-    this.setState({ propDetail: null, delPlot: false, propError: '' });
+    this.setState({ propDetail: null, delPlot: false, cardMenu: null, propError: '' });
+  }
+  /* Put an Unsold property back on the list. Same record, same id — the
+     store rewrites its lifecycle, so no duplicate is ever created. */
+  async restoreUnsold(id) {
+    const done = await deskStore.restoreUnsoldProperty(id);
+    this.setState({ cardMenu: null, propDetail: null, propError: done ? '' : deskStore.lastWriteError });
   }
   deleteClient(id) {
     const c = this.clients.find(x => x.id === id); this.clients = this.clients.filter(x => x.id !== id);
@@ -2735,9 +2754,12 @@ export class Component extends DCLogic {
     const linkList = linkFor ? this.properties.filter(pr => pr.status !== 'sold').map(pr => ({ title: pr.type + ' · ' + pr.size, loc: pr.loc, priceFmt: this.inr(pr.price), imgId: 'plotimg-' + pr.id, photoStyle: `width:52px;height:52px;border-radius:11px;flex:none;background-image:url('${this.plotPhoto(pr, 0)}');background-size:cover;background-position:center`, pick: () => this.linkProp(linkFor, pr.id) })) : [];
 
     // Plots
-    const stM = { available: { l: 'Available', c: '#c85a1a', b: '#fbe4d3' }, onhold: { l: 'On hold', c: '#b06f0c', b: '#fbeecb' }, sold: { l: 'Sold', c: '#ffffff', b: '#0a6634' } };
+    const stM = { available: { l: 'Available', c: '#c85a1a', b: '#fbe4d3' }, onhold: { l: 'On hold', c: '#b06f0c', b: '#fbeecb' }, sold: { l: 'Sold', c: '#ffffff', b: '#0a6634' }, removed: { l: 'Removed', c: '#4b4741', b: '#e7e1d7' } };
     const propVM = (pr) => {
-      const mm = stM[pr.status]; const shs = sharesOf(pr.id); const act = shs.filter(x => x.status === 'active').length;
+      const mm = stM[pr.status] || stM.available; const shs = sharesOf(pr.id); const act = shs.filter(x => x.status === 'active').length;
+      /* A removed record is neither sold nor sellable: it must not offer
+         Send, Publish, Mark sold or Take off market. */
+      const removedCard = pr.status === 'removed';
       const menuStyle = 'display:flex;align-items:center;gap:7px;height:40px;padding:0 14px;border-radius:11px;background:#f3eeff;color:#4c463d;font-size:14px;font-weight:800';
       return {
         title: pr.type, size: pr.size, loc: pr.loc, facing: pr.facing, priceFmt: this.inr(pr.price), gap: pr.gap || '', imgId: 'plotimg-' + pr.id,
@@ -2765,14 +2787,20 @@ export class Component extends DCLogic {
         statusLabel: mm.l, statusStyle: `display:inline-flex;padding:5px 12px;border-radius:999px;font-size:12.5px;font-weight:800;background:${mm.b};color:${mm.c}`,
         photoLabel: 'Add ' + pr.type.split(' ')[0].toLowerCase() + ' photo',
         id: pr.id, city: pr.city, locShort: (pr.loc || '').split(',')[0], sizeText: pr.size,
-        showAvail: pr.status !== 'sold',
+        showAvail: pr.status !== 'sold' && !removedCard,
         avail: pr.status === 'available' ? 'Available' : 'Off market',
         availStyle: `display:inline-flex;align-items:center;gap:6px;font-size:13.5px;font-weight:800;padding:6px 12px;border-radius:999px;${pr.status === 'available' ? 'background:#d9f5e3;color:#0a6634' : 'background:#ffe6cf;color:#a3541b'}`,
         hasPhoto: (pr.photoCount || 0) > 0, noPhoto: (pr.photoCount || 0) === 0,
         rdLabel: this.RS[this.readinessOf(pr).state].l, rdIcon: this.RS[this.readinessOf(pr).state].i,
         rdStyle: (() => { const r = this.RS[this.readinessOf(pr).state]; return `display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:800;padding:7px 13px;border-radius:999px;background:${r.b};color:${r.c};box-shadow:inset 0 0 0 1.5px ${r.bd}`; })(),
         edit: () => this.openEdit(pr.id, 1), archive: () => this.archiveProp(pr.id),
-        isSoldCard: pr.status === 'sold', notSoldCard: pr.status !== 'sold',
+        isSoldCard: pr.status === 'sold', notSoldCard: pr.status !== 'sold' && !removedCard,
+        isRemovedCard: removedCard,
+        removedLine: pr.removedOn
+          ? ('Removed on ' + pr.removedOn + ' without a sale')
+          : 'Removed from your list without a sale',
+        restore: () => this.restoreUnsold(pr.id),
+        mnRestore: 'display:flex;align-items:center;justify-content:center;gap:9px;width:100%;height:52px;border-radius:14px;background:#1d7a43;background-image:linear-gradient(140deg,#27a05a,#125c31);color:#eafff2;font-size:16.5px;font-weight:800;margin-top:11px;box-shadow:0 14px 26px -14px rgba(11,111,57,.9)',
         saleFmt: pr.sale ? this.inr(pr.sale.price) : this.inr(pr.price),
         saleLine: pr.sale ? (() => {
           const d = pr.sale.date || '';
@@ -2807,21 +2835,37 @@ export class Component extends DCLogic {
     const tmatch = (pr) => s.fType === 'all' || pr.want === s.fType;
     const pool = this.properties.filter(inCity).filter(qmatch).filter(tmatch);
     const soldView = s.invView === 'sold';
+    /* Unsold is its own segment fed by its own array — never "everything
+       that is not sold". A removed record is not in `this.properties` at
+       all, so On sale cannot show it and Sold cannot claim it. */
+    const unsoldView = s.invView === 'unsold';
+    const allUnsold = this.unsold;
+    const unsoldPool = this.unsold.filter(inCity).filter(qmatch).filter(tmatch);
     const allSold = this.properties.filter(pr => pr.status === 'sold'), allLive = this.properties.filter(pr => pr.status !== 'sold');
     const soldPool = pool.filter(pr => pr.status === 'sold'), livePoolAll = pool.filter(pr => pr.status !== 'sold');
     const stateOf = (pr) => this.readinessOf(pr).state;
     const livePool = s.fState === 'all' ? livePoolAll : livePoolAll.filter(pr => stateOf(pr) === s.fState);
     const soldValue = soldPool.reduce((a, pr) => a + pr.price, 0);
     const soldEarn = Math.round(soldValue * 0.015);
-    const portfolio = soldView ? soldValue : livePoolAll.reduce((a, pr) => a + pr.price, 0);
+    const unsoldValue = unsoldPool.reduce((a, pr) => a + (pr.price || 0), 0);
+    /* A removed record that is still a complete listing goes straight back
+       On Sale; an incomplete one returns as a Draft. Both are restorable —
+       this counts the ones that need no further work first. */
+    const unsoldReady = unsoldPool.filter(pr => stateOf(pr) !== 'draft').length;
+    /* The filter chips count what the open segment actually contains. */
+    const countPool = unsoldView ? this.unsold : this.properties;
+    const portfolio = unsoldView ? unsoldValue : soldView ? soldValue : livePoolAll.reduce((a, pr) => a + pr.price, 0);
     const readyCount = soldView ? soldPool.length : livePoolAll.filter(pr => stateOf(pr) === 'ready').length;
     const liveLinkCount = this.clientLinks.filter(l => l.status === 'active').length + this.shares.filter(x => x.status === 'active').length;
     const needCount = liveLinkCount;
     const opensOf = (pr) => this.clientLinks.filter(l => l.props.includes(pr.id)).reduce((a, l) => a + (l.opens || 0), 0)
       + this.shares.filter(x => x.propId === pr.id && x.opened !== 'not opened yet').length * 2 + (pr.views || 0);
     const qv = s.quickView || 'all';
-    let listPool = soldView ? soldPool.slice() : livePool.slice();
-    if (!soldView) {
+    let listPool = unsoldView ? unsoldPool.slice() : soldView ? soldPool.slice() : livePool.slice();
+    if (unsoldView) {
+      if (qv === 'price') listPool.sort((a, b) => (b.price || 0) - (a.price || 0));
+      else listPool.sort((a, b) => String((b.removal || {}).at || '').localeCompare(String((a.removal || {}).at || '')));
+    } else if (!soldView) {
       if (qv === 'hot') listPool = listPool.filter(pr => opensOf(pr) > 0).sort((a, b) => opensOf(b) - opensOf(a));
       else if (qv === 'price') listPool.sort((a, b) => b.price - a.price);
       else if (qv === 'new') listPool = listPool.slice().reverse();
@@ -2872,9 +2916,11 @@ export class Component extends DCLogic {
       }
     };
 
-    const qvDefs = soldView
-      ? [{ k: 'price', l: 'Biggest sales', i: 'ph-fill ph-trend-up' }]
-      : [{ k: 'hot', l: 'Hot right now', i: 'ph-fill ph-fire' }, { k: 'price', l: 'Highest price', i: 'ph-fill ph-trend-up' }, { k: 'new', l: 'Newest', i: 'ph-fill ph-sparkle' }];
+    const qvDefs = unsoldView
+      ? [{ k: 'price', l: 'Highest price', i: 'ph-fill ph-trend-up' }]
+      : soldView
+        ? [{ k: 'price', l: 'Biggest sales', i: 'ph-fill ph-trend-up' }]
+        : [{ k: 'hot', l: 'Hot right now', i: 'ph-fill ph-fire' }, { k: 'price', l: 'Highest price', i: 'ph-fill ph-trend-up' }, { k: 'new', l: 'Newest', i: 'ph-fill ph-sparkle' }];
     const quickViews = qvDefs.map(q => {
       const on = qv === q.k;
       const t = qvTheme[q.k] || qvTheme.price;
@@ -2888,10 +2934,16 @@ export class Component extends DCLogic {
     const plotCityLabel = s.plotCity === 'all' ? 'All cities' : s.plotCity;
     const segBase = 'display:flex;align-items:center;gap:9px;height:52px;padding:0 22px;border-radius:14px;font-size:16.5px;font-weight:800;white-space:nowrap;transition:all .18s';
     const segNum = (on) => `font-size:13.5px;font-weight:800;border-radius:999px;padding:2px 9px;${on ? 'background:rgba(0,0,0,.16)' : 'background:rgba(0,0,0,.07)'}`;
+    /* Every option in the Properties segmented control shares one box:
+       same height, type scale, padding and radius. Only the colour of the
+       active pill changes, so adding a third option cannot drift. */
+    const segSize = ';height:60px;padding:0 26px;font-size:18.5px;border-radius:16px;white-space:nowrap;';
+    const segIdle = (color) => 'background:transparent;color:' + color + ';opacity:.75';
     const fTypeDefs = [{ k: 'all', l: 'All types' }, { k: 'Plot', l: 'Plots' }, { k: 'Flat', l: 'Flats & floors' }, { k: 'Kothi', l: 'Kothis' }, { k: 'Villa', l: 'Villas' }, { k: 'Commercial', l: 'Commercial' }];
     const fStateDefs = [{ k: 'all', l: 'Any state' }, { k: 'ready', l: 'Ready to show' }, { k: 'draft', l: 'Draft' }];
     const chipF = (on) => `display:flex;align-items:center;justify-content:space-between;gap:10px;height:50px;padding:0 16px;border-radius:13px;font-size:15.5px;font-weight:800;text-align:left;transition:all .15s;${on ? 'background:#e8681c;color:#fff' : 'background:#fff;color:#4c463d;box-shadow:inset 0 0 0 1.5px #e8dcc4'}`;
     const invFilterCount = (s.plotCity !== 'all' ? 1 : 0) + (s.fType !== 'all' ? 1 : 0) + (s.fState !== 'all' ? 1 : 0);
+    const propQOnNow = !!s.propQ;
     const invFilterChips = [
       ...(s.plotCity !== 'all' ? [{ label: s.plotCity, clear: () => this.setState({ plotCity: 'all' }) }] : []),
       ...(s.fType !== 'all' ? [{ label: (fTypeDefs.find(x => x.k === s.fType) || {}).l, clear: () => this.setState({ fType: 'all' }) }] : []),
@@ -3081,7 +3133,7 @@ export class Component extends DCLogic {
     const totalOpens = this.clientLinks.reduce((a, l) => a + l.opens, 0);
 
     // Property detail
-    const pd = s.propDetail ? this.properties.find(pr => pr.id === s.propDetail) : null;
+    const pd = s.propDetail ? this.propertyById(s.propDetail) : null;
     const propDetail = pd ? (() => {
       const shot = s.propShot % 6; const sheet = this.PROPMAP[pd.id];
       const inLinks = this.clientLinks.filter(l => l.props.includes(pd.id));
@@ -3143,6 +3195,9 @@ export class Component extends DCLogic {
       const pdTab = s.pdTab || 'gallery';
       const med = s.pdMedia || 'photos';
       const isSold = pd.status === 'sold';
+      /* Opened from the Unsold list: the record is whole and readable, but
+         it is not inventory, so nothing here may sell, share or publish it. */
+      const isRemoved = pd.status === 'removed';
       const PDT = [
         { k: 'gallery', l: 'Gallery', i: 'ph-fill ph-images', c: '#a3541b', b: '#fbeee0', r: '#e8cdae', sub: (pd.photoCount || 0) + ' photos · 2 maps' },
         { k: 'overview', l: 'Overview', i: 'ph-fill ph-info', c: '#9a6a00', b: '#fdf0d4', r: '#f0d493', sub: 'All the details' },
@@ -3239,7 +3294,7 @@ export class Component extends DCLogic {
         priceValStyle: `font-family:'Newsreader',serif;font-weight:600;font-size:30px;line-height:1.05;white-space:nowrap;color:${isSold ? '#4ade80' : '#ffcb45'}`,
         blueStat: 'display:flex;flex-direction:column;gap:3px;padding:14px 16px;border-radius:15px;background:#f3f7fd;box-shadow:inset 0 0 0 1.5px #d3e2f5',
         mktSub: mk ? [mk.created + ' creatives', mk.published + ' published', mk.scheduled + ' scheduled', mk.reels + (mk.reels === 1 ? ' reel' : ' reels')].join(' · ') : 'Nothing made yet',
-        showAvail: pd.status !== 'sold',
+        showAvail: pd.status !== 'sold' && !isRemoved,
         availLabel: pd.status === 'available' ? 'Available' : 'Off market',
         availStyle: `display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:800;padding:8px 14px;border-radius:999px;${pd.status === 'available' ? 'background:#d9f5e3;color:#0a6634' : pd.status === 'onhold' ? 'background:#ffe6cf;color:#a3541b' : 'background:#0b6f39;color:#eafff2'}`,
         mktLine: mk ? [mk.created + ' creatives', mk.published + ' published', mk.scheduled + ' scheduled', mk.reels + (mk.reels === 1 ? ' reel' : ' reels')].join(' · ') : '',
@@ -3277,7 +3332,12 @@ export class Component extends DCLogic {
         engageLine: [shareRows.length === 1 ? 'Shared with 1 customer' : 'Shared with ' + shareRows.length + ' customers',
         activeLinks === 1 ? '1 live link' : activeLinks + ' live links',
         totalOpens === 1 ? '1 real open' : totalOpens + ' real opens'].join(' · '),
-        isSoldView: pd.status === 'sold', notSoldView: pd.status !== 'sold',
+        isSoldView: pd.status === 'sold', notSoldView: pd.status !== 'sold' && !isRemoved,
+        isRemovedView: isRemoved,
+        removedLine: pd.removedOn
+          ? ('Removed on ' + pd.removedOn + ' without a sale. Everything on this property was kept.')
+          : 'Removed from your list without a sale. Everything on this property was kept.',
+        restoreGo: () => this.restoreUnsold(pd.id),
         saleFmt: sale ? this.inr(sale.price) : this.inr(pd.price),
         saleComm: sale && sale.comm ? this.inr(sale.comm) : '', hasComm: !!(sale && sale.comm),
         saleDate: sale ? sale.date : '—', saleBuyer: sale ? sale.buyerName : 'Not recorded',
@@ -3371,7 +3431,7 @@ export class Component extends DCLogic {
         isPublished: pd.published !== false && pd.status !== 'sold', notPublished: pd.published === false || pd.status === 'sold',
         publish: () => this.publish(pd.id), unpublish: () => this.setState({ unpubFor: pd.id, unpubReason: '' }), sold: () => this.setState({ soldFor: pd.id }),
         editPrice: () => this.setState({ priceEdit: pd.id, priceVal: pd.price ? String(pd.price / 1e7) : '' }),
-        delArm: s.delPlot, delIdle: !s.delPlot, arm: () => this.setState({ delPlot: true }), disarm: () => this.setState({ delPlot: false }), doDelete: () => this.deletePlot(pd.id),
+        delArm: s.delPlot && !isRemoved && !isSold, delIdle: !s.delPlot && !isRemoved && !isSold, arm: () => this.setState({ delPlot: true }), disarm: () => this.setState({ delPlot: false }), doDelete: () => this.deletePlot(pd.id),
         share: () => this.setState({ propDetail: null, linkBuild: 'new', lstep: 2, lSearchQ: '', lSearchQ2: '', lform: { ...this.blankL(), plots: [pd.id] } }),
         canSell: pd.status !== 'sold', isSold: pd.status === 'sold', celebrateSold: () => this.celebrateSold(pd.id),
         isBooked: !!this.propBooked(pd.id),
@@ -3579,7 +3639,9 @@ export class Component extends DCLogic {
     return {
       navItems, ownerName: this.ownerName, ownerFirst: this.ownerName.split(' ')[0], ownerInitials: this.ownerInitials, bizName: this.bizName,
       greeting, dateStr, sectionName: sm.name, sectionIcon: sm.icon,
-      invLiveGo: () => this.setState({ invView: 'live' }), invSoldGo: () => this.setState({ invView: 'sold' }),
+      invLiveGo: () => this.setState({ invView: 'live', quickView: 'all' }),
+      invSoldGo: () => this.setState({ invView: 'sold', quickView: 'all' }),
+      invUnsoldGo: () => this.setState({ invView: 'unsold', quickView: 'all' }),
       invMoneyToggle: () => this.setState({ invView: soldView ? 'live' : 'sold' }),
       invMoneyBtnLabel: soldView ? 'Back to on sale' : this.inr(soldEarn) + ' earned',
       invMoneyBtnIcon: soldView ? 'ph-bold ph-arrow-left' : 'ph-fill ph-seal-check',
@@ -3588,21 +3650,32 @@ export class Component extends DCLogic {
         : 'background:#1b2b52;background-image:linear-gradient(160deg,#2f477f,#131f3e);color:#f8c200;box-shadow:0 5px 0 #0a1024,0 16px 30px -14px rgba(17,28,54,.55),inset 0 1px 0 rgba(255,255,255,.24)'),
       invLiveStyle: bigBtn(!soldView, 'gold', soldView), invSoldStyle: bigBtn(soldView, 'money', soldView),
       invLiveMeta: livePool.length + ' on your list', invSoldMeta: soldPool.length + ' sold · ' + this.inr(soldEarn) + ' earned',
-      invStatLabelA: soldView ? 'Value sold' : 'Value on sale',
-      invStatLabelB: soldView ? 'Properties sold' : 'Ready to show',
-      invStatLabelC: soldView ? 'Earnings' : 'Live client links',
-      invStatIconA: soldView ? 'ph-fill ph-bank' : 'ph-fill ph-buildings',
-      invStatIconB: soldView ? 'ph-fill ph-seal-check' : 'ph-fill ph-check-circle',
-      invStatIconC: soldView ? 'ph-fill ph-coins' : 'ph-fill ph-paper-plane-tilt',
-      invLiveCount: allLive.length, invSoldCount: allSold.length,
-      invSegLive: segBase + ';height:60px;padding:0 26px;font-size:18.5px;border-radius:16px;white-space:nowrap;' + (soldView ? 'background:transparent;color:#2f6b4c;opacity:.75' : 'background:#f8a800;color:#241d0c;box-shadow:0 14px 28px -12px rgba(248,168,0,.95),inset 0 0 0 2px #ffce5c;transform:scale(1.02)'),
-      invSegSold: segBase + ';height:60px;padding:0 26px;font-size:18.5px;border-radius:16px;white-space:nowrap;' + (soldView ? 'background:#0a6634;color:#eafff2;box-shadow:0 14px 28px -12px rgba(10,102,52,.95),inset 0 0 0 2px #2fd07f;transform:scale(1.02)' : 'background:transparent;color:#6b6156;opacity:.72'),
-      invSegLiveN: segNum(!soldView), invSegSoldN: segNum(soldView),
-      invSegWrapStyle: 'display:flex;gap:6px;padding:6px;border-radius:20px;' + (soldView ? 'background:#d9f0e4;box-shadow:inset 0 0 0 2px #9fd6ba' : 'background:#fff3d6;box-shadow:inset 0 0 0 1px rgba(120,100,60,.16)'),
-      invAddBtnStyle: 'display:flex;align-items:center;gap:10px;height:60px;padding:0 26px;border-radius:16px;font-size:18px;font-weight:800;white-space:nowrap;white-space:nowrap;transition:transform .12s;' + (soldView ? 'background:#f8a800;color:#241d0c' : 'background:#1d7a43;background-image:linear-gradient(140deg,#27a05a,#125c31);color:#eafff2;box-shadow:0 18px 34px -16px rgba(11,111,57,.9)'),
+      invStatLabelA: unsoldView ? 'Value removed' : soldView ? 'Value sold' : 'Value on sale',
+      invStatLabelB: unsoldView ? 'Properties removed' : soldView ? 'Properties sold' : 'Ready to show',
+      invStatLabelC: unsoldView ? 'Ready to put back' : soldView ? 'Earnings' : 'Live client links',
+      invStatIconA: unsoldView ? 'ph-fill ph-archive-box' : soldView ? 'ph-fill ph-bank' : 'ph-fill ph-buildings',
+      invStatIconB: unsoldView ? 'ph-fill ph-trash-simple' : soldView ? 'ph-fill ph-seal-check' : 'ph-fill ph-check-circle',
+      invStatIconC: unsoldView ? 'ph-fill ph-arrow-counter-clockwise' : soldView ? 'ph-fill ph-coins' : 'ph-fill ph-paper-plane-tilt',
+      invLiveCount: allLive.length, invSoldCount: allSold.length, invUnsoldCount: allUnsold.length,
+      /* One segmented control, three options. Same height, type, padding,
+         radius and active recipe on all three — only the hue changes. */
+      invSegLive: segBase + segSize + (!soldView && !unsoldView
+        ? 'background:#f8a800;color:#241d0c;box-shadow:0 14px 28px -12px rgba(248,168,0,.95),inset 0 0 0 2px #ffce5c;transform:scale(1.02)'
+        : segIdle(soldView ? '#2f6b4c' : '#5b5348')),
+      invSegSold: segBase + segSize + (soldView
+        ? 'background:#0a6634;color:#eafff2;box-shadow:0 14px 28px -12px rgba(10,102,52,.95),inset 0 0 0 2px #2fd07f;transform:scale(1.02)'
+        : segIdle(unsoldView ? '#5b5348' : '#6b6156')),
+      invSegUnsold: segBase + segSize + (unsoldView
+        ? 'background:#4b4741;color:#f6f1e8;box-shadow:0 14px 28px -12px rgba(75,71,65,.95),inset 0 0 0 2px #9a9186;transform:scale(1.02)'
+        : segIdle(soldView ? '#2f6b4c' : '#6b6156')),
+      invSegLiveN: segNum(!soldView && !unsoldView), invSegSoldN: segNum(soldView), invSegUnsoldN: segNum(unsoldView),
+      invSegWrapStyle: 'display:flex;flex-wrap:wrap;gap:6px;padding:6px;border-radius:20px;max-width:100%;' + (unsoldView
+        ? 'background:#ece7de;box-shadow:inset 0 0 0 2px #cbc3b6'
+        : soldView ? 'background:#d9f0e4;box-shadow:inset 0 0 0 2px #9fd6ba' : 'background:#fff3d6;box-shadow:inset 0 0 0 1px rgba(120,100,60,.16)'),
+      invAddBtnStyle: 'display:flex;align-items:center;gap:10px;height:60px;padding:0 26px;border-radius:16px;font-size:18px;font-weight:800;white-space:nowrap;white-space:nowrap;transition:transform .12s;' + (soldView || unsoldView ? 'background:#f8a800;color:#241d0c' : 'background:#1d7a43;background-image:linear-gradient(140deg,#27a05a,#125c31);color:#eafff2;box-shadow:0 18px 34px -16px rgba(11,111,57,.9)'),
       propQ: s.propQ, propQOn: !!s.propQ,
       onPropQ: (e) => this.setState({ propQ: e.target.value }), clearPropQ: () => this.setState({ propQ: '' }),
-      invSearchStyle: 'width:280px;max-width:320px;flex:0 1 280px;display:flex;align-items:center;gap:10px;height:52px;padding:0 16px;border-radius:15px;background:#fffdf7;box-shadow:inset 0 0 0 1.5px ' + (soldView ? '#a9d9bd' : '#e6d6b4') + ',0 4px 12px -8px rgba(40,26,2,.2);',
+      invSearchStyle: 'width:280px;max-width:320px;flex:0 1 280px;display:flex;align-items:center;gap:10px;height:52px;padding:0 16px;border-radius:15px;background:#fffdf7;box-shadow:inset 0 0 0 1.5px ' + (unsoldView ? '#cbc3b6' : soldView ? '#a9d9bd' : '#e6d6b4') + ',0 4px 12px -8px rgba(40,26,2,.2);',
       invSearchInput: 'border:none;outline:none;background:none;width:100%;font-size:16px;font-weight:600;color:#241f1c',
       filtersOpen: s.filtersOpen, toggleFilters: () => this.setState({ filtersOpen: !s.filtersOpen, plotCityOpen: false }),
       invFilterBtn: 'display:flex;align-items:center;gap:8px;height:52px;padding:0 18px;border-radius:15px;font-size:15.5px;font-weight:800;' + (invFilterCount ? 'background:#e8681c;color:#fff;box-shadow:0 8px 18px -6px rgba(232,104,28,.8);border:2px solid #e8681c;' : 'background:#fffdf7;color:#4c463d;border:1.5px solid #e6d6b4;box-shadow:0 3px 8px -4px rgba(40,26,2,.1);'),
@@ -3613,11 +3686,11 @@ export class Component extends DCLogic {
       dealSegWrap: 'display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:18px;background:#fff3d6;box-shadow:inset 0 0 0 1.5px rgba(120,100,60,.16);',
       fCityRows: [{ k: 'all', l: 'All cities' }, ...this.CITIES.map(c => ({ k: c, l: c }))].map(ch => ({
         label: ch.l, go: () => this.setState({ plotCity: ch.k }), style: chipF(s.plotCity === ch.k),
-        count: String(ch.k === 'all' ? this.properties.length : this.properties.filter(pr => pr.city === ch.k).length)
+        count: String(ch.k === 'all' ? countPool.length : countPool.filter(pr => pr.city === ch.k).length)
       })),
       fTypeRows: fTypeDefs.map(fd => ({
         label: fd.l, go: () => this.setState({ fType: fd.k }), style: chipF(s.fType === fd.k),
-        count: String(fd.k === 'all' ? this.properties.length : this.properties.filter(pr => pr.want === fd.k).length)
+        count: String(fd.k === 'all' ? countPool.length : countPool.filter(pr => pr.want === fd.k).length)
       })),
       fStateRows: fStateDefs.map(fd => ({
         label: fd.l, go: () => this.setState({ fState: fd.k }), style: chipF(s.fState === fd.k),
@@ -3626,11 +3699,14 @@ export class Component extends DCLogic {
       clearFilters: () => this.setState({ plotCity: 'all', fType: 'all', fState: 'all' }),
       closeFilters: () => this.setState({ filtersOpen: false }),
       needCountText: needCount === 1 ? '1 property needs attention' : needCount + ' properties need attention',
-      invStatA: soldView ? 'border-radius:24px;padding:26px 30px;color:#78350f;background:#fef3c7;background-image:linear-gradient(135deg,#fffbeb,#fef3c7 60%,#fde68a);box-shadow:0 20px 40px -20px rgba(217,119,6,.45),inset 0 2px 0 rgba(255,255,255,.9);border:2px solid #fcd34d;' : 'border-radius:24px;padding:26px 30px;color:#1c1303;background:#f59e0b;background-image:linear-gradient(135deg,#fbbf24,#f59e0b 60%,#d97706);box-shadow:0 20px 40px -20px rgba(245,158,11,.65),inset 0 2px 0 rgba(255,255,255,.5);border:2px solid #f59e0b;',
-      invStatB: soldView ? 'border-radius:24px;padding:26px 30px;color:#ffffff;background:#059669;background-image:linear-gradient(135deg,#10b981,#059669 60%,#047857);box-shadow:0 20px 40px -20px rgba(5,150,105,.6),inset 0 2px 0 rgba(255,255,255,.3);border:2px solid #059669;' : 'border-radius:24px;padding:26px 30px;color:#9a3412;background:#fff7ed;background-image:linear-gradient(135deg,#fff7ed,#ffedd5 60%,#fed7aa);box-shadow:0 20px 40px -20px rgba(234,88,12,.35),inset 0 2px 0 rgba(255,255,255,.9);border:2px solid #fb923c;',
-      invStatC: soldView ? 'border-radius:24px;padding:26px 30px;color:#ffffff;background:#d97706;background-image:linear-gradient(135deg,#f59e0b,#d97706 60%,#b45309);box-shadow:0 20px 40px -20px rgba(217,119,6,.6),inset 0 2px 0 rgba(255,255,255,.3);border:2px solid #d97706;' : 'border-radius:24px;padding:26px 30px;color:#5b21b6;background:#f5f3ff;background-image:linear-gradient(135deg,#f5f3ff,#ede9fe 60%,#ddd6fe);box-shadow:0 20px 40px -20px rgba(109,40,217,.35),inset 0 2px 0 rgba(255,255,255,.9);border:2px solid #c4b5fd;',
-      invListLabel: soldView ? 'Sold and settled' : 'Your properties',
-      invH1Style: "margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:34px;letter-spacing:-.015em;color:" + (soldView ? '#0a4a26' : '#241f1c'),
+      invStatA: unsoldView ? 'border-radius:24px;padding:26px 30px;color:#3f3a33;background:#f4f0e8;background-image:linear-gradient(135deg,#faf7f1,#f0ebe1 60%,#e4ddd0);box-shadow:0 20px 40px -20px rgba(75,71,65,.35),inset 0 2px 0 rgba(255,255,255,.9);border:2px solid #cbc3b6;' : soldView ? 'border-radius:24px;padding:26px 30px;color:#78350f;background:#fef3c7;background-image:linear-gradient(135deg,#fffbeb,#fef3c7 60%,#fde68a);box-shadow:0 20px 40px -20px rgba(217,119,6,.45),inset 0 2px 0 rgba(255,255,255,.9);border:2px solid #fcd34d;' : 'border-radius:24px;padding:26px 30px;color:#1c1303;background:#f59e0b;background-image:linear-gradient(135deg,#fbbf24,#f59e0b 60%,#d97706);box-shadow:0 20px 40px -20px rgba(245,158,11,.65),inset 0 2px 0 rgba(255,255,255,.5);border:2px solid #f59e0b;',
+      invStatB: unsoldView ? 'border-radius:24px;padding:26px 30px;color:#f6f1e8;background:#4b4741;background-image:linear-gradient(135deg,#6b6459,#4b4741 60%,#332f2a);box-shadow:0 20px 40px -20px rgba(51,47,42,.6),inset 0 2px 0 rgba(255,255,255,.22);border:2px solid #4b4741;' : soldView ? 'border-radius:24px;padding:26px 30px;color:#ffffff;background:#059669;background-image:linear-gradient(135deg,#10b981,#059669 60%,#047857);box-shadow:0 20px 40px -20px rgba(5,150,105,.6),inset 0 2px 0 rgba(255,255,255,.3);border:2px solid #059669;' : 'border-radius:24px;padding:26px 30px;color:#9a3412;background:#fff7ed;background-image:linear-gradient(135deg,#fff7ed,#ffedd5 60%,#fed7aa);box-shadow:0 20px 40px -20px rgba(234,88,12,.35),inset 0 2px 0 rgba(255,255,255,.9);border:2px solid #fb923c;',
+      invStatC: unsoldView ? 'border-radius:24px;padding:26px 30px;color:#0a4a26;background:#eef7f1;background-image:linear-gradient(135deg,#f4fbf7,#e6f4ec 60%,#d6ebe0);box-shadow:0 20px 40px -20px rgba(11,111,57,.35),inset 0 2px 0 rgba(255,255,255,.9);border:2px solid #9fd6ba;' : soldView ? 'border-radius:24px;padding:26px 30px;color:#ffffff;background:#d97706;background-image:linear-gradient(135deg,#f59e0b,#d97706 60%,#b45309);box-shadow:0 20px 40px -20px rgba(217,119,6,.6),inset 0 2px 0 rgba(255,255,255,.3);border:2px solid #d97706;' : 'border-radius:24px;padding:26px 30px;color:#5b21b6;background:#f5f3ff;background-image:linear-gradient(135deg,#f5f3ff,#ede9fe 60%,#ddd6fe);box-shadow:0 20px 40px -20px rgba(109,40,217,.35),inset 0 2px 0 rgba(255,255,255,.9);border:2px solid #c4b5fd;',
+      invListLabel: unsoldView ? 'Removed without a sale' : soldView ? 'Sold and settled' : 'Your properties',
+      invEmptyText: unsoldView
+        ? (invFilterCount || propQOnNow ? 'No removed properties match this search.' : 'Nothing removed. Every property you have is still on your list.')
+        : 'Nothing here yet for this search.',
+      invH1Style: "margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:34px;letter-spacing:-.015em;color:" + (unsoldView ? '#3f3a33' : soldView ? '#0a4a26' : '#241f1c'),
       invSecLabelStyle: 'display:none',
       shellRef: (el) => { this._shell = el; }, asideRef: (el) => { this._aside = el; },
       topBarStyle: 'display:flex;align-items:center;gap:14px;padding:16px 40px;backdrop-filter:blur(8px);position:sticky;top:0;z-index:30;transition:background .45s ease;' + (mny ? 'border-bottom:1px solid rgba(217,154,9,.26);background:rgba(12,21,48,.76)' : 'border-bottom:1px solid #ddd2f5;background:rgba(247,243,234,.86)'),
@@ -4303,7 +4379,12 @@ export class Component extends DCLogic {
       pPriceEcho: (() => { const v = parseFloat(pf.price); return isNaN(v) ? '—' : this.inr(v * 1e7); })(),
       pNextStyle: `display:flex;align-items:center;gap:10px;height:54px;padding:0 24px;border-radius:15px;font-size:17.5px;font-weight:800;${(pstep === 1 ? !!(pf.city && pf.area) : true) ? 'background:#241d0c;color:#f8c200;box-shadow:0 14px 26px -16px rgba(36,29,12,.9)' : 'background:#e6dcc6;color:#a99878;cursor:not-allowed'}`,
       pFinishStyle: 'display:flex;align-items:center;gap:10px;height:54px;padding:0 26px;border-radius:15px;font-size:17.5px;font-weight:800;background:#1d7a43;background-image:linear-gradient(140deg,#27a05a,#125c31);color:#eafff2;box-shadow:0 16px 30px -16px rgba(11,111,57,.95)',
-      plotsValue: m(portfolio), plotsReady: n(readyCount), plotsNeed: soldView ? m(soldEarn) : n(needCount), propsReady, propsNeedWork,
+      plotsValue: m(portfolio),
+      /* Unsold counts removed records, not readiness: A = what they were
+         worth, B = how many, C = how many go straight back On Sale. */
+      plotsReady: n(unsoldView ? unsoldPool.length : readyCount),
+      plotsNeed: unsoldView ? n(unsoldReady) : soldView ? m(soldEarn) : n(needCount),
+      propsReady, propsNeedWork,
       hasReady: propsReady.length > 0, noReady: propsReady.length === 0, hasNeedWork: propsNeedWork.length > 0, plotCityName,
       plotScopeLabel: s.plotCity === 'all' ? '' : ' in ' + s.plotCity,
       plotCityOpen: s.plotCityOpen, togglePlotCity: () => this.setState({ plotCityOpen: !s.plotCityOpen }), plotCityGrid, plotCityLabel,

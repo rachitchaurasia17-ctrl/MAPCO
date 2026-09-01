@@ -229,9 +229,17 @@ export function saleDateLabel(iso: string | undefined): string {
 /** Desk status vocabulary ← canonical lifecycle. */
 function toDeskStatus(lifecycle: PropertyLifecycle): string {
   if (lifecycle === 'sold') return 'sold';
+  if (lifecycle === 'unsold') return 'removed';
   if (lifecycle === 'archived') return 'onhold';
   return 'available';
 }
+
+/**
+ * A removed record never joins the arrays the rest of the Desk reads, so
+ * "removed" is a status the existing screens never have to know about.
+ * It exists only for the Unsold list and the Restore action.
+ */
+export const isRemovedDeskRow = (row: { status?: unknown }): boolean => row.status === 'removed';
 
 /** The Desk's "position" line, derived from the plot advantage flags. */
 function derivePosition(specs: Record<string, unknown>, fallback: string): string {
@@ -282,6 +290,11 @@ export function toDeskProperty(property: Property): Record<string, unknown> {
       },
       dealId: property.sale.dealId,
     } : {}),
+    // A property the dealer removed without selling. The record is whole;
+    // only its place in active inventory changed.
+    removed: lifecycle === 'unsold',
+    removedOn: saleDateLabel(property.removal?.at),
+    removedFrom: property.removal?.from ?? '',
     // Filled in by the seller directory / document loads, not invented here.
     ps: null,
     docs: [],
@@ -722,6 +735,14 @@ export class DeskStore {
 
   /** Mutated in place, for the same reason `sellers` is. */
   readonly properties: Record<string, unknown>[] = [];
+  /**
+   * Properties the dealer removed without selling. Deliberately a SECOND
+   * array rather than a flag inside `properties`: every screen that offers
+   * inventory reads `properties` and asks only "is it sold?", so keeping
+   * removed records out of it means a removal cannot leak into a client
+   * link, the presentation, a deal picker or a stock count.
+   */
+  readonly unsoldProperties: Record<string, unknown>[] = [];
   propertiesStatus: SectionStatus = { state: 'idle' };
 
   /**
@@ -735,15 +756,23 @@ export class DeskStore {
     const result = await adapter.properties.list({ limit: 200 });
     if (!result.ok) {
       this.properties.splice(0, this.properties.length);
+      this.unsoldProperties.splice(0, this.unsoldProperties.length);
       this.propertiesStatus = { state: 'error', error: message(result.error, 'Properties could not be loaded') };
       this.notify();
       return;
     }
     const rows = result.value.items.map(toDeskProperty);
     this.attachSellerRelationships(rows);
-    this.properties.splice(0, this.properties.length, ...rows);
+    this.properties.splice(0, this.properties.length, ...rows.filter((r) => !isRemovedDeskRow(r)));
+    this.unsoldProperties.splice(0, this.unsoldProperties.length, ...rows.filter(isRemovedDeskRow));
     this.propertiesStatus = { state: 'ready' };
     this.notify();
+  }
+
+  /** Any property the dealer holds a record of, removed ones included. */
+  private findRow(id: string): Record<string, unknown> | undefined {
+    return this.properties.find((p) => p.id === id)
+      ?? this.unsoldProperties.find((p) => p.id === id);
   }
 
   /** Invert the seller directory into propertyId → relationship. */
@@ -788,9 +817,7 @@ export class DeskStore {
     options: { id?: string; lifecycle?: PropertyLifecycle } = {},
   ): Promise<PropertyWriteResult> {
     this.lastWriteError = '';
-    const existingRow = options.id
-      ? this.properties.find((p) => p.id === options.id)
-      : undefined;
+    const existingRow = options.id ? this.findRow(options.id) : undefined;
     const existing = existingRow
       ? await this.readCanonical(String(existingRow.id))
       : undefined;
@@ -1037,12 +1064,67 @@ export class DeskStore {
     this.clientWorkspaceStatus = { state: 'idle' };
   }
 
-  /** Remove a property that has not sold. Sold records keep their history. */
+  /**
+   * Remove a property the dealer never sold — the Unsold state.
+   *
+   * This is a lifecycle transition, not a deletion. The whole canonical
+   * record is written back untouched apart from `lifecycle` and the
+   * `removal` stamp, so price, seller relationship, photos, documents,
+   * notes, canonical location, mapPlacement, sector references and every
+   * Property Intelligence result keyed on this id all survive and the
+   * property can be restored. Sold records are refused: their completed
+   * deal and the buyer's purchase history reference them.
+   */
   async deleteProperty(id: string): Promise<boolean> {
     this.lastWriteError = '';
-    const result = await adapter.properties.remove(id);
+    const existing = await this.readCanonical(id);
+    if (!existing) {
+      this.lastWriteError = 'This property is no longer available.';
+      this.notify();
+      return false;
+    }
+    const from = propertyLifecycle(existing);
+    if (from === 'sold') {
+      this.lastWriteError = 'A sold property keeps its deal and buyer history. It cannot be removed.';
+      this.notify();
+      return false;
+    }
+    if (from === 'unsold') { await this.loadProperties(); return true; }
+    const result = await adapter.properties.save({
+      ...existing,
+      lifecycle: 'unsold',
+      removal: { at: new Date().toISOString(), from },
+    });
     if (!result.ok) {
-      this.lastWriteError = message(result.error, 'Could not delete this property');
+      this.lastWriteError = message(result.error, 'Could not remove this property');
+      this.notify();
+      return false;
+    }
+    await this.loadProperties();
+    return true;
+  }
+
+  /**
+   * Put a removed property back on the dealer's list. The same record is
+   * written back — never a new one — so nothing that referenced its id
+   * needs to change. An incomplete record returns as a Draft rather than
+   * being refused: it is the dealer's property either way, and a Draft is
+   * still on the list.
+   */
+  async restoreUnsoldProperty(id: string): Promise<boolean> {
+    this.lastWriteError = '';
+    const existing = await this.readCanonical(id);
+    if (!existing) {
+      this.lastWriteError = 'This property is no longer available.';
+      this.notify();
+      return false;
+    }
+    if (propertyLifecycle(existing) !== 'unsold') { await this.loadProperties(); return true; }
+    const { removal: _removed, ...record } = existing;
+    const lifecycle: PropertyLifecycle = missingForOnSale(record).length ? 'draft' : 'on-sale';
+    const result = await adapter.properties.save({ ...record, lifecycle });
+    if (!result.ok) {
+      this.lastWriteError = message(result.error, 'Could not put this property back on your list');
       this.notify();
       return false;
     }

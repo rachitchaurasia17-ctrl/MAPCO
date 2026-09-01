@@ -30,7 +30,16 @@ export type Facing = 'East' | 'West' | 'North' | 'South' | 'North-East' | 'North
 export type LinkStatus = 'active' | 'revoked' | 'expired';
 export type PriceVisibility = 'hidden' | 'shown';
 export type LocationVisibility = 'area' | 'exact' | 'hidden';
-export type PropertyLifecycle = 'draft' | 'on-sale' | 'sold' | 'archived';
+/**
+ * The one canonical property state.
+ *   draft    — incomplete; not listable yet
+ *   on-sale  — active inventory the dealer is selling
+ *   archived — Off market / On hold: still the dealer's, only paused
+ *   sold     — a completed sale is attached
+ *   unsold   — the dealer removed it WITHOUT selling it. Recoverable: the
+ *              whole record survives, it only leaves active inventory.
+ */
+export type PropertyLifecycle = 'draft' | 'on-sale' | 'sold' | 'archived' | 'unsold';
 
 export type SellerType = 'individual' | 'builder' | 'broker' | 'company';
 export type SellerRelationship = 'owner' | 'co-owner' | 'builder' | 'authorized-seller';
@@ -99,6 +108,13 @@ export interface Property {
   lifecycle?: PropertyLifecycle;
   /** Immutable completed-sale association written by the atomic sale command. */
   sale?: { finalPrice: number; soldAt: string; buyerId: string; dealId: string };
+  /**
+   * When the record left active inventory without selling, and the state
+   * it left from. Written when lifecycle becomes 'unsold', cleared on
+   * Restore. Nothing else about the property is touched, so Restore is a
+   * state change and never a re-creation.
+   */
+  removal?: { at: string; from: PropertyLifecycle };
   views: number;
   masterplanId?: string;
   sectorMapId?: string;

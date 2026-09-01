@@ -49,7 +49,9 @@ import {
   propertyLocationPoint,
 } from './property-location';
 import { normalizeCompletedDeal, expectedCommissionSide } from './deal-normalization';
-import { canonicalPropertyLifecycle, propertyLifecycle, propertyLifecycleValidationError } from './property-lifecycle';
+import {
+  canonicalPropertyLifecycle, isHeldProperty, propertyLifecycle, propertyLifecycleValidationError,
+} from './property-lifecycle';
 import {
   PROPERTY_DOCUMENT_BUCKET,
   propertyDocumentObjectPath,
@@ -431,7 +433,7 @@ class MockSellerRepository implements SellerRepository {
           .pop();
         return {
           seller: { ...seller },
-          liveCount: rows.filter((r) => propertyLifecycle(r.property) !== 'sold').length,
+          liveCount: rows.filter((r) => isHeldProperty(r.property)).length,
           soldCount: rows.filter((r) => propertyLifecycle(r.property) === 'sold').length,
           ...(confirmedAt ? { lastConfirmedAt: confirmedAt } : {}),
           anyUnconfirmed: rows.some((r) => r.relationship.availability !== 'available'),
@@ -463,7 +465,7 @@ class MockSellerRepository implements SellerRepository {
       });
     return ok({
       seller: seller.value,
-      active: pairs.filter((p) => propertyLifecycle(p.property) !== 'sold'),
+      active: pairs.filter((p) => isHeldProperty(p.property)),
       sold: pairs.filter((p) => propertyLifecycle(p.property) === 'sold'),
     });
   }

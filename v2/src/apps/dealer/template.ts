@@ -710,6 +710,8 @@ export function renderApp(state: any) {
                       style="font-size:19px"></i>On sale<span style="\${invSegLiveN}">\${invLiveCount}</span></button>
                   <button onClick="\${__b(invSoldGo)}" style="\${invSegSold}"><i class="ph-fill ph-seal-check"
                       style="font-size:19px"></i>Sold<span style="\${invSegSoldN}">\${invSoldCount}</span></button>
+                  <button onClick="\${__b(invUnsoldGo)}" style="\${invSegUnsold}"><i class="ph-fill ph-arrow-u-up-left"
+                      style="font-size:19px"></i>Unsold<span style="\${invSegUnsoldN}">\${invUnsoldCount}</span></button>
                 </div>
                 <div style="flex:1"></div>
                 <button onClick="\${__b(openAddPlot)}" style="\${invAddBtnStyle}"
@@ -880,6 +882,15 @@ export function renderApp(state: any) {
                             \` : '' }
                           </div>
                         \` : '' }
+                        \${ p.isRemovedCard ? \`
+                          <div
+                            style="margin-top:14px;padding:14px 16px;border-radius:15px;background:#f4f0e8;box-shadow:inset 0 0 0 1.5px #cbc3b6">
+                            <div style="display:flex;align-items:center;gap:9px;font-size:15px;font-weight:800;color:#4b4741"><i
+                                class="ph-fill ph-arrow-u-up-left" style="font-size:17px"></i>\${p.removedLine}</div>
+                            <button onClick="\${__b(p.restore)}" style="\${p.mnRestore}"><i
+                                class="ph-fill ph-arrow-counter-clockwise" style="font-size:18px"></i>Put back on sale</button>
+                          </div>
+                        \` : '' }
                         \${ p.menuOpen ? \`
                           <div
                             style="display:flex;flex-wrap:wrap;gap:7px;margin-top:12px;padding-top:13px;border-top:1px dashed #ecdcc0">
@@ -904,7 +915,7 @@ export function renderApp(state: any) {
               \${ noReady ? \`
                 <div
                   style="padding:34px;text-align:center;color:#8a6a3c;font-size:17px;font-weight:600;background:#fffdf7;border-radius:20px;box-shadow:inset 0 0 0 2px #ecdcc0">
-                  Nothing here yet for this search.</div>
+                  \${invEmptyText}</div>
               \` : '' }
             </div>
           \` : '' }
@@ -3130,6 +3141,11 @@ export function renderApp(state: any) {
                         style="display:flex;align-items:center;gap:8px;height:46px;padding:0 17px;border-radius:14px;background:#f8a800;color:#241d0c;font-size:16px;font-weight:800;white-space:nowrap"><i
                           class="ph-fill ph-paper-plane-tilt" style="font-size:18px"></i>Send link</button>
                     \` : '' }
+                    \${ propDetail.isRemovedView ? \`
+                      <button onClick="\${__b(propDetail.restoreGo)}"
+                        style="display:flex;align-items:center;gap:8px;height:46px;padding:0 17px;border-radius:14px;background:#1d7a43;background-image:linear-gradient(140deg,#27a05a,#125c31);color:#eafff2;font-size:16px;font-weight:800;white-space:nowrap"><i
+                          class="ph-fill ph-arrow-counter-clockwise" style="font-size:19px"></i>Put back on sale</button>
+                    \` : '' }
                     <div style="position:relative">
                       <button onClick="\${__b(propDetail.toggleMore)}" title="More"
                         style="width:46px;height:46px;border-radius:14px;background:#f0e5cd;color:#5c4a22;display:grid;place-items:center"
@@ -3138,25 +3154,25 @@ export function renderApp(state: any) {
                       \${ propDetail.moreOpen ? \`
                         <div
                           style="position:absolute;top:calc(100% + 8px);right:0;width:250px;background:#fffdf7;border-radius:16px;box-shadow:0 0 0 1.5px #ecdcc0,0 26px 50px -22px rgba(40,26,2,.6);padding:8px;z-index:20;text-align:left">
-                          <button onClick="\${__b(propDetail.archiveGo)}"
+                          \${ propDetail.notSoldView ? \`<button onClick="\${__b(propDetail.archiveGo)}"
                             style="width:100%;display:flex;align-items:center;gap:10px;height:50px;padding:0 14px;border-radius:12px;background:transparent;color:#4c463d;font-size:16px;font-weight:800"
                             style-hover="background:#f4ecdd"><i class="ph-fill ph-archive"
-                              style="font-size:19px"></i>Take off market</button>
+                              style="font-size:19px"></i>Take off market</button>\` : '' }
                           \${ propDetail.delIdle ? \`
                             <button onClick="\${__b(propDetail.arm)}"
                               style="width:100%;display:flex;align-items:center;gap:10px;height:50px;padding:0 14px;border-radius:12px;background:transparent;color:#a08a6c;font-size:16px;font-weight:800"
                               style-hover="background:#ffe4ea;color:#c2185b"><i class="ph ph-trash"
-                                style="font-size:19px"></i>Delete for good</button>
+                                style="font-size:19px"></i>Remove from my list</button>
                           \` : '' }
                           \${ propDetail.delArm ? \`
                             <div style="padding:10px 12px">
-                              <div style="font-size:15px;font-weight:700;color:#8a7a52;line-height:1.4">This removes it
-                                from links, marketing and deals.</div>
+                              <div style="font-size:15px;font-weight:700;color:#8a7a52;line-height:1.4">It moves to
+                                Unsold with everything kept. You can put it back any time.</div>
                               <div style="display:flex;gap:8px;margin-top:10px">
                                 <button onClick="\${__b(propDetail.disarm)}"
                                   style="flex:1;height:46px;border-radius:12px;background:#f4ecdd;color:#4c463d;font-size:15px;font-weight:800">Keep</button>
                                 <button onClick="\${__b(propDetail.doDelete)}"
-                                  style="flex:1;height:46px;border-radius:12px;background:#c2185b;color:#fff;font-size:15px;font-weight:800">Delete</button>
+                                  style="flex:1;height:46px;border-radius:12px;background:#4b4741;color:#fff;font-size:15px;font-weight:800">Remove</button>
                               </div>
                             </div>
                           \` : '' }
