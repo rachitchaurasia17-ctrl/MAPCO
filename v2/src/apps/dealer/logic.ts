@@ -1308,7 +1308,26 @@ export class Component extends DCLogic {
       const AdvMarker = (markerLib as any)?.AdvancedMarkerElement || (window as any).google?.maps?.marker?.AdvancedMarkerElement;
       if (AdvMarker && GOOGLE_MAPS_MAP_ID) {
         const pinElement = document.createElement('div');
-        pinElement.innerHTML = '<div style="display:grid;place-items:center;cursor:grab"><span style="width:52px;height:52px;border-radius:50%;background:rgba(232,104,28,.38);display:grid;place-items:center;animation:omGlow 2s ease-in-out infinite"><i class="ph-fill ph-map-pin" style="font-size:36px;color:#ff8a3c;filter:drop-shadow(0 4px 8px rgba(0,0,0,.7))"></i></span></div>';
+        pinElement.innerHTML = `<div style="display:grid;place-items:center;cursor:grab;animation:omGlow 2.5s ease-in-out infinite;">
+          <svg width="48" height="64" viewBox="0 0 48 64" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 10px 14px rgba(0,0,0,0.6));">
+            <defs>
+              <linearGradient id="goldMain" x1="12" y1="0" x2="36" y2="64" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#FFF2A8"/>
+                <stop offset="30%" stop-color="#D4AF37"/>
+                <stop offset="55%" stop-color="#F9D976"/>
+                <stop offset="85%" stop-color="#AA7C11"/>
+                <stop offset="100%" stop-color="#D4AF37"/>
+              </linearGradient>
+              <linearGradient id="goldEdge" x1="0" y1="0" x2="48" y2="64" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#FFFFFF"/>
+                <stop offset="40%" stop-color="#F3E5AB"/>
+                <stop offset="70%" stop-color="#8B6508"/>
+                <stop offset="100%" stop-color="#FFDF73"/>
+              </linearGradient>
+            </defs>
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M24 0C10.745 0 0 10.745 0 24C0 42 24 64 24 64C24 64 48 42 48 24C48 10.745 37.255 0 24 0ZM24 35C30.0751 35 35 30.0751 35 24C35 17.9249 30.0751 13 24 13C17.9249 13 13 17.9249 13 24C13 30.0751 17.9249 35 24 35Z" fill="url(#goldMain)" stroke="url(#goldEdge)" stroke-width="1.5"/>
+          </svg>
+        </div>`;
         marker = new AdvMarker({
           map: gMap,
           position: center,
