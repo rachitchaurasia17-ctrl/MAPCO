@@ -75,6 +75,7 @@ describe('canonical property location model', () => {
     expect(coordinateValidationError(30, -181)).toMatch(/longitude/);
     expect(coordinateValidationError(Number.NaN, 76)).toMatch(/finite/);
     expect(coordinateValidationError('30', 76)).toMatch(/finite/);
+    expect(coordinateValidationError(0, 0)).toMatch(/cannot both be zero/);
   });
 
   it('retains exact numeric precision through model and repository serialization', async () => {
@@ -176,6 +177,10 @@ describe('migration and tenant boundary', () => {
     join(process.cwd(), '..', 'supabase', 'verification', 'verify-isolation.js'),
     'utf8',
   );
+  const zeroGuard = readFileSync(
+    join(process.cwd(), '..', 'supabase', 'migrations', '20260901000100_reject_zero_property_location.sql'),
+    'utf8',
+  );
 
   it('stores location on the existing property payload and leaves mapPlacement separate', () => {
     expect(migration).toContain("'{location}'");
@@ -196,5 +201,11 @@ describe('migration and tenant boundary', () => {
     expect(migration).toMatch(/revoke all[\s\S]+from public, anon/);
     expect(migration).toMatch(/grant execute[\s\S]+to authenticated/);
     expect(verifier).toContain('anon cannot set property locations');
+  });
+
+  it('rejects the default 0,0 sentinel in both the payload constraint and location RPC', () => {
+    expect(zeroGuard).toContain("->> 'latitude')::numeric = 0");
+    expect(zeroGuard).toContain("->> 'longitude')::numeric = 0");
+    expect(zeroGuard).toContain('or (p_latitude = 0 and p_longitude = 0)');
   });
 });

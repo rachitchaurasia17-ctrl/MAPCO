@@ -1,0 +1,4 @@
+# Local/provider verification artifacts are never frontend deployment inputs.
+public/place-media/
+.pi-cache/
+.env*

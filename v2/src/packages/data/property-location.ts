@@ -24,6 +24,9 @@ export function coordinateValidationError(latitude: unknown, longitude: unknown)
   }
   if (latitude < -90 || latitude > 90) return 'Property latitude must be between -90 and 90.';
   if (longitude < -180 || longitude > 180) return 'Property longitude must be between -180 and 180.';
+  if (latitude === 0 && longitude === 0) {
+    return 'Property latitude and longitude cannot both be zero.';
+  }
   return null;
 }
 

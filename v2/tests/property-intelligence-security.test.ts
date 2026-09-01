@@ -4,7 +4,7 @@ import { resolve, join } from 'node:path';
 
 const repo = resolve(__dirname, '../..');
 const v2 = resolve(__dirname, '..');
-const read = (path: string) => readFileSync(resolve(repo, path), 'utf8');
+const read = (path: string) => readFileSync(resolve(repo, path), 'utf8').replace(/\r\n/g, '\n');
 
 const MIGRATION = read('supabase/migrations/20260831000100_property_intelligence_v3.sql');
 

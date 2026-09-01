@@ -893,7 +893,17 @@ export class Component extends DCLogic {
         videos: (pr.videos || []).slice(), docs: (pr.docs || []).map(d => ({ ...d, id: d.id || ('DC' + Math.random().toString(36).slice(2, 8)), photos: d.photos || [0] })),
         highlights: (pr.highlights || []).slice(), customHl: '',
         registry: pr.registry || '', approval: pr.approval || '', notes: pr.notes || '',
-        earth: !!pr.earth, earthQ: pr.loc || '', sector: this.PROPMAP[pr.id] || '',
+        // Reopen Earth from the canonical saved WGS84 point. mapPlacement is
+        // deliberately not consulted: it is a normalized raster-image pin.
+        earth: !!pr.location, pinSet: !!pr.location,
+        lat: pr.location?.latitude, lng: pr.location?.longitude,
+        earthQ: pr.loc || '', sector: this.PROPMAP[pr.id] || '',
+        ...(pr.mapPlacement ? {
+          mapPlacement: { ...pr.mapPlacement },
+          sectorMapId: pr.mapPlacement.mapId,
+          sectorPinX: pr.mapPlacement.x * 100,
+          sectorPinY: pr.mapPlacement.y * 100,
+        } : {}),
         sellerId: ps.sellerId || '', askPrice: ps.askPrice ? String(ps.askPrice / 1e7) : '', relation: ps.relation || 'Owner',
         availConfirmed: ps.availConfirmed !== false, lastConfirmed: ps.lastConfirmed || 'Today',
         visitNote: ps.visitNote || '', sellerPropNote: ps.note || '', sellerDocs: (ps.docs || []).slice()
@@ -1267,20 +1277,36 @@ export class Component extends DCLogic {
   async syncEarthMap() {
     const el = document.getElementById('dealer-earth-map');
     if (!el) {
-      if (this._gMap) {
-        this._gMap = null;
-        this._gMarker = null;
-      }
+      this._gMapEpoch = (this._gMapEpoch || 0) + 1;
+      this.disposeEarthMap();
       return;
     }
+
+    // DCLogic renders the Desk as one HTML string. Preserve the live Google
+    // Maps host when the surrounding form rerenders (for example after
+    // Confirm), otherwise each render creates a second map, marker and set of
+    // provider listeners. The controls are fresh DOM, so rebind only the
+    // address autocomplete to the new search input.
+    if (this._gMapEl && this._gMapEl !== el && (this._gMap || this._gMapInitPromise)) {
+      el.replaceWith(this._gMapEl);
+      if (this._gMap) this.bindEarthSearch(this._gMap, this._gMarker);
+      return;
+    }
+    if (this._gMapInitPromise) return;
     if (el.dataset.mounted === 'true') return;
     el.dataset.mounted = 'true';
+    this._gMapEl = el;
+    const epoch = (this._gMapEpoch || 0) + 1;
+    this._gMapEpoch = epoch;
 
-    try {
+    const initialize = async () => {
       await loadGoogleMaps();
       const mapsLib = await importMapsLibrary('maps');
       const markerLib = await importMapsLibrary('marker');
-      const placesLib = await importMapsLibrary('places');
+      await importMapsLibrary('places');
+
+      // The dealer may have left step 4 while the provider script loaded.
+      if (epoch !== this._gMapEpoch || !this._gMapEl?.isConnected) return;
 
       const pf = this.state.pform || {};
       // Centre on the dealer's real saved pin when there is one, otherwise on
@@ -1334,7 +1360,7 @@ export class Component extends DCLogic {
           gmpDraggable: true,
           content: pinElement.firstElementChild,
         });
-        marker.addListener('dragend', () => {
+        this._gMarkerDragListener = marker.addListener('dragend', () => {
           const pos = marker.position;
           if (pos) {
             const lat = typeof pos.lat === 'function' ? pos.lat() : pos.lat;
@@ -1353,7 +1379,7 @@ export class Component extends DCLogic {
           draggable: true,
           title: 'Property Location',
         });
-        marker.addListener('dragend', (e) => {
+        this._gMarkerDragListener = marker.addListener('dragend', (e) => {
           const lat = e.latLng.lat();
           const lng = e.latLng.lng();
           this.state.pform.lat = lat;
@@ -1364,7 +1390,7 @@ export class Component extends DCLogic {
       }
       this._gMarker = marker;
 
-      gMap.addListener('click', (e) => {
+      this._gMapClickListener = gMap.addListener('click', (e) => {
         const lat = e.latLng.lat();
         const lng = e.latLng.lng();
         if (marker) {
@@ -1377,36 +1403,7 @@ export class Component extends DCLogic {
         this.state.pform.pinSet = true;
       });
 
-      const searchInput = document.getElementById('dealer-earth-search');
-      if (searchInput && (window as any).google?.maps?.places?.Autocomplete) {
-        const autocomplete = new (window as any).google.maps.places.Autocomplete(searchInput, {
-          bounds: new (window as any).google.maps.LatLngBounds(
-            new (window as any).google.maps.LatLng(30.55, 76.55),
-            new (window as any).google.maps.LatLng(30.90, 76.95)
-          ),
-          componentRestrictions: { country: 'in' },
-          fields: ['geometry', 'name', 'formatted_address']
-        });
-        autocomplete.addListener('place_changed', () => {
-          const place = autocomplete.getPlace();
-          if (place && place.geometry && place.geometry.location) {
-            const loc = place.geometry.location;
-            const lat = loc.lat();
-            const lng = loc.lng();
-            gMap.setCenter({ lat, lng });
-            gMap.setZoom(17);
-            if (marker) {
-              if (marker.setPosition) marker.setPosition({ lat, lng });
-              else marker.position = { lat, lng };
-            }
-            this.state.pform.lat = lat;
-            this.state.pform.lng = lng;
-            this.state.pform.earth = true;
-            this.state.pform.pinSet = true;
-            this.state.pform.earthQ = searchInput.value;
-          }
-        });
-      }
+      this.bindEarthSearch(gMap, marker);
 
       window.setTimeout(() => {
         if ((window as any).google?.maps?.event) {
@@ -1414,13 +1411,76 @@ export class Component extends DCLogic {
           gMap.setCenter(center);
         }
       }, 80);
+    };
+
+    const initPromise = initialize();
+    this._gMapInitPromise = initPromise;
+    try {
+      await initPromise;
     } catch (err: any) {
       if (el) {
         el.dataset.mounted = '';
         el.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:rgba(255,255,255,0.7);font-size:14px;background:#1a2315;text-align:center;padding:20px;line-height:1.5;">Failed to load Google Maps.<br/>${err?.message || String(err)}<br/><br/><span style="font-size:12px;opacity:0.6;">Check API key or billing restrictions in Vercel.</span></div>`;
       }
       console.warn('Google Maps satellite load error:', err);
+    } finally {
+      if (this._gMapInitPromise === initPromise) this._gMapInitPromise = null;
     }
+  }
+  bindEarthSearch(gMap, marker) {
+    const searchInput = document.getElementById('dealer-earth-search');
+    if (!searchInput || !(window as any).google?.maps?.places?.Autocomplete) return;
+    if (this._gSearchInput === searchInput) return;
+    this._gPlaceListener?.remove?.();
+    this._gAutocomplete = null;
+    this._gSearchInput = searchInput;
+    const autocomplete = new (window as any).google.maps.places.Autocomplete(searchInput, {
+      bounds: new (window as any).google.maps.LatLngBounds(
+        new (window as any).google.maps.LatLng(30.55, 76.55),
+        new (window as any).google.maps.LatLng(30.90, 76.95)
+      ),
+      componentRestrictions: { country: 'in' },
+      fields: ['geometry', 'name', 'formatted_address']
+    });
+    this._gAutocomplete = autocomplete;
+    this._gPlaceListener = autocomplete.addListener('place_changed', () => {
+      const place = autocomplete.getPlace();
+      if (place && place.geometry && place.geometry.location) {
+        const loc = place.geometry.location;
+        const lat = loc.lat();
+        const lng = loc.lng();
+        gMap.setCenter({ lat, lng });
+        gMap.setZoom(17);
+        if (marker) {
+          if (marker.setPosition) marker.setPosition({ lat, lng });
+          else marker.position = { lat, lng };
+        }
+        this.state.pform.lat = lat;
+        this.state.pform.lng = lng;
+        this.state.pform.earth = true;
+        this.state.pform.pinSet = true;
+        this.state.pform.earthQ = searchInput.value;
+      }
+    });
+  }
+  disposeEarthMap() {
+    this._gPlaceListener?.remove?.();
+    this._gMapClickListener?.remove?.();
+    this._gMarkerDragListener?.remove?.();
+    if (this._gMarker?.setMap) this._gMarker.setMap(null);
+    else if (this._gMarker) this._gMarker.map = null;
+    this._gPlaceListener = null;
+    this._gMapClickListener = null;
+    this._gMarkerDragListener = null;
+    this._gAutocomplete = null;
+    this._gSearchInput = null;
+    this._gMap = null;
+    this._gMarker = null;
+    this._gMapEl = null;
+    // The epoch check prevents the abandoned initializer from constructing
+    // anything. Clearing only our reference lets an immediate reopen start a
+    // fresh initializer; the abandoned promise cannot clear that newer one.
+    this._gMapInitPromise = null;
   }
   go(k) {
     if (this._raf) cancelAnimationFrame(this._raf);

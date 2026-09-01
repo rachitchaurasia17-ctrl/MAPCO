@@ -62,6 +62,26 @@ describe('Desk ↔ canonical property round trip', () => {
     expect(canonical.want).toBe('Plot');
   });
 
+  it('stores only the live-map WGS84 point and keeps raster placement separate', () => {
+    const canonical = toCanonicalProperty({
+      ...baseForm,
+      lat: 30.688912345,
+      lng: 76.736112345,
+      mapPlacement: { mapId: 'sector-79', x: 0.4123, y: 0.6789 },
+    }, undefined, 'canonical-location');
+    expect(canonical.location).toMatchObject({
+      latitude: 30.688912,
+      longitude: 76.736112,
+      source: 'dealer-selected',
+    });
+    expect(canonical.mapPlacement).toEqual({ mapId: 'sector-79', x: 0.4123, y: 0.6789 });
+  });
+
+  it('does not persist a default 0,0 coordinate', () => {
+    const canonical = toCanonicalProperty({ ...baseForm, lat: 0, lng: 0 }, undefined, 'zero-location');
+    expect(canonical.location).toBeUndefined();
+  });
+
   it('drops spec keys that do not belong to the chosen type', () => {
     const asPlot = toCanonicalProperty(
       { ...baseForm, type: 'Residential Plot', beds: '3', baths: '2' }, undefined, 'p3');
