@@ -197,7 +197,17 @@ export interface PropertyRepository {
   get(id: string, opts?: QueryOptions): Promise<Result<Property>>;
   /** Create or update a property (dealer-scoped). */
   save(property: Property, opts?: QueryOptions): Promise<Result<Property>>;
-  /** Soft-delete a dealer-scoped property from active inventory. */
+  /**
+   * DESTRUCTIVE. Take a dealer-scoped property out of the product for good:
+   * after this the record is unreachable through every repository read.
+   *
+   * This is NOT the dealer's Delete. Removing a property the dealer never
+   * sold is the 'unsold' lifecycle, written through `save`, and it is
+   * recoverable. Call this only for a genuine permanent destruction — the
+   * Desk reaches it solely from a record already in Unsold, after purging
+   * that property's private papers and photo objects — or for internal
+   * cleanup such as discarding a test fixture.
+   */
   remove(id: string, opts?: QueryOptions): Promise<Result<void>>;
   /** Atomically set or clear the canonical real-world location. */
   setLocation(id: string, location: PropertyLocationInput | null, opts?: QueryOptions): Promise<Result<Property>>;

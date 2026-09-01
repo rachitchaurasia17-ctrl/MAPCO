@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { adapter } from '../src/packages/data/mock-adapter-v2';
 import { CLIENTS } from '../src/packages/data/mock-adapter';
 import { DeskStore, toDeskProperty } from '../src/apps/dealer/desk-store';
@@ -12,6 +12,12 @@ const migration = readFileSync(
   new URL('../../supabase/migrations/20260901000200_property_unsold_lifecycle.sql', import.meta.url),
   'utf8',
 );
+/** The migration that first constrained the lifecycle, before 'unsold' existed. */
+const priorMigration = readFileSync(
+  new URL('../../supabase/migrations/20260823000100_desk_property_foundations.sql', import.meta.url),
+  'utf8',
+);
+const deskStoreSource = readFileSync(new URL('../src/apps/dealer/desk-store.ts', import.meta.url), 'utf8');
 
 const uniq = (p: string) => `${p}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
@@ -301,9 +307,247 @@ describe('existing Sold behaviour is untouched', () => {
   });
 });
 
+
+describe('store partition invariants', () => {
+  it('puts ONLY lifecycle unsold in unsoldProperties, and everything else in properties', async () => {
+    const store = new DeskStore();
+    const ids = {
+      draft: uniq('inv-draft'), live: uniq('inv-live'),
+      hold: uniq('inv-hold'), sold: uniq('inv-sold'), gone: uniq('inv-gone'),
+    };
+    await store.loadSellers();
+    await store.loadProperties();
+    await store.saveProperty({ city: 'Mohali', area: 'Inv draft', type: 'Flat' }, { id: ids.draft });
+    await store.saveProperty({ ...baseForm, area: 'Inv live' }, { id: ids.live });
+    await store.saveProperty({ ...baseForm, area: 'Inv hold' }, { id: ids.hold });
+    await store.archiveProperty(ids.hold);
+    await store.saveProperty({ ...baseForm, area: 'Inv sold' }, { id: ids.sold });
+    await store.markSold({
+      propertyId: ids.sold, soldPrice: 8600000, saleDate: '2026-08-26', buyerId: CLIENTS[0]!.id,
+    });
+    await store.saveProperty({ ...baseForm, area: 'Inv gone' }, { id: ids.gone });
+    await store.deleteProperty(ids.gone);
+
+    // Every row is resolved back to its canonical lifecycle, so this asserts
+    // the real partition rather than the Desk's own status label.
+    const lifecycleOf = async (id: string) => {
+      const read = await adapter.properties.get(id);
+      return read.ok ? read.value.lifecycle : 'missing';
+    };
+    for (const row of store.unsoldProperties) {
+      expect(await lifecycleOf(String(row.id))).toBe('unsold');
+      expect(row.status).toBe('removed');
+    }
+    for (const row of store.properties) {
+      expect(await lifecycleOf(String(row.id))).not.toBe('unsold');
+      expect(row.status).not.toBe('removed');
+    }
+    // And each seeded record landed in exactly one array.
+    expect(segmentsFor(store, ids.draft)).toEqual({ onSale: true, sold: false, unsold: false });
+    expect(segmentsFor(store, ids.live)).toEqual({ onSale: true, sold: false, unsold: false });
+    expect(segmentsFor(store, ids.hold)).toEqual({ onSale: true, sold: false, unsold: false });
+    expect(segmentsFor(store, ids.sold)).toEqual({ onSale: false, sold: true, unsold: false });
+    expect(segmentsFor(store, ids.gone)).toEqual({ onSale: false, sold: false, unsold: true });
+
+    for (const id of Object.values(ids)) await adapter.properties.remove(id);
+  });
+
+  it('never hands a removed property to anything that offers inventory', async () => {
+    const id = uniq('inv-offer');
+    await seedRichProperty(id);
+    const store = new DeskStore();
+    await store.loadProperties();
+    expect(await store.deleteProperty(id)).toBe(true);
+
+    // Client links, the presentation, deal pickers and stock counts all read
+    // store.properties and ask only "is it sold?". That question can never
+    // reach a removed record, because it is not in the array at all.
+    const offerable = store.properties.filter((row) => row.status !== 'sold');
+    expect(offerable.some((row) => row.id === id)).toBe(false);
+    expect(store.properties.some((row) => row.id === id)).toBe(false);
+
+    await adapter.properties.remove(id);
+  });
+
+  it('routes the dealer Delete through save(), never through the destructive remove()', async () => {
+    const id = uniq('inv-not-remove');
+    await seedRichProperty(id);
+    const store = new DeskStore();
+    await store.loadProperties();
+
+    const destroy = vi.spyOn(adapter.properties, 'remove');
+    destroy.mockClear();
+    expect(await store.deleteProperty(id)).toBe(true);
+    expect(destroy).not.toHaveBeenCalled();
+    destroy.mockRestore();
+
+    // The record is still readable, which a destructive remove would prevent.
+    expect((await adapter.properties.get(id)).ok).toBe(true);
+    await adapter.properties.remove(id);
+  });
+
+  it('keeps remove() genuinely destructive for the internal callers that need it', async () => {
+    const id = uniq('inv-destructive');
+    await seedRichProperty(id);
+    expect((await adapter.properties.get(id)).ok).toBe(true);
+    expect((await adapter.properties.remove(id)).ok).toBe(true);
+    const gone = await adapter.properties.get(id);
+    expect(gone.ok).toBe(false);
+    if (!gone.ok) expect(gone.error.code).toBe('not_found');
+  });
+});
+
+describe('deleting an Unsold property for good', () => {
+  it('destroys the record so it leaves every segment', async () => {
+    const id = uniq('purge-full');
+    await seedRichProperty(id);
+    const store = new DeskStore();
+    await store.loadProperties();
+    expect(await store.deleteProperty(id)).toBe(true);
+
+    expect(await store.destroyUnsoldProperty(id)).toBe(true);
+
+    expect(segmentsFor(store, id)).toEqual({ onSale: false, sold: false, unsold: false });
+    const gone = await adapter.properties.get(id);
+    expect(gone.ok).toBe(false);
+    if (!gone.ok) expect(gone.error.code).toBe('not_found');
+  });
+
+  it('purges private papers before the record, so their storage cannot be orphaned', async () => {
+    const id = uniq('purge-papers');
+    await seedRichProperty(id);
+    const store = new DeskStore();
+    await store.loadProperties();
+    expect(await store.deleteProperty(id)).toBe(true);
+
+    const order: string[] = [];
+    const listed = vi.spyOn(adapter.propertyDocuments, 'listForProperty').mockResolvedValue({
+      ok: true,
+      value: [{
+        id: 'doc-1', propertyId: id, title: 'Registry', type: 'registry',
+        storage: { bucket: 'property-documents', path: 'dealers/d/properties/' + id + '/documents/doc-1.pdf' },
+        mimeType: 'application/pdf', sizeBytes: 10, visibility: 'private', safety: 'private',
+      }],
+    } as never);
+    const purgedDoc = vi.spyOn(adapter.propertyDocuments, 'remove')
+      .mockImplementation(async () => { order.push('document'); return { ok: true, value: undefined } as never; });
+    const destroyed = vi.spyOn(adapter.properties, 'remove')
+      .mockImplementation(async () => { order.push('record'); return { ok: true, value: undefined } as never; });
+
+    expect(await store.destroyUnsoldProperty(id)).toBe(true);
+    expect(order).toEqual(['document', 'record']);
+
+    listed.mockRestore(); purgedDoc.mockRestore(); destroyed.mockRestore();
+    await adapter.properties.remove(id);
+  });
+
+  it('leaves the property untouched in Unsold when a purge step fails', async () => {
+    const id = uniq('purge-fails');
+    await seedRichProperty(id);
+    const store = new DeskStore();
+    await store.loadProperties();
+    expect(await store.deleteProperty(id)).toBe(true);
+
+    // Photo objects only exist to purge when the record carries storage refs.
+    const withPhoto = await adapter.properties.get(id);
+    expect(withPhoto.ok).toBe(true);
+    if (!withPhoto.ok) return;
+    await adapter.properties.save({
+      ...withPhoto.value,
+      photoStorage: [{ kind: 'storage', id: 'p1', path: 'dealers/d/properties/' + id + '/p1.jpg' }],
+    });
+    await store.loadProperties();
+
+    const failing = vi.spyOn(adapter.media, 'removePropertyPhotos').mockResolvedValue({
+      ok: false, error: { code: 'network', message: 'storage down', retryable: true },
+    } as never);
+    const destroyed = vi.spyOn(adapter.properties, 'remove');
+    destroyed.mockClear();
+
+    expect(await store.destroyUnsoldProperty(id)).toBe(false);
+    expect(store.lastWriteError).toMatch(/nothing was deleted/i);
+    expect(destroyed).not.toHaveBeenCalled();
+    failing.mockRestore(); destroyed.mockRestore();
+
+    // Still there, still recoverable.
+    expect((await adapter.properties.get(id)).ok).toBe(true);
+    await store.loadProperties();
+    expect(segmentsFor(store, id)).toEqual({ onSale: false, sold: false, unsold: true });
+    await adapter.properties.remove(id);
+  });
+
+  it('refuses to destroy anything that is not already in Unsold', async () => {
+    const store = new DeskStore();
+    await store.loadSellers();
+    await store.loadProperties();
+
+    const live = uniq('purge-live');
+    await store.saveProperty({ ...baseForm, area: 'Purge live' }, { id: live });
+    expect(await store.destroyUnsoldProperty(live)).toBe(false);
+    expect(store.lastWriteError).toMatch(/unsold/i);
+    expect((await adapter.properties.get(live)).ok).toBe(true);
+
+    const sold = uniq('purge-sold');
+    await store.saveProperty({ ...baseForm, area: 'Purge sold' }, { id: sold });
+    await store.markSold({
+      propertyId: sold, soldPrice: 8600000, saleDate: '2026-08-26', buyerId: CLIENTS[0]!.id,
+    });
+    // A sold property cannot be removed, so it can never reach the one state
+    // from which destruction is possible.
+    expect(await store.deleteProperty(sold)).toBe(false);
+    expect(await store.destroyUnsoldProperty(sold)).toBe(false);
+    expect((await adapter.properties.get(sold)).ok).toBe(true);
+
+    await adapter.properties.remove(live);
+    await adapter.properties.remove(sold);
+  });
+
+  it('refuses while a deal still refers to the property', async () => {
+    const id = uniq('purge-deal');
+    await seedRichProperty(id);
+    const store = new DeskStore();
+    await store.loadProperties();
+    expect(await store.deleteProperty(id)).toBe(true);
+
+    const pipeline = vi.spyOn(adapter.deals, 'listPipeline').mockResolvedValue({
+      ok: true,
+      value: { items: [{ id: 'D-x', stage: 'token', propertyId: id }], nextCursor: null, total: 1 },
+    } as never);
+    const destroyed = vi.spyOn(adapter.properties, 'remove');
+    destroyed.mockClear();
+
+    expect(await store.destroyUnsoldProperty(id)).toBe(false);
+    expect(store.lastWriteError).toMatch(/deal/i);
+    expect(destroyed).not.toHaveBeenCalled();
+
+    pipeline.mockRestore(); destroyed.mockRestore();
+    await adapter.properties.remove(id);
+  });
+
+  it('is the only Desk caller of the destructive remove()', () => {
+    const callers = deskStoreSource.split('\n')
+      .filter((line) => line.includes('adapter.properties.remove('));
+    expect(callers).toHaveLength(1);
+    const destroyBody = deskStoreSource.slice(
+      deskStoreSource.indexOf('async destroyUnsoldProperty'),
+      deskStoreSource.indexOf('/** Documents for one property'),
+    );
+    expect(destroyBody).toContain('adapter.properties.remove(id)');
+  });
+});
+
 describe('the database accepts the new state without widening anything else', () => {
   it('adds unsold to the lifecycle constraint and keeps it out of client-facing rows', () => {
+    // The ONLY gate on lifecycle is this CHECK — there is no Postgres enum —
+    // and before this branch it did not accept 'unsold', so the write would
+    // have been rejected outright rather than silently persisting.
+    expect(priorMigration).toContain("payload->>'lifecycle' in ('draft','on-sale','sold','archived')");
+    expect(priorMigration).not.toContain('unsold');
     expect(migration).toContain("payload->>'lifecycle' in ('draft','on-sale','sold','archived','unsold')");
+    // Backward compatible: the four existing states still validate, and the
+    // On Sale completeness rule is carried over untouched.
+    for (const state of ['draft', 'on-sale', 'sold', 'archived']) expect(migration).toContain(`'${state}'`);
+    expect(migration).toContain("payload->>'lifecycle' <> 'on-sale' or (");
     expect(migration).toContain('crm_records_unsold_not_client_facing');
     // A seller's live count is the inventory still on the books.
     expect(migration).toContain("coalesce(r.payload->>'lifecycle','') not in ('sold','unsold')");

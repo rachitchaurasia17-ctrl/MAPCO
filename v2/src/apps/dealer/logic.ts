@@ -19,7 +19,7 @@ export class Component extends DCLogic {
       city: '', area: '', society: '', address: '', type: 'Residential Plot', size: '', unit: 'sq yd', carpet: '', rate: '', pooja: false, store: false, servant: false, lift: false, powerBackup: false, cornerShop: false, shutters: '', washrooms: '', facing: 'East', road: '', plotNo: '', showPlotNo: true, corner: false, parkFacing: false, tenure: 'Freehold', beds: '3', baths: '2', floor: '', totalFloors: '', balconies: '1', parking: '1', furnishing: 'Unfurnished', age: 'New', possession: 'Ready to move', frontage: '', use: '', mainRoad: false, avail: 'available', price: '', photos: [0, 1, 2], cover: 0, video: false, docs: [], highlights: [], customHl: '', registry: '', approval: '', notes: '', earth: false, earthQ: '', sector: '',
       sellerId: '', askPrice: '', relation: 'Owner', availConfirmed: true, lastConfirmed: 'Today', visitNote: '', sellerPropNote: '', sellerDocs: []
     },
-    lstep: 1, linkCopied: false, priceEdit: null, priceVal: '', unpubFor: null, unpubReason: '', soldFor: null, delPlot: false, delClient: false,
+    lstep: 1, linkCopied: false, priceEdit: null, priceVal: '', unpubFor: null, unpubReason: '', soldFor: null, delPlot: false, purgePlot: false, delClient: false,
     linkBuild: null, lform: { clientId: '', newName: '', newPhone: '', newBusiness: '', plots: [], expiry: '3d', loc: 'area', price: 'hidden', audio: 'none', secs: 0, note: '' },
     sform: { clientId: '', newName: '', newPhone: '', expiry: '3d', loc: 'area', price: 'hidden', photos: [0, 1, 2, 3], audio: 'none', secs: 0 },
     wiz: { step: 1, clientId: '', useNewClient: false, ncName: '', ncPhone: '', propId: '', useManualProp: false, mpLoc: '', mpSize: '', name: '', value: '', comm: '', stage: 'negotiating', sellerName: '', sellerPhone: '', q1: '', q2: '' },
@@ -1637,6 +1637,14 @@ export class Component extends DCLogic {
     const done = await deskStore.restoreUnsoldProperty(id);
     this.setState({ cardMenu: null, propDetail: null, propError: done ? '' : deskStore.lastWriteError });
   }
+  /* Delete for good, from inside Unsold only. This is the one path that
+     actually destroys a property, its private papers and its private
+     photos. There is no undo, and the confirm text says so. */
+  async purgeUnsold(id) {
+    const done = await deskStore.destroyUnsoldProperty(id);
+    if (!done) { this.setState({ purgePlot: false, propError: deskStore.lastWriteError }); return; }
+    this.setState({ propDetail: null, purgePlot: false, cardMenu: null, propError: '' });
+  }
   deleteClient(id) {
     const c = this.clients.find(x => x.id === id); this.clients = this.clients.filter(x => x.id !== id);
     if (c) this.clientLinks = this.clientLinks.filter(l => l.client !== c.name);
@@ -2776,7 +2784,7 @@ export class Component extends DCLogic {
         mapTagStyle: `display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:800;padding:5px 11px;border-radius:999px;${pr.ready ? 'background:#e2f2e6;color:#186c3c' : 'background:#ffe1e6;color:#c2185b'}`,
         hasShares: act > 0, shareText: act === 1 ? '1 live link' : act + ' live links',
         menuOpen: s.cardMenu === pr.id, openMenu: () => this.setState({ cardMenu: s.cardMenu === pr.id ? null : pr.id }),
-        openDetail: () => this.setState({ propDetail: pr.id, propShot: 0, pdTab: 'gallery', pdMedia: 'photos', cardMenu: null }),
+        openDetail: () => this.setState({ propDetail: pr.id, propShot: 0, pdTab: 'gallery', pdMedia: 'photos', cardMenu: null, delPlot: false, purgePlot: false }),
         openShare: () => this.setState({ linkBuild: 'new', lstep: 2, lSearchQ: '', lSearchQ2: '', lform: { ...this.blankL(), plots: [pr.id] }, cardMenu: null }),
         menuStyle,
         mnEdit: 'display:flex;align-items:center;gap:8px;height:44px;padding:0 15px;border-radius:13px;background:#e1ecfb;color:#1a5aa8;font-size:15.5px;font-weight:800;white-space:nowrap',
@@ -3432,13 +3440,17 @@ export class Component extends DCLogic {
         publish: () => this.publish(pd.id), unpublish: () => this.setState({ unpubFor: pd.id, unpubReason: '' }), sold: () => this.setState({ soldFor: pd.id }),
         editPrice: () => this.setState({ priceEdit: pd.id, priceVal: pd.price ? String(pd.price / 1e7) : '' }),
         delArm: s.delPlot && !isRemoved && !isSold, delIdle: !s.delPlot && !isRemoved && !isSold, arm: () => this.setState({ delPlot: true }), disarm: () => this.setState({ delPlot: false }), doDelete: () => this.deletePlot(pd.id),
+        purgeIdle: isRemoved && !s.purgePlot, purgeArm: isRemoved && s.purgePlot,
+        purgeGo: () => this.setState({ purgePlot: true }),
+        purgeStop: () => this.setState({ purgePlot: false }),
+        doPurge: () => this.purgeUnsold(pd.id),
         share: () => this.setState({ propDetail: null, linkBuild: 'new', lstep: 2, lSearchQ: '', lSearchQ2: '', lform: { ...this.blankL(), plots: [pd.id] } }),
         canSell: pd.status !== 'sold', isSold: pd.status === 'sold', celebrateSold: () => this.celebrateSold(pd.id),
         isBooked: !!this.propBooked(pd.id),
         bookedIn: (() => { const bd = this.propBooked(pd.id); return bd ? ('Booked · ' + bd.client + ' at ' + this.ds(bd.stage).l.toLowerCase()) : ''; })(),
         bookedStyle: 'display:inline-flex;align-items:center;gap:7px;font-size:14.5px;font-weight:800;padding:8px 14px;border-radius:999px;background:#1a5aa8;color:#fff;white-space:nowrap',
         openBookedDeal: () => { const bd = this.propBooked(pd.id); if (bd) this.setState({ propDetail: null, section: 'deals', dealView: 'active', selectedDeal: bd.id, dealTab: 'overview' }); },
-        close: () => this.setState({ propDetail: null, delPlot: false })
+        close: () => this.setState({ propDetail: null, delPlot: false, purgePlot: false })
       };
     })() : null;
 

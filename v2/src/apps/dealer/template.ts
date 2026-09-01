@@ -3176,6 +3176,24 @@ export function renderApp(state: any) {
                               </div>
                             </div>
                           \` : '' }
+                          \${ propDetail.purgeIdle ? \`
+                            <button onClick="\${__b(propDetail.purgeGo)}"
+                              style="width:100%;display:flex;align-items:center;gap:10px;height:50px;padding:0 14px;border-radius:12px;background:transparent;color:#a08a6c;font-size:16px;font-weight:800"
+                              style-hover="background:#ffe4ea;color:#c2185b"><i class="ph ph-trash"
+                                style="font-size:19px"></i>Delete for good</button>
+                          \` : '' }
+                          \${ propDetail.purgeArm ? \`
+                            <div style="padding:10px 12px">
+                              <div style="font-size:15px;font-weight:700;color:#a3143f;line-height:1.4">This erases the
+                                property, its papers and its photos. It cannot be undone.</div>
+                              <div style="display:flex;gap:8px;margin-top:10px">
+                                <button onClick="\${__b(propDetail.purgeStop)}"
+                                  style="flex:1;height:46px;border-radius:12px;background:#f4ecdd;color:#4c463d;font-size:15px;font-weight:800">Keep</button>
+                                <button onClick="\${__b(propDetail.doPurge)}"
+                                  style="flex:1;height:46px;border-radius:12px;background:#c2185b;color:#fff;font-size:15px;font-weight:800">Delete</button>
+                              </div>
+                            </div>
+                          \` : '' }
                         </div>
                       \` : '' }
                     </div>

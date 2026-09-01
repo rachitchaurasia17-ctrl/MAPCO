@@ -1132,6 +1132,69 @@ export class DeskStore {
     return true;
   }
 
+  /**
+   * Destroy a removed property for good. This is the ONLY Desk caller of the
+   * repository's destructive `remove()`, and it is reachable only from a
+   * record already sitting in Unsold — so the user-facing Delete can never
+   * reach it, and nothing on the dealer's list can be destroyed in one step.
+   *
+   * Order matters. Private papers and private photo objects are purged
+   * first, because once the record is gone their storage paths are
+   * unrecoverable and would sit in the private buckets forever. If any of
+   * that fails the property is left exactly as it was, in Unsold, so the
+   * dealer can retry rather than being left with a half-destroyed record.
+   */
+  async destroyUnsoldProperty(id: string): Promise<boolean> {
+    this.lastWriteError = '';
+    const existing = await this.readCanonical(id);
+    if (!existing) { this.lastWriteError = 'This property is no longer available.'; this.notify(); return false; }
+    if (propertyLifecycle(existing) !== 'unsold') {
+      this.lastWriteError = 'Only a property in Unsold can be deleted for good.';
+      this.notify();
+      return false;
+    }
+    // A deal that still points at this property would be orphaned by the
+    // delete. Completed sales cannot reach Unsold at all; this catches the
+    // open pipeline.
+    const pipeline = await adapter.deals.listPipeline({ limit: 200 });
+    if (pipeline.ok && pipeline.value.items.some((deal) => deal.propertyId === id)) {
+      this.lastWriteError = 'A deal still refers to this property. Close or remove that deal first.';
+      this.notify();
+      return false;
+    }
+    const documents = await adapter.propertyDocuments.listForProperty(id);
+    if (!documents.ok) {
+      this.lastWriteError = `Nothing was deleted. ${message(documents.error, 'Could not read the papers on this property')}`;
+      this.notify();
+      return false;
+    }
+    for (const document of documents.value) {
+      const purged = await adapter.propertyDocuments.remove(document.id);
+      if (!purged.ok) {
+        this.lastWriteError = `Nothing was deleted. ${message(purged.error, 'Could not delete the papers on this property')}`;
+        this.notify();
+        return false;
+      }
+    }
+    const photoPaths = (existing.photoStorage ?? []).map((ref) => ref.path);
+    if (photoPaths.length) {
+      const cleared = await adapter.media.removePropertyPhotos(photoPaths);
+      if (!cleared.ok) {
+        this.lastWriteError = `Nothing was deleted. ${message(cleared.error, 'Could not delete the photos on this property')}`;
+        this.notify();
+        return false;
+      }
+    }
+    const result = await adapter.properties.remove(id);
+    if (!result.ok) {
+      this.lastWriteError = message(result.error, 'Could not delete this property');
+      this.notify();
+      return false;
+    }
+    await this.loadProperties();
+    return true;
+  }
+
   /** Documents for one property, loaded only when a detail view opens. */
   propertyDocuments: Record<string, unknown>[] = [];
   propertyDocumentsId: string | null = null;
