@@ -1289,6 +1289,7 @@ export class Component extends DCLogic {
     // address autocomplete to the new search input.
     if (this._gMapEl && this._gMapEl !== el && (this._gMap || this._gMapInitPromise)) {
       el.replaceWith(this._gMapEl);
+      this.reattachEarthMarker();
       if (this._gMap) this.bindEarthSearch(this._gMap, this._gMarker);
       return;
     }
@@ -1365,10 +1366,7 @@ export class Component extends DCLogic {
           if (pos) {
             const lat = typeof pos.lat === 'function' ? pos.lat() : pos.lat;
             const lng = typeof pos.lng === 'function' ? pos.lng() : pos.lng;
-            this.state.pform.lat = lat;
-            this.state.pform.lng = lng;
-            this.state.pform.earth = true;
-            this.state.pform.pinSet = true;
+            this.recordEarthSelection(lat, lng);
           }
         });
       } else {
@@ -1382,10 +1380,7 @@ export class Component extends DCLogic {
         this._gMarkerDragListener = marker.addListener('dragend', (e) => {
           const lat = e.latLng.lat();
           const lng = e.latLng.lng();
-          this.state.pform.lat = lat;
-          this.state.pform.lng = lng;
-          this.state.pform.earth = true;
-          this.state.pform.pinSet = true;
+          this.recordEarthSelection(lat, lng);
         });
       }
       this._gMarker = marker;
@@ -1397,10 +1392,7 @@ export class Component extends DCLogic {
           if (marker.setPosition) marker.setPosition({ lat, lng });
           else marker.position = { lat, lng };
         }
-        this.state.pform.lat = lat;
-        this.state.pform.lng = lng;
-        this.state.pform.earth = true;
-        this.state.pform.pinSet = true;
+        this.recordEarthSelection(lat, lng);
       });
 
       this.bindEarthSearch(gMap, marker);
@@ -1425,6 +1417,43 @@ export class Component extends DCLogic {
       console.warn('Google Maps satellite load error:', err);
     } finally {
       if (this._gMapInitPromise === initPromise) this._gMapInitPromise = null;
+    }
+  }
+  recordEarthSelection(lat, lng) {
+    const latitude = Number(lat);
+    const longitude = Number(lng);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)
+        || (latitude === 0 && longitude === 0)) return false;
+    this.state.pform.lat = latitude;
+    this.state.pform.lng = longitude;
+    // A Google click/drag chooses the candidate coordinate. Only the explicit
+    // Confirm action marks it canonical and eligible for persistence.
+    this.state.pform.earth = false;
+    this.state.pform.pinSet = true;
+    this.state.propError = '';
+    return true;
+  }
+  reattachEarthMarker() {
+    const marker = this._gMarker;
+    const map = this._gMap;
+    if (!marker || !map) return;
+
+    // Reusing the detached host keeps the single Google Map instance and its
+    // listeners. AdvancedMarkerElement removes its custom element when that
+    // host is briefly disconnected by DCLogic's root render, so rebind the
+    // existing marker object instead of constructing a second marker.
+    if (marker.setMap) marker.setMap(map);
+    else {
+      marker.map = null;
+      marker.map = map;
+    }
+
+    const latitude = Number(this.state.pform?.lat);
+    const longitude = Number(this.state.pform?.lng);
+    if (Number.isFinite(latitude) && Number.isFinite(longitude)
+        && !(latitude === 0 && longitude === 0)) {
+      if (marker.setPosition) marker.setPosition({ lat: latitude, lng: longitude });
+      else marker.position = { lat: latitude, lng: longitude };
     }
   }
   bindEarthSearch(gMap, marker) {
@@ -1455,10 +1484,7 @@ export class Component extends DCLogic {
           if (marker.setPosition) marker.setPosition({ lat, lng });
           else marker.position = { lat, lng };
         }
-        this.state.pform.lat = lat;
-        this.state.pform.lng = lng;
-        this.state.pform.earth = true;
-        this.state.pform.pinSet = true;
+        this.recordEarthSelection(lat, lng);
         this.state.pform.earthQ = searchInput.value;
       }
     });
@@ -1697,7 +1723,16 @@ export class Component extends DCLogic {
     if (this.state.savingProp && this.state.savingProp !== false) return;
     const editId = this.state.pEditId;
     this.setState({ savingProp: { title: (f.type || 'Property') + (f.size ? ' · ' + f.size + ' ' + (f.unit || '') : ''), loc: [f.area, f.city].filter(Boolean).join(', ') }, propError: '' });
-    const result = await deskStore.saveProperty(f, { id: editId || undefined, lifecycle: f.avail === 'onhold' ? 'archived' : 'on-sale' });
+    let result;
+    try {
+      result = await deskStore.saveProperty(f, { id: editId || undefined, lifecycle: f.avail === 'onhold' ? 'archived' : 'on-sale' });
+    } catch (error) {
+      const detail = error instanceof Error && error.message
+        ? error.message
+        : 'Could not save this property. Please try again.';
+      this.setState({ savingProp: false, propError: detail });
+      return;
+    }
     if (result.error) { this.setState({ savingProp: false, propError: result.error }); return; }
     const saved = result.property;
     if (closeAfter === false) {

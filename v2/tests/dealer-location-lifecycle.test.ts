@@ -2,6 +2,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Component } from '../src/apps/dealer/logic';
 import { DCLogic } from '../src/framework/dc';
+import { deskStore } from '../src/apps/dealer/desk-store';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+const dealerTemplate = readFileSync(resolve(__dirname, '../src/apps/dealer/template.ts'), 'utf8');
 
 describe('dealer canonical Earth lifecycle', () => {
   beforeEach(() => {
@@ -41,9 +46,18 @@ describe('dealer canonical Earth lifecycle', () => {
     const app = document.getElementById('app')!;
     app.innerHTML = '<div id="dealer-earth-map"></div><input id="dealer-earth-search">';
     const originalHost = document.getElementById('dealer-earth-map')!;
+    const map = { id: 'one-map' };
+    const mapAssignments: unknown[] = [];
+    const marker: Record<string, unknown> = { position: null };
+    Object.defineProperty(marker, 'map', {
+      configurable: true,
+      get: () => mapAssignments.at(-1),
+      set: (value) => { mapAssignments.push(value); },
+    });
     component._gMapEl = originalHost;
-    component._gMap = { id: 'one-map' };
-    component._gMarker = { id: 'one-marker' };
+    component._gMap = map;
+    component._gMarker = marker;
+    component.state.pform = { lat: 30.705006, lng: 76.71554 };
 
     app.innerHTML = '<div id="dealer-earth-map"></div><input id="dealer-earth-search">';
     const replacementHost = document.getElementById('dealer-earth-map')!;
@@ -52,8 +66,48 @@ describe('dealer canonical Earth lifecycle', () => {
     await component.syncEarthMap();
 
     expect(document.getElementById('dealer-earth-map')).toBe(originalHost);
-    expect(component._gMap).toEqual({ id: 'one-map' });
-    expect(component._gMarker).toEqual({ id: 'one-marker' });
+    expect(component._gMap).toBe(map);
+    expect(component._gMarker).toBe(marker);
+    expect(mapAssignments).toEqual([null, map]);
+    expect(marker.position).toEqual({ lat: 30.705006, lng: 76.71554 });
+  });
+
+  it('keeps a Google-selected coordinate pending until explicit confirmation', () => {
+    const component = new Component() as any;
+    component.state.pform = { earth: true, pinSet: false };
+
+    expect(component.recordEarthSelection(30.705005889229952, 76.71553965608055)).toBe(true);
+    expect(component.state.pform).toMatchObject({
+      lat: 30.705005889229952,
+      lng: 76.71553965608055,
+      earth: false,
+      pinSet: true,
+    });
+    expect(component.recordEarthSelection(0, 0)).toBe(false);
+
+    component.setState = (patch: Record<string, unknown>) => {
+      component.state = { ...component.state, ...patch };
+    };
+    component.renderVals().pEarthConfirm();
+    expect(component.state.pform.earth).toBe(true);
+  });
+
+  it('surfaces returned and unexpected persistence failures on the Earth step', async () => {
+    const component = new Component() as any;
+    component.state.pform = { city: 'Mohali', area: 'Canonical QA', type: 'Residential Plot' };
+    component.setState = (patch: Record<string, unknown>) => {
+      component.state = { ...component.state, ...patch };
+    };
+
+    vi.spyOn(deskStore, 'saveProperty').mockResolvedValueOnce({ error: 'Active dealer write access required.' });
+    await component.savePlot();
+    expect(component.state).toMatchObject({ savingProp: false, propError: 'Active dealer write access required.' });
+
+    vi.spyOn(deskStore, 'saveProperty').mockRejectedValueOnce(new Error('Network unavailable.'));
+    await component.savePlot();
+    expect(component.state).toMatchObject({ savingProp: false, propError: 'Network unavailable.' });
+    expect(dealerTemplate).toContain('role="alert"');
+    expect(dealerTemplate).toContain('${propError}');
   });
 
   it('removes provider listeners and marker when Earth leaves the DOM', async () => {

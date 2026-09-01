@@ -4655,6 +4655,9 @@ export function renderApp(state: any) {
                           </div>
                         </div>
 
+                        \${ propError ? \`<div role="alert"
+                          style="position:absolute;top:62px;left:16px;z-index:4;max-width:520px;padding:10px 14px;border-radius:11px;background:rgba(139,28,50,.94);color:#fff3f5;font-size:13.5px;font-weight:800;line-height:1.35;box-shadow:0 5px 16px rgba(0,0,0,.35);pointer-events:none">\${propError}</div>\` : '' }
+
                         <!-- Bottom Floating Controls Overlay -->
                         <div
                           style="position:absolute;bottom:0;left:0;right:0;z-index:4;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;background:linear-gradient(0deg,rgba(10,24,16,.75),transparent);pointer-events:none">
