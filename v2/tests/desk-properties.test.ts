@@ -65,6 +65,8 @@ describe('Desk ↔ canonical property round trip', () => {
   it('stores only the live-map WGS84 point and keeps raster placement separate', () => {
     const canonical = toCanonicalProperty({
       ...baseForm,
+      // Accepted: pEarthConfirm sets this. recordEarthSelection leaves it false.
+      earth: true,
       lat: 30.688912345,
       lng: 76.736112345,
       mapPlacement: { mapId: 'sector-79', x: 0.4123, y: 0.6789 },
@@ -78,8 +80,71 @@ describe('Desk ↔ canonical property round trip', () => {
   });
 
   it('does not persist a default 0,0 coordinate', () => {
-    const canonical = toCanonicalProperty({ ...baseForm, lat: 0, lng: 0 }, undefined, 'zero-location');
+    const canonical = toCanonicalProperty(
+      { ...baseForm, earth: true, lat: 0, lng: 0 }, undefined, 'zero-location');
     expect(canonical.location).toBeUndefined();
+  });
+
+  /* ── acceptance, not merely selection ────────────────────────────────
+     recordEarthSelection() stores a click/drag/search result as a CANDIDATE
+     and sets earth = false; only "Confirm this spot" accepts it. These pin
+     that contract at the persistence boundary, which is the last place it
+     could be broken. */
+
+  it('does not persist a candidate coordinate the dealer never confirmed', () => {
+    const canonical = toCanonicalProperty({
+      ...baseForm,
+      earth: false,          // recordEarthSelection: selected, not accepted
+      lat: 30.688912345,
+      lng: 76.736112345,
+    }, undefined, 'candidate-only');
+    expect(canonical.location).toBeUndefined();
+  });
+
+  it('treats a missing acceptance flag as unconfirmed', () => {
+    const canonical = toCanonicalProperty(
+      { ...baseForm, lat: 30.7046, lng: 76.7179 }, undefined, 'no-flag');
+    expect(canonical.location).toBeUndefined();
+  });
+
+  it('persists the coordinate once it has been confirmed', () => {
+    const canonical = toCanonicalProperty({
+      ...baseForm, earth: true, lat: 30.7046, lng: 76.7179,
+    }, undefined, 'confirmed');
+    expect(canonical.location).toMatchObject({
+      latitude: 30.7046, longitude: 76.7179, source: 'dealer-selected',
+    });
+  });
+
+  it('never erases an existing location when a new pin is left unconfirmed', () => {
+    const existing = {
+      id: 'keep', location: { latitude: 30.5, longitude: 76.5, source: 'dealer-selected' },
+    } as unknown as Property;
+    const canonical = toCanonicalProperty(
+      { ...baseForm, earth: false, lat: 30.9, lng: 76.9 }, existing, 'keep');
+    expect(canonical.location).toEqual(existing.location);
+  });
+
+  it('keeps an existing location when the form carries no coordinate at all', () => {
+    const existing = {
+      id: 'keep2', location: { latitude: 30.5, longitude: 76.5, source: 'dealer-selected' },
+    } as unknown as Property;
+    expect(toCanonicalProperty(baseForm, existing, 'keep2').location).toEqual(existing.location);
+  });
+
+  it('cannot manufacture a coordinate from a raster placement, confirmed or not', () => {
+    // mapPlacement x/y are 0..1 fractions of an authored image. They sit inside
+    // the legal lat/lng range, which is exactly why they must never cross over.
+    for (const earth of [true, false]) {
+      const canonical = toCanonicalProperty({
+        ...baseForm,
+        earth,
+        mapPlacement: { mapId: 'sector-79', x: 0.4123, y: 0.6789 },
+        sectorMapId: 'sector-79', sectorPinX: 41.23, sectorPinY: 67.89,
+      }, undefined, `raster-${earth}`);
+      expect(canonical.location).toBeUndefined();
+      expect(canonical.mapPlacement).toEqual({ mapId: 'sector-79', x: 0.4123, y: 0.6789 });
+    }
   });
 
   it('drops spec keys that do not belong to the chosen type', () => {

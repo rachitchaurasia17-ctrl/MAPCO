@@ -16,6 +16,14 @@ export default defineConfig(({ mode }) => {
     define: {
       'import.meta.env.VITE_GOOGLE_MAPS_API_KEY': JSON.stringify(process.env.VITE_GOOGLE_MAPS_API_KEY || merged.VITE_GOOGLE_MAPS_API_KEY || ''),
       'import.meta.env.VITE_GOOGLE_MAPS_MAP_ID': JSON.stringify(process.env.VITE_GOOGLE_MAPS_MAP_ID || merged.VITE_GOOGLE_MAPS_MAP_ID || ''),
+      // Which build a dealer actually ran. Stamped on every product event so a
+      // mid-trial deploy stays interpretable rather than silently changing the
+      // treatment. Seven characters, not forty: plotmap_event_metadata_has_secret
+      // rejects any metadata string holding eight consecutive digits, and a full
+      // sha can contain one. Not a secret — it is a public commit id.
+      'import.meta.env.VITE_BUILD_VERSION': JSON.stringify(
+        (process.env.VERCEL_GIT_COMMIT_SHA || merged.VITE_BUILD_VERSION || 'dev').slice(0, 7),
+      ),
     },
     server: {
       // Authoritative hand-mapped roads live beside the MAPCO repository in

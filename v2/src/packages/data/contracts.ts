@@ -33,18 +33,24 @@ import type {
    state instead of an unhandled rejection.
    ─────────────────────────────────────────────────────────────── */
 
-export type RepoErrorCode =
-  | 'network'          // transport failed / offline with no cache
-  | 'unauthorized'     // no/invalid session
-  | 'forbidden'        // role/scope mismatch
-  | 'not_found'        // resource absent
-  | 'gone'             // link/token expired or revoked
-  | 'rate_limited'
-  | 'conflict'         // optimistic-concurrency clash (Pass 2 sync)
-  | 'validation'       // bad input
-  | 'aborted'          // AbortSignal fired
-  | 'unavailable'      // asset/backend temporarily unavailable
-  | 'unknown';
+/** The closed set of repository failure classes. Exported as a value so
+ *  telemetry can prove a code is one of these before recording it — a raw
+ *  error message must never reach analytics. */
+export const REPO_ERROR_CODES = [
+  'network',           // transport failed / offline with no cache
+  'unauthorized',      // no/invalid session
+  'forbidden',         // role/scope mismatch
+  'not_found',         // resource absent
+  'gone',              // link/token expired or revoked
+  'rate_limited',
+  'conflict',          // optimistic-concurrency clash (Pass 2 sync)
+  'validation',        // bad input
+  'aborted',           // AbortSignal fired
+  'unavailable',       // asset/backend temporarily unavailable
+  'unknown',
+] as const;
+
+export type RepoErrorCode = typeof REPO_ERROR_CODES[number];
 
 export interface RepoError {
   readonly code: RepoErrorCode;
@@ -459,13 +465,61 @@ export interface PresentationRepository {
   getProperty(id: string, opts?: QueryOptions): Promise<Result<PresentationProperty>>;
 }
 
-export type PresentationEventKind =
-  | 'opened' | 'map-changed' | 'property-viewed' | 'gallery-opened' | 'closed';
+/** THE frontend copy of public.plotmap_event_name_allowed().
+ *
+ *  The RPC raises 'unknown event type' for any name not on this list, and the
+ *  emitter swallows that error, so drift here silently destroys the dataset
+ *  rather than failing loudly. That is exactly how the previous taxonomy died:
+ *  it held hyphenated names ('map-changed', 'property-viewed') that the SQL
+ *  allowlist has never contained, so every event it could have described was
+ *  rejected on arrival.
+ *
+ *  tests/telemetry-contract.test.ts compares this array against the migration
+ *  SQL in both directions on every run. Underscores, never hyphens. */
+export const PRESENTATION_EVENT_KINDS = [
+  // lifecycle
+  'app_open', 'dealer_login', 'presentation_opened',
+  // navigation
+  'dealer_dashboard_opened', 'team_workspace_opened', 'properties_page_opened',
+  'map_studio_opened', 'clients_page_opened', 'insights_page_opened',
+  'admin_page_opened', 'client_panel_opened', 'inventory_opened',
+  // maps
+  'map_opened', 'area_viewed', 'sector_viewed', 'overlay_selected',
+  'sector_proof_clicked', 'original_proof_clicked',
+  // properties
+  'property_add_clicked', 'property_added', 'property_selected',
+  'property_viewed', 'followup_created_from_presentation',
+  // sharing
+  'property_shared_whatsapp', 'brochure_shared', 'property_shared',
+  // health
+  'app_error', 'asset_load_failure', 'slow_operation',
+  // evidence foundation (20260903000100)
+  'property_location_pinned', 'property_valued', 'earth_opened',
+  'intelligence_requested', 'intelligence_viewed', 'client_link_created',
+  'seller_added', 'buyer_added', 'deal_stage_changed',
+] as const;
+
+export type PresentationEventKind = typeof PRESENTATION_EVENT_KINDS[number];
+
+/** Workflow result. 'abandoned' leaves no row anywhere else in the database
+ *  and cannot be reconstructed after the fact, so it is only ever emitted
+ *  where abandonment is genuinely observable — never guessed at. */
+export type PresentationEventOutcome = 'started' | 'completed' | 'abandoned' | 'failed';
+
+export type JsonPrimitive = string | number | boolean | null;
+
+/** Caller-owned event context. Keys beginning with an underscore belong to the
+ *  system envelope and are stripped — see RESERVED_EVENT_METADATA_KEYS. */
+export type PresentationEventMetadata = Readonly<Record<string, JsonPrimitive | readonly JsonPrimitive[]>>;
 
 export interface PresentationEvent {
   readonly kind: PresentationEventKind;
   readonly propertyId?: string;
   readonly mapId?: string;
+  readonly clientId?: string;
+  readonly outcome?: PresentationEventOutcome;
+  readonly durationMs?: number;
+  readonly metadata?: PresentationEventMetadata;
   /** ISO timestamp supplied by caller (Date is not created inside repos). */
   readonly at: string;
 }

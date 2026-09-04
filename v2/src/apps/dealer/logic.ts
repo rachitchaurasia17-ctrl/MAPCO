@@ -4,6 +4,18 @@ import { deskStore } from './desk-store';
 import { MAP_REGISTRY as CANONICAL_SECTOR_MAPS } from '../../packages/maps/sector-map-registry';
 import { loadGoogleMaps, importMapsLibrary, GOOGLE_MAPS_MAP_ID } from '../../packages/maps/google-loader';
 import { productRoutes } from '../../packages/ui/product-routes';
+import { adapter } from '../../packages/data/adapter';
+import { AddPropertyTelemetry } from './add-property-telemetry';
+
+/* Add Property evidence. Fire-and-forget in every direction: the repository
+   resolves ok() on all failure paths, the promise is never awaited, and the
+   catch guards against that ever changing. A dealer must never be told his
+   property did not save because an analytics RPC did. */
+const addPropertyTelemetry = new AddPropertyTelemetry((event) => {
+  void Promise.resolve()
+    .then(() => adapter.presentationEvents.record(event))
+    .catch(() => {});
+});
 
 export class Component extends DCLogic {
   state = {
@@ -875,6 +887,9 @@ export class Component extends DCLogic {
 
   openEdit(id, step) {
     const pr = this.properties.find(x => x.id === id); if (!pr) return;
+    // Editing an existing property is not adding one. This suppresses every
+    // add-flow event so an edit can never inflate the trial's property count.
+    addPropertyTelemetry.openedForEdit(id);
     const n = Math.min(6, pr.photoCount || 0); const ps = pr.ps || {};
     this.setState({
       addPlotOpen: true, pstep: step || 1, pEditId: id, cardMenu: null, propDetail: null, pSaved: false, sellerAdd: false, sellerQ: '', docName: '', pform: {
@@ -1366,7 +1381,7 @@ export class Component extends DCLogic {
           if (pos) {
             const lat = typeof pos.lat === 'function' ? pos.lat() : pos.lat;
             const lng = typeof pos.lng === 'function' ? pos.lng() : pos.lng;
-            this.recordEarthSelection(lat, lng);
+            this.recordEarthSelection(lat, lng, 'drag');
           }
         });
       } else {
@@ -1380,7 +1395,7 @@ export class Component extends DCLogic {
         this._gMarkerDragListener = marker.addListener('dragend', (e) => {
           const lat = e.latLng.lat();
           const lng = e.latLng.lng();
-          this.recordEarthSelection(lat, lng);
+          this.recordEarthSelection(lat, lng, 'drag');
         });
       }
       this._gMarker = marker;
@@ -1392,7 +1407,7 @@ export class Component extends DCLogic {
           if (marker.setPosition) marker.setPosition({ lat, lng });
           else marker.position = { lat, lng };
         }
-        this.recordEarthSelection(lat, lng);
+        this.recordEarthSelection(lat, lng, 'click');
       });
 
       this.bindEarthSearch(gMap, marker);
@@ -1419,7 +1434,7 @@ export class Component extends DCLogic {
       if (this._gMapInitPromise === initPromise) this._gMapInitPromise = null;
     }
   }
-  recordEarthSelection(lat, lng) {
+  recordEarthSelection(lat, lng, source) {
     const latitude = Number(lat);
     const longitude = Number(lng);
     if (!Number.isFinite(latitude) || !Number.isFinite(longitude)
@@ -1430,6 +1445,9 @@ export class Component extends DCLogic {
     // Confirm action marks it canonical and eligible for persistence.
     this.state.pform.earth = false;
     this.state.pform.pinSet = true;
+    // Telemetry only. Recorded here because by the time Confirm is pressed,
+    // how the dealer reached this coordinate is no longer knowable.
+    if (source) this.state.pform.pinSource = source;
     this.state.propError = '';
     return true;
   }
@@ -1484,7 +1502,7 @@ export class Component extends DCLogic {
           if (marker.setPosition) marker.setPosition({ lat, lng });
           else marker.position = { lat, lng };
         }
-        this.recordEarthSelection(lat, lng);
+        this.recordEarthSelection(lat, lng, 'search');
         this.state.pform.earthQ = searchInput.value;
       }
     });
@@ -1723,22 +1741,40 @@ export class Component extends DCLogic {
     if (this.state.savingProp && this.state.savingProp !== false) return;
     const editId = this.state.pEditId;
     this.setState({ savingProp: { title: (f.type || 'Property') + (f.size ? ' · ' + f.size + ' ' + (f.unit || '') : ''), loc: [f.area, f.city].filter(Boolean).join(', ') }, propError: '' });
+    const wanted = f.avail === 'onhold' ? 'archived' : 'on-sale';
     let result;
     try {
-      result = await deskStore.saveProperty(f, { id: editId || undefined, lifecycle: f.avail === 'onhold' ? 'archived' : 'on-sale' });
+      result = await deskStore.saveProperty(f, { id: editId || undefined, lifecycle: wanted });
     } catch (error) {
+      // A thrown transport error is still a real persistence failure. Only the
+      // failure class travels; the message is dealer-facing and stays out.
+      addPropertyTelemetry.persistFailed('on_sale', 'unknown');
       const detail = error instanceof Error && error.message
         ? error.message
         : 'Could not save this property. Please try again.';
       this.setState({ savingProp: false, propError: detail });
       return;
     }
-    if (result.error) { this.setState({ savingProp: false, propError: result.error }); return; }
+    if (result.error) {
+      addPropertyTelemetry.persistFailed('on_sale', result.errorCode);
+      this.setState({ savingProp: false, propError: result.error }); return;
+    }
     const saved = result.property;
+    // Only after the canonical record actually persisted. Latched inside the
+    // telemetry: pNext re-saves on every step advance, and those are updates.
+    addPropertyTelemetry.persisted({
+      propertyId: saved.id,
+      lifecycle: (result.missing && result.missing.length) ? 'draft' : wanted,
+      downgraded: !!(result.missing && result.missing.length),
+      hasMapPlacement: !!saved.mapPlacement,
+      hasLocation: !!saved.location,
+      photoCount: (saved.photos || []).length,
+    });
     if (closeAfter === false) {
       this.setState({ savingProp: false, pEditId: saved.id, pSaved: true, propError: '', propMissing: result.missing || [] });
       return;
     }
+    addPropertyTelemetry.closed();
     this.setState({
       addPlotOpen: false, pstep: 1, pEditId: null, pSaved: false, section: 'properties',
       invView: 'live', plotCity: saved.city || 'Mohali', pform: this.blankP(),
@@ -1750,9 +1786,26 @@ export class Component extends DCLogic {
      persisted property, not a local placeholder. */
   async saveDraft() {
     const f = this.state.pform;
-    if (!f.city && !f.area) { this.setState({ addPlotOpen: false, pstep: 1, pEditId: null, pform: this.blankP() }); return; }
+    if (!f.city && !f.area) {
+      // The one abandonment the Desk can truthfully observe: Close ran, and
+      // nothing was written. Every other exit from this overlay persists a row.
+      addPropertyTelemetry.abandoned(this.state.pstep);
+      this.setState({ addPlotOpen: false, pstep: 1, pEditId: null, pform: this.blankP() }); return;
+    }
     const result = await deskStore.saveProperty(f, { id: this.state.pEditId || undefined, lifecycle: 'draft' });
-    if (result.error) { this.setState({ propError: result.error }); return; }
+    if (result.error) {
+      addPropertyTelemetry.persistFailed('draft', result.errorCode);
+      this.setState({ propError: result.error }); return;
+    }
+    addPropertyTelemetry.persisted({
+      propertyId: result.property.id,
+      lifecycle: 'draft',
+      downgraded: false,
+      hasMapPlacement: !!result.property.mapPlacement,
+      hasLocation: !!result.property.location,
+      photoCount: (result.property.photos || []).length,
+    });
+    addPropertyTelemetry.closed();
     this.setState({ addPlotOpen: false, pstep: 1, pEditId: null, pSaved: false, section: 'properties', invView: 'live', pform: this.blankP(), propError: '' });
   }
   /* Off market. Non-destructive: media, papers, seller relationship and
@@ -4197,7 +4250,10 @@ export class Component extends DCLogic {
       soldError: s.soldError || '', savingSold: !!s.savingSold,
       soldConfirmStyle: `width:100%;display:flex;align-items:center;justify-content:center;gap:11px;height:70px;border-radius:18px;font-size:21px;font-weight:800;${s.soldForm.price ? 'background:#0b6f39;background-image:linear-gradient(140deg,#25b567,#0b6f39 55%,#06552b);color:#eafff2;box-shadow:0 18px 36px -16px rgba(6,70,36,.9)' : 'background:#ece2cd;color:#b3a68a;cursor:not-allowed'}`,
       addPlotOpen: s.addPlotOpen,
-      openAddPlot: () => this.setState({ addPlotOpen: true, pstep: 1, pEditId: null, pSaved: false, pform: this.blankP() }),
+      openAddPlot: () => {
+        addPropertyTelemetry.openedForAdd();
+        this.setState({ addPlotOpen: true, pstep: 1, pEditId: null, pSaved: false, pform: this.blankP() });
+      },
       closeAddPlot: () => this.saveDraft(),
       pform: pf, onPForm: (e) => this.onPForm(e), pstep, pSteps, pIsEdit, pNotEdit: !pIsEdit,
       pTitle: pIsEdit ? 'Edit this property' : 'Add a property',
@@ -4275,9 +4331,14 @@ export class Component extends DCLogic {
         const ok = Number.isFinite(Number(f.lat)) && Number.isFinite(Number(f.lng))
           && !(Number(f.lat) === 0 && Number(f.lng) === 0);
         if (!ok) { this.setState({ propError: 'Tap the map to place the property pin first.' }); return; }
+        // The ONLY place property_location_pinned can be emitted, and the only
+        // place `earth` becomes true. A drag, a map click or a search result
+        // produces a candidate; this is where it is accepted, and acceptance
+        // is what desk-store now requires before writing Property.location.
+        addPropertyTelemetry.locationConfirmed(Number(f.lat), Number(f.lng), f.pinSource);
         this.setP({ earth: true, pinSet: true });
       },
-      pEarthRedo: () => this.setP({ earth: false, lat: undefined, lng: undefined, pinSet: false }),
+      pEarthRedo: () => this.setP({ earth: false, lat: undefined, lng: undefined, pinSet: false, pinSource: undefined }),
       pMapClick: (e) => this.mapClick(e),
       pPinSet: pf.pinSet !== false, pPinNotSet: pf.pinSet === false,
       pPinStyle: `position:absolute;left:${pf.pinX === undefined ? 50 : pf.pinX}%;top:${pf.pinY === undefined ? 52 : pf.pinY}%;transform:translate(-50%,-100%);display:grid;place-items:center;pointer-events:none;transition:left .12s,top .12s`,

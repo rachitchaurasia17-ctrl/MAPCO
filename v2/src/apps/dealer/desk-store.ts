@@ -27,7 +27,7 @@ import type {
   SellerAvailability, Property, PropertySeller, PropertyLifecycle,
   Client, ClientRequirements,
 } from '../../packages/data/types';
-import type { RepoError } from '../../packages/data/contracts';
+import type { RepoError, RepoErrorCode } from '../../packages/data/contracts';
 import { normalizePropertySpecs } from '../../packages/data/property-specs';
 import { propertyLifecycle } from '../../packages/data/property-lifecycle';
 
@@ -302,6 +302,10 @@ export interface PropertyWriteResult {
   /** Present when the record cannot go On Sale yet. */
   missing?: readonly string[];
   error?: string;
+  /** Machine-readable failure class, for telemetry only. Never rendered —
+   *  `error` above is the dealer-facing prose, and prose must not reach
+   *  analytics because it can carry record data and Postgres internals. */
+  errorCode?: RepoErrorCode;
 }
 
 const WANT_BY_TYPE = (type: string): string => {
@@ -386,10 +390,23 @@ export function toCanonicalProperty(
        'dealer-selected', which produced plausible but wrong coordinates
        for every property. That fabrication is deliberately gone: if the
        dealer never placed a real map pin, the property simply has no
-       Earth location and the UI says so. */
+       Earth location and the UI says so.
+
+       A coordinate must also be ACCEPTED, not merely selected. logic.ts
+       recordEarthSelection() stores a click, drag or search result as a
+       candidate and explicitly sets `earth = false`; only pEarthConfirm
+       ("Confirm this spot") sets it true. Persisting an unconfirmed
+       candidate would break that contract at the last step and would also
+       break the round trip, because openEdit() reopens a property with
+       `earth: !!pr.location` — so an unconfirmed save would come back
+       showing "Confirmed" to a dealer who never confirmed it.
+
+       When the coordinate is not accepted, any location already on the
+       record survives untouched: declining to confirm a new pin must
+       never erase a good one. */
     ...(form.location
       ? { location: form.location }
-      : (isRealCoordinate(form.lat, form.lng)
+      : (form.earth === true && isRealCoordinate(form.lat, form.lng)
         ? {
             location: {
               latitude: +Number(form.lat).toFixed(6),
@@ -806,7 +823,7 @@ export class DeskStore {
     if (!result.ok) {
       this.lastWriteError = message(result.error, 'Could not save this property');
       this.notify();
-      return { error: this.lastWriteError };
+      return { error: this.lastWriteError, errorCode: result.error.code };
     }
     await this.loadProperties();
     return { property: result.value, ...(missing.length ? { missing } : {}) };

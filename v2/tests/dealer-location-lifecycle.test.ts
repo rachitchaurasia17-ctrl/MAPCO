@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Component } from '../src/apps/dealer/logic';
 import { DCLogic } from '../src/framework/dc';
-import { deskStore } from '../src/apps/dealer/desk-store';
+import { deskStore, toCanonicalProperty } from '../src/apps/dealer/desk-store';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -90,6 +90,52 @@ describe('dealer canonical Earth lifecycle', () => {
     };
     component.renderVals().pEarthConfirm();
     expect(component.state.pform.earth).toBe(true);
+  });
+
+  it('carries the candidate/accepted contract all the way to the canonical record', () => {
+    // The state layer already refused to mark a selection accepted. This proves
+    // the persistence boundary honours the same contract, which is the last
+    // place the chain could break: desk-store used to write any valid lat/lng.
+    const component = new Component() as any;
+    component.setState = (patch: Record<string, unknown>) => {
+      component.state = { ...component.state, ...patch };
+    };
+    component.state.pform = {
+      ...component.state.pform, city: 'Mohali', area: 'Sector 79', type: 'Residential Plot',
+    };
+
+    // Click / drag / search — a candidate only.
+    expect(component.recordEarthSelection(30.705005889229952, 76.71553965608055, 'click')).toBe(true);
+    expect(component.state.pform.earth).toBe(false);
+    expect(toCanonicalProperty(component.state.pform, undefined, 'candidate').location)
+      .toBeUndefined();
+
+    // Confirm — accepted, and only now eligible for the canonical column.
+    component.renderVals().pEarthConfirm();
+    expect(component.state.pform.earth).toBe(true);
+    expect(toCanonicalProperty(component.state.pform, undefined, 'accepted').location)
+      .toMatchObject({ latitude: 30.705006, longitude: 76.71554, source: 'dealer-selected' });
+
+    // Move pin — back to unaccepted, and an existing coordinate survives.
+    const saved = {
+      id: 'accepted',
+      location: { latitude: 30.705006, longitude: 76.71554, source: 'dealer-selected' },
+    } as any;
+    component.renderVals().pEarthRedo();
+    expect(component.state.pform.earth).toBe(false);
+    expect(toCanonicalProperty(component.state.pform, saved, 'accepted').location)
+      .toEqual(saved.location);
+  });
+
+  it('records how the dealer reached the coordinate, for telemetry only', () => {
+    const component = new Component() as any;
+    component.state.pform = {};
+    for (const source of ['click', 'drag', 'search'] as const) {
+      expect(component.recordEarthSelection(30.7046, 76.7179, source)).toBe(true);
+      expect(component.state.pform.pinSource).toBe(source);
+      // Provenance must never be mistaken for acceptance.
+      expect(component.state.pform.earth).toBe(false);
+    }
   });
 
   it('surfaces returned and unexpected persistence failures on the Earth step', async () => {

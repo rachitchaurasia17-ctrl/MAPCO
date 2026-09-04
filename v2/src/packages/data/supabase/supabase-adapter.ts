@@ -30,6 +30,7 @@ import {
   type DemandSignalsRepository,
 } from '../contracts';
 import type { DealerPredictionSummary, PredictiveActionEvent } from '../../performance';
+import { buildEventMetadata } from '../telemetry';
 import { publishResourceInvalidation } from '../../performance';
 import {
   toBuyerSafeIntelligence,
@@ -92,6 +93,12 @@ function cryptoId(): string {
   const c = (globalThis as { crypto?: { randomUUID?: () => string } }).crypto;
   return c?.randomUUID ? c.randomUUID().replace(/-/g, '') : `${Date.now()}${Math.round(Math.random() * 1e9)}`;
 }
+
+/** Which build the dealer is actually running. Injected by vite.config.ts from
+ *  VERCEL_GIT_COMMIT_SHA, 'dev' locally. Stamped on every product event so a
+ *  mid-trial deploy stays interpretable instead of silently changing the
+ *  treatment. Not a secret. */
+const BUILD_VERSION: string = import.meta.env.VITE_BUILD_VERSION ?? 'dev';
 
 /** Translate any thrown/PostgREST error into a typed RepoError. */
 function toErr(e: unknown): Result<never> {
@@ -1120,17 +1127,60 @@ class SupaPresentation implements PresentationRepository {
   }
 }
 
+/** Stable for the life of the tab. plotmap_record_presentation_event caps
+ *  p_session_id at 128 characters and rejects anything longer. */
+const deskSessionId = `${cryptoId()}${cryptoId()}`;
+
+/** Resolved once per tab, then reused. Without this every product event would
+ *  cost an auth round-trip plus a profiles read on the critical path. A failed
+ *  lookup is deliberately not cached, so an event fired after the dealer signs
+ *  in can still succeed. */
+let deskDealerId: Promise<Result<string>> | null = null;
+function cachedDealerId(c: SupabaseClient): Promise<Result<string>> {
+  if (!deskDealerId) {
+    deskDealerId = currentDealerId(c).then((r) => { if (!r.ok) deskDealerId = null; return r; });
+  }
+  return deskDealerId;
+}
+
+/** Test seam only: forget the cached dealer between cases. */
+export function resetTelemetryIdentityCache(): void {
+  deskDealerId = null;
+}
+
 class SupaPresentationEvents implements PresentationEventsRepository {
   async record(ev: PresentationEvent, o?: QueryOptions): Promise<Result<void>> {
     const a = aborted<void>(o); if (a) return a;
     try {
       const c = await client();
+      // The RPC checks the caller's profile against p_dealer_id, so it must be
+      // the real dealer. The previous emitter sent an empty string, which never
+      // matches a profile, so every event it ever fired was rejected.
+      const dealer = await cachedDealerId(c);
+      if (!dealer.ok) return ok(undefined);
+
+      const metadata = buildEventMetadata(ev.metadata, {
+        build: BUILD_VERSION,
+        ...(ev.outcome ? { outcome: ev.outcome } : {}),
+        ...(typeof ev.durationMs === 'number' ? { durationMs: ev.durationMs } : {}),
+      });
+
       // Best-effort, fire-and-forget: never block the UI on analytics.
-      await c.rpc('plotmap_record_presentation_event', {
-        p_dealer_id: '', p_session_id: '', p_event_type: ev.kind,
-        p_map_id: ev.mapId ?? null, p_property_id: ev.propertyId ?? null,
+      const { error } = await c.rpc('plotmap_record_presentation_event', {
+        p_dealer_id: dealer.value,
+        p_session_id: deskSessionId,
+        p_event_type: ev.kind,
+        p_map_id: ev.mapId ?? null,
+        p_property_id: ev.propertyId ?? null,
+        p_client_id: ev.clientId ?? null,
+        p_metadata: metadata,
         p_created_at: ev.at,
       });
+      // Swallowing this in production is deliberate. Swallowing it in
+      // development is how the previous pipeline stayed dead for months.
+      if (error && import.meta.env.DEV) {
+        console.warn('[presentation-events] dropped', ev.kind, error.message);
+      }
       return ok(undefined);
     } catch { return ok(undefined); }
   }
