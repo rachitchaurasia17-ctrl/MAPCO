@@ -314,7 +314,7 @@ export function renderApp(state: any) {
       <main style="flex:1;min-width:0;min-height:0;display:flex;flex-direction:column">
 
 
-        <div data-scroll="" style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden">
+        <div data-scroll="" style="flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;transition:background .4s ease,background-image .4s ease;\${props.pageBgStyle || ''}">
 
           \${ isDeals ? \`
             <div style="max-width:1680px;margin:0 auto;padding:20px 40px 70px">
@@ -476,29 +476,71 @@ export function renderApp(state: any) {
                     <div style="font-size:20px;font-weight:800;color:#241f1c;margin-top:12px">\${noLedgerMsg}</div>
                   </div>
                 \` : '' }
+              \` : '' }
 
-                \${ hasLost ? \`
-                  <div style="margin-top:26px">
-                    <div
-                      style="font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8a7f6e;margin-bottom:12px">
-                      Did not happen — kept for the record</div>
-                    <div style="display:flex;flex-direction:column;gap:9px">
-                      \${ (lostDeals || []).map(d => \`
+              \${ dvLost ? \`
+                <div
+                  style="display:grid;grid-template-columns:repeat(auto-fill,minmax(430px,1fr));gap:16px;margin-top:20px">
+                  \${ (lostDeals || []).map(d => \`
+                    <div style="\${d.cardStyle}">
+                      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                        <span
+                          style="display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border-radius:12px;background:#be123c;color:#fff;font-size:15px;font-weight:800;white-space:nowrap"><i
+                            class="ph-fill ph-x-circle" style="font-size:17px"></i>Lost</span>
+                        <span
+                          style="display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 13px;border-radius:12px;background:#ffdfe2;color:#b02a37;font-size:14.5px;font-weight:800;text-wrap:pretty"><i
+                            class="ph-fill ph-warning" style="font-size:16px"></i>\${d.reason}</span>
+                      </div>
+
+                      <button onClick="\${__b(d.open)}" style="display:block;width:100%;text-align:left;margin-top:14px"
+                        style-hover="opacity:.75">
+                        <span
+                          style="display:block;font-size:24px;font-weight:800;color:#241f1c;line-height:1.2;text-wrap:balance">\${d.buyer}</span>
+                        <span
+                          style="display:flex;align-items:center;gap:8px;font-size:16.5px;font-weight:700;color:#7a6f60;margin-top:4px"><i
+                            class="ph-fill ph-buildings" style="font-size:18px;color:#b02a37;flex:none"></i>\${d.propTitle}</span>
+                        <span
+                          style="display:block;font-size:15.5px;font-weight:600;color:#8a7f6e;margin-top:1px;padding-left:26px">\${d.propLoc}</span>
+                      </button>
+
+                      <div style="\${d.moneyStyle}">
+                        <div style="flex:1;min-width:120px">
+                          <div
+                            style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8a7f6e">
+                            Deal price</div>
+                          <div
+                            style="font-family:'Newsreader',serif;font-weight:600;font-size:31px;line-height:1.05;color:#241f1c">
+                            \${d.priceFmt}</div>
+                        </div>
+                        <div style="flex:1;min-width:120px;text-align:right">
+                          <div
+                            style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#b02a37">
+                            Lost commission</div>
+                          <div
+                            style="font-family:'Newsreader',serif;font-weight:600;font-size:31px;line-height:1.05;color:#b02a37">
+                            \${d.commFmt}</div>
+                        </div>
+                      </div>
+
+                      <div style="display:flex;align-items:center;gap:10px;margin-top:16px">
+                        <button onClick="\${__b(d.update)}"
+                          style="display:flex;align-items:center;justify-content:center;gap:8px;flex:1;height:54px;border-radius:15px;background:#241d0c;color:#f8c200;font-size:17px;font-weight:800"
+                          style-hover="background:#3a2f14"><i class="ph-fill ph-pencil-simple"
+                            style="font-size:18px"></i>Update</button>
                         <button onClick="\${__b(d.open)}"
-                          style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;text-align:left;padding:15px 18px;border-radius:16px;background:#fff6f6;box-shadow:inset 0 0 0 1.5px #f3c7cc"
-                          style-hover="background:#ffeff0">
-                          <span style="flex:1;min-width:180px">
-                            <span style="display:block;font-size:17.5px;font-weight:800;color:#241f1c">\${d.client}</span>
-                            <span style="display:block;font-size:14.5px;font-weight:600;color:#7a6f60">\${d.propLine}</span>
-                          </span>
-                          <span
-                            style="display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 13px;border-radius:11px;background:#ffdfe2;color:#b02a37;font-size:14.5px;font-weight:800;flex:none"><i
-                              class="ph-fill ph-x-circle" style="font-size:16px"></i>\${d.reason}</span>
-                          <span
-                            style="flex:none;font-size:14.5px;font-weight:700;color:#8a7f6e;min-width:70px;text-align:right">\${d.when}</span>
-                        </button>
-                      \`).join('') }
+                          style="display:flex;align-items:center;justify-content:center;gap:8px;flex:1;height:54px;border-radius:15px;background:#fff0f1;color:#be123c;font-size:17px;font-weight:800"
+                          style-hover="background:#ffe4e6">Full details<i class="ph-bold ph-arrow-right"
+                            style="font-size:17px"></i></button>
+                      </div>
                     </div>
+                  \`).join('') }
+                </div>
+                \${ noLostDeals ? \`
+                  <div
+                    style="margin-top:16px;padding:52px 36px;text-align:center;border-radius:22px;background:#fff1f2;box-shadow:inset 0 0 0 1.5px #fecdd3">
+                    <i class="ph-fill ph-x-circle" style="font-size:44px;color:#fca5a5"></i>
+                    <div style="font-size:20px;font-weight:800;color:#241f1c;margin-top:12px">No lost deals</div>
+                    <div style="font-size:16px;font-weight:600;color:#8a7f6e;margin-top:4px">Deals marked as lost will appear here.</div>
                   </div>
                 \` : '' }
               \` : '' }
@@ -710,6 +752,8 @@ export function renderApp(state: any) {
                       style="font-size:19px"></i>On sale<span style="\${invSegLiveN}">\${invLiveCount}</span></button>
                   <button onClick="\${__b(invSoldGo)}" style="\${invSegSold}"><i class="ph-fill ph-seal-check"
                       style="font-size:19px"></i>Sold<span style="\${invSegSoldN}">\${invSoldCount}</span></button>
+                  <button onClick="\${__b(invHoldGo)}" style="\${invSegHold}"><i class="ph-fill ph-archive"
+                      style="font-size:19px"></i>Unsold<span style="\${invSegHoldN}">\${invHoldCount}</span></button>
                 </div>
                 <div style="flex:1"></div>
                 <button onClick="\${__b(openAddPlot)}" style="\${invAddBtnStyle}"

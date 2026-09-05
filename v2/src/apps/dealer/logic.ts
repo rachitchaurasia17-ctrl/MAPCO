@@ -685,169 +685,108 @@ export class Component extends DCLogic {
     const dims = (fk, dk, l1, l2) => [text(l1 || 'Frontage (ft)', fk, '30'), text(l2 || 'Depth (ft)', dk, '75')];
     const ROOMS = [{ k: 'living', l: 'Drawing / living' }, { k: 'dining', l: 'Dining' }, { k: 'store', l: 'Store room' }, { k: 'puja', l: 'Pooja room' }, { k: 'study', l: 'Study' }, { k: 'servant', l: 'Servant room' }, { k: 'servantBath', l: 'Servant washroom' }];
     const SERV = [{ k: 'lift', l: 'Lift' }, { k: 'powerBackup', l: 'Power backup' }, { k: 'borewell', l: 'Borewell' }, { k: 'solar', l: 'Solar' }, { k: 'security', l: 'Gated security' }];
-    let main = [], more = [];
+    let secA = [], secB = [], secC = [], secD = [];
 
-    if (K === 'plot') {
-      main = [...dims('frontage', 'depth'),
+    if (K === 'plot' || K === 'indplot') {
+      secA = [...dims('frontage', 'depth'),
       chips('Facing', 'facing', this.FACING, null, true),
-      text('Road width in front (ft)', 'road', '30'),
-      chips('Open sides', 'openSides', ['One side', 'Two side', 'Three side', 'Four side'], null, true),
-      flags('Position advantages', [{ k: 'corner', l: 'Corner plot' }, { k: 'parkFacing', l: 'Park facing' }, { k: 'mainRoad', l: 'On the main road' }, { k: 'cornerCut', l: 'Corner cut' }, { k: 'nearGreen', l: 'Green belt behind' }]),
-      text('Plot number', 'plotNo', '1247'),
-      text('Block / pocket', 'block', 'B')];
-      more = [text('Second-side road width (ft)', 'road2', '24'),
+      text('Road width in front (ft)', 'road', '30')];
+      
+      secB = [chips('Open sides', 'openSides', ['One side', 'Two side', 'Three side', 'Four side'], null, true),
+      flags('Position advantages', [{ k: 'corner', l: 'Corner plot' }, { k: 'parkFacing', l: 'Park facing' }, { k: 'mainRoad', l: 'On the main road' }, { k: 'nearGreen', l: 'Green belt behind' }, { k: 'cornerCut', l: 'Corner cut' }]),
+      chips('Ground level', 'level', ['Level with road', 'Above road', 'Below road'], null, true)];
+      
+      secC = [text('Plot number', 'plotNo', '1247'),
+      text('Block / pocket', 'block', 'B'),
+      chips('Plot shape', 'shape', ['Regular', 'Irregular', 'Corner cut', 'L-shape'], null, true),
       text('Front dimension (ft)', 'dimFront', '30'), text('Back dimension (ft)', 'dimBack', '30'),
       text('Left dimension (ft)', 'dimLeft', '75'), text('Right dimension (ft)', 'dimRight', '72'),
-      chips('Plot shape', 'shape', ['Regular', 'Irregular', 'Corner cut', 'L-shape'], null, true),
-      chips('Ownership', 'tenure', ['Freehold', 'Leasehold', 'Power of attorney'], null, true),
+      text('Second-side road width (ft)', 'road2', '24')];
+      
+      secD = [chips('Ownership', 'tenure', ['Freehold', 'Leasehold', 'Power of attorney'], null, true),
       text('Approving authority', 'approvalNote', 'GMADA approved'),
-      chips('Ground level', 'level', ['Level with road', 'Above road', 'Below road'], null, true),
       flags('Show to customers', [{ k: 'showPlotNo', l: 'Show plot number to customers' }])];
     }
-    else if (K === 'indplot') {
-      main = [...dims('frontage', 'depth'),
-      text('Road width in front (ft)', 'road', '80'),
-      chips('Access', 'access', ['Single access', 'Two-side access', 'Corner'], null, true),
-      text('Shed / built-up area (sq ft)', 'shedArea', '8000'),
-      text('Power load', 'powerLoad', '75 KVA'),
-      flags('Utilities on site', [{ k: 'water', l: 'Water connection' }, { k: 'sewer', l: 'Sewer connection' }, { k: 'effluent', l: 'Effluent line' }, { k: 'gas', l: 'Gas line' }, { k: 'built', l: 'Shed / factory built' }]),
-      text('Plot number', 'plotNo', 'B-114'),
-      text('Industrial area / phase', 'phase', 'Phase 8B, Mohali')];
-      more = [text('Shed height (ft)', 'ceiling', '28'),
-      flags('Handling and structure', [{ k: 'crane', l: 'Crane / gantry' }, { k: 'loadingBay', l: 'Loading bay' }, { k: 'officeBlock', l: 'Office block' }, { k: 'labourQtr', l: 'Labour quarters' }]),
-      text('Covered parking / yard (sq ft)', 'yardArea', '3000'),
-      chips('Ownership', 'tenure', ['Freehold', 'Leasehold'], null, true),
-      text('Approving authority', 'approvalNote', 'PSIEC allotted'),
-      text('Current use', 'use', 'Warehouse')];
-    }
-    else if (K === 'flat') {
-      main = [chips('Configuration', 'config', ['1 BHK', '2 BHK', '3 BHK', '4 BHK', '5+ BHK'], null, true),
-      chips('Bedrooms', 'beds', N6), chips('Washrooms', 'baths', N6),
-      chips('Balconies', 'balconies', N4, (v) => v === '0' ? 'None' : v),
-      chips('Kitchens', 'kitchens', ['1', '2'], null, false),
-      text('Floor this flat is on', 'floor', '2nd'),
-      text('Total floors in building', 'totalFloors', '4'),
-      chips('Covered parking', 'parking', N4, (v) => v === '0' ? 'None' : v + ' car'),
-      chips('Furnishing', 'furnishing', FURN, null, true),
+    else if (K === 'flat' || K === 'bfloor') {
+      secA = [chips('Configuration', 'config', ['1 BHK', '2 BHK', '3 BHK', '4 BHK', '5+ BHK'], null, true),
+      text('Super area (sq ft)', 'superArea', '1850'),
       text('Built-up area (sq ft)', 'builtup', '1450'),
       text('Carpet area (sq ft)', 'carpet', '1180'),
-      flags('Rooms it also has', ROOMS),
-      flags('Building services', SERV)];
-      more = [chips('Age of building', 'age', AGE, null, true),
-      chips('Possession', 'possession', ['Ready to move', 'Within 3 months', 'Within 6 months', 'Under construction'], null, true),
-      chips('Facing', 'facing', this.FACING, null, true),
-      chips('Flooring', 'flooring', ['Vitrified', 'Marble', 'Wooden', 'Tiles', 'Granite'], null, true),
-      text('Monthly maintenance', 'maintenance', '₹2,400'),
-      text('Flat / unit number', 'plotNo', 'B-402'),
-      flags('Extras', [{ k: 'modularKitchen', l: 'Modular kitchen' }, { k: 'wardrobes', l: 'Fitted wardrobes' }, { k: 'ac', l: 'ACs installed' }, { k: 'piped', l: 'Piped gas' }, { k: 'terraceRights', l: 'Terrace rights' }])];
-    }
-    else if (K === 'bfloor') {
-      main = [chips('Configuration', 'config', ['1 BHK', '2 BHK', '3 BHK', '4 BHK', '5+ BHK'], null, true),
-      chips('Bedrooms', 'beds', N6), chips('Washrooms', 'baths', N6),
-      chips('Which floor', 'floor', FLOORS, null, true),
-      text('Total floors in the building', 'totalFloors', '3'),
+      text('Floor this flat is on', 'floor', '2nd'),
+      text('Total floors in building', 'totalFloors', '4'),
+      chips('Facing', 'facing', this.FACING, null, true)];
+      
+      secB = [chips('Bedrooms', 'beds', N6), chips('Washrooms', 'baths', N6),
       chips('Balconies', 'balconies', N4, (v) => v === '0' ? 'None' : v),
-      chips('Kitchens', 'kitchens', ['1', '2'], null, false),
       chips('Covered parking', 'parking', N4, (v) => v === '0' ? 'None' : v + ' car'),
-      text('Plot size the floor sits on (sq yd)', 'landArea', '250'),
-      text('Built-up area (sq ft)', 'builtup', '1650'),
       chips('Furnishing', 'furnishing', FURN, null, true),
-      flags('Rooms it also has', ROOMS),
-      flags('This floor has', [{ k: 'sepEntry', l: 'Separate entry' }, { k: 'terrace', l: 'Terrace with it' }, { k: 'roofRights', l: 'Roof rights' }, { k: 'stilt', l: 'Stilt parking' }, ...SERV])];
-      more = [chips('Age', 'age', AGE, null, true),
-      chips('Facing', 'facing', this.FACING, null, true),
-      text('Road width in front (ft)', 'road', '40'),
-      text('Carpet area (sq ft)', 'carpet', '1380'),
+      flags('Building / lifestyle', [{ k: 'lift', l: 'Lift' }, { k: 'powerBackup', l: 'Power backup' }, { k: 'security', l: 'Gated security' }, { k: 'servant', l: 'Servant room' }])];
+      
+      secC = [chips('Age of building', 'age', AGE, null, true),
+      chips('Kitchens', 'kitchens', ['1', '2'], null, false),
       chips('Flooring', 'flooring', ['Vitrified', 'Marble', 'Wooden', 'Tiles', 'Granite'], null, true),
-      text('House number', 'plotNo', '1247')];
+      flags('Rooms it also has', [{ k: 'living', l: 'Drawing / living' }, { k: 'dining', l: 'Dining' }, { k: 'store', l: 'Store room' }, { k: 'puja', l: 'Pooja room' }, { k: 'study', l: 'Study' }]),
+      text('Monthly maintenance', 'maintenance', '₹2,400'),
+      flags('Extras', [{ k: 'modularKitchen', l: 'Modular kitchen' }, { k: 'wardrobes', l: 'Fitted wardrobes' }, { k: 'ac', l: 'ACs installed' }, { k: 'piped', l: 'Piped gas' }])];
+      
+      secD = [chips('Ownership', 'tenure', ['Freehold', 'Leasehold'], null, true),
+      text('Approving authority', 'approvalNote', 'GMADA approved'),
+      chips('Possession', 'possession', ['Ready to move', 'Within 3 months', 'Within 6 months', 'Under construction'], null, true),
+      text('Flat / unit number', 'plotNo', 'B-402')];
     }
     else if (K === 'kothi' || K === 'villa') {
-      main = [...dims('frontage', 'depth', 'Plot frontage (ft)', 'Plot depth (ft)'),
-      text(K === 'villa' ? 'Land area (sq yd)' : 'Plot area (sq yd)', 'landArea', '500'),
+      secA = [text(K === 'villa' ? 'Land area (sq yd)' : 'Plot area (sq yd)', 'landArea', '500'),
       text('Total built-up area (sq ft)', 'builtup', '4200'),
       chips('Floors built', 'floorCount', ['1', '2', '3', '4'], null, false),
       chips('Total bedrooms', 'beds', N6), chips('Total washrooms', 'baths', N6),
-      chips('Kitchens', 'kitchens', ['1', '2', '3'], null, false),
-      chips('Covered parking', 'parking', N4, (v) => v === '0' ? 'None' : v + ' car'),
-      chips('Furnishing', 'furnishing', FURN, null, true),
-      flags('Rooms it also has', ROOMS),
-      flags('The house also has', [{ k: 'lawn', l: K === 'villa' ? 'Private lawn' : 'Lawn / garden' }, { k: 'basement', l: 'Basement' }, { k: 'terrace', l: 'Terrace' }, { k: 'barsati', l: 'Barsati / top room' }, { k: 'portico', l: 'Portico' }, { k: 'stilt', l: 'Stilt parking' }, ...SERV])];
-      more = [text('Basement area (sq ft)', 'basementArea', '900'),
-      text('Lawn area (sq yd)', 'lawnArea', '80'),
-      chips('Age', 'age', AGE, null, true),
-      chips('Facing', 'facing', this.FACING, null, true),
-      text('Road width in front (ft)', 'road', '40'),
-      text('Carpet area (sq ft)', 'carpet', '3600'),
-      chips('Ownership', 'tenure', ['Freehold', 'Leasehold', 'Power of attorney'], null, true),
-      text('Floor-wise rooms (optional)', 'floorPlan', 'Ground — 2 bed, 2 bath, kitchen, drawing · First — 3 bed, 3 bath, kitchen', true)];
-    }
-    else if (K === 'sco') {
-      main = [...dims('frontage', 'depth'),
-      chips('Floors built', 'floorCount', ['1', '2', '3', '4', '5'], null, false),
-      text('Total built-up area (sq ft)', 'builtup', '5400'),
-      text('Plot area (sq yd)', 'landArea', '160'),
-      text('Road width in front (ft)', 'road', '80'),
-      chips('Washrooms', 'washrooms', N6),
-      chips('Covered parking', 'parking', N4, (v) => v === '0' ? 'None' : v + ' car'),
-      chips('Condition', 'fitout', ['Bare shell', 'Semi-finished', 'Fully finished'], null, true),
-      flags('Position and services', [{ k: 'basement', l: 'Basement' }, { k: 'corner', l: 'Corner' }, { k: 'twoSide', l: 'Two-side open' }, { k: 'mainRoad', l: 'On the main road' }, { k: 'pantry', l: 'Pantry' }, { k: 'lift', l: 'Lift' }, { k: 'powerBackup', l: 'Power backup' }, { k: 'terrace', l: 'Terrace usable' }])];
-      more = [text('Basement area (sq ft)', 'basementArea', '1200'),
-      text('Ceiling height (ft)', 'ceiling', '12'),
-      chips('Suitable for', 'use', ['Shop', 'Office', 'Showroom', 'Restaurant', 'Clinic', 'Bank', 'Hotel'], null, true),
-      chips('Ownership', 'tenure', ['Freehold', 'Leasehold'], null, true),
-      text('Currently rented to', 'currentUse', 'Ground floor rented at ₹85,000'),
-      text('Floor-wise use (optional)', 'floorPlan', 'Ground — showroom · First — office · Second — vacant', true)];
-    }
-    else if (K === 'booth') {
-      main = [text('Unit area (sq ft)', 'carpet', '120'),
-      ...dims('frontage', 'depth', 'Shutter frontage (ft)', 'Depth (ft)'),
-      chips('Where it sits', 'floor', ['Ground', 'First', 'Basement'], null, true),
-      chips('Suitable for', 'use', ['Shop', 'Office', 'Restaurant', 'Clinic', 'Bank'], null, true),
-      chips('Condition', 'fitout', ['Bare shell', 'Semi-finished', 'Fully finished'], null, true),
-      flags('It also has', [{ k: 'washroom', l: 'Washroom' }, { k: 'pantry', l: 'Pantry' }, { k: 'mezzanine', l: 'Mezzanine' }, { k: 'corner', l: 'Corner' }, { k: 'mainRoad', l: 'On the main road' }, { k: 'parkingAccess', l: 'Parking in front' }, { k: 'powerBackup', l: 'Power backup' }])];
-      more = [text('Road width in front (ft)', 'road', '40'),
-      text('Ceiling height (ft)', 'ceiling', '11'),
-      text('Booth number', 'plotNo', 'SCF-24'),
-      text('Current use', 'currentUse', 'Running tea stall'),
-      chips('Ownership', 'tenure', ['Freehold', 'Leasehold'], null, true)];
-    }
-    else if (K === 'office') {
-      main = [text('Carpet area (sq ft)', 'carpet', '2400'),
-      text('Built-up area (sq ft)', 'builtup', '3100'),
-      chips('Which floor', 'floor', FLOORS, null, true),
-      text('Total floors in building', 'totalFloors', '8'),
-      chips('Cabins', 'cabins', N6), text('Open seating (seats)', 'seats', '36'),
-      chips('Washrooms', 'washrooms', N5),
-      chips('Covered parking', 'parking', N4, (v) => v === '0' ? 'None' : v + ' car'),
-      chips('Condition', 'fitout', ['Bare shell', 'Semi-finished', 'Ready to move'], null, true),
-      flags('It also has', [{ k: 'conference', l: 'Conference room' }, { k: 'reception', l: 'Reception' }, { k: 'pantry', l: 'Pantry' }, { k: 'serverRoom', l: 'Server room' }, { k: 'lift', l: 'Lift' }, { k: 'powerBackup', l: 'Power backup' }, { k: 'centralAc', l: 'Central AC' }])];
-      more = [chips('Furnishing', 'furnishing', FURN, null, true),
-      text('Ceiling height (ft)', 'ceiling', '10'),
-      text('Monthly maintenance', 'maintenance', '₹18,000'),
-      text('Currently occupied by', 'currentUse', 'Vacant since Feb'),
       chips('Facing', 'facing', this.FACING, null, true)];
+      
+      secB = [chips('Covered parking', 'parking', N4, (v) => v === '0' ? 'None' : v + ' car'),
+      flags('Layout / features', [{ k: 'corner', l: 'Corner' }, { k: 'parkFacing', l: 'Park facing' }, { k: 'basement', l: 'Basement' }, { k: 'terrace', l: 'Terrace' }, { k: 'servant', l: 'Servant room' }, { k: 'lawn', l: 'Lawn / garden' }])];
+      
+      secC = [...dims('frontage', 'depth', 'Plot frontage (ft)', 'Plot depth (ft)'),
+      text('Carpet area (sq ft)', 'carpet', '3600'),
+      text('Basement area (sq ft)', 'basementArea', '900'),
+      text('Road width in front (ft)', 'road', '40'),
+      chips('Kitchens', 'kitchens', ['1', '2', '3'], null, false),
+      flags('Rooms it also has', [{ k: 'living', l: 'Drawing / living' }, { k: 'dining', l: 'Dining' }, { k: 'store', l: 'Store room' }, { k: 'puja', l: 'Pooja room' }, { k: 'study', l: 'Study' }]),
+      chips('Age', 'age', AGE, null, true)];
+      
+      secD = [chips('Ownership', 'tenure', ['Freehold', 'Leasehold', 'Power of attorney'], null, true),
+      text('Approving authority', 'approvalNote', 'GMADA approved'),
+      chips('Furnishing', 'furnishing', FURN, null, true)];
     }
     else {
-      main = [text('Area (sq ft)', 'carpet', '1800'),
+      secA = [text('Area (sq ft)', 'carpet', '1800'),
       ...dims('frontage', 'depth', 'Frontage (ft)', 'Depth (ft)'),
-      text('Ceiling height (ft)', 'ceiling', '14'),
       chips('Which floor', 'floor', ['Ground', 'First', 'Basement', 'Ground + First'], null, true),
-      text('Road width in front (ft)', 'road', '80'),
-      chips('Washrooms', 'washrooms', N5),
+      chips('Facing', 'facing', this.FACING, null, true),
+      text('Road width in front (ft)', 'road', '80')];
+      
+      secB = [flags('Features', [{ k: 'mainRoad', l: 'Main road visibility' }, { k: 'corner', l: 'Corner' }]),
+      chips('Suitable for', 'use', ['Shop', 'Office', 'Restaurant', 'Clinic', 'Bank', 'Gym'], null, true),
       chips('Covered parking', 'parking', N4, (v) => v === '0' ? 'None' : v + ' car'),
-      chips('Condition', 'fitout', ['Bare shell', 'Semi-finished', 'Fully finished'], null, true),
-      flags('Position and services', [{ k: 'groundAccess', l: 'Direct ground access' }, { k: 'corner', l: 'Corner visibility' }, { k: 'mainRoad', l: 'On the main road' }, { k: 'mezzanine', l: 'Mezzanine' }, { k: 'pantry', l: 'Pantry' }, { k: 'powerBackup', l: 'Power backup' }, { k: 'centralAc', l: 'Central AC' }])];
-      more = [text('Basement area (sq ft)', 'basementArea', '800'),
+      chips('Washrooms', 'washrooms', N5),
+      flags('Services', [{ k: 'lift', l: 'Lift / escalator' }, { k: 'basement', l: 'Basement' }])];
+      
+      secC = [text('Ceiling height (ft)', 'ceiling', '14'),
       text('Shutter / glass frontage (ft)', 'shutter', '22'),
-      chips('Suitable for', 'use', ['Shop', 'Showroom', 'Restaurant', 'Clinic', 'Bank', 'Gym'], null, true),
-      text('Current use', 'currentUse', 'Running furniture showroom'),
-      chips('Ownership', 'tenure', ['Freehold', 'Leasehold'], null, true)];
+      chips('Condition', 'fitout', ['Bare shell', 'Semi-finished', 'Fully finished'], null, true)];
+      
+      secD = [chips('Ownership', 'tenure', ['Freehold', 'Leasehold'], null, true),
+      text('Current use', 'currentUse', 'Vacant')];
     }
+    
     const dimNote = YARD(pf.frontage, pf.depth);
     return {
       pKindIcon: meta.i, pKindHint: dimNote ? ('That works out to ' + dimNote + '.') : meta.h,
-      pFields: main.concat(more), pMoreFields: [], pMoreOpen: false, pMoreLabel: '', pMoreIcon: '', pMoreGo: () => { },
-      pMoreStyle: 'display:flex;align-items:center;gap:9px;height:50px;padding:0 18px;border-radius:14px;margin-top:16px;background:#e1ecfb;color:#1a5aa8;font-size:16px;font-weight:800'
+      pSections: [
+        { title: 'Essentials', fields: secA },
+        { title: 'Features', fields: secB },
+        { title: 'Advanced details', fields: secC, isAdvanced: true },
+        { title: 'Legal & Visibility', fields: secD, isAdvanced: true }
+      ],
+      pMoreStyle: 'display:flex;align-items:center;justify-content:center;gap:9px;height:54px;padding:0 24px;border-radius:14px;margin-top:20px;background:rgba(255,255,255,.08);color:#bfdbfe;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.15);font-size:16.5px;font-weight:800;transition:all .15s;cursor:pointer;'
     };
   }
   groupOf(t) {
@@ -931,13 +870,7 @@ export class Component extends DCLogic {
       sellerId: '', askPrice: '', relation: 'Owner', availConfirmed: true, lastConfirmed: 'Today', visitNote: '', sellerPropNote: '', sellerDocs: []
     };
   }
-  setP(patch) {
-    this.setState({ pform: { ...this.state.pform, ...patch } });
-  }
-  onPForm(e) {
-    const { name, value, type, checked } = e.target;
-    this.setP({ [name]: type === 'checkbox' ? checked : value });
-  }
+
   /* Add Seller from inside the Add Property flow. Writes the canonical
      seller, then selects it for this property. An existing seller with the
      same number is reused instead of creating a second copy. */
@@ -1683,9 +1616,10 @@ export class Component extends DCLogic {
     this.setState({ pform: { ...curF, ...o } });
   }
   onPForm(e) {
-    const p = { [e.target.name]: e.target.value };
-    if (e.target.name === 'price') {
-      const sz = this.sizeNum(this.state.pform); const cr = parseFloat(e.target.value);
+    const { name, value, type, checked } = e.target;
+    const p = { [name]: type === 'checkbox' ? checked : value };
+    if (name === 'price') {
+      const sz = this.sizeNum(this.state.pform); const cr = parseFloat(value);
       p.rate = (sz && cr) ? String(Math.round(cr * 1e7 / sz)) : '';
     }
     this.setP(p);
@@ -2313,7 +2247,7 @@ export class Component extends DCLogic {
     const dActiveAll = this.deals.filter(d => d.stage !== 'closed' && d.stage !== 'lost');
     const dDoneAll = this.deals.filter(d => d.stage === 'closed');
     const dLostAll = this.deals.filter(d => d.stage === 'lost');
-    const dView = s.dealView === 'done' ? 'done' : 'active';
+    const dView = s.dealView === 'done' ? 'done' : (s.dealView === 'lost' ? 'lost' : 'active');
     const stageFilter = s.dealStage || 'all';
     const commExp = dActiveAll.reduce((a, d) => a + this.dealMoney(d).expected, 0);
     const commGotAll = this.deals.reduce((a, d) => a + this.dealMoney(d).got, 0);
@@ -2345,7 +2279,8 @@ export class Component extends DCLogic {
 
     const dvTabs = [
       { k: 'active', l: 'Ongoing', n: dActiveAll.length, i: 'ph-fill ph-handshake', on: 'background:#f8a800;color:#241d0c;box-shadow:0 10px 20px -10px rgba(248,168,0,.9);', off: 'background:transparent;color:#786950;' },
-      { k: 'done', l: 'Sold', n: dDoneAll.length, i: 'ph-fill ph-seal-check', on: 'background:#0a6634;color:#eafff2;box-shadow:0 10px 20px -10px rgba(10,102,52,.9);', off: 'background:transparent;color:#786950;' }
+      { k: 'done', l: 'Sold', n: dDoneAll.length, i: 'ph-fill ph-seal-check', on: 'background:#0a6634;color:#eafff2;box-shadow:0 10px 20px -10px rgba(10,102,52,.9);', off: 'background:transparent;color:#786950;' },
+      { k: 'lost', l: 'Lost', n: dLostAll.length, i: 'ph-fill ph-x-circle', on: 'background:#be123c;color:#fff;box-shadow:0 10px 20px -10px rgba(190,18,60,.9);', off: 'background:transparent;color:#786950;' }
     ].map(t => {
       const on = dView === t.k; return {
         label: t.l, count: String(t.n), icon: t.i, go: () => this.setState({ dealView: t.k, dealStage: 'all', ledgerFilter: 'all' }),
@@ -2462,6 +2397,7 @@ export class Component extends DCLogic {
       };
     });
 
+
     /* ---------- COMPLETED ledger ---------- */
     const ledgerFilter = s.ledgerFilter || 'all';
     const ledgerBase = dDoneAll.filter(dMatch);
@@ -2498,11 +2434,19 @@ export class Component extends DCLogic {
       };
     });
 
-    const lostDeals = dLostAll.filter(dMatch).map(d => ({
-      client: d.client, propLine: d.prop + ' · ' + d.propSub,
-      reason: d.lostReason || 'Not recorded', when: d.lostOn || '',
-      open: () => this.setState({ selectedDeal: d.id, dealTab: 'overview' })
-    }));
+    const lostDeals = dLostAll.filter(dMatch).map(d => {
+      const M = this.dealMoney(d), S = sellerNameOf(d);
+      return {
+        buyer: d.client,
+        propTitle: d.prop, propLoc: d.propSub,
+        priceFmt: this.inr(d.value), commFmt: this.inr(M.expected),
+        reason: d.lostReason || 'Not recorded', when: d.lostOn || '',
+        cardStyle: 'border-radius:24px;padding:20px 22px 22px;background:#fff1f2;background-image:linear-gradient(155deg,rgba(255,255,255,.74),rgba(255,255,255,0) 64%);box-shadow:0 0 0 2px #fecdd3,0 20px 40px -28px rgba(127,29,29,.6)',
+        moneyStyle: 'display:flex;align-items:flex-end;gap:16px;margin-top:16px;padding:14px 16px;border-radius:17px;background:rgba(255,255,255,.88);box-shadow:0 0 0 1.5px rgba(255,255,255,.95);flex-wrap:wrap',
+        update: () => this.openUpdate(d.id),
+        open: () => this.setState({ selectedDeal: d.id, dealTab: 'overview' })
+      };
+    });
 
     /* ---------- update sheet ---------- */
     let upVM = null;
@@ -2895,21 +2839,22 @@ export class Component extends DCLogic {
     const tmatch = (pr) => s.fType === 'all' || pr.want === s.fType;
     const pool = this.properties.filter(inCity).filter(qmatch).filter(tmatch);
     const soldView = s.invView === 'sold';
-    const allSold = this.properties.filter(pr => pr.status === 'sold'), allLive = this.properties.filter(pr => pr.status !== 'sold');
-    const soldPool = pool.filter(pr => pr.status === 'sold'), livePoolAll = pool.filter(pr => pr.status !== 'sold');
+    const holdView = s.invView === 'onhold';
+    const allSold = this.properties.filter(pr => pr.status === 'sold'), allHold = this.properties.filter(pr => pr.status === 'onhold'), allLive = this.properties.filter(pr => pr.status !== 'sold' && pr.status !== 'onhold');
+    const soldPool = pool.filter(pr => pr.status === 'sold'), holdPool = pool.filter(pr => pr.status === 'onhold'), livePoolAll = pool.filter(pr => pr.status !== 'sold' && pr.status !== 'onhold');
     const stateOf = (pr) => this.readinessOf(pr).state;
     const livePool = s.fState === 'all' ? livePoolAll : livePoolAll.filter(pr => stateOf(pr) === s.fState);
     const soldValue = soldPool.reduce((a, pr) => a + pr.price, 0);
     const soldEarn = Math.round(soldValue * 0.015);
-    const portfolio = soldView ? soldValue : livePoolAll.reduce((a, pr) => a + pr.price, 0);
-    const readyCount = soldView ? soldPool.length : livePoolAll.filter(pr => stateOf(pr) === 'ready').length;
+    const portfolio = soldView ? soldValue : (holdView ? holdPool.reduce((a, pr) => a + pr.price, 0) : livePoolAll.reduce((a, pr) => a + pr.price, 0));
+    const readyCount = soldView ? soldPool.length : (holdView ? holdPool.length : livePoolAll.filter(pr => stateOf(pr) === 'ready').length);
     const liveLinkCount = this.clientLinks.filter(l => l.status === 'active').length + this.shares.filter(x => x.status === 'active').length;
     const needCount = liveLinkCount;
     const opensOf = (pr) => this.clientLinks.filter(l => l.props.includes(pr.id)).reduce((a, l) => a + (l.opens || 0), 0)
       + this.shares.filter(x => x.propId === pr.id && x.opened !== 'not opened yet').length * 2 + (pr.views || 0);
     const qv = s.quickView || 'all';
-    let listPool = soldView ? soldPool.slice() : livePool.slice();
-    if (!soldView) {
+    let listPool = soldView ? soldPool.slice() : (holdView ? holdPool.slice() : livePool.slice());
+    if (!soldView && !holdView) {
       if (qv === 'hot') listPool = listPool.filter(pr => opensOf(pr) > 0).sort((a, b) => opensOf(b) - opensOf(a));
       else if (qv === 'price') listPool.sort((a, b) => b.price - a.price);
       else if (qv === 'new') listPool = listPool.slice().reverse();
@@ -3502,8 +3447,8 @@ export class Component extends DCLogic {
       const on = pf.type === t.k;
       return {
         label: t.k, icon: t.i, go: () => this.setP({ type: t.k }),
-        style: `display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:18px 16px;border-radius:18px;text-align:left;transition:all .16s;${on ? 'background:#241d0c;color:#f8c200;box-shadow:0 16px 30px -18px rgba(36,29,12,.9)' : 'background:#fffdf7;color:#4c463d;box-shadow:inset 0 0 0 2px #e6d6b4'}`,
-        iconStyle: `width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:24px;${on ? 'background:#f8a800;color:#241d0c' : 'background:#f7efdf;color:#a3541b'}`
+        style: `display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:18px 16px;border-radius:18px;text-align:left;transition:all .16s;${on ? 'background:#ffffff;color:#4c1d95;box-shadow:0 16px 30px -18px rgba(255,255,255,.3)' : 'background:rgba(255,255,255,.08);color:#ede9fe'}`,
+        iconStyle: `width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:24px;${on ? 'background:#4c1d95;color:#ffffff' : 'background:rgba(255,255,255,.15);color:#ede9fe'}`
       };
     });
     const pkind = pg === 'plot' ? 'plot' : pg === 'comm' ? 'landmark' : 'project';
@@ -3664,30 +3609,54 @@ export class Component extends DCLogic {
     const nextDealId = 'D' + (this.deals.length + 1);
     const nextClientId = 'C' + (this.clients.length + 1);
 
+    const pageBgStyle = (() => {
+      if (s.section === 'deals') {
+        if (dView === 'lost') {
+          return 'background:#fff1f2;background-image:radial-gradient(60% 50% at 2% 0%,rgba(225,29,72,.16),transparent 65%),radial-gradient(50% 45% at 98% 100%,rgba(244,63,94,.12),transparent 65%);';
+        }
+        if (dView === 'done') {
+          return 'background:#ebfbf2;background-image:radial-gradient(65% 55% at 2% 0%,rgba(16,185,129,.24),transparent 70%),radial-gradient(55% 45% at 98% 100%,rgba(5,150,105,.2),transparent 70%),radial-gradient(40% 30% at 50% 40%,rgba(52,211,153,.15),transparent 60%);';
+        }
+        return 'background:#f4fbf6;background-image:radial-gradient(60% 50% at 2% 0%,rgba(34,197,94,.16),transparent 65%),radial-gradient(50% 45% at 98% 100%,rgba(234,179,8,.18),transparent 65%);';
+      }
+      if (s.section === 'properties' || s.section === 'plots') {
+        if (soldView) {
+          return 'background:#eefcf3;background-image:radial-gradient(65% 55% at 2% 0%,rgba(16,185,129,.26),transparent 70%),radial-gradient(55% 45% at 98% 100%,rgba(4,120,87,.22),transparent 70%);';
+        }
+        if (holdView) {
+          return 'background:#fff0f2;background-image:radial-gradient(60% 50% at 2% 0%,rgba(225,29,72,.18),transparent 65%),radial-gradient(50% 45% at 98% 100%,rgba(190,18,60,.14),transparent 65%);';
+        }
+        return 'background:#f2faf5;background-image:radial-gradient(60% 50% at 2% 0%,rgba(34,197,94,.18),transparent 65%),radial-gradient(50% 45% at 98% 100%,rgba(16,185,129,.12),transparent 65%);';
+      }
+      return '';
+    })();
+
     return {
+      pageBgStyle,
       navItems, ownerName: this.ownerName, ownerFirst: this.ownerName.split(' ')[0], ownerInitials: this.ownerInitials, bizName: this.bizName,
       greeting, dateStr, sectionName: sm.name, sectionIcon: sm.icon,
-      invLiveGo: () => this.setState({ invView: 'live' }), invSoldGo: () => this.setState({ invView: 'sold' }),
+      invLiveGo: () => this.setState({ invView: 'live' }), invSoldGo: () => this.setState({ invView: 'sold' }), invHoldGo: () => this.setState({ invView: 'onhold' }),
       invMoneyToggle: () => this.setState({ invView: soldView ? 'live' : 'sold' }),
       invMoneyBtnLabel: soldView ? 'Back to on sale' : this.inr(soldEarn) + ' earned',
       invMoneyBtnIcon: soldView ? 'ph-bold ph-arrow-left' : 'ph-fill ph-seal-check',
       invMoneyBtnStyle: 'display:flex;align-items:center;gap:9px;height:46px;padding:0 20px;border-radius:12px;font-size:15px;font-weight:800;transition:transform .12s,box-shadow .2s;' + (soldView
         ? 'background:#f6efdd;color:#111c36;box-shadow:0 5px 0 #b9ac8d,0 16px 30px -14px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.9)'
         : 'background:#1b2b52;background-image:linear-gradient(160deg,#2f477f,#131f3e);color:#f8c200;box-shadow:0 5px 0 #0a1024,0 16px 30px -14px rgba(17,28,54,.55),inset 0 1px 0 rgba(255,255,255,.24)'),
-      invLiveStyle: bigBtn(!soldView, 'gold', soldView), invSoldStyle: bigBtn(soldView, 'money', soldView),
+      invLiveStyle: bigBtn(!soldView && !holdView, 'gold', soldView || holdView), invSoldStyle: bigBtn(soldView, 'money', soldView),
       invLiveMeta: livePool.length + ' on your list', invSoldMeta: soldPool.length + ' sold · ' + this.inr(soldEarn) + ' earned',
-      invStatLabelA: soldView ? 'Value sold' : 'Value on sale',
-      invStatLabelB: soldView ? 'Properties sold' : 'Ready to show',
-      invStatLabelC: soldView ? 'Earnings' : 'Live client links',
-      invStatIconA: soldView ? 'ph-fill ph-bank' : 'ph-fill ph-buildings',
-      invStatIconB: soldView ? 'ph-fill ph-seal-check' : 'ph-fill ph-check-circle',
-      invStatIconC: soldView ? 'ph-fill ph-coins' : 'ph-fill ph-paper-plane-tilt',
-      invLiveCount: allLive.length, invSoldCount: allSold.length,
-      invSegLive: segBase + ';height:60px;padding:0 26px;font-size:18.5px;border-radius:16px;white-space:nowrap;' + (soldView ? 'background:transparent;color:#2f6b4c;opacity:.75' : 'background:#f8a800;color:#241d0c;box-shadow:0 14px 28px -12px rgba(248,168,0,.95),inset 0 0 0 2px #ffce5c;transform:scale(1.02)'),
-      invSegSold: segBase + ';height:60px;padding:0 26px;font-size:18.5px;border-radius:16px;white-space:nowrap;' + (soldView ? 'background:#0a6634;color:#eafff2;box-shadow:0 14px 28px -12px rgba(10,102,52,.95),inset 0 0 0 2px #2fd07f;transform:scale(1.02)' : 'background:transparent;color:#6b6156;opacity:.72'),
-      invSegLiveN: segNum(!soldView), invSegSoldN: segNum(soldView),
-      invSegWrapStyle: 'display:flex;gap:6px;padding:6px;border-radius:20px;' + (soldView ? 'background:#d9f0e4;box-shadow:inset 0 0 0 2px #9fd6ba' : 'background:#fff3d6;box-shadow:inset 0 0 0 1px rgba(120,100,60,.16)'),
-      invAddBtnStyle: 'display:flex;align-items:center;gap:10px;height:60px;padding:0 26px;border-radius:16px;font-size:18px;font-weight:800;white-space:nowrap;white-space:nowrap;transition:transform .12s;' + (soldView ? 'background:#f8a800;color:#241d0c' : 'background:#1d7a43;background-image:linear-gradient(140deg,#27a05a,#125c31);color:#eafff2;box-shadow:0 18px 34px -16px rgba(11,111,57,.9)'),
+      invStatLabelA: soldView ? 'Value sold' : (holdView ? 'Value off market' : 'Value on sale'),
+      invStatLabelB: soldView ? 'Properties sold' : (holdView ? 'Properties held' : 'Ready to show'),
+      invStatLabelC: soldView ? 'Earnings' : (holdView ? 'Past links' : 'Live client links'),
+      invStatIconA: soldView ? 'ph-fill ph-bank' : (holdView ? 'ph-fill ph-archive' : 'ph-fill ph-buildings'),
+      invStatIconB: soldView ? 'ph-fill ph-seal-check' : (holdView ? 'ph-fill ph-pause-circle' : 'ph-fill ph-check-circle'),
+      invStatIconC: soldView ? 'ph-fill ph-coins' : (holdView ? 'ph-fill ph-paper-plane-tilt' : 'ph-fill ph-paper-plane-tilt'),
+      invLiveCount: allLive.length, invSoldCount: allSold.length, invHoldCount: allHold.length,
+      invSegLive: segBase + ';height:60px;padding:0 26px;font-size:18.5px;border-radius:16px;white-space:nowrap;' + (!soldView && !holdView ? 'background:#f8a800;color:#241d0c;box-shadow:0 14px 28px -12px rgba(248,168,0,.95),inset 0 0 0 2px #ffce5c;transform:scale(1.02)' : 'background:transparent;color:#2f6b4c;opacity:.75'),
+      invSegSold: segBase + ';height:60px;padding:0 26px;font-size:18.5px;border-radius:16px;white-space:nowrap;' + (soldView ? 'background:#0a6634;color:#eafff2;box-shadow:0 14px 28px -12px rgba(10,102,52,.95),inset 0 0 0 2px #2fd07f;transform:scale(1.02)' : 'background:transparent;color:#2f6b4c;opacity:.75'),
+      invSegHold: segBase + ';height:60px;padding:0 26px;font-size:18.5px;border-radius:16px;white-space:nowrap;' + (holdView ? 'background:#be123c;color:#fff;box-shadow:0 14px 28px -12px rgba(190,18,60,.95),inset 0 0 0 2px #e11d48;transform:scale(1.02)' : 'background:transparent;color:#786950;opacity:.75'),
+      invSegLiveN: segNum(!soldView && !holdView), invSegSoldN: segNum(soldView), invSegHoldN: segNum(holdView),
+      invSegWrapStyle: 'display:flex;gap:6px;padding:6px;border-radius:20px;' + (soldView ? 'background:#d9f0e4;box-shadow:inset 0 0 0 2px #9fd6ba' : (holdView ? 'background:#ffe4e6;box-shadow:inset 0 0 0 2px #fecdd3' : 'background:#fff3d6;box-shadow:inset 0 0 0 1px rgba(120,100,60,.16)')),
+      invAddBtnStyle: 'display:flex;align-items:center;gap:10px;height:60px;padding:0 26px;border-radius:16px;font-size:18px;font-weight:800;white-space:nowrap;white-space:nowrap;transition:transform .12s;' + (!soldView && !holdView ? 'background:#1d7a43;background-image:linear-gradient(140deg,#27a05a,#125c31);color:#eafff2;box-shadow:0 18px 34px -16px rgba(11,111,57,.9)' : 'background:#f8a800;color:#241d0c'),
       propQ: s.propQ, propQOn: !!s.propQ,
       onPropQ: (e) => this.setState({ propQ: e.target.value }), clearPropQ: () => this.setState({ propQ: '' }),
       invSearchStyle: 'width:280px;max-width:320px;flex:0 1 280px;display:flex;align-items:center;gap:10px;height:52px;padding:0 16px;border-radius:15px;background:#fffdf7;box-shadow:inset 0 0 0 1.5px ' + (soldView ? '#a9d9bd' : '#e6d6b4') + ',0 4px 12px -8px rgba(40,26,2,.2);',
@@ -3714,11 +3683,11 @@ export class Component extends DCLogic {
       clearFilters: () => this.setState({ plotCity: 'all', fType: 'all', fState: 'all' }),
       closeFilters: () => this.setState({ filtersOpen: false }),
       needCountText: needCount === 1 ? '1 property needs attention' : needCount + ' properties need attention',
-      invStatA: soldView ? 'border-radius:24px;padding:26px 30px;color:#78350f;background:#fef3c7;background-image:linear-gradient(135deg,#fffbeb,#fef3c7 60%,#fde68a);box-shadow:0 20px 40px -20px rgba(217,119,6,.45),inset 0 2px 0 rgba(255,255,255,.9);border:2px solid #fcd34d;' : 'border-radius:24px;padding:26px 30px;color:#1c1303;background:#f59e0b;background-image:linear-gradient(135deg,#fbbf24,#f59e0b 60%,#d97706);box-shadow:0 20px 40px -20px rgba(245,158,11,.65),inset 0 2px 0 rgba(255,255,255,.5);border:2px solid #f59e0b;',
-      invStatB: soldView ? 'border-radius:24px;padding:26px 30px;color:#ffffff;background:#059669;background-image:linear-gradient(135deg,#10b981,#059669 60%,#047857);box-shadow:0 20px 40px -20px rgba(5,150,105,.6),inset 0 2px 0 rgba(255,255,255,.3);border:2px solid #059669;' : 'border-radius:24px;padding:26px 30px;color:#9a3412;background:#fff7ed;background-image:linear-gradient(135deg,#fff7ed,#ffedd5 60%,#fed7aa);box-shadow:0 20px 40px -20px rgba(234,88,12,.35),inset 0 2px 0 rgba(255,255,255,.9);border:2px solid #fb923c;',
-      invStatC: soldView ? 'border-radius:24px;padding:26px 30px;color:#ffffff;background:#d97706;background-image:linear-gradient(135deg,#f59e0b,#d97706 60%,#b45309);box-shadow:0 20px 40px -20px rgba(217,119,6,.6),inset 0 2px 0 rgba(255,255,255,.3);border:2px solid #d97706;' : 'border-radius:24px;padding:26px 30px;color:#5b21b6;background:#f5f3ff;background-image:linear-gradient(135deg,#f5f3ff,#ede9fe 60%,#ddd6fe);box-shadow:0 20px 40px -20px rgba(109,40,217,.35),inset 0 2px 0 rgba(255,255,255,.9);border:2px solid #c4b5fd;',
-      invListLabel: soldView ? 'Sold and settled' : 'Your properties',
-      invH1Style: "margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:34px;letter-spacing:-.015em;color:" + (soldView ? '#0a4a26' : '#241f1c'),
+      invStatA: soldView ? 'border-radius:24px;padding:26px 30px;color:#064e3b;background:#d1fae5;background-image:linear-gradient(135deg,#ecfdf5,#d1fae5 60%,#a7f3d0);box-shadow:0 20px 40px -20px rgba(6,78,59,.4),inset 0 2px 0 rgba(255,255,255,.9);border:2px solid #6ee7b7;' : (holdView ? 'border-radius:24px;padding:26px 30px;color:#881337;background:#ffe4e6;background-image:linear-gradient(135deg,#fff1f2,#ffe4e6 60%,#fecdd3);box-shadow:0 20px 40px -20px rgba(190,18,60,.35),inset 0 2px 0 rgba(255,255,255,.9);border:2px solid #fda4af;' : 'border-radius:24px;padding:26px 30px;color:#1c1303;background:#f59e0b;background-image:linear-gradient(135deg,#fbbf24,#f59e0b 60%,#d97706);box-shadow:0 20px 40px -20px rgba(245,158,11,.65),inset 0 2px 0 rgba(255,255,255,.5);border:2px solid #f59e0b;'),
+      invStatB: soldView ? 'border-radius:24px;padding:26px 30px;color:#ffffff;background:#059669;background-image:linear-gradient(135deg,#10b981,#059669 60%,#047857);box-shadow:0 20px 40px -20px rgba(5,150,105,.6),inset 0 2px 0 rgba(255,255,255,.3);border:2px solid #059669;' : (holdView ? 'border-radius:24px;padding:26px 30px;color:#9f1239;background:#fff1f2;background-image:linear-gradient(135deg,#fff1f2,#ffe4e6 60%,#fecdd3);box-shadow:0 20px 40px -20px rgba(159,18,57,.35),inset 0 2px 0 rgba(255,255,255,.9);border:2px solid #fb7185;' : 'border-radius:24px;padding:26px 30px;color:#9a3412;background:#fff7ed;background-image:linear-gradient(135deg,#fff7ed,#ffedd5 60%,#fed7aa);box-shadow:0 20px 40px -20px rgba(234,88,12,.35),inset 0 2px 0 rgba(255,255,255,.9);border:2px solid #fb923c;'),
+      invStatC: soldView ? 'border-radius:24px;padding:26px 30px;color:#ffffff;background:#d97706;background-image:linear-gradient(135deg,#f59e0b,#d97706 60%,#b45309);box-shadow:0 20px 40px -20px rgba(217,119,6,.6),inset 0 2px 0 rgba(255,255,255,.3);border:2px solid #d97706;' : (holdView ? 'border-radius:24px;padding:26px 30px;color:#1e3a8a;background:#dbeafe;background-image:linear-gradient(135deg,#dbeafe,#bfdbfe 60%,#93c5fd);box-shadow:0 20px 40px -20px rgba(59,130,246,.35),inset 0 2px 0 rgba(255,255,255,.9);border:2px solid #93c5fd;' : 'border-radius:24px;padding:26px 30px;color:#5b21b6;background:#f5f3ff;background-image:linear-gradient(135deg,#f5f3ff,#ede9fe 60%,#ddd6fe);box-shadow:0 20px 40px -20px rgba(109,40,217,.35),inset 0 2px 0 rgba(255,255,255,.9);border:2px solid #c4b5fd;'),
+      invListLabel: soldView ? 'Sold and settled' : (holdView ? 'Unsold and archived' : 'Your properties'),
+      invH1Style: "margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:34px;letter-spacing:-.015em;color:" + (soldView ? '#0a4a26' : (holdView ? '#7c2d12' : '#241f1c')),
       invSecLabelStyle: 'display:none',
       shellRef: (el) => { this._shell = el; }, asideRef: (el) => { this._aside = el; },
       topBarStyle: 'display:flex;align-items:center;gap:14px;padding:16px 40px;backdrop-filter:blur(8px);position:sticky;top:0;z-index:30;transition:background .45s ease;' + (mny ? 'border-bottom:1px solid rgba(217,154,9,.26);background:rgba(12,21,48,.76)' : 'border-bottom:1px solid #ddd2f5;background:rgba(247,243,234,.86)'),
@@ -3837,25 +3806,40 @@ export class Component extends DCLogic {
       dealSearch: s.dealSearch || '', dealSearchOn: !!(s.dealSearch || '').length, onDealSearch: (e) => this.setState({ dealSearch: e.target.value }), clearDealSearch: () => this.setState({ dealSearch: '' }),
       hasActive: !doneView && dealsActive.length > 0, noActive: !doneView && dealsActive.length === 0, hasDone: doneView && dealsDone.length > 0,
       dvTabs, dStrip, dStageChips, todayGroups, activeDeals, ledgerChips, ledgerRows, lostDeals,
-      dSumWrap: 'display:flex;flex-wrap:wrap;gap:22px;margin-top:16px;padding:22px 28px;border-radius:22px;color:#eafff2;' + (dView === 'done'
-        ? 'background:#06452a;background-image:linear-gradient(140deg,#0d6b3f,#04331e);box-shadow:0 24px 46px -26px rgba(6,60,35,.9)'
-        : 'background:#0b6f39;background-image:linear-gradient(140deg,#17a05c,#0a5b2e);box-shadow:0 24px 46px -26px rgba(10,90,50,.85)'),
+      dSumWrap: 'display:flex;flex-wrap:wrap;gap:22px;margin-top:16px;padding:22px 28px;border-radius:22px;' + (dView === 'lost'
+        ? 'color:#fde8ec;background:#7f1d1d;background-image:linear-gradient(140deg,#991b1b,#5c1414);box-shadow:0 24px 46px -26px rgba(127,29,29,.9)'
+        : dView === 'done'
+        ? 'color:#d1fae5;background:#064e3b;background-image:linear-gradient(140deg,#065f46,#022c22);box-shadow:0 24px 46px -26px rgba(6,78,59,.9)'
+        : 'color:#fef3c7;background:#78350f;background-image:linear-gradient(140deg,#92400e,#451a03);box-shadow:0 24px 46px -26px rgba(120,53,15,.9)'),
       dSummary: (() => {
-        const lab = () => 'font-size:12.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#a8e3c3';
-        const val = () => "font-family:'Newsreader',serif;font-weight:600;font-size:40px;line-height:1.05;color:#fff8e8";
-        const sub = () => 'font-size:15px;font-weight:700;color:#a8e3c3;margin-top:2px';
+        if (dView === 'lost') {
+          const lostVal = dLostAll.reduce((a, d) => a + d.value, 0);
+          const topReason = (() => { const rc = {}; dLostAll.forEach(d => { const r = d.lostReason || 'Not recorded'; rc[r] = (rc[r] || 0) + 1; }); let best = '—', mx = 0; for (const k in rc) if (rc[k] > mx) { mx = rc[k]; best = k; } return best; })();
+          const lab = () => 'font-size:12.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#fca5a5';
+          const val = () => "font-family:'Newsreader',serif;font-weight:600;font-size:40px;line-height:1.05;color:#fff1f2";
+          const sub = () => 'font-size:15px;font-weight:700;color:#fca5a5;margin-top:2px';
+          return [{ title: 'Lost', value: String(dLostAll.length), sub: dLostAll.length === 1 ? 'deal did not close' : 'deals did not close', label: lab(), valStyle: val(), subStyle: sub() },
+          { title: 'Value lost', value: m(lostVal), sub: 'total opportunity missed', label: lab(), valStyle: val(), subStyle: sub() },
+          { title: 'Top reason', value: topReason, sub: 'most common cause', label: lab(), valStyle: "font-family:'Newsreader',serif;font-weight:600;font-size:28px;line-height:1.15;color:#fff1f2", subStyle: sub() }];
+        }
         if (dView === 'done') {
           const rec = dDoneAll.reduce((a, d) => a + this.dealMoney(d).got, 0), due = dDoneAll.reduce((a, d) => a + this.dealMoney(d).due, 0);
-          return [{ title: 'Sold', value: String(dDoneAll.length), sub: dDoneAll.length === 1 ? 'property closed' : 'properties closed', label: lab('#7a8f82'), valStyle: val('#241f1c'), subStyle: sub('#5c7a68') },
-          { title: 'Total value', value: m(doneVal), sub: 'across all sales', label: lab('#7a8f82'), valStyle: val('#241f1c'), subStyle: sub('#5c7a68') },
-          { title: 'You earned', value: m(rec), sub: due > 0 ? (m(due) + ' still to come') : 'all commission received', label: lab('#0a6634'), valStyle: val('#0a6634'), subStyle: sub('#0a6634') }];
+          const lab = () => 'font-size:12.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#6ee7b7';
+          const val = () => "font-family:'Newsreader',serif;font-weight:600;font-size:40px;line-height:1.05;color:#ecfdf5";
+          const sub = () => 'font-size:15px;font-weight:700;color:#6ee7b7;margin-top:2px';
+          return [{ title: 'Sold', value: String(dDoneAll.length), sub: dDoneAll.length === 1 ? 'property closed' : 'properties closed', label: lab(), valStyle: val(), subStyle: sub() },
+          { title: 'Total value', value: m(doneVal), sub: 'across all sales', label: lab(), valStyle: val(), subStyle: sub() },
+          { title: 'You earned', value: m(rec), sub: due > 0 ? (m(due) + ' still to come') : 'all commission received', label: lab(), valStyle: val(), subStyle: sub() }];
         }
-        return [{ title: 'Ongoing', value: String(dActiveAll.length), sub: dActiveAll.length === 1 ? 'deal in progress' : 'deals in progress', label: lab('#8a7f6e'), valStyle: val('#241f1c'), subStyle: sub('#8a7f6e') },
-        { title: 'Money on the table', value: m(pipeline), sub: 'if all of them close', label: lab('#8a7f6e'), valStyle: val('#241f1c'), subStyle: sub('#8a7f6e') },
-        { title: 'Your commission', value: m(commExp), sub: 'expected from these deals', label: lab('#0a6634'), valStyle: val('#0a6634'), subStyle: sub('#0a6634') }];
+        const lab = () => 'font-size:12.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#fde68a';
+        const val = () => "font-family:'Newsreader',serif;font-weight:600;font-size:40px;line-height:1.05;color:#fffbeb";
+        const sub = () => 'font-size:15px;font-weight:700;color:#fde68a;margin-top:2px';
+        return [{ title: 'Ongoing', value: String(dActiveAll.length), sub: dActiveAll.length === 1 ? 'deal in progress' : 'deals in progress', label: lab(), valStyle: val(), subStyle: sub() },
+        { title: 'Money on the table', value: m(pipeline), sub: 'if all of them close', label: lab(), valStyle: val(), subStyle: sub() },
+        { title: 'Your commission', value: m(commExp), sub: 'expected from these deals', label: lab(), valStyle: val(), subStyle: sub() }];
       })(),
-      dvToday: false, dvActive: dView === 'active', dvDone: dView === 'done',
-      noActiveDeals: activeDeals.length === 0,
+      dvToday: false, dvActive: dView === 'active', dvDone: dView === 'done', dvLost: dView === 'lost',
+      activeDeals, lostDeals, noActiveDeals: activeDeals.length === 0, noLostDeals: lostDeals.length === 0,
       noActiveMsg: (dq || stageFilter !== 'all') ? 'No deal matches this' : 'No deal is open right now. Start one when a buyer gets serious.',
       noLedger: ledgerRows.length === 0,
       noLedgerMsg: ledgerFilter === 'due' ? 'Every completed deal is fully paid.' : 'Nothing closed yet.',
@@ -4276,10 +4260,21 @@ export class Component extends DCLogic {
       pAvailYesStyle: pill(!!pf.availConfirmed), pAvailNoStyle: pill(!pf.availConfirmed),
       pDocs, pHasDocs: pDocs.length > 0, pNoDocs: pDocs.length === 0,
       pInput: inputBig, pArea: areaBig,
+      pCities: this.CITIES,
+      pRecentCities: ['Mohali', 'Chandigarh', 'Aerocity', 'New Chandigarh'].map(c => ({
+        label: c,
+        go: () => this.setP({ city: c, sector: '' }),
+        style: pf.city === c
+          ? 'height:26px;padding:0 10px;border-radius:7px;font-size:12.5px;font-weight:700;background:#241d0c;color:#f8c200;border:none;transition:all .15s;cursor:pointer'
+          : 'height:26px;padding:0 10px;border-radius:7px;font-size:12.5px;font-weight:600;background:#f5efe6;color:#6b5d49;border:1px solid #e3d8c5;transition:all .15s;cursor:pointer'
+      })),
+      pAddressOpen: !!s.pAddressOpen || !!(pf.address && pf.address.trim()),
+      openAddress: () => this.setState({ pAddressOpen: true }),
       pCityChips: this.CITIES.map(c => ({ label: c, go: () => this.setP({ city: c, sector: '' }), style: pill(pf.city === c) })),
       pTypeTiles, pIsPlot: pg === 'plot', pIsBuilt: pg === 'built', pIsComm: pg === 'comm',
       pSizeUnits, pFacing, pBeds, pBaths, pParking, pFurn, pAge, pUse,
       ...this.typeFields(pf, pill),
+      pMoreOpen: !!s.pMoreOpen,
       onPRate: (e) => this.onPRate(e),
       pRateUnit: (() => { const u = pf.unit || 'sq yd'; return u === 'sq ft' ? 'sq ft' : (u === 'marla' || u === 'kanal') ? 'sq yd' : 'sq yd'; })(),
       pRateEcho: (() => { const r = parseFloat(pf.rate); return r ? ('₹' + Math.round(r).toLocaleString('en-IN')) : '—'; })(),

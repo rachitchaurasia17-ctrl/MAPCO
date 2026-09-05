@@ -68,7 +68,108 @@ export class DCLogic {
     // The template.ts should expose a renderApp function that takes props
     // We expect it to be passed in from main.ts. We'll store it on the instance or inject it.
     if ((this as any).__templateFn) {
+      // PRE-RENDER STATE CAPTURE
+      const getSelectorPath = (el: Element, rootEl: Element): string => {
+        const path: string[] = [];
+        let current = el;
+        while (current && current !== rootEl && current !== document.body) {
+          let selector = current.tagName.toLowerCase();
+          if (current.id) {
+            selector += `#${current.id}`;
+            path.unshift(selector);
+            break;
+          } else {
+            let index = 1;
+            let sibling = current.previousElementSibling;
+            while (sibling) {
+              if (sibling.tagName === current.tagName) {
+                index++;
+              }
+              sibling = sibling.previousElementSibling;
+            }
+            selector += `:nth-of-type(${index})`;
+            path.unshift(selector);
+            current = current.parentElement as Element;
+          }
+        }
+        return path.join(' > ');
+      };
+
+      let activeIdentifier: string | null = null;
+      let activeSelectionStart: number | null = null;
+      let activeSelectionEnd: number | null = null;
+
+      const activeEl = document.activeElement as HTMLElement;
+      if (activeEl && root.contains(activeEl)) {
+        if (activeEl.id) {
+          activeIdentifier = `#${activeEl.id}`;
+        } else if (activeEl.hasAttribute('name')) {
+          const name = activeEl.getAttribute('name');
+          const tagName = activeEl.tagName.toLowerCase();
+          activeIdentifier = `${tagName}[name="${name}"]`;
+        } else {
+          activeIdentifier = getSelectorPath(activeEl, root);
+        }
+
+        if (activeIdentifier && (activeEl instanceof HTMLInputElement || activeEl instanceof HTMLTextAreaElement)) {
+          try {
+            activeSelectionStart = activeEl.selectionStart;
+            activeSelectionEnd = activeEl.selectionEnd;
+          } catch (e) {
+            // Some input types like 'number' don't support selection
+          }
+        }
+      }
+
+      const scrollStates: { identifier: string, scrollTop: number, scrollLeft: number }[] = [];
+      const scrollableElements = root.querySelectorAll('*');
+      for (let i = 0; i < scrollableElements.length; i++) {
+        const el = scrollableElements[i];
+        if (el.scrollTop > 0 || el.scrollLeft > 0) {
+          scrollStates.push({
+            identifier: el.id ? `#${el.id}` : getSelectorPath(el, root),
+            scrollTop: el.scrollTop,
+            scrollLeft: el.scrollLeft
+          });
+        }
+      }
+      
+      if (root.scrollTop > 0 || root.scrollLeft > 0) {
+        scrollStates.push({
+          identifier: 'root',
+          scrollTop: root.scrollTop,
+          scrollLeft: root.scrollLeft
+        });
+      }
+
+      // RENDER
       root.innerHTML = (this as any).__templateFn(props);
+
+      // POST-RENDER STATE RESTORE
+      for (const s of scrollStates) {
+        if (s.identifier === 'root') {
+          root.scrollTop = s.scrollTop;
+          root.scrollLeft = s.scrollLeft;
+        } else {
+          const el = root.querySelector(s.identifier);
+          if (el) {
+            el.scrollTop = s.scrollTop;
+            el.scrollLeft = s.scrollLeft;
+          }
+        }
+      }
+
+      if (activeIdentifier) {
+        const el = root.querySelector(activeIdentifier) as HTMLInputElement | HTMLTextAreaElement;
+        if (el) {
+          el.focus();
+          if (activeSelectionStart !== null && activeSelectionEnd !== null) {
+            try {
+              el.setSelectionRange(activeSelectionStart, activeSelectionEnd);
+            } catch (e) {}
+          }
+        }
+      }
 
       const didUpdate = (this as unknown as { componentDidUpdate?: () => void }).componentDidUpdate;
       if (typeof didUpdate === 'function') {
