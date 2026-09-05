@@ -36,7 +36,7 @@ export class Component extends DCLogic {
     sform: { clientId: '', newName: '', newPhone: '', expiry: '3d', loc: 'area', price: 'hidden', photos: [0, 1, 2, 3], audio: 'none', secs: 0 },
     wiz: { step: 1, clientId: '', useNewClient: false, ncName: '', ncPhone: '', propId: '', useManualProp: false, mpLoc: '', mpSize: '', name: '', value: '', comm: '', stage: 'negotiating', sellerName: '', sellerPhone: '', q1: '', q2: '' },
     cform: { name: '', phone: '', want: 'Plot', city: 'Mohali', budgetFrom: '', budgetTo: '', unit: 'Cr', note: '', plots: [] },
-    contactMode: 'clients', cliQ: '', cliFilter: 'all', sellQ: '', addClientBig: false, addSellerOpen: false, sellerProfile: null,
+    contactMode: 'clients', cliQ: '', cliFilter: null, sellQ: '', addClientBig: false, addSellerOpen: false, sellerProfile: null,
     savingSeller: false, sellerError: '', sellerEditId: null,
     savingSold: false, soldError: '', propError: '', propMissing: [],
     savingClient: false, clientError: '',
@@ -231,7 +231,6 @@ export class Component extends DCLogic {
       seller: { name: 'Owner (direct)', phone: '—' }
     },
   ];
-  ;
   /* Clients are canonical — Mark Sold resolves the buyer server-side and
      appends to that client's purchase history, so a fixture id would not
      exist. Filled in place by deskStore.loadClients(). */
@@ -239,17 +238,17 @@ export class Component extends DCLogic {
   newClients = ['C5', 'C7', 'C11'];
   CLIX = {
     C1: { types: ['Residential Plot'], areas: ['Sector 79, Mohali', 'Sector 88, Mohali'], bFrom: 1.5, bTo: 1.8, sizeFrom: '250', sizeTo: '300', prefs: ['East facing', 'Ready for registry', 'Corner'], stage: 'Negotiating', business: 'Gill Transport Co.', notes: [{ t: '2 days ago', x: 'Brother is coming next Saturday to see Sector 79.' }, { t: 'Last week', x: 'Only wants ready-for-registry. No GPA.' }] },
-    C2: { types: ['Residential Plot'], areas: ['Aerocity, Mohali', 'New Chandigarh'], bFrom: 2.5, bTo: 3, sizeFrom: '300', prefs: ['Park facing', 'Wide road'], stage: 'Site visits', business: '', notes: [{ t: 'Yesterday', x: 'Comparing Aerocity against New Chandigarh. Call after 6 PM.' }] },
-    C3: { types: ['Kothi'], areas: ['Sector 9, Panchkula'], bFrom: 3, bTo: 3.5, prefs: ['Corner'], stage: 'Negotiating', business: 'Verma Dental Care', notes: [{ t: '3 days ago', x: 'Decision this month, wife decides the final one.' }] },
-    C4: { types: ['Flat', 'Builder Floor'], areas: ['Zirakpur'], bFrom: 0.7, bTo: 0.9, prefs: ['Ready to move'], stage: 'Just looking', business: '', notes: [] },
-    C5: { types: ['Villa'], areas: ['New Chandigarh'], bFrom: 4.5, bTo: 5, prefs: ['Gated society', 'Park facing'], stage: 'Actively searching', business: 'Jindal Steels', notes: [{ t: 'Today', x: 'Wants gated only. Doesn\u2019t want Aerocity.' }] },
-    C6: { types: ['Residential Plot'], areas: ['Eco City, New Chandigarh'], bFrom: 2, bTo: 2.5, prefs: ['Clear title'], stage: 'Actively searching', business: 'Bansal Investments', notes: [] },
-    C7: { types: ['Residential Plot'], areas: ['Sector 88, Mohali'], bFrom: 1.2, bTo: 1.4, prefs: ['Corner'], stage: 'Negotiating', business: '', notes: [{ t: 'Yesterday', x: 'Token discussed \u2014 ready if seller drops 3 lakh.' }] },
-    C8: { types: ['Flat'], areas: ['Aerocity, Mohali'], bFrom: 1, bTo: 1.05, prefs: [], stage: 'Bought', business: '', notes: [] },
-    C9: { types: [], areas: [], prefs: [], stage: 'Just looking', business: '', notes: [] },
-    C10: { types: ['Kothi'], areas: ['Sector 22, Chandigarh'], bFrom: 4, prefs: [], stage: 'Just looking', business: 'Sethi Textiles', notes: [] },
-    C11: { types: ['Residential Plot'], areas: ['Aerotropolis'], bFrom: 1.5, bTo: 2, prefs: ['GMADA approved'], stage: 'Actively searching', business: '', notes: [{ t: 'Today', x: 'NRI \u2014 only free on WhatsApp video, evenings IST.' }] },
-    C12: { types: ['Residential Plot'], areas: ['Derabassi'], bFrom: 0.4, bTo: 0.55, prefs: [], stage: 'Just looking', business: '', notes: [] }
+    C2: { types: ['Residential Plot'], areas: ['Aerocity, Mohali', 'New Chandigarh'], bFrom: 2.5, bTo: 3, sizeFrom: '300', prefs: ['Park facing', 'Wide road'], stage: 'Site visits', business: 'Mehta Healthcare', notes: [{ t: 'Yesterday', x: 'Asked for site visit to Sector 79 & Aerocity 300 sq yd.' }] },
+    C3: { types: ['Kothi'], areas: ['Sector 9, Panchkula'], bFrom: 3, bTo: 3.5, prefs: ['Corner', 'Park facing'], stage: 'Negotiating', business: 'Verma Dental Care', notes: [{ t: '3 days ago', x: 'Decision this month, wife decides the final one.' }] },
+    C4: { types: ['Flat', 'Builder Floor'], areas: ['VIP Road, Zirakpur'], bFrom: 0.7, bTo: 0.9, prefs: ['Ready to move'], stage: 'Actively searching', business: 'Mehta Logistics', notes: [{ t: '3 days ago', x: 'Looking for 3 BHK floor ready to move.' }] },
+    C5: { types: ['Villa'], areas: ['New Chandigarh'], bFrom: 4.5, bTo: 5, prefs: ['Gated society', 'Park facing'], stage: 'Actively searching', business: 'Jindal Steels', notes: [{ t: 'Today', x: 'Wants gated only. Doesn’t want Aerocity.' }] },
+    C6: { types: ['Residential Plot'], areas: ['Eco City, New Chandigarh'], bFrom: 2, bTo: 2.5, prefs: ['Clear title'], stage: 'Actively searching', business: 'Bansal Investments', notes: [{ t: '4 days ago', x: 'Looking for 500 sq yd plot in Eco City.' }] },
+    C7: { types: ['Residential Plot'], areas: ['Sector 88, Mohali'], bFrom: 1.2, bTo: 1.4, prefs: ['Corner'], stage: 'Negotiating', business: 'Ahluwalia Auto Parts', notes: [{ t: 'Yesterday', x: 'Token discussed — ready if seller drops 3 lakh.' }] },
+    C8: { types: ['Flat'], areas: ['Aerocity, Mohali'], bFrom: 1, bTo: 1.05, prefs: ['Park facing'], stage: 'Bought', business: 'Gupta Traders', notes: [{ t: '1 month ago', x: 'Closed deal for Aerocity flat.' }] },
+    C9: { types: ['Commercial SCO'], areas: ['Sector 82, Mohali'], bFrom: 2.5, bTo: 3.2, prefs: ['Main road', 'Corner'], stage: 'Site visits', business: 'Sharma Retail Outlets', notes: [{ t: 'Today', x: 'Asked for a site visit to Sector 82 SCO.' }] },
+    C10: { types: ['Kothi'], areas: ['Sector 22, Chandigarh'], bFrom: 4, bTo: 4.5, prefs: ['North facing'], stage: 'Actively searching', business: 'Sethi Textiles', notes: [{ t: '5 days ago', x: 'Looking for 1 kanal kothi.' }] },
+    C11: { types: ['Residential Plot'], areas: ['Aerotropolis'], bFrom: 1.5, bTo: 2, prefs: ['GMADA approved'], stage: 'Actively searching', business: 'Global Tech Solutions', notes: [{ t: 'Today', x: 'NRI — only free on WhatsApp video, evenings IST.' }] },
+    C12: { types: ['Residential Plot'], areas: ['Derabassi'], bFrom: 0.4, bTo: 0.55, prefs: ['Wide road'], stage: 'Actively searching', business: 'Kaur Fabrics', notes: [{ t: '1 week ago', x: 'Budget fixed under 55 lakh.' }] }
   };
   PREFOPTS = ['Corner', 'Park facing', 'East facing', 'North facing', 'Wide road', 'Ready for registry', 'Gated society', 'Ready to move', 'Main road', 'Near school'];
   STAGEOPTS = ['Just looking', 'Actively searching', 'Site visits', 'Negotiating'];
@@ -288,8 +287,12 @@ export class Component extends DCLogic {
   contactState(c) {
     const bought = this.properties.some(pr => pr.sale && pr.sale.buyerId === c.id) || this.deals.some(d => d.client === c.name && d.stage === 'closed');
     if (bought) return 'bought';
-    if (this.knownDepth(c) < 2) return 'attention';
-    const act = this.clientLinks.filter(l => l.clientId === c.id).reduce((a, l) => a.concat(l.events || []), []);
+    const links = this.clientLinks.filter(l => l.clientId === c.id || l.client === c.name);
+    const hasVisit = links.some(l => l.visit || (l.events || []).some(e => e.k === 'visit'));
+    const hasUnopened = links.some(l => l.status === 'active' && l.opens === 0);
+    const noteVisit = (c.notes || []).some(n => n.x && n.x.toLowerCase().includes('visit'));
+    if (hasVisit || hasUnopened || c.stage === 'Site visits' || noteVisit || this.knownDepth(c) < 2) return 'attention';
+    const act = links.reduce((a, l) => a.concat(l.events || []), []);
     if (act.length && Math.min(...act.map(e => e.m)) <= 2880) return 'active';
     if (this.newClients.includes(c.id)) return 'new';
     return 'quiet';
@@ -4523,9 +4526,16 @@ export class Component extends DCLogic {
         const pillS = (bg, col) => `display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 13px;border-radius:999px;font-size:14px;font-weight:800;background:${bg};color:${col}`;
         const q = (s.cliQ || '').toLowerCase().trim();
         const stCount = (k) => liveC.filter(c => this.contactState(c) === k).length;
-        const cliDefs = [{ k: 'attention', l: 'Needs attention', n: stCount('attention') }, { k: 'bought', l: 'Bought', n: stCount('bought') }, { k: 'active', l: 'Hot', n: stCount('active') }]; const cliDefsOld = [{ k: 'all', l: 'Everyone', n: liveC.length }, { k: 'active', l: 'Active', n: stCount('active') }, { k: 'attention', l: 'Needs details', n: stCount('attention') }, { k: 'bought', l: 'Bought', n: stCount('bought') }, { k: 'new', l: 'New', n: stCount('new') }, { k: 'quiet', l: 'Quiet', n: stCount('quiet') }];
+        const hasAttn = stCount('attention') > 0;
+        const effCliFilter = s.cliFilter !== null ? s.cliFilter : (hasAttn ? 'attention' : 'all');
+        const cliDefs = [
+          { k: 'attention', l: 'Needs attention', n: stCount('attention') },
+          { k: 'bought', l: 'Bought', n: stCount('bought') },
+          { k: 'active', l: 'Hot', n: stCount('active') },
+          { k: 'all', l: 'All clients', n: liveC.length }
+        ];
         const cliCards = liveC
-          .filter(c => s.cliFilter === 'all' || this.contactState(c) === s.cliFilter)
+          .filter(c => effCliFilter === 'all' || this.contactState(c) === effCliFilter)
           .filter(c => !q || ((c.name + ' ' + c.phone + ' ' + c.city + ' ' + (c.business || '') + ' ' + (c.types || []).join(' ') + ' ' + (c.areas || []).join(' ') + ' ' + (c.budget || '')).toLowerCase().includes(q)))
           .map(c => {
             const st = this.contactState(c), m = CS[st], la = lastActOf(c.id);
@@ -4880,10 +4890,10 @@ export class Component extends DCLogic {
           cliQ: s.cliQ || '', onCliQ: (e) => this.setState({ cliQ: e.target.value }),
           sellQ: s.sellQ || '', onSellQ: (e) => this.setState({ sellQ: e.target.value }),
           cliChips: cliDefs.map(d => {
-            const on = s.cliFilter === d.k; const cm = CS[d.k] || { c: '#241d0c', b: '#ffe5a0', card: '#fffaea', ring: '#e6d6b4' };
+            const on = effCliFilter === d.k; const cm = CS[d.k] || { c: '#241d0c', b: '#ffe5a0', card: '#fffaea', ring: '#e6d6b4' };
             return {
               label: d.l, count: String(d.n), go: () => this.setState({ cliFilter: on ? 'all' : d.k }),
-              style: `display:flex;align-items:center;gap:7px;height:40px;padding:0 16px;border-radius:11px;font-size:14px;font-weight:800;white-space:nowrap;flex:none;transition:all .15s;${on ? `background:${cm.c};color:#fff;box-shadow:0 6px 14px -6px ${cm.c}` : 'background:transparent;color:#6b5f4c'}`,
+              style: `display:flex;align-items:center;gap:7px;height:40px;padding:0 16px;border-radius:11px;font-size:14px;font-weight:800;white-space:nowrap;flex:none;transition:all .15s;${on ? `background:${cm.c || '#241d0c'};color:#fff;box-shadow:0 6px 14px -6px ${cm.c || '#241d0c'}` : 'background:transparent;color:#6b5f4c'}`,
               numStyle: `font-size:12px;font-weight:800;border-radius:999px;padding:1px 7px;${on ? 'background:rgba(255,255,255,.24)' : 'background:rgba(0,0,0,.08);color:#6b5f4c'}`
             };
           }),

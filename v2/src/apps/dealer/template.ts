@@ -1010,7 +1010,7 @@ export function renderApp(state: any) {
                 <div>
 
                   \${ cliAny ? \`
-                    <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:18px">
+                    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:18px">
                       \${ (cliCards || []).map(c => \`
                         <div onClick="\${__b(c.open)}" onKeyDown="\${__b(c.keyOpen)}" role="button" tabIndex="0"
                           title="Open this customer" style="\${c.cardStyle}" style-hover="transform:translateY(-3px)"
@@ -1076,7 +1076,7 @@ export function renderApp(state: any) {
 
                   \${ sellAny ? \`
                     <div
-                      style="display:grid;grid-template-columns:repeat(auto-fill,minmax(390px,1fr));gap:16px;margin-top:18px">
+                      style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:18px">
                       \${ (sellCards || []).map(sl => \`
                         <div onClick="\${__b(sl.open)}" style="\${sl.cardStyle}"
                           style-hover="transform:translateY(-3px)">
