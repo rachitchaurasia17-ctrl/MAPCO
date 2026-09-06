@@ -851,31 +851,31 @@ export function renderApp(state: any) {
 
                         \${ p.showAvail ? \`\` : '' }
                       </button>
-                      <div style="padding:12px 12px 13px;\${p.cardBodyStyle}flex:1;display:flex;flex-direction:column;justify-content:space-between;min-height:0">
+                      <div style="padding:14px 16px 16px;\${p.cardBodyStyle}flex:1;display:flex;flex-direction:column;justify-content:space-between;min-height:0">
                         <div style="\${p.catBoxStyle}">
                           <div style="display:flex;align-items:flex-start;gap:8px">
                             <div style="flex:1;min-width:0">
                               <div style="\${p.catTitleStyle}">\${p.title}</div>
                               <div style="\${p.catLocStyle}">
-                                <i class="ph-fill ph-map-pin" style="font-size:14px;color:\${p.catPinColor}"></i>\${p.loc}</div>
+                                <i class="ph-fill ph-map-pin" style="font-size:14px;color:\${p.catPinColor};filter:drop-shadow(0 1px 2px rgba(0,0,0,.3))"></i>\${p.loc}</div>
                             </div>
                             <button onClick="\${__b(p.openMenu)}" title="More"
                               style="\${p.catMenuBtnStyle}"
-                              style-hover="filter:brightness(.92)"><i class="ph-bold ph-dots-three"
+                              style-hover="filter:brightness(1.18)"><i class="ph-bold ph-dots-three"
                                 style="font-size:18px"></i></button>
                           </div>
                         </div>
                         <div
                           style="\${p.catBarStyle}">
                           <span
-                            style="display:flex;align-items:center;gap:5px;font-size:14px;font-weight:800;color:\${p.sizeColor};flex:none"><i
-                              class="ph-fill ph-ruler" style="font-size:15px;color:\${p.sizeIconColor}"></i>\${p.sizeText}</span>
+                            style="display:flex;align-items:center;gap:6px;font-size:14px;font-weight:800;color:\${p.sizeColor};text-shadow:0 1px 2px rgba(0,0,0,.4);flex:none"><i
+                              class="ph-fill ph-ruler" style="font-size:15px;color:\${p.sizeIconColor};filter:drop-shadow(0 1px 2px rgba(0,0,0,.3))"></i>\${p.sizeText}</span>
                           <div style="flex:1;min-width:2px"></div>
                           <button onClick="\${__b(p.editPrice)}" title="Update price"
-                            style="display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:10px;background:linear-gradient(135deg,#fef3c7,#fde68a);border:1.5px solid #f59e0b;box-shadow:0 2px 6px rgba(217,119,6,.15);text-align:left;flex:none;cursor:pointer"
-                            style-hover="background:#fde68a">
-                            <span style="font-family:'Newsreader',serif;font-weight:700;font-size:22px;line-height:1;color:#92400e">\${p.priceFmt}</span>
-                            <i class="ph-bold ph-pencil-simple" style="font-size:12px;color:#b45309"></i>
+                            style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:10px;background:#ffffff;border:1.5px solid rgba(255,255,255,.95);box-shadow:0 4px 12px rgba(0,0,0,.22);text-align:left;flex:none;cursor:pointer"
+                            style-hover="filter:brightness(1.05)">
+                            <span style="font-family:'Newsreader',serif;font-weight:700;font-size:22px;line-height:1;color:#0f172a">\${p.priceFmt}</span>
+                            <i class="ph-bold ph-pencil-simple" style="font-size:12px;color:#2563eb"></i>
                           </button>
                           \${ p.notSoldCard ? \`
                             <button onClick="\${__b(p.openShare)}" title="Send a private link"
@@ -909,7 +909,7 @@ export function renderApp(state: any) {
                         \` : '' }
                         \${ p.menuOpen ? \`
                           <div
-                            style="display:flex;flex-wrap:wrap;gap:7px;margin-top:12px;padding-top:13px;border-top:1px dashed #ecdcc0">
+                            style="display:flex;flex-wrap:wrap;gap:7px;margin-top:12px;padding-top:13px;border-top:1px dashed rgba(255,255,255,.25)">
                             <button onClick="\${__b(p.edit)}" style="\${p.mnEdit}"><i class="ph-fill ph-pencil-simple"
                                 style="font-size:16px"></i>Edit</button>
                             \${ p.notSoldCard ? \`<button

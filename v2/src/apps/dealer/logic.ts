@@ -799,65 +799,55 @@ export class Component extends DCLogic {
     if (s.includes('industrial')) {
       return {
         cat: 'industrial', label: 'Industrial', icon: 'ph-fill ph-factory',
-        cardBg: '#ccfbf1', cardGrad: 'linear-gradient(155deg, #e6fcf8 0%, #b3f7ec 48%, #72ecd9 100%)',
-        cardBorder: '#14b8a6', cardShadow: 'rgba(13,148,136,.28)',
-        boxBg: '#ffffff', boxBorder: 'rgba(255,255,255,.9)', boxShadow: '0 4px 12px -2px rgba(15,118,110,.14)',
-        titleColor: '#134e4a', locColor: '#0f766e', pinColor: '#0d9488',
-        tagBg: '#99f6e4', tagColor: '#115e59',
-        menuBg: '#e6fcf8', menuColor: '#0f766e', accent: '#0d9488',
-        barBg: '#ffffff', barBorder: 'rgba(255,255,255,.9)', barShadow: '0 4px 12px -2px rgba(15,118,110,.14)',
-        sizeColor: '#134e4a', sizeIconColor: '#0d9488'
+        cardBg: '#0f766e', cardGrad: 'linear-gradient(140deg, #042f2e 0%, #0d9488 50%, #14b8a6 100%)',
+        cardBorder: '#2dd4bf', cardShadow: 'rgba(20,184,166,.45)',
+        titleColor: '#ffffff', locColor: '#f0fdfa', pinColor: '#5eead4',
+        tagBg: 'rgba(255,255,255,.2)', tagColor: '#ffffff',
+        accent: '#14b8a6',
+        sizeColor: '#ffffff', sizeIconColor: '#5eead4'
       };
     }
     if (s.includes('plot') || s.includes('land') || s.includes('agricultural')) {
       return {
         cat: 'plot', label: 'Plot', icon: 'ph-fill ph-map-pin-area',
-        cardBg: '#ffeed9', cardGrad: 'linear-gradient(155deg, #fff7ed 0%, #fed7aa 48%, #fba758 100%)',
-        cardBorder: '#f97316', cardShadow: 'rgba(234,88,12,.32)',
-        boxBg: '#ffffff', boxBorder: 'rgba(255,255,255,.9)', boxShadow: '0 4px 12px -2px rgba(154,52,18,.15)',
-        titleColor: '#7c2d12', locColor: '#9a3412', pinColor: '#ea580c',
-        tagBg: '#fed7aa', tagColor: '#c2410c',
-        menuBg: '#ffedd5', menuColor: '#c2410c', accent: '#ea580c',
-        barBg: '#ffffff', barBorder: 'rgba(255,255,255,.9)', barShadow: '0 4px 12px -2px rgba(154,52,18,.15)',
-        sizeColor: '#1e3a8a', sizeIconColor: '#2563eb'
+        cardBg: '#1e40af', cardGrad: 'linear-gradient(140deg, #0b1e4f 0%, #1d4ed8 50%, #0284c7 100%)',
+        cardBorder: '#38bdf8', cardShadow: 'rgba(2,132,199,.45)',
+        titleColor: '#ffffff', locColor: '#f1f5f9', pinColor: '#38bdf8',
+        tagBg: 'rgba(255,255,255,.2)', tagColor: '#ffffff',
+        accent: '#38bdf8',
+        sizeColor: '#ffffff', sizeIconColor: '#38bdf8'
       };
     }
     if (s.includes('commercial') || s.includes('sco') || s.includes('booth') || s.includes('office') || s.includes('showroom') || s.includes('shop') || s.includes('retail')) {
       return {
         cat: 'comm', label: 'Commercial', icon: 'ph-fill ph-storefront',
-        cardBg: '#ffe4e8', cardGrad: 'linear-gradient(155deg, #fff1f3 0%, #fecdd6 48%, #fda4b4 100%)',
-        cardBorder: '#f43f5e', cardShadow: 'rgba(225,29,72,.28)',
-        boxBg: '#ffffff', boxBorder: 'rgba(255,255,255,.9)', boxShadow: '0 4px 12px -2px rgba(159,18,57,.14)',
-        titleColor: '#881337', locColor: '#9f1239', pinColor: '#e11d48',
-        tagBg: '#fecdd3', tagColor: '#be123c',
-        menuBg: '#ffe4e6', menuColor: '#be123c', accent: '#e11d48',
-        barBg: '#ffffff', barBorder: 'rgba(255,255,255,.9)', barShadow: '0 4px 12px -2px rgba(159,18,57,.14)',
-        sizeColor: '#881337', sizeIconColor: '#e11d48'
+        cardBg: '#9f1239', cardGrad: 'linear-gradient(140deg, #4c0519 0%, #be123c 50%, #f43f5e 100%)',
+        cardBorder: '#fb7185', cardShadow: 'rgba(225,29,72,.45)',
+        titleColor: '#ffffff', locColor: '#fff1f2', pinColor: '#fda4af',
+        tagBg: 'rgba(255,255,255,.2)', tagColor: '#ffffff',
+        accent: '#f43f5e',
+        sizeColor: '#ffffff', sizeIconColor: '#fda4af'
       };
     }
     if (s.includes('kothi') || s.includes('villa') || s.includes('house') || s.includes('bungalow')) {
       return {
         cat: 'villa', label: 'Villa / Kothi', icon: 'ph-fill ph-house-line',
-        cardBg: '#dcfce7', cardGrad: 'linear-gradient(155deg, #effef4 0%, #bbf7d0 48%, #86efac 100%)',
-        cardBorder: '#22c55e', cardShadow: 'rgba(22,163,74,.28)',
-        boxBg: '#ffffff', boxBorder: 'rgba(255,255,255,.9)', boxShadow: '0 4px 12px -2px rgba(22,101,52,.14)',
-        titleColor: '#14532d', locColor: '#166534', pinColor: '#16a34a',
-        tagBg: '#bbf7d0', tagColor: '#15803d',
-        menuBg: '#dcfce7', menuColor: '#15803d', accent: '#16a34a',
-        barBg: '#ffffff', barBorder: 'rgba(255,255,255,.9)', barShadow: '0 4px 12px -2px rgba(22,101,52,.14)',
-        sizeColor: '#14532d', sizeIconColor: '#16a34a'
+        cardBg: '#065f46', cardGrad: 'linear-gradient(140deg, #022c22 0%, #059669 50%, #10b981 100%)',
+        cardBorder: '#34d399', cardShadow: 'rgba(16,185,129,.45)',
+        titleColor: '#ffffff', locColor: '#ecfdf5', pinColor: '#6ee7b7',
+        tagBg: 'rgba(255,255,255,.2)', tagColor: '#ffffff',
+        accent: '#10b981',
+        sizeColor: '#ffffff', sizeIconColor: '#6ee7b7'
       };
     }
     return {
       cat: 'built', label: 'Flat / Apt', icon: 'ph-fill ph-buildings',
-      cardBg: '#ede4ff', cardGrad: 'linear-gradient(155deg, #f5f0ff 0%, #e3d2ff 48%, #c4a6ff 100%)',
-      cardBorder: '#a855f7', cardShadow: 'rgba(124,58,237,.28)',
-      boxBg: '#ffffff', boxBorder: 'rgba(255,255,255,.9)', boxShadow: '0 4px 12px -2px rgba(126,34,206,.14)',
-      titleColor: '#581c87', locColor: '#7e22ce', pinColor: '#9333ea',
-      tagBg: '#e9d5ff', tagColor: '#7e22ce',
-      menuBg: '#f3e8ff', menuColor: '#7e22ce', accent: '#7c3aed',
-      barBg: '#ffffff', barBorder: 'rgba(255,255,255,.9)', barShadow: '0 4px 12px -2px rgba(126,34,206,.14)',
-      sizeColor: '#581c87', sizeIconColor: '#7c3aed'
+      cardBg: '#581c87', cardGrad: 'linear-gradient(140deg, #2e1065 0%, #6d28d9 50%, #9333ea 100%)',
+      cardBorder: '#c084fc', cardShadow: 'rgba(147,51,234,.45)',
+      titleColor: '#ffffff', locColor: '#faf5ff', pinColor: '#d8b4fe',
+      tagBg: 'rgba(255,255,255,.2)', tagColor: '#ffffff',
+      accent: '#9333ea',
+      sizeColor: '#ffffff', sizeIconColor: '#d8b4fe'
     };
   }
   readinessOf(pr) {
@@ -2891,17 +2881,17 @@ export class Component extends DCLogic {
         cat: cat.cat,
         catLabel: cat.label,
         catIcon: cat.icon,
-        catBoxStyle: `padding:11px 13px 12px;border-radius:15px;background:${cat.boxBg};border:1.5px solid ${cat.boxBorder};box-shadow:${cat.boxShadow};`,
-        catTitleStyle: `font-size:18px;font-weight:800;color:${cat.titleColor};letter-spacing:-.01em;line-height:1.22;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;`,
-        catLocStyle: `display:flex;align-items:center;gap:5px;font-size:13.5px;font-weight:600;color:${cat.locColor};margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;`,
+        catBoxStyle: `padding:2px 2px;`,
+        catTitleStyle: `font-size:19px;font-weight:800;color:${cat.titleColor};letter-spacing:-.015em;line-height:1.24;text-shadow:0 1px 3px rgba(0,0,0,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;`,
+        catLocStyle: `display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:${cat.locColor};margin-top:5px;text-shadow:0 1px 2px rgba(0,0,0,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;`,
         catPinColor: cat.pinColor,
-        catMenuBtnStyle: `width:34px;height:34px;border-radius:9px;background:${cat.menuBg};color:${cat.menuColor};display:grid;place-items:center;flex:none;border:none;cursor:pointer;`,
-        catBarStyle: `display:flex;align-items:center;gap:6px;margin-top:10px;padding:6px 7px 6px 10px;border-radius:14px;background:${cat.barBg};border:1.5px solid ${cat.barBorder};box-shadow:${cat.barShadow};`,
+        catMenuBtnStyle: `width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.18);color:#ffffff;display:grid;place-items:center;flex:none;border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(8px);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15);`,
+        catBarStyle: `display:flex;align-items:center;gap:7px;margin-top:14px;padding:2px 2px;`,
         cardBodyStyle: `background:${cat.cardBg};background-image:${cat.cardGrad};`,
         accent: cat.accent,
         accentBar: `height:5px;background:${cat.accent};`,
         cardWrap: (() => {
-          return `background:${cat.cardBg};background-image:${cat.cardGrad};border-radius:22px;overflow:hidden;box-shadow:0 0 0 1.5px ${cat.cardBorder},0 18px 36px -18px ${cat.cardShadow};transition:transform .14s,box-shadow .14s;min-width:0;display:flex;flex-direction:column;`;
+          return `background:${cat.cardBg};background-image:${cat.cardGrad};border-radius:22px;overflow:hidden;box-shadow:0 0 0 1.5px ${cat.cardBorder},0 20px 40px -16px ${cat.cardShadow};transition:transform .14s,box-shadow .14s;min-width:0;display:flex;flex-direction:column;`;
         })(),
         sizeColor: cat.sizeColor,
         sizeIconColor: cat.sizeIconColor
