@@ -1470,17 +1470,6 @@ export function renderApp(state: any) {
                 </div>
               </div>
 
-              <div
-                style="\${demandTopBg};margin-top:18px;border-radius:22px;padding:22px 26px;display:flex;align-items:center;gap:16px;animation-delay:.1s">
-                <i class="\${demandTopIcon}" style="font-size:32px;\${demandTopTag};flex:none"></i>
-                <div>
-                  <div
-                    style="font-size:12.5px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;\${demandTopTag}">
-                    \${demandTopKicker} · \${demandTopName}</div>
-                  <div style="font-size:17px;color:#4c463d;line-height:1.45;margin-top:4px;max-width:820px">\${demandTopLine}</div>
-                </div>
-              </div>
-
               <div style="display:flex;align-items:center;justify-content:space-between;margin:30px 0 14px">
                 <div style="font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8a8070">
                   Plots pulling the most attention</div>

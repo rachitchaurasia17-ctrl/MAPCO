@@ -779,6 +779,8 @@ export class Component extends DCLogic {
     const dimNote = YARD(pf.frontage, pf.depth);
     return {
       pKindIcon: meta.i, pKindHint: dimNote ? ('That works out to ' + dimNote + '.') : meta.h,
+      pFields: secA,
+      pMoreFields: [...secB, ...secC, ...secD],
       pSections: [
         { title: 'Essentials', fields: secA },
         { title: 'Features', fields: secB },
@@ -2906,7 +2908,7 @@ export class Component extends DCLogic {
 
     const qvDefs = soldView
       ? [{ k: 'price', l: 'Biggest sales', i: 'ph-fill ph-trend-up' }]
-      : [{ k: 'hot', l: 'Hot right now', i: 'ph-fill ph-fire' }, { k: 'price', l: 'Highest price', i: 'ph-fill ph-trend-up' }, { k: 'new', l: 'Newest', i: 'ph-fill ph-sparkle' }];
+      : [];
     const quickViews = qvDefs.map(q => {
       const on = qv === q.k;
       const t = qvTheme[q.k] || qvTheme.price;
@@ -3625,7 +3627,7 @@ export class Component extends DCLogic {
         if (holdView) {
           return 'background:#fff0f2;background-image:radial-gradient(60% 50% at 2% 0%,rgba(225,29,72,.18),transparent 65%),radial-gradient(50% 45% at 98% 100%,rgba(190,18,60,.14),transparent 65%);';
         }
-        return 'background:#f2faf5;background-image:radial-gradient(60% 50% at 2% 0%,rgba(34,197,94,.18),transparent 65%),radial-gradient(50% 45% at 98% 100%,rgba(16,185,129,.12),transparent 65%);';
+        return 'background:#fffef0;background-image:radial-gradient(60% 50% at 2% 0%,rgba(245,158,11,.18),transparent 65%),radial-gradient(50% 45% at 98% 100%,rgba(251,191,36,.14),transparent 65%),radial-gradient(40% 30% at 50% 30%,rgba(254,240,138,.2),transparent 60%);';
       }
       return '';
     })();
