@@ -10,3 +10,10 @@
 # The canonical MAPCO-owned copies are published to v2/public/landmarks/
 # by scripts/import-landmarks.mjs (byte-identical), so this is not tracked.
 landmarks photos/
+
+# Accidental nested repo clone in templates
+templates/MAPCO/
+
+# Temporary patch drop zips
+founders thing*.zip
+founderthing*.zip
