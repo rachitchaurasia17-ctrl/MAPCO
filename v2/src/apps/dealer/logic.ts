@@ -796,44 +796,44 @@ export class Component extends DCLogic {
   }
   CARD_PALETTES = [
     {
-      cardBg: '#581c87',
-      cardGrad: 'linear-gradient(140deg, #3b0764 0%, #6b21a8 50%, #9333ea 100%)',
-      cardBorder: '#c084fc',
-      cardShadow: 'rgba(147,51,234,.45)',
-      titleColor: '#ffffff', locColor: '#f5f3ff', pinColor: '#e9d5ff',
-      accent: '#c084fc', sizeColor: '#ffffff', sizeIconColor: '#e9d5ff'
+      cardBg: '#ede9fe',
+      cardGrad: 'linear-gradient(145deg, #f5f3ff 0%, #ede9fe 48%, #ddd6fe 100%)',
+      cardBorder: '#c4b5fd',
+      cardShadow: 'rgba(139,92,246,.25)',
+      titleColor: '#0f172a', locColor: '#475569', pinColor: '#7c3aed',
+      accent: '#7c3aed', sizeColor: '#0f172a', sizeIconColor: '#7c3aed'
     },
     {
-      cardBg: '#9f1239',
-      cardGrad: 'linear-gradient(140deg, #4c0519 0%, #be123c 50%, #f43f5e 100%)',
-      cardBorder: '#fb7185',
-      cardShadow: 'rgba(225,29,72,.45)',
-      titleColor: '#ffffff', locColor: '#fff1f2', pinColor: '#fecdd3',
-      accent: '#fb7185', sizeColor: '#ffffff', sizeIconColor: '#fecdd3'
+      cardBg: '#ffedd5',
+      cardGrad: 'linear-gradient(145deg, #fff7ed 0%, #ffedd5 48%, #fed7aa 100%)',
+      cardBorder: '#fdba74',
+      cardShadow: 'rgba(249,115,22,.25)',
+      titleColor: '#0f172a', locColor: '#475569', pinColor: '#ea580c',
+      accent: '#ea580c', sizeColor: '#0f172a', sizeIconColor: '#ea580c'
     },
     {
-      cardBg: '#9a3412',
-      cardGrad: 'linear-gradient(140deg, #451a03 0%, #c2410c 48%, #ea580c 80%, #f59e0b 100%)',
-      cardBorder: '#fb923c',
-      cardShadow: 'rgba(234,88,12,.45)',
-      titleColor: '#ffffff', locColor: '#fff7ed', pinColor: '#fed7aa',
-      accent: '#fb923c', sizeColor: '#ffffff', sizeIconColor: '#fed7aa'
+      cardBg: '#fef9c3',
+      cardGrad: 'linear-gradient(145deg, #fefce8 0%, #fef9c3 48%, #fef08a 100%)',
+      cardBorder: '#fde047',
+      cardShadow: 'rgba(202,138,4,.25)',
+      titleColor: '#0f172a', locColor: '#475569', pinColor: '#ca8a04',
+      accent: '#ca8a04', sizeColor: '#0f172a', sizeIconColor: '#ca8a04'
     },
     {
-      cardBg: '#831843',
-      cardGrad: 'linear-gradient(140deg, #500724 0%, #9d174d 48%, #ec4899 100%)',
+      cardBg: '#fce7f3',
+      cardGrad: 'linear-gradient(145deg, #fdf2f8 0%, #fce7f3 48%, #fbcfe8 100%)',
       cardBorder: '#f472b6',
-      cardShadow: 'rgba(236,72,153,.45)',
-      titleColor: '#ffffff', locColor: '#fdf2f8', pinColor: '#fbcfe8',
-      accent: '#f472b6', sizeColor: '#ffffff', sizeIconColor: '#fbcfe8'
+      cardShadow: 'rgba(236,72,153,.25)',
+      titleColor: '#0f172a', locColor: '#475569', pinColor: '#db2777',
+      accent: '#db2777', sizeColor: '#0f172a', sizeIconColor: '#db2777'
     },
     {
-      cardBg: '#312e81',
-      cardGrad: 'linear-gradient(140deg, #1e1b4b 0%, #4338ca 50%, #7c3aed 100%)',
-      cardBorder: '#818cf8',
-      cardShadow: 'rgba(99,102,241,.45)',
-      titleColor: '#ffffff', locColor: '#eef2ff', pinColor: '#c7d2fe',
-      accent: '#818cf8', sizeColor: '#ffffff', sizeIconColor: '#c7d2fe'
+      cardBg: '#e0e7ff',
+      cardGrad: 'linear-gradient(145deg, #eef2ff 0%, #e0e7ff 48%, #c7d2fe 100%)',
+      cardBorder: '#a5b4fc',
+      cardShadow: 'rgba(99,102,241,.25)',
+      titleColor: '#0f172a', locColor: '#475569', pinColor: '#4f46e5',
+      accent: '#4f46e5', sizeColor: '#0f172a', sizeIconColor: '#4f46e5'
     }
   ];
   catThemeOf(t, i = 0) {
@@ -2886,16 +2886,16 @@ export class Component extends DCLogic {
         catLabel: cat.label,
         catIcon: cat.icon,
         catBoxStyle: `padding:2px 2px;`,
-        catTitleStyle: `font-size:19px;font-weight:800;color:${cat.titleColor};letter-spacing:-.015em;line-height:1.24;text-shadow:0 1px 3px rgba(0,0,0,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;`,
-        catLocStyle: `display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:${cat.locColor};margin-top:5px;text-shadow:0 1px 2px rgba(0,0,0,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;`,
+        catTitleStyle: `font-size:18.5px;font-weight:800;color:${cat.titleColor};letter-spacing:-.02em;line-height:1.24;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;`,
+        catLocStyle: `display:flex;align-items:center;gap:5px;font-size:13.5px;font-weight:600;color:${cat.locColor};margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;`,
         catPinColor: cat.pinColor,
-        catMenuBtnStyle: `width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.18);color:#ffffff;display:grid;place-items:center;flex:none;border:1px solid rgba(255,255,255,.28);backdrop-filter:blur(8px);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.15);`,
+        catMenuBtnStyle: `width:34px;height:34px;border-radius:10px;background:rgba(255,255,255,.75);color:#0f172a;display:grid;place-items:center;flex:none;border:1px solid rgba(0,0,0,.08);backdrop-filter:blur(8px);cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.04);`,
         catBarStyle: `display:flex;align-items:center;gap:7px;margin-top:14px;padding:2px 2px;`,
         cardBodyStyle: `background:${cat.cardBg};background-image:${cat.cardGrad};`,
         accent: cat.accent,
         accentBar: `height:5px;background:${cat.accent};`,
         cardWrap: (() => {
-          return `background:${cat.cardBg};background-image:${cat.cardGrad};border-radius:22px;overflow:hidden;box-shadow:0 0 0 1.5px ${cat.cardBorder},0 20px 40px -16px ${cat.cardShadow};transition:transform .14s,box-shadow .14s;min-width:0;display:flex;flex-direction:column;`;
+          return `background:${cat.cardBg};background-image:${cat.cardGrad};border-radius:22px;overflow:hidden;box-shadow:0 0 0 1.5px ${cat.cardBorder},0 16px 32px -12px ${cat.cardShadow};transition:transform .14s,box-shadow .14s;min-width:0;display:flex;flex-direction:column;`;
         })(),
         sizeColor: cat.sizeColor,
         sizeIconColor: cat.sizeIconColor
