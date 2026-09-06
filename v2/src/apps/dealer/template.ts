@@ -942,7 +942,7 @@ export function renderApp(state: any) {
               <div
                 style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px;">
                 <!-- Segmented Tabs for Clients / Sellers -->
-                <div style="display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:18px;background:#fff3d6;box-shadow:inset 0 0 0 1.5px rgba(120,100,60,.16);">
+                <div style="\${ctSegWrap}">
                   \${ (ctTabs || []).map(t => \`
                     <button onClick="\${__b(t.go)}" style="\${t.style}"><i class="\${t.icon}"
                         style="font-size:21px"></i>\${t.label}<span style="\${t.numStyle}">\${t.count}</span></button>
@@ -1113,7 +1113,7 @@ export function renderApp(state: any) {
             <div style="max-width:1680px;margin:0 auto;padding:22px 32px 80px">
               <div
                 style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <div style="\${lkSegWrap}">
                   \${ (lkTabs || []).map(t => \`
                     <button onClick="\${__b(t.go)}" style="\${t.style}"><i class="\${t.icon}"
                         style="font-size:21px"></i>\${t.label}<span style="\${t.numStyle}">\${t.count}</span></button>

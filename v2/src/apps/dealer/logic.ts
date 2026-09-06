@@ -3694,6 +3694,18 @@ export class Component extends DCLogic {
         }
         return 'background:#edf5fe;background-image:radial-gradient(75% 65% at 0% 0%,rgba(37,99,235,.32),transparent 72%),radial-gradient(75% 65% at 100% 0%,rgba(59,130,246,.30),transparent 72%),radial-gradient(65% 55% at 95% 45%,rgba(37,99,235,.24),transparent 68%),radial-gradient(60% 45% at 50% 15%,rgba(147,197,253,.28),transparent 65%),radial-gradient(70% 60% at 85% 95%,rgba(59,130,246,.22),transparent 70%),radial-gradient(60% 50% at 15% 90%,rgba(147,197,253,.20),transparent 70%);';
       }
+      if (s.section === 'clients') {
+        if (s.contactMode === 'sellers') {
+          return 'background:#fef6ea;background-image:radial-gradient(75% 65% at 0% 0%,rgba(234,88,12,.32),transparent 72%),radial-gradient(75% 65% at 100% 0%,rgba(217,119,6,.30),transparent 72%),radial-gradient(65% 55% at 95% 45%,rgba(234,88,12,.24),transparent 68%),radial-gradient(60% 45% at 50% 15%,rgba(251,191,36,.28),transparent 65%),radial-gradient(70% 60% at 85% 95%,rgba(217,119,6,.22),transparent 70%),radial-gradient(60% 50% at 15% 90%,rgba(253,186,116,.20),transparent 70%);';
+        }
+        return 'background:#f7f2fe;background-image:radial-gradient(75% 65% at 0% 0%,rgba(124,58,237,.32),transparent 72%),radial-gradient(75% 65% at 100% 0%,rgba(147,51,234,.30),transparent 72%),radial-gradient(65% 55% at 95% 45%,rgba(124,58,237,.24),transparent 68%),radial-gradient(60% 45% at 50% 15%,rgba(192,132,252,.28),transparent 65%),radial-gradient(70% 60% at 85% 95%,rgba(147,51,234,.22),transparent 70%),radial-gradient(60% 50% at 15% 90%,rgba(216,180,254,.20),transparent 70%);';
+      }
+      if (s.section === 'links') {
+        if (s.linksTab === 'links') {
+          return 'background:#eff4ff;background-image:radial-gradient(75% 65% at 0% 0%,rgba(79,70,229,.32),transparent 72%),radial-gradient(75% 65% at 100% 0%,rgba(37,99,235,.30),transparent 72%),radial-gradient(65% 55% at 95% 45%,rgba(79,70,229,.24),transparent 68%),radial-gradient(60% 45% at 50% 15%,rgba(129,140,248,.28),transparent 65%),radial-gradient(70% 60% at 85% 95%,rgba(37,99,235,.22),transparent 70%),radial-gradient(60% 50% at 15% 90%,rgba(165,180,252,.20),transparent 70%);';
+        }
+        return 'background:#fef0ea;background-image:radial-gradient(75% 65% at 0% 0%,rgba(234,88,12,.32),transparent 72%),radial-gradient(75% 65% at 100% 0%,rgba(225,29,72,.30),transparent 72%),radial-gradient(65% 55% at 95% 45%,rgba(234,88,12,.24),transparent 68%),radial-gradient(60% 45% at 50% 15%,rgba(251,146,60,.28),transparent 65%),radial-gradient(70% 60% at 85% 95%,rgba(244,63,94,.22),transparent 70%),radial-gradient(60% 50% at 15% 90%,rgba(253,186,116,.20),transparent 70%);';
+      }
       return '';
     })();
 
@@ -3735,6 +3747,8 @@ export class Component extends DCLogic {
       invFilterChips, hasFilterChips: invFilterChips.length > 0, quickViews,
       invQuickSegWrap: 'display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:16px;background:' + (soldView ? '#d9f0e4' : '#eff6ff') + ';box-shadow:inset 0 0 0 1.5px ' + (soldView ? '#9fd6ba' : '#bfdbfe') + ';',
       dealSegWrap: 'display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:18px;background:' + (dView === 'done' ? 'rgba(217,240,228,.85)' : (dView === 'lost' ? 'rgba(255,228,230,.85)' : 'rgba(239,246,255,.9)')) + ';box-shadow:inset 0 0 0 2px ' + (dView === 'done' ? '#6ee7b7' : (dView === 'lost' ? '#fca5a5' : '#93c5fd')) + ',0 8px 20px -8px ' + (dView === 'done' ? 'rgba(16,185,129,.35)' : (dView === 'lost' ? 'rgba(225,29,72,.35)' : 'rgba(37,99,235,.35)')) + ';backdrop-filter:blur(8px);',
+      ctSegWrap: 'display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:18px;background:' + (s.contactMode === 'sellers' ? 'rgba(255,237,213,.85)' : 'rgba(243,232,255,.9)') + ';box-shadow:inset 0 0 0 2px ' + (s.contactMode === 'sellers' ? '#fed7aa' : '#d8b4fe') + ',0 8px 20px -8px ' + (s.contactMode === 'sellers' ? 'rgba(234,88,12,.35)' : 'rgba(124,58,237,.35)') + ';backdrop-filter:blur(8px);',
+      lkSegWrap: 'display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:18px;background:' + (s.linksTab === 'links' ? 'rgba(238,242,255,.9)' : 'rgba(255,237,213,.85)') + ';box-shadow:inset 0 0 0 2px ' + (s.linksTab === 'links' ? '#c7d2fe' : '#fed7aa') + ',0 8px 20px -8px ' + (s.linksTab === 'links' ? 'rgba(79,70,229,.35)' : 'rgba(234,88,12,.35)') + ';backdrop-filter:blur(8px);',
       fCityRows: [{ k: 'all', l: 'All cities' }, ...this.CITIES.map(c => ({ k: c, l: c }))].map(ch => ({
         label: ch.l, go: () => this.setState({ plotCity: ch.k }), style: chipF(s.plotCity === ch.k),
         count: String(ch.k === 'all' ? this.properties.length : this.properties.filter(pr => pr.city === ch.k).length)
@@ -4502,8 +4516,8 @@ export class Component extends DCLogic {
             bg: '#0f7a45', bgi: 'linear-gradient(145deg,#17a05c 0%,#0f7a45 55%,#075c32 100%)', fg: '#eafff2', dim: '#a8e3c3', glow: '#2fd07f', f: 'See who', go: () => this.setState({ tab: 'links', linksTab: 'follow' })
           },
           {
-            l: 'Follow-ups', s: 'Real reasons to contact them', v: followUps, ic: 'ph-fill ph-phone-call',
-            bg: '#f8a800', bgi: 'linear-gradient(145deg,#ffca4d 0%,#f8a800 55%,#d18800 100%)', fg: '#241d0c', dim: '#7a5300', glow: '#ffd166', f: 'Open follow-ups', go: () => this.setState({ tab: 'links', linksTab: 'follow' })
+            l: 'Needs attention', s: 'Real reasons to contact them', v: followUps, ic: 'ph-fill ph-bell-ringing',
+            bg: '#c0490c', bgi: 'linear-gradient(145deg,#ea580c 0%,#c0490c 55%,#963406 100%)', fg: '#fff3ea', dim: '#f3c3a4', glow: '#ff8a4c', f: 'View attention', go: () => this.setState({ tab: 'links', linksTab: 'follow' })
           },
           {
             l: 'Properties to check', s: 'Seller availability getting old', v: stale, ic: 'ph-fill ph-clock-countdown',
@@ -4953,10 +4967,19 @@ export class Component extends DCLogic {
           ctMode: s.contactMode, ctIsClients: s.contactMode === 'clients', ctIsSellers: s.contactMode === 'sellers',
           ctTabs: [{ k: 'clients', l: 'Clients', i: 'ph-fill ph-users-three', n: liveC.length }, { k: 'sellers', l: 'Sellers', i: 'ph-fill ph-key', n: liveS.length }].map(t => {
             const on = s.contactMode === t.k;
+            const isClients = t.k === 'clients';
             return {
               label: t.l, icon: t.i, count: String(t.n), go: () => this.setState({ contactMode: t.k }),
-              style: `display:flex;align-items:center;gap:10px;height:54px;padding:0 24px;border-radius:14px;font-size:17.5px;font-weight:800;letter-spacing:-.01em;transition:all .18s;${on ? 'background:linear-gradient(135deg, #3b1464, #501d8a);color:#fff;box-shadow:0 10px 24px -10px rgba(59,20,100,.8)' : 'background:transparent;color:#786950;'}`,
-              numStyle: `font-size:14px;font-weight:800;border-radius:999px;padding:2px 10px;${on ? 'background:rgba(255,255,255,.2);color:#ffd875' : 'background:rgba(0,0,0,.07);color:#6b5f4c'}`
+              style: `display:flex;align-items:center;gap:10px;height:54px;padding:0 24px;border-radius:14px;font-size:17.5px;font-weight:800;letter-spacing:-.01em;border:none;cursor:pointer;transition:all .18s;` +
+                (on
+                  ? (isClients
+                    ? 'background:#4c1d95;background-image:linear-gradient(135deg,#3b1464,#5b21b6);color:#fff;box-shadow:0 10px 24px -10px rgba(59,20,100,.8),inset 0 0 0 1.5px #a78bfa;transform:scale(1.02);'
+                    : 'background:#c2410c;background-image:linear-gradient(135deg,#9a3412,#ea580c);color:#fff;box-shadow:0 10px 24px -10px rgba(194,65,12,.8),inset 0 0 0 1.5px #fb923c;transform:scale(1.02);')
+                  : 'background:transparent;color:#786950;'),
+              numStyle: `font-size:14px;font-weight:800;border-radius:999px;padding:2px 10px;` +
+                (on
+                  ? 'background:rgba(255,255,255,.22);color:#ffffff'
+                  : 'background:rgba(0,0,0,.07);color:#6b5f4c')
             };
           }),
           cliQ: s.cliQ || '', onCliQ: (e) => this.setState({ cliQ: e.target.value }),
@@ -5010,12 +5033,24 @@ export class Component extends DCLogic {
           sfDup: !!sfDupS, sfDupName: sfDupS ? sfDupS.name : '', sfDupSub: sfDupS ? (sfDupS.phone + ' · ' + sfDupS.kind) : '',
           sfUseDup: () => { if (sfDupS) { deskStore.loadSellerWorkspace(sfDupS.id); this.setState({ addSellerOpen: false, sellerEditId: null, contactMode: 'sellers', sellerView: sfDupS.id }); } },
           cp, cpOpen: !!cp,
-          lkTabs: [{ k: 'follow', l: 'Follow-ups', i: 'ph-fill ph-phone-call', n: followList.length, c: '#c0490c', b: '#ffdcbd', card: '#fff5ec', ring: '#f5c9a0' }, { k: 'links', l: 'All links', i: 'ph-fill ph-paper-plane-tilt', n: this.clientLinks.length, c: '#4a2c99', b: '#e7defc', card: '#f6f2ff', ring: '#d5c5f2' }].map(t => {
+          lkTabs: [
+            { k: 'follow', l: 'Needs attention', i: 'ph-fill ph-bell-ringing', n: followList.length },
+            { k: 'links', l: 'All links', i: 'ph-fill ph-paper-plane-tilt', n: this.clientLinks.length }
+          ].map(t => {
             const on = (t.k === 'links') === (s.linksTab === 'links');
+            const isLinks = t.k === 'links';
             return {
               label: t.l, icon: t.i, count: String(t.n), go: () => this.setState({ linksTab: t.k }),
-              style: `display:flex;align-items:center;gap:10px;height:60px;padding:0 24px;border-radius:17px;font-size:18px;font-weight:800;white-space:nowrap;transition:all .16s;${on ? `background:${t.c};color:#fff;box-shadow:0 14px 26px -16px ${t.c}` : `background:${t.card};color:${t.c};box-shadow:inset 0 0 0 2px ${t.ring}`}`,
-              numStyle: `font-size:14.5px;font-weight:800;border-radius:999px;padding:2px 10px;${on ? 'background:rgba(255,255,255,.24)' : `background:${t.b}`}`
+              style: `display:flex;align-items:center;gap:10px;height:54px;padding:0 24px;border-radius:14px;font-size:17.5px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;border:none;cursor:pointer;transition:all .18s;` +
+                (on
+                  ? (isLinks
+                    ? 'background:#3730a3;background-image:linear-gradient(135deg,#312e81,#4f46e5);color:#fff;box-shadow:0 10px 24px -10px rgba(79,70,229,.8),inset 0 0 0 1.5px #818cf8;transform:scale(1.02);'
+                    : 'background:#c2410c;background-image:linear-gradient(135deg,#9a3412,#ea580c);color:#fff;box-shadow:0 10px 24px -10px rgba(194,65,12,.8),inset 0 0 0 1.5px #fb923c;transform:scale(1.02);')
+                  : 'background:transparent;color:#786950;'),
+              numStyle: `font-size:14px;font-weight:800;border-radius:999px;padding:2px 10px;` +
+                (on
+                  ? 'background:rgba(255,255,255,.22);color:#ffffff'
+                  : 'background:rgba(0,0,0,.07);color:#6b5f4c')
             };
           }),
           lkIsFollow: s.linksTab !== 'links', lkIsLinks: s.linksTab === 'links', lkIsProps: false,
