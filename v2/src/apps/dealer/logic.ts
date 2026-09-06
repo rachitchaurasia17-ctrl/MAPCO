@@ -794,60 +794,64 @@ export class Component extends DCLogic {
     const m = this.PTYPES.find(x => x.k === t); if (m) return m.g; const s = (t || '').toLowerCase();
     if (s.includes('plot')) return 'plot'; if (s.includes('commercial') || s.includes('sco') || s.includes('booth') || s.includes('office') || s.includes('showroom')) return 'comm'; return 'built';
   }
-  catThemeOf(t) {
+  CARD_PALETTES = [
+    {
+      cardBg: '#581c87',
+      cardGrad: 'linear-gradient(140deg, #3b0764 0%, #6b21a8 50%, #9333ea 100%)',
+      cardBorder: '#c084fc',
+      cardShadow: 'rgba(147,51,234,.45)',
+      titleColor: '#ffffff', locColor: '#f5f3ff', pinColor: '#e9d5ff',
+      accent: '#c084fc', sizeColor: '#ffffff', sizeIconColor: '#e9d5ff'
+    },
+    {
+      cardBg: '#9f1239',
+      cardGrad: 'linear-gradient(140deg, #4c0519 0%, #be123c 50%, #f43f5e 100%)',
+      cardBorder: '#fb7185',
+      cardShadow: 'rgba(225,29,72,.45)',
+      titleColor: '#ffffff', locColor: '#fff1f2', pinColor: '#fecdd3',
+      accent: '#fb7185', sizeColor: '#ffffff', sizeIconColor: '#fecdd3'
+    },
+    {
+      cardBg: '#9a3412',
+      cardGrad: 'linear-gradient(140deg, #451a03 0%, #c2410c 48%, #ea580c 80%, #f59e0b 100%)',
+      cardBorder: '#fb923c',
+      cardShadow: 'rgba(234,88,12,.45)',
+      titleColor: '#ffffff', locColor: '#fff7ed', pinColor: '#fed7aa',
+      accent: '#fb923c', sizeColor: '#ffffff', sizeIconColor: '#fed7aa'
+    },
+    {
+      cardBg: '#831843',
+      cardGrad: 'linear-gradient(140deg, #500724 0%, #9d174d 48%, #ec4899 100%)',
+      cardBorder: '#f472b6',
+      cardShadow: 'rgba(236,72,153,.45)',
+      titleColor: '#ffffff', locColor: '#fdf2f8', pinColor: '#fbcfe8',
+      accent: '#f472b6', sizeColor: '#ffffff', sizeIconColor: '#fbcfe8'
+    },
+    {
+      cardBg: '#312e81',
+      cardGrad: 'linear-gradient(140deg, #1e1b4b 0%, #4338ca 50%, #7c3aed 100%)',
+      cardBorder: '#818cf8',
+      cardShadow: 'rgba(99,102,241,.45)',
+      titleColor: '#ffffff', locColor: '#eef2ff', pinColor: '#c7d2fe',
+      accent: '#818cf8', sizeColor: '#ffffff', sizeIconColor: '#c7d2fe'
+    }
+  ];
+  catThemeOf(t, i = 0) {
     const s = (t || '').toLowerCase();
-    if (s.includes('industrial')) {
-      return {
-        cat: 'industrial', label: 'Industrial', icon: 'ph-fill ph-factory',
-        cardBg: '#0f766e', cardGrad: 'linear-gradient(140deg, #042f2e 0%, #0d9488 50%, #14b8a6 100%)',
-        cardBorder: '#2dd4bf', cardShadow: 'rgba(20,184,166,.45)',
-        titleColor: '#ffffff', locColor: '#f0fdfa', pinColor: '#5eead4',
-        tagBg: 'rgba(255,255,255,.2)', tagColor: '#ffffff',
-        accent: '#14b8a6',
-        sizeColor: '#ffffff', sizeIconColor: '#5eead4'
-      };
-    }
-    if (s.includes('plot') || s.includes('land') || s.includes('agricultural')) {
-      return {
-        cat: 'plot', label: 'Plot', icon: 'ph-fill ph-map-pin-area',
-        cardBg: '#1e40af', cardGrad: 'linear-gradient(140deg, #0b1e4f 0%, #1d4ed8 50%, #0284c7 100%)',
-        cardBorder: '#38bdf8', cardShadow: 'rgba(2,132,199,.45)',
-        titleColor: '#ffffff', locColor: '#f1f5f9', pinColor: '#38bdf8',
-        tagBg: 'rgba(255,255,255,.2)', tagColor: '#ffffff',
-        accent: '#38bdf8',
-        sizeColor: '#ffffff', sizeIconColor: '#38bdf8'
-      };
-    }
-    if (s.includes('commercial') || s.includes('sco') || s.includes('booth') || s.includes('office') || s.includes('showroom') || s.includes('shop') || s.includes('retail')) {
-      return {
-        cat: 'comm', label: 'Commercial', icon: 'ph-fill ph-storefront',
-        cardBg: '#9f1239', cardGrad: 'linear-gradient(140deg, #4c0519 0%, #be123c 50%, #f43f5e 100%)',
-        cardBorder: '#fb7185', cardShadow: 'rgba(225,29,72,.45)',
-        titleColor: '#ffffff', locColor: '#fff1f2', pinColor: '#fda4af',
-        tagBg: 'rgba(255,255,255,.2)', tagColor: '#ffffff',
-        accent: '#f43f5e',
-        sizeColor: '#ffffff', sizeIconColor: '#fda4af'
-      };
-    }
-    if (s.includes('kothi') || s.includes('villa') || s.includes('house') || s.includes('bungalow')) {
-      return {
-        cat: 'villa', label: 'Villa / Kothi', icon: 'ph-fill ph-house-line',
-        cardBg: '#065f46', cardGrad: 'linear-gradient(140deg, #022c22 0%, #059669 50%, #10b981 100%)',
-        cardBorder: '#34d399', cardShadow: 'rgba(16,185,129,.45)',
-        titleColor: '#ffffff', locColor: '#ecfdf5', pinColor: '#6ee7b7',
-        tagBg: 'rgba(255,255,255,.2)', tagColor: '#ffffff',
-        accent: '#10b981',
-        sizeColor: '#ffffff', sizeIconColor: '#6ee7b7'
-      };
-    }
+    const isInd = s.includes('industrial');
+    const isPlot = s.includes('plot') || s.includes('land') || s.includes('agricultural');
+    const isComm = s.includes('commercial') || s.includes('sco') || s.includes('booth') || s.includes('office') || s.includes('showroom') || s.includes('shop') || s.includes('retail');
+    const isVilla = s.includes('kothi') || s.includes('villa') || s.includes('house') || s.includes('bungalow');
+
+    const cat = isInd ? 'industrial' : (isPlot ? 'plot' : (isComm ? 'comm' : (isVilla ? 'villa' : 'built')));
+    const label = isInd ? 'Industrial' : (isPlot ? 'Plot' : (isComm ? 'Commercial' : (isVilla ? 'Villa / Kothi' : 'Flat / Apt')));
+    const icon = isInd ? 'ph-fill ph-factory' : (isPlot ? 'ph-fill ph-map-pin-area' : (isComm ? 'ph-fill ph-storefront' : (isVilla ? 'ph-fill ph-house-line' : 'ph-fill ph-buildings')));
+
+    const pal = this.CARD_PALETTES[Math.abs(Number(i) || 0) % this.CARD_PALETTES.length];
+
     return {
-      cat: 'built', label: 'Flat / Apt', icon: 'ph-fill ph-buildings',
-      cardBg: '#581c87', cardGrad: 'linear-gradient(140deg, #2e1065 0%, #6d28d9 50%, #9333ea 100%)',
-      cardBorder: '#c084fc', cardShadow: 'rgba(147,51,234,.45)',
-      titleColor: '#ffffff', locColor: '#faf5ff', pinColor: '#d8b4fe',
-      tagBg: 'rgba(255,255,255,.2)', tagColor: '#ffffff',
-      accent: '#9333ea',
-      sizeColor: '#ffffff', sizeIconColor: '#d8b4fe'
+      cat, label, icon,
+      ...pal
     };
   }
   readinessOf(pr) {
@@ -2832,10 +2836,10 @@ export class Component extends DCLogic {
 
     // Plots
     const stM = { available: { l: 'Available', c: '#c85a1a', b: '#fbe4d3' }, onhold: { l: 'On hold', c: '#b06f0c', b: '#fbeecb' }, sold: { l: 'Sold', c: '#ffffff', b: '#0a6634' } };
-    const propVM = (pr) => {
+    const propVM = (pr, i = 0) => {
       const mm = stM[pr.status]; const shs = sharesOf(pr.id); const act = shs.filter(x => x.status === 'active').length;
       const menuStyle = 'display:flex;align-items:center;gap:7px;height:40px;padding:0 14px;border-radius:11px;background:#f3eeff;color:#4c463d;font-size:14px;font-weight:800';
-      const cat = this.catThemeOf(pr.type);
+      const cat = this.catThemeOf(pr.type, i);
       return {
         title: pr.type, size: pr.size, loc: pr.loc, facing: pr.facing, priceFmt: this.inr(pr.price), gap: pr.gap || '', imgId: 'plotimg-' + pr.id,
         photoStyle: `position:absolute;inset:0;background-image:url('${this.plotPhoto(pr, 0)}');background-size:cover;background-position:center`, photoCount: (pr.photoCount || 0) + ' photos',
@@ -2941,7 +2945,7 @@ export class Component extends DCLogic {
       else if (qv === 'quiet') listPool = listPool.filter(pr => opensOf(pr) === 0);
       else listPool.sort((a, b) => (stateOf(a) === 'draft' ? 1 : 0) - (stateOf(b) === 'draft' ? 1 : 0));
     } else if (qv === 'price') listPool.sort((a, b) => ((b.sale && b.sale.price) || b.price) - ((a.sale && a.sale.price) || a.price));
-    const propsReady = listPool.map(propVM);
+    const propsReady = listPool.map((pr, i) => propVM(pr, i));
     const qvTheme: Record<string, { bgOn: string; bgOff: string; fgOn: string; fgOff: string; bdOn: string; bdOff: string; shadowOn: string; shadowOff: string }> = {
       hot: {
         bgOn: 'linear-gradient(135deg,#f97316,#ea580c)',

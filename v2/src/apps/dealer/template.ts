@@ -875,7 +875,7 @@ export function renderApp(state: any) {
                             style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:10px;background:#ffffff;border:1.5px solid rgba(255,255,255,.95);box-shadow:0 4px 12px rgba(0,0,0,.22);text-align:left;flex:none;cursor:pointer"
                             style-hover="filter:brightness(1.05)">
                             <span style="font-family:'Newsreader',serif;font-weight:700;font-size:22px;line-height:1;color:#0f172a">\${p.priceFmt}</span>
-                            <i class="ph-bold ph-pencil-simple" style="font-size:12px;color:#2563eb"></i>
+                            <i class="ph-bold ph-pencil-simple" style="font-size:12px;color:\${p.accent}"></i>
                           </button>
                           \${ p.notSoldCard ? \`
                             <button onClick="\${__b(p.openShare)}" title="Send a private link"
