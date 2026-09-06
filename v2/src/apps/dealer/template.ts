@@ -1015,38 +1015,34 @@ export function renderApp(state: any) {
                         <div onClick="\${__b(c.open)}" onKeyDown="\${__b(c.keyOpen)}" role="button" tabIndex="0"
                           title="Open this customer" style="\${c.cardStyle}" style-hover="transform:translateY(-3px)"
                           style-focus="box-shadow:0 0 0 3px #f8a800">
-                          <div style="display:flex;align-items:flex-start;gap:15px">
-                            <span style="\${c.avStyle}">\${c.initials}</span>
-                            <div style="flex:1;min-width:0">
-                              <div
-                                style="font-size:21px;font-weight:800;color:#241f1c;line-height:1.2;text-wrap:balance">
-                                \${c.name}</div>
-                              \${ c.hasBiz ? \`
-                                <div
-                                  style="font-size:15px;font-weight:700;color:#8a7f6e;margin-top:2px;text-wrap:pretty">
-                                  \${c.business}</div>
-                              \` : '' }
-                              <div style="font-size:15.5px;color:#6b6156;margin-top:3px;white-space:nowrap">\${c.phone}</div>
+
+                          <button onClick="\${__b(c.open)}" style="display:block;width:100%;text-align:left;border:none;background:none;padding:0;cursor:pointer">
+                            <span style="display:block;font-size:23px;font-weight:800;color:#241f1c;line-height:1.2;text-wrap:balance">\${c.name}</span>
+                            <span style="display:flex;align-items:center;gap:8px;font-size:16.5px;font-weight:700;color:#7a6f60;margin-top:6px"><i class="ph-fill ph-buildings" style="font-size:18px;color:#1a5aa8;flex:none"></i>\${c.reqLine}</span>
+                            <span style="display:block;font-size:15px;font-weight:600;color:#8a7f6e;margin-top:2px;padding-left:26px">\${c.phone}\${c.hasBiz ? ' · ' + c.business : ''}</span>
+                          </button>
+
+                          <div style="\${c.moneyStyle}">
+                            <div style="flex:1;min-width:110px">
+                              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8a7f6e">Budget</div>
+                              <div style="font-family:'Newsreader',serif;font-weight:600;font-size:28px;line-height:1.05;color:#241f1c;margin-top:2px">\${c.budget}</div>
+                            </div>
+                            <div style="flex:1;min-width:110px;text-align:right">
+                              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#0a6634">Stage</div>
+                              <div style="font-family:'Newsreader',serif;font-weight:600;font-size:24px;line-height:1.05;color:#0a6634;margin-top:2px">\${c.stage}</div>
                             </div>
                           </div>
 
-                          <div style="display:flex;align-items:center;gap:10px;margin-top:13px;flex-wrap:wrap">
-                            <span style="\${c.stateStyle}"><i class="\${c.stateIcon}" style="font-size:16px"></i>\${c.stateLabel}</span>
-                          </div>
-                          <div style="display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:15px">
+                          <div style="display:flex;align-items:center;gap:8px;margin-top:16px">
                             <button onClick="\${__b(c.sendLink)}" title="Send a private link"
-                              style="display:flex;align-items:center;justify-content:center;gap:7px;height:50px;padding:0 14px;border-radius:14px;background:#f8a800;color:#241d0c;font-size:15.5px;font-weight:800;white-space:nowrap;flex:1 1 auto;min-width:0;overflow:hidden"
-                              style-hover="background:#db9500"><i class="ph-fill ph-paper-plane-tilt"
-                                style="font-size:18px"></i>Send<i class="ph-bold ph-arrow-right"
-                                style="font-size:15px"></i></button>
+                              style="display:flex;align-items:center;justify-content:center;gap:7px;flex:1.2;height:50px;border-radius:14px;background:#241d0c;color:#f8c200;font-size:15px;font-weight:800;white-space:nowrap;border:none;cursor:pointer"
+                              style-hover="background:#3a2f14"><i class="ph-fill ph-paper-plane-tilt" style="font-size:18px"></i>Send</button>
                             <a href="\${c.tel}" onClick="\${__b(c.stop)}"
-                              style="display:flex;align-items:center;justify-content:center;gap:9px;flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;height:50px;border-radius:14px;background:#0f7a45;color:#fff;font-size:16px;font-weight:800;text-decoration:none"
-                              style-hover="background:#0b6437"><i class="ph-fill ph-phone"
-                                style="font-size:19px"></i>Call</a>
+                              style="display:flex;align-items:center;justify-content:center;gap:7px;flex:1;height:50px;border-radius:14px;background:#fff0d6;color:#a3541b;font-size:15px;font-weight:800;text-decoration:none"
+                              style-hover="background:#ffe6bd"><i class="ph-fill ph-phone" style="font-size:18px"></i>Call</a>
                             <a href="\${c.wa}" target="_blank" onClick="\${__b(c.stop)}"
-                              style="display:flex;align-items:center;justify-content:center;gap:9px;flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;height:50px;border-radius:14px;background:#e3f4e9;color:#0a6634;font-size:16px;font-weight:800;text-decoration:none"
-                              style-hover="background:#d0ecda"><i class="ph-fill ph-whatsapp-logo"
-                                style="font-size:19px"></i>WhatsApp</a>
+                              style="display:flex;align-items:center;justify-content:center;gap:7px;flex:1;height:50px;border-radius:14px;background:#e3f4e9;color:#0a6634;font-size:15px;font-weight:800;text-decoration:none"
+                              style-hover="background:#d0ecda"><i class="ph-fill ph-whatsapp-logo" style="font-size:18px"></i>WhatsApp</a>
                           </div>
                         </div>
                       \`).join('') }
@@ -1072,47 +1068,32 @@ export function renderApp(state: any) {
                     <div
                       style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin-top:18px">
                       \${ (sellCards || []).map(sl => \`
-                        <div onClick="\${__b(sl.open)}" style="\${sl.cardStyle}"
-                          style-hover="transform:translateY(-3px)">
-                          <div style="display:flex;align-items:flex-start;gap:15px">
-                            <span style="\${sl.avStyle}">\${sl.initials}</span>
-                            <div style="flex:1;min-width:0">
-                              <div
-                                style="font-size:21px;font-weight:800;color:#241f1c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-                                \${sl.name}</div>
-                              \${ sl.hasBiz ? \`
-                                <div style="font-size:15px;font-weight:700;color:#8a7f6e;margin-top:1px">\${sl.business}</div>
-                              \` : '' }
-                              <div style="font-size:15.5px;color:#6b6156;margin-top:2px">\${sl.phone} · \${sl.city}
-                              </div>
-                            </div>
-                            <span style="\${sl.kindStyle};flex:none">\${sl.kind}</span>
-                          </div>
-                          <div style="display:flex;gap:11px;margin-top:16px">
-                            <div style="flex:1;padding:13px 15px;border-radius:15px;background:#f7f2ff">
-                              <div
-                                style="font-family:'Newsreader',serif;font-weight:600;font-size:28px;color:#4a2c99;line-height:1">
-                                \${sl.liveN}</div>
-                              <div style="font-size:14px;font-weight:700;color:#6b6156;margin-top:2px">active \${sl.liveLabel}</div>
-                            </div>
-                            <div style="flex:1;padding:13px 15px;border-radius:15px;background:#eaf6ee">
-                              <div
-                                style="font-family:'Newsreader',serif;font-weight:600;font-size:28px;color:#0a6634;line-height:1">
-                                \${sl.soldN}</div>
-                              <div style="font-size:14px;font-weight:700;color:#6b6156;margin-top:2px">sold with you
-                              </div>
-                            </div>
-                          </div>
-                          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">\${ (sl.chips || []).map(ch => \`\`).join('') }</div>
+                        <div onClick="\${__b(sl.open)}" style="\${sl.cardStyle}" style-hover="transform:translateY(-3px)" tabIndex="0" role="button">
+                          
+                          <button onClick="\${__b(sl.open)}" style="display:block;width:100%;text-align:left;border:none;background:none;padding:0;cursor:pointer">
+                            <span style="display:block;font-size:23px;font-weight:800;color:#241f1c;line-height:1.2;text-wrap:balance">\${sl.name}</span>
+                            <span style="display:flex;align-items:center;gap:8px;font-size:16.5px;font-weight:700;color:#7a6f60;margin-top:6px"><i class="ph-fill ph-key" style="font-size:18px;color:#4a2c99;flex:none"></i>\${sl.kind} · \${sl.city}</span>
+                            <span style="display:block;font-size:15px;font-weight:600;color:#8a7f6e;margin-top:2px;padding-left:26px">\${sl.phone}\${sl.hasBiz ? ' · ' + sl.business : ''}</span>
+                          </button>
 
-                          <div style="display:flex;align-items:center;gap:10px;margin-top:15px">
+                          <div style="\${sl.moneyStyle}">
+                            <div style="flex:1;min-width:110px">
+                              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8a7f6e">Active listings</div>
+                              <div style="font-family:'Newsreader',serif;font-weight:600;font-size:28px;line-height:1.05;color:#4a2c99;margin-top:2px">\${sl.liveN} \${sl.liveLabel}</div>
+                            </div>
+                            <div style="flex:1;min-width:110px;text-align:right">
+                              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#0a6634">Sold with you</div>
+                              <div style="font-family:'Newsreader',serif;font-weight:600;font-size:26px;line-height:1.05;color:#0a6634;margin-top:2px">\${sl.soldN} sold</div>
+                            </div>
+                          </div>
+
+                          <div style="display:flex;align-items:center;gap:10px;margin-top:16px">
+                            <button onClick="\${__b(sl.open)}"
+                              style="display:flex;align-items:center;justify-content:center;gap:8px;flex:1.2;height:52px;border-radius:15px;background:#241d0c;color:#f8c200;font-size:16px;font-weight:800;border:none;cursor:pointer"
+                              style-hover="background:#3a2f14">Full details <i class="ph-bold ph-arrow-right" style="font-size:17px"></i></button>
                             <a href="\${sl.tel}" onClick="\${__b(sl.stop)}"
-                              style="display:flex;align-items:center;justify-content:center;gap:9px;flex:1;height:50px;border-radius:14px;background:#4a2c99;color:#fff;font-size:16px;font-weight:800;text-decoration:none"
-                              style-hover="background:#3d2380"><i class="ph-fill ph-phone"
-                                style="font-size:19px"></i>Call seller</a>
-                            <span
-                              style="display:flex;align-items:center;justify-content:center;gap:9px;flex:1;height:50px;border-radius:14px;background:#f4eeff;color:#4a2c99;font-size:16px;font-weight:800"><i
-                                class="ph-fill ph-arrow-right" style="font-size:18px"></i>Open profile</span>
+                              style="display:flex;align-items:center;justify-content:center;gap:8px;flex:1;height:52px;border-radius:15px;background:#fff0d6;color:#a3541b;font-size:16px;font-weight:800;text-decoration:none"
+                              style-hover="background:#ffe6bd"><i class="ph-fill ph-phone" style="font-size:18px"></i>Call</a>
                           </div>
                         </div>
                       \`).join('') }

@@ -4528,13 +4528,21 @@ export class Component extends DCLogic {
           { k: 'bought', l: 'Bought', n: stCount('bought') },
           { k: 'active', l: 'Hot', n: stCount('active') }
         ];
+        const CARD_THEMES = [
+          { bg: '#eae6ff', bgGrad: 'linear-gradient(155deg,#f0ecff,#e5dfff)', border: '#d4ccff', shadow: 'rgba(107,63,212,.22)' },
+          { bg: '#fff0c2', bgGrad: 'linear-gradient(155deg,#fff6d6,#ffeaa3)', border: '#f7df94', shadow: 'rgba(217,119,6,.22)' },
+          { bg: '#e2efff', bgGrad: 'linear-gradient(155deg,#ecf4ff,#d6e8ff)', border: '#c4ddff', shadow: 'rgba(26,90,168,.22)' },
+          { bg: '#e2f7ed', bgGrad: 'linear-gradient(155deg,#ebfaf3,#d4f3e4)', border: '#bcecd4', shadow: 'rgba(10,102,52,.22)' },
+          { bg: '#ffebe6', bgGrad: 'linear-gradient(155deg,#fff2ef,#ffdcd3)', border: '#fcc7b9', shadow: 'rgba(192,73,12,.22)' }
+        ];
         const cliCards = liveC
           .filter(c => effCliFilter === 'all' || this.contactState(c) === effCliFilter)
           .filter(c => !q || ((c.name + ' ' + c.phone + ' ' + c.city + ' ' + (c.business || '') + ' ' + (c.types || []).join(' ') + ' ' + (c.areas || []).join(' ') + ' ' + (c.budget || '')).toLowerCase().includes(q)))
-          .map(c => {
+          .map((c, idx) => {
             const st = this.contactState(c), m = CS[st], la = lastActOf(c.id);
             const live = linksOf(c.id).filter(l => l.status === 'active').length;
             const bought = boughtOf(c);
+            const theme = CARD_THEMES[idx % CARD_THEMES.length];
             return {
               id: c.id, name: c.name, initials: this.initialsOf(c.name), phone: c.phone, tel: this.tel(c.phone), wa: this.waLink(c.phone),
               business: c.business || '', hasBiz: !!c.business,
@@ -4552,31 +4560,28 @@ export class Component extends DCLogic {
                 if (e && e.stopPropagation) e.stopPropagation();
                 this.setState({ selectedClient: null, linkBuild: 'new', lstep: 3, lSearchQ: '', lSearchQ2: '', lform: { ...this.blankL(), clientId: c.id } });
               },
-              cardStyle: (st === 'bought'
-                ? 'min-width:0;text-align:left;background:#fff4d1;background-image:linear-gradient(150deg,#fff9e4,#ffeeb4);border-radius:22px;padding:20px 22px 20px 24px;border-left:10px solid #9a6a00;box-shadow:0 0 0 2px #f0c95e,0 20px 44px -26px rgba(150,105,0,.8);transition:transform .13s,box-shadow .13s;cursor:pointer'
-                : 'min-width:0;text-align:left;background:' + m.b + ';background-image:linear-gradient(155deg,rgba(255,255,255,.82),rgba(255,255,255,.14) 66%);border-radius:22px;padding:20px 22px 20px 24px;border-left:10px solid ' + m.c + ';box-shadow:0 0 0 1.5px rgba(60,40,10,.08),0 16px 38px -30px rgba(40,30,10,.7);transition:transform .13s,box-shadow .13s;cursor:pointer'),
+              cardStyle: `min-width:0;text-align:left;background:${theme.bg};background-image:${theme.bgGrad};border-radius:24px;padding:22px 24px;box-shadow:0 0 0 1.5px ${theme.border},0 18px 40px -26px ${theme.shadow};transition:transform .13s,box-shadow .13s;cursor:pointer`,
+              moneyStyle: 'display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;padding:14px 18px;border-radius:18px;background:#ffffff;box-shadow:0 2px 8px rgba(0,0,0,.03)',
               avStyle: `width:54px;height:54px;border-radius:17px;flex:none;display:grid;place-items:center;font-size:19px;font-weight:800;background:${m.b};color:${m.c}`,
               open: () => this.setState({ selectedClient: c.id, cliEdit: false, noteDraft: '', cpTab: 'overview', cpPick: false, cpPickQ: '' }), stop: (e) => e.stopPropagation()
             };
           });
         const sq = (s.sellQ || '').toLowerCase().trim();
         const sellCards = liveS.filter(x => !sq || ((x.name + ' ' + x.phone + ' ' + (x.business || '') + ' ' + x.city + ' ' + x.kind).toLowerCase().includes(sq)))
-          .map(sl => {
-            /* Counts and availability come from the canonical seller
-               directory, computed server-side in one round trip — never
-               from a local join against a separate property collection. */
+          .map((sl, idx) => {
             const props = sl.props || [];
             const live = props.filter(p => !p.sold), sold = props.filter(p => p.sold);
             const cps = live.filter(p => p.lastConfirmed);
             const okPs = cps.find(p => p.availConfirmed), stalePs = cps.find(p => !p.availConfirmed);
             const conf = okPs ? okPs.lastConfirmed : ''; const stale = !okPs && stalePs ? stalePs.lastConfirmed : '';
+            const theme = CARD_THEMES[(idx + 1) % CARD_THEMES.length];
             return {
               id: sl.id, name: sl.name, initials: this.initialsOf(sl.name), phone: sl.phone, tel: this.tel(sl.phone),
               business: sl.business || '', hasBiz: !!sl.business, kind: sl.kind, city: sl.city || '—',
               kindStyle: pillS('#efe8fb', '#4a2c99'),
               liveN: String(live.length), soldN: String(sold.length),
               liveLabel: live.length === 1 ? 'property' : 'properties',
-              confLine: conf ? ('Availability confirmed ' + conf.toLowerCase()) : (stale ? ('Not confirmed since ' + stale.toLowerCase()) : 'Availability never confirmed'),
+              confLine: conf ? ('Confirmed') : (stale ? ('Not recent') : 'Unconfirmed'),
               confStyle: `font-size:14.5px;font-weight:700;${conf ? 'color:#0a6634' : 'color:#a3541b'}`,
               note: sl.note || '', hasNote: !!sl.note,
               chips: live.slice(0, 3).map(p => ({
@@ -4584,7 +4589,8 @@ export class Component extends DCLogic {
                   + (p.askPrice || p.price ? ' · ' + this.inr(p.askPrice || p.price) : ''),
                 style: 'display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:999px;background:#f4eeff;color:#4a2c99;font-size:13.5px;font-weight:800'
               })),
-              cardStyle: 'min-width:0;text-align:left;background:#fffdf7;border-radius:22px;padding:20px 22px;box-shadow:0 0 0 1.5px #e2d8ee,0 16px 38px -30px rgba(40,30,10,.7);transition:transform .13s;cursor:pointer',
+              cardStyle: `min-width:0;text-align:left;background:${theme.bg};background-image:${theme.bgGrad};border-radius:24px;padding:22px 24px;box-shadow:0 0 0 1.5px ${theme.border},0 18px 40px -26px ${theme.shadow};transition:transform .13s,box-shadow .13s;cursor:pointer`,
+              moneyStyle: 'display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;padding:14px 18px;border-radius:18px;background:#ffffff;box-shadow:0 2px 8px rgba(0,0,0,.03)',
               avStyle: 'width:54px;height:54px;border-radius:17px;flex:none;display:grid;place-items:center;font-size:19px;font-weight:800;background:#efe8fb;color:#4a2c99',
               open: () => { deskStore.loadSellerWorkspace(sl.id); this.setState({ sellerView: sl.id }); }, stop: (e) => e.stopPropagation()
             };
