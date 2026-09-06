@@ -370,7 +370,7 @@ export class Component extends DCLogic {
      desk_property_sellers, Property.specs and Property.highlights. */
   PTYPES = [{ k: 'Residential Plot', i: 'ph-fill ph-map-pin-area', g: 'plot' }, { k: 'Flat', i: 'ph-fill ph-buildings', g: 'built' }, { k: 'Builder Floor', i: 'ph-fill ph-stack', g: 'built' }, { k: 'Kothi', i: 'ph-fill ph-house-line', g: 'built' }, { k: 'Villa', i: 'ph-fill ph-house', g: 'built' }, { k: 'Commercial SCO', i: 'ph-fill ph-storefront', g: 'comm' }, { k: 'Commercial Booth', i: 'ph-fill ph-shopping-bag-open', g: 'comm' }, { k: 'Office', i: 'ph-fill ph-briefcase', g: 'comm' }, { k: 'Showroom', i: 'ph-fill ph-shopping-cart', g: 'comm' }, { k: 'Industrial Plot', i: 'ph-fill ph-factory', g: 'plot' }];
   HIGHLIGHTS = ['Park Facing', 'Corner', 'Wide Road', 'Prime Location', 'Clear Title', 'GMADA Approved', 'RERA Approved', 'Gated', 'Near Market', 'Ready to Move'];
-  RS = { ready: { l: 'Ready to show', c: '#0a6634', b: '#c9f0d9', bd: '#8fdcae', i: 'ph-fill ph-seal-check' }, attention: { l: 'Needs attention', c: '#a33417', b: '#ffdccb', bd: '#f3bb98', i: 'ph-fill ph-warning' }, draft: { l: 'Draft', c: '#6b5320', b: '#f6e6bd', bd: '#e2cd97', i: 'ph-fill ph-note-pencil' }, sold: { l: 'Sold', c: '#0a4a26', b: '#c9f0d9', bd: '#8fdcae', i: 'ph-fill ph-seal-check' } };
+  RS = { ready: { l: 'Ready to show', c: '#1d4ed8', b: '#dbeafe', bd: '#93c5fd', i: 'ph-fill ph-seal-check' }, attention: { l: 'Needs attention', c: '#a33417', b: '#ffdccb', bd: '#f3bb98', i: 'ph-fill ph-warning' }, draft: { l: 'Draft', c: '#6b5320', b: '#f6e6bd', bd: '#e2cd97', i: 'ph-fill ph-note-pencil' }, sold: { l: 'Sold', c: '#0a6634', b: '#c9f0d9', bd: '#8fdcae', i: 'ph-fill ph-seal-check' } };
   buildPropertyOverview(pd) {
     if (!pd) return { headline: '', typeIcon: 'ph-fill ph-house-line', typeLabel: '', isNegotiable: true, isFixedPrice: false, highlightChips: [], hasHighlightChips: false, keySpecs: [], detailGroups: [], moreDetailsList: [], moreDetailsCount: 0, hasMoreDetails: false, hasCustomNotes: false, customNotes: '' };
     const K = this.kindOf(pd.type);
@@ -793,6 +793,52 @@ export class Component extends DCLogic {
   groupOf(t) {
     const m = this.PTYPES.find(x => x.k === t); if (m) return m.g; const s = (t || '').toLowerCase();
     if (s.includes('plot')) return 'plot'; if (s.includes('commercial') || s.includes('sco') || s.includes('booth') || s.includes('office') || s.includes('showroom')) return 'comm'; return 'built';
+  }
+  catThemeOf(t) {
+    const s = (t || '').toLowerCase();
+    if (s.includes('industrial')) {
+      return {
+        cat: 'industrial', label: 'Industrial', icon: 'ph-fill ph-factory',
+        boxBg: 'linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%)', boxBorder: '#99f6e4', boxShadow: '0 2px 8px -2px rgba(13,148,136,.15)',
+        titleColor: '#134e4a', locColor: '#0f766e', pinColor: '#0d9488',
+        tagBg: '#99f6e4', tagColor: '#115e59',
+        menuBg: '#ccfbf1', menuColor: '#0f766e', accent: '#0d9488'
+      };
+    }
+    if (s.includes('plot') || s.includes('land') || s.includes('agricultural')) {
+      return {
+        cat: 'plot', label: 'Plot', icon: 'ph-fill ph-map-pin-area',
+        boxBg: 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)', boxBorder: '#fed7aa', boxShadow: '0 2px 8px -2px rgba(234,88,12,.15)',
+        titleColor: '#7c2d12', locColor: '#9a3412', pinColor: '#ea580c',
+        tagBg: '#fed7aa', tagColor: '#c2410c',
+        menuBg: '#ffedd5', menuColor: '#c2410c', accent: '#ea580c'
+      };
+    }
+    if (s.includes('commercial') || s.includes('sco') || s.includes('booth') || s.includes('office') || s.includes('showroom') || s.includes('shop') || s.includes('retail')) {
+      return {
+        cat: 'comm', label: 'Commercial', icon: 'ph-fill ph-storefront',
+        boxBg: 'linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%)', boxBorder: '#fecdd3', boxShadow: '0 2px 8px -2px rgba(225,29,72,.15)',
+        titleColor: '#881337', locColor: '#9f1239', pinColor: '#e11d48',
+        tagBg: '#fecdd3', tagColor: '#be123c',
+        menuBg: '#ffe4e6', menuColor: '#be123c', accent: '#e11d48'
+      };
+    }
+    if (s.includes('kothi') || s.includes('villa') || s.includes('house') || s.includes('bungalow')) {
+      return {
+        cat: 'villa', label: 'Villa / Kothi', icon: 'ph-fill ph-house-line',
+        boxBg: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)', boxBorder: '#bbf7d0', boxShadow: '0 2px 8px -2px rgba(22,163,74,.15)',
+        titleColor: '#14532d', locColor: '#166534', pinColor: '#16a34a',
+        tagBg: '#bbf7d0', tagColor: '#15803d',
+        menuBg: '#dcfce7', menuColor: '#15803d', accent: '#16a34a'
+      };
+    }
+    return {
+      cat: 'built', label: 'Flat / Apt', icon: 'ph-fill ph-buildings',
+      boxBg: 'linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%)', boxBorder: '#e9d5ff', boxShadow: '0 2px 8px -2px rgba(124,58,237,.15)',
+      titleColor: '#581c87', locColor: '#7e22ce', pinColor: '#9333ea',
+      tagBg: '#e9d5ff', tagColor: '#7e22ce',
+      menuBg: '#f3e8ff', menuColor: '#7e22ce', accent: '#7c3aed'
+    };
   }
   readinessOf(pr) {
     const miss = [];
@@ -2279,14 +2325,14 @@ export class Component extends DCLogic {
       }));
 
     const dvTabs = [
-      { k: 'active', l: 'Ongoing', n: dActiveAll.length, i: 'ph-fill ph-handshake', on: 'background:#f8a800;color:#241d0c;box-shadow:0 10px 20px -10px rgba(248,168,0,.9);', off: 'background:transparent;color:#786950;' },
-      { k: 'done', l: 'Sold', n: dDoneAll.length, i: 'ph-fill ph-seal-check', on: 'background:#0a6634;color:#eafff2;box-shadow:0 10px 20px -10px rgba(10,102,52,.9);', off: 'background:transparent;color:#786950;' },
-      { k: 'lost', l: 'Lost', n: dLostAll.length, i: 'ph-fill ph-x-circle', on: 'background:#be123c;color:#fff;box-shadow:0 10px 20px -10px rgba(190,18,60,.9);', off: 'background:transparent;color:#786950;' }
+      { k: 'active', l: 'Ongoing', n: dActiveAll.length, i: 'ph-fill ph-handshake', on: 'background:#1d4ed8;background-image:linear-gradient(140deg,#2563eb,#1d4ed8);color:#ffffff;box-shadow:0 14px 28px -12px rgba(29,78,216,.95),inset 0 0 0 2px #60a5fa;', off: 'background:transparent;color:#475569;' },
+      { k: 'done', l: 'Completed', n: dDoneAll.length, i: 'ph-fill ph-seal-check', on: 'background:#0a6634;color:#eafff2;box-shadow:0 10px 20px -10px rgba(10,102,52,.9);', off: 'background:transparent;color:#475569;' },
+      { k: 'lost', l: 'Lost', n: dLostAll.length, i: 'ph-fill ph-x-circle', on: 'background:#be123c;color:#fff;box-shadow:0 10px 20px -10px rgba(190,18,60,.9);', off: 'background:transparent;color:#475569;' }
     ].map(t => {
       const on = dView === t.k; return {
         label: t.l, count: String(t.n), icon: t.i, go: () => this.setState({ dealView: t.k, dealStage: 'all', ledgerFilter: 'all' }),
         style: 'display:flex;align-items:center;gap:9px;height:52px;padding:0 22px;border-radius:14px;font-size:17px;font-weight:800;white-space:nowrap;transition:all .16s;' + (on ? t.on : t.off),
-        num: 'font-size:13.5px;font-weight:800;border-radius:999px;padding:2px 9px;' + (on ? 'background:rgba(0,0,0,.14)' : 'background:rgba(0,0,0,.07)')
+        num: 'font-size:13.5px;font-weight:800;border-radius:999px;padding:2px 9px;' + (on ? 'background:rgba(255,255,255,.24);color:#ffffff' : 'background:rgba(0,0,0,.07);color:#475569')
       };
     });
 
@@ -2340,7 +2386,7 @@ export class Component extends DCLogic {
         emptyMsg: 'Nothing is stuck waiting on someone else.'
       },
       {
-        label: 'Money to collect', sub: moneyRows.length ? (this.inr(commDueAll) + ' outstanding') : '', icon: 'ph-fill ph-hand-coins', c: '#0a6634', b: '#d3f2e0', bg: '#f2faf5', ring: '#b7e0c8', rows: moneyRows,
+        label: 'Money to collect', sub: moneyRows.length ? (this.inr(commDueAll) + ' outstanding') : '', icon: 'ph-fill ph-hand-coins', c: '#b45309', b: '#fef3c7', bg: '#fffdf5', ring: '#fde68a', rows: moneyRows,
         emptyMsg: 'Every rupee of commission is in. Nothing to chase.'
       }]
       .map(g => ({
@@ -2369,11 +2415,18 @@ export class Component extends DCLogic {
         return (fa.length ? fa[0].pri : 9) - (fb.length ? fb[0].pri : 9);
       });
 
-    const activeDeals = activeRows.map(d => {
+    const activeDeals = activeRows.map((d, i) => {
       const M = this.dealMoney(d), st = this.ds(d.stage), S = sellerNameOf(d);
       const cl = this.clients.find(c => c.id === d.clientId) || {};
       const fl = this.dealFlags(d), top = fl[0];
       const nx = d.next;
+      const palette = [
+        { bg: '#e7defc', border: '#ddd0f5' },
+        { bg: '#ffe9a8', border: '#f6e3ab' },
+        { bg: '#ffd9c2', border: '#f8cba6' },
+        { bg: '#cceaf3', border: '#b6ddea' }
+      ];
+      const cardColor = palette[i % palette.length];
       return {
         card: 'flex:1 1 520px;max-width:840px;border-radius:24px;background:#fffdf7;padding:19px 21px 20px;box-shadow:0 0 0 1.5px #ece3d2,0 18px 40px -32px rgba(40,30,10,.8)',
         stageLabel: st.l, stageIcon: st.i,
@@ -2381,7 +2434,7 @@ export class Component extends DCLogic {
         hasNote: !!top, noteText: top ? top.t : '', noteIcon: top ? top.i : '',
         noteStyle: top ? ('display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 13px;border-radius:12px;background:' + top.b + ';color:' + top.c + ';font-size:14.5px;font-weight:800;text-wrap:pretty') : 'display:none',
         buyer: d.client, buyerPhone: cl.phone || '—',
-        cardStyle: 'border-radius:24px;padding:20px 22px 22px;background:' + st.b + ';background-image:linear-gradient(155deg,rgba(255,255,255,.74),rgba(255,255,255,0) 64%);box-shadow:0 0 0 2px ' + (st.r || st.b) + ',0 20px 40px -28px rgba(40,30,10,.8)',
+        cardStyle: 'border-radius:24px;padding:20px 22px 22px;background:' + cardColor.bg + ';background-image:linear-gradient(155deg,rgba(255,255,255,.74),rgba(255,255,255,0) 64%);box-shadow:0 0 0 2px ' + cardColor.border + ',0 20px 40px -28px rgba(40,30,10,.8)',
         moneyStyle: 'display:flex;align-items:flex-end;gap:16px;margin-top:16px;padding:14px 16px;border-radius:17px;background:rgba(255,255,255,.88);box-shadow:0 0 0 1.5px rgba(255,255,255,.95);flex-wrap:wrap',
         propTitle: d.prop, propLoc: d.propSub,
         seller: S.name, sellerAsk: S.ask,
@@ -2423,7 +2476,7 @@ export class Component extends DCLogic {
         statusIcon: M.fully ? 'ph-fill ph-check-circle' : 'ph-fill ph-clock-countdown',
         statusStyle: 'display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 12px;border-radius:11px;font-size:14.5px;font-weight:800;' + (M.fully ? 'background:#d3f2e0;color:#0a6634' : 'background:#ffdfe2;color:#b02a37'),
         receivedLine: M.fully ? this.inr(M.got) + ' in hand' : (this.inr(M.due) + ' still due'),
-        row: 'display:flex;align-items:center;gap:14px;row-gap:10px;flex-wrap:wrap;padding:16px 20px;box-shadow:inset 0 -1.5px 0 #f0e6d4;' + (M.fully ? 'background:#fffdf7' : 'background:#fff8f4'),
+        row: 'display:flex;align-items:center;gap:14px;row-gap:10px;flex-wrap:wrap;padding:16px 20px;border-radius:16px;margin-bottom:8px;box-shadow:0 0 0 1.5px #a6e3c0;' + (M.fully ? 'background:#e6f8ed' : 'background:#e6f8ed'),
         showCollect: M.due > 0,
         collect: (e) => {
           if (e && e.stopPropagation) e.stopPropagation();
@@ -2442,8 +2495,8 @@ export class Component extends DCLogic {
         propTitle: d.prop, propLoc: d.propSub,
         priceFmt: this.inr(d.value), commFmt: this.inr(M.expected),
         reason: d.lostReason || 'Not recorded', when: d.lostOn || '',
-        cardStyle: 'border-radius:24px;padding:20px 22px 22px;background:#fff1f2;background-image:linear-gradient(155deg,rgba(255,255,255,.74),rgba(255,255,255,0) 64%);box-shadow:0 0 0 2px #fecdd3,0 20px 40px -28px rgba(127,29,29,.6)',
-        moneyStyle: 'display:flex;align-items:flex-end;gap:16px;margin-top:16px;padding:14px 16px;border-radius:17px;background:rgba(255,255,255,.88);box-shadow:0 0 0 1.5px rgba(255,255,255,.95);flex-wrap:wrap',
+        cardStyle: 'border-radius:24px;padding:20px 22px 22px;background:#fff0f4;box-shadow:0 0 0 2px #fecdd3,0 20px 40px -28px rgba(127,29,29,.2)',
+        moneyStyle: 'display:flex;align-items:flex-end;gap:16px;margin-top:16px;padding:14px 16px;border-radius:17px;background:#be123c;box-shadow:inset 0 0 0 1.5px #9f1239;flex-wrap:wrap',
         update: () => this.openUpdate(d.id),
         open: () => this.setState({ selectedDeal: d.id, dealTab: 'overview' })
       };
@@ -2772,6 +2825,7 @@ export class Component extends DCLogic {
     const propVM = (pr) => {
       const mm = stM[pr.status]; const shs = sharesOf(pr.id); const act = shs.filter(x => x.status === 'active').length;
       const menuStyle = 'display:flex;align-items:center;gap:7px;height:40px;padding:0 14px;border-radius:11px;background:#f3eeff;color:#4c463d;font-size:14px;font-weight:800';
+      const cat = this.catThemeOf(pr.type);
       return {
         title: pr.type, size: pr.size, loc: pr.loc, facing: pr.facing, priceFmt: this.inr(pr.price), gap: pr.gap || '', imgId: 'plotimg-' + pr.id,
         photoStyle: `position:absolute;inset:0;background-image:url('${this.plotPhoto(pr, 0)}');background-size:cover;background-position:center`, photoCount: (pr.photoCount || 0) + ' photos',
@@ -2814,10 +2868,18 @@ export class Component extends DCLogic {
         })() : 'Sold',
         saleComm: pr.sale && pr.sale.comm ? this.inr(pr.sale.comm) : '', hasSaleComm: !!(pr.sale && pr.sale.comm),
         hasDealCard: !!pr.dealId, goDealCard: () => { if (pr.dealId) this.setState({ selectedDeal: pr.dealId, section: 'deals', cardMenu: null }); },
-        accent: (() => { const g = this.groupOf(pr.type); return g === 'plot' ? '#e8681c' : g === 'comm' ? '#5b32c4' : '#0a6634'; })(),
-        accentBar: (() => { const g = this.groupOf(pr.type); const c = g === 'plot' ? '#e8681c' : g === 'comm' ? '#5b32c4' : '#0a6634'; return `height:5px;background:${c}`; })(),
+        cat: cat.cat,
+        catLabel: cat.label,
+        catIcon: cat.icon,
+        catBoxStyle: `padding:11px 13px 12px;border-radius:15px;background:${cat.boxBg};border:1.5px solid ${cat.boxBorder};box-shadow:${cat.boxShadow};`,
+        catTitleStyle: `font-size:18px;font-weight:800;color:${cat.titleColor};letter-spacing:-.01em;line-height:1.22;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;`,
+        catLocStyle: `display:flex;align-items:center;gap:5px;font-size:13.5px;font-weight:600;color:${cat.locColor};margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;`,
+        catPinColor: cat.pinColor,
+        catMenuBtnStyle: `width:34px;height:34px;border-radius:9px;background:${cat.menuBg};color:${cat.menuColor};display:grid;place-items:center;flex:none;border:none;cursor:pointer;`,
+        accent: cat.accent,
+        accentBar: `height:5px;background:${cat.accent};`,
         cardWrap: (() => {
-          return 'background:#ffffff;border-radius:22px;overflow:hidden;box-shadow:0 0 0 1.5px #eadfc9,0 16px 36px -18px rgba(40,24,6,.14);transition:transform .14s,box-shadow .14s;';
+          return 'background:#ffffff;border-radius:22px;overflow:hidden;box-shadow:0 0 0 1.5px #dbe7f7,0 16px 36px -18px rgba(37,99,235,.12);transition:transform .14s,box-shadow .14s;min-width:0;display:flex;flex-direction:column;';
         })()
       };
     };
@@ -2851,6 +2913,9 @@ export class Component extends DCLogic {
     const readyCount = soldView ? soldPool.length : (holdView ? holdPool.length : livePoolAll.filter(pr => stateOf(pr) === 'ready').length);
     const liveLinkCount = this.clientLinks.filter(l => l.status === 'active').length + this.shares.filter(x => x.status === 'active').length;
     const needCount = liveLinkCount;
+    const plotsValue = m(portfolio);
+    const plotsReady = n(readyCount);
+    const plotsNeed = soldView ? m(soldEarn) : n(needCount);
     const opensOf = (pr) => this.clientLinks.filter(l => l.props.includes(pr.id)).reduce((a, l) => a + (l.opens || 0), 0)
       + this.shares.filter(x => x.propId === pr.id && x.opened !== 'not opened yet').length * 2 + (pr.views || 0);
     const qv = s.quickView || 'all';
@@ -3618,7 +3683,7 @@ export class Component extends DCLogic {
         if (dView === 'done') {
           return 'background:#ebfbf2;background-image:radial-gradient(65% 55% at 2% 0%,rgba(16,185,129,.24),transparent 70%),radial-gradient(55% 45% at 98% 100%,rgba(5,150,105,.2),transparent 70%),radial-gradient(40% 30% at 50% 40%,rgba(52,211,153,.15),transparent 60%);';
         }
-        return 'background:#f4fbf6;background-image:radial-gradient(60% 50% at 2% 0%,rgba(34,197,94,.16),transparent 65%),radial-gradient(50% 45% at 98% 100%,rgba(234,179,8,.18),transparent 65%);';
+        return 'background:#f8faff;background-image:radial-gradient(65% 55% at 2% 0%,rgba(59,130,246,.15),transparent 65%),radial-gradient(55% 45% at 98% 100%,rgba(37,99,235,.12),transparent 65%),radial-gradient(40% 30% at 50% 25%,rgba(147,197,253,.16),transparent 60%);';
       }
       if (s.section === 'properties' || s.section === 'plots') {
         if (soldView) {
@@ -3627,7 +3692,7 @@ export class Component extends DCLogic {
         if (holdView) {
           return 'background:#fff0f2;background-image:radial-gradient(60% 50% at 2% 0%,rgba(225,29,72,.18),transparent 65%),radial-gradient(50% 45% at 98% 100%,rgba(190,18,60,.14),transparent 65%);';
         }
-        return 'background:#fffef0;background-image:radial-gradient(60% 50% at 2% 0%,rgba(245,158,11,.18),transparent 65%),radial-gradient(50% 45% at 98% 100%,rgba(251,191,36,.14),transparent 65%),radial-gradient(40% 30% at 50% 30%,rgba(254,240,138,.2),transparent 60%);';
+        return 'background:#f8faff;background-image:radial-gradient(65% 55% at 2% 0%,rgba(59,130,246,.15),transparent 65%),radial-gradient(55% 45% at 98% 100%,rgba(37,99,235,.12),transparent 65%),radial-gradient(40% 30% at 50% 25%,rgba(147,197,253,.16),transparent 60%);';
       }
       return '';
     })();
@@ -3652,23 +3717,24 @@ export class Component extends DCLogic {
       invStatIconB: soldView ? 'ph-fill ph-seal-check' : (holdView ? 'ph-fill ph-pause-circle' : 'ph-fill ph-check-circle'),
       invStatIconC: soldView ? 'ph-fill ph-coins' : (holdView ? 'ph-fill ph-paper-plane-tilt' : 'ph-fill ph-paper-plane-tilt'),
       invLiveCount: allLive.length, invSoldCount: allSold.length, invHoldCount: allHold.length,
-      invSegLive: segBase + ';height:60px;padding:0 26px;font-size:18.5px;border-radius:16px;white-space:nowrap;' + (!soldView && !holdView ? 'background:#f8a800;color:#241d0c;box-shadow:0 14px 28px -12px rgba(248,168,0,.95),inset 0 0 0 2px #ffce5c;transform:scale(1.02)' : 'background:transparent;color:#2f6b4c;opacity:.75'),
-      invSegSold: segBase + ';height:60px;padding:0 26px;font-size:18.5px;border-radius:16px;white-space:nowrap;' + (soldView ? 'background:#0a6634;color:#eafff2;box-shadow:0 14px 28px -12px rgba(10,102,52,.95),inset 0 0 0 2px #2fd07f;transform:scale(1.02)' : 'background:transparent;color:#2f6b4c;opacity:.75'),
+      invSegLive: segBase + ';height:60px;padding:0 26px;font-size:18.5px;border-radius:16px;white-space:nowrap;' + (!soldView && !holdView ? 'background:#1d4ed8;background-image:linear-gradient(140deg,#2563eb,#1d4ed8);color:#ffffff;box-shadow:0 14px 28px -12px rgba(29,78,216,.95),inset 0 0 0 2px #60a5fa;transform:scale(1.02)' : 'background:transparent;color:#475569;opacity:.8'),
+      invSegSold: segBase + ';height:60px;padding:0 26px;font-size:18.5px;border-radius:16px;white-space:nowrap;' + (soldView ? 'background:#0a6634;color:#eafff2;box-shadow:0 14px 28px -12px rgba(10,102,52,.95),inset 0 0 0 2px #2fd07f;transform:scale(1.02)' : 'background:transparent;color:#786950;opacity:.75'),
       invSegHold: segBase + ';height:60px;padding:0 26px;font-size:18.5px;border-radius:16px;white-space:nowrap;' + (holdView ? 'background:#be123c;color:#fff;box-shadow:0 14px 28px -12px rgba(190,18,60,.95),inset 0 0 0 2px #e11d48;transform:scale(1.02)' : 'background:transparent;color:#786950;opacity:.75'),
-      invSegLiveN: segNum(!soldView && !holdView), invSegSoldN: segNum(soldView), invSegHoldN: segNum(holdView),
-      invSegWrapStyle: 'display:flex;gap:6px;padding:6px;border-radius:20px;' + (soldView ? 'background:#d9f0e4;box-shadow:inset 0 0 0 2px #9fd6ba' : (holdView ? 'background:#ffe4e6;box-shadow:inset 0 0 0 2px #fecdd3' : 'background:#fff3d6;box-shadow:inset 0 0 0 1px rgba(120,100,60,.16)')),
-      invAddBtnStyle: 'display:flex;align-items:center;gap:10px;height:60px;padding:0 26px;border-radius:16px;font-size:18px;font-weight:800;white-space:nowrap;white-space:nowrap;transition:transform .12s;' + (!soldView && !holdView ? 'background:#1d7a43;background-image:linear-gradient(140deg,#27a05a,#125c31);color:#eafff2;box-shadow:0 18px 34px -16px rgba(11,111,57,.9)' : 'background:#f8a800;color:#241d0c'),
+      invSegLiveN: !soldView && !holdView ? 'font-size:13.5px;font-weight:800;border-radius:999px;padding:2px 9px;background:rgba(255,255,255,.24);color:#ffffff' : segNum(false),
+      invSegSoldN: segNum(soldView), invSegHoldN: segNum(holdView),
+      invSegWrapStyle: 'display:flex;gap:6px;padding:6px;border-radius:20px;' + (soldView ? 'background:#d9f0e4;box-shadow:inset 0 0 0 2px #9fd6ba' : (holdView ? 'background:#ffe4e6;box-shadow:inset 0 0 0 2px #fecdd3' : 'background:#eff6ff;box-shadow:inset 0 0 0 1.5px #bfdbfe')),
+      invAddBtnStyle: 'display:flex;align-items:center;gap:10px;height:60px;padding:0 26px;border-radius:16px;font-size:18px;font-weight:800;white-space:nowrap;white-space:nowrap;transition:transform .12s;' + (!soldView && !holdView ? 'background:#f8a800;background-image:linear-gradient(140deg,#ffc43a,#f8a800 55%,#d97706);color:#241d0c;box-shadow:0 14px 28px -12px rgba(248,168,0,.95)' : 'background:#f8a800;color:#241d0c'),
       propQ: s.propQ, propQOn: !!s.propQ,
       onPropQ: (e) => this.setState({ propQ: e.target.value }), clearPropQ: () => this.setState({ propQ: '' }),
-      invSearchStyle: 'width:280px;max-width:320px;flex:0 1 280px;display:flex;align-items:center;gap:10px;height:52px;padding:0 16px;border-radius:15px;background:#fffdf7;box-shadow:inset 0 0 0 1.5px ' + (soldView ? '#a9d9bd' : '#e6d6b4') + ',0 4px 12px -8px rgba(40,26,2,.2);',
+      invSearchStyle: 'width:280px;max-width:320px;flex:0 1 280px;display:flex;align-items:center;gap:10px;height:52px;padding:0 16px;border-radius:15px;background:#ffffff;box-shadow:inset 0 0 0 1.5px ' + (soldView ? '#a9d9bd' : '#bfdbfe') + ',0 4px 12px -8px rgba(37,99,235,.15);',
       invSearchInput: 'border:none;outline:none;background:none;width:100%;font-size:16px;font-weight:600;color:#241f1c',
       filtersOpen: s.filtersOpen, toggleFilters: () => this.setState({ filtersOpen: !s.filtersOpen, plotCityOpen: false }),
-      invFilterBtn: 'display:flex;align-items:center;gap:8px;height:52px;padding:0 18px;border-radius:15px;font-size:15.5px;font-weight:800;' + (invFilterCount ? 'background:#e8681c;color:#fff;box-shadow:0 8px 18px -6px rgba(232,104,28,.8);border:2px solid #e8681c;' : 'background:#fffdf7;color:#4c463d;border:1.5px solid #e6d6b4;box-shadow:0 3px 8px -4px rgba(40,26,2,.1);'),
+      invFilterBtn: 'display:flex;align-items:center;gap:8px;height:52px;padding:0 18px;border-radius:15px;font-size:15.5px;font-weight:800;' + (invFilterCount ? 'background:#e8681c;color:#fff;box-shadow:0 8px 18px -6px rgba(232,104,28,.8);border:2px solid #e8681c;' : 'background:#ffffff;color:#4c463d;border:1.5px solid ' + (soldView ? '#a9d9bd' : '#bfdbfe') + ';box-shadow:0 3px 8px -4px rgba(37,99,235,.1);'),
       invFilterCount: invFilterCount ? String(invFilterCount) : '',
       invFilterCountStyle: invFilterCount ? 'font-size:14px;font-weight:800;background:rgba(0,0,0,.2);border-radius:999px;padding:2px 9px' : 'display:none',
       invFilterChips, hasFilterChips: invFilterChips.length > 0, quickViews,
-      invQuickSegWrap: 'display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:16px;background:#fff3d6;box-shadow:inset 0 0 0 1.5px rgba(120,100,60,.16);',
-      dealSegWrap: 'display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:18px;background:#fff3d6;box-shadow:inset 0 0 0 1.5px rgba(120,100,60,.16);',
+      invQuickSegWrap: 'display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:16px;background:' + (soldView ? '#d9f0e4' : '#eff6ff') + ';box-shadow:inset 0 0 0 1.5px ' + (soldView ? '#9fd6ba' : '#bfdbfe') + ';',
+      dealSegWrap: 'display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:18px;background:' + (dView === 'done' ? '#d9f0e4' : (dView === 'lost' ? '#ffe4e6' : '#eff6ff')) + ';box-shadow:inset 0 0 0 1.5px ' + (dView === 'done' ? '#9fd6ba' : (dView === 'lost' ? '#fecdd3' : '#bfdbfe')) + ';',
       fCityRows: [{ k: 'all', l: 'All cities' }, ...this.CITIES.map(c => ({ k: c, l: c }))].map(ch => ({
         label: ch.l, go: () => this.setState({ plotCity: ch.k }), style: chipF(s.plotCity === ch.k),
         count: String(ch.k === 'all' ? this.properties.length : this.properties.filter(pr => pr.city === ch.k).length)
@@ -3684,9 +3750,23 @@ export class Component extends DCLogic {
       clearFilters: () => this.setState({ plotCity: 'all', fType: 'all', fState: 'all' }),
       closeFilters: () => this.setState({ filtersOpen: false }),
       needCountText: needCount === 1 ? '1 property needs attention' : needCount + ' properties need attention',
-      invStatA: soldView ? 'border-radius:24px;padding:26px 30px;color:#064e3b;background:#d1fae5;background-image:linear-gradient(135deg,#ecfdf5,#d1fae5 60%,#a7f3d0);box-shadow:0 20px 40px -20px rgba(6,78,59,.4),inset 0 2px 0 rgba(255,255,255,.9);border:2px solid #6ee7b7;' : (holdView ? 'border-radius:24px;padding:26px 30px;color:#881337;background:#ffe4e6;background-image:linear-gradient(135deg,#fff1f2,#ffe4e6 60%,#fecdd3);box-shadow:0 20px 40px -20px rgba(190,18,60,.35),inset 0 2px 0 rgba(255,255,255,.9);border:2px solid #fda4af;' : 'border-radius:24px;padding:26px 30px;color:#1c1303;background:#f59e0b;background-image:linear-gradient(135deg,#fbbf24,#f59e0b 60%,#d97706);box-shadow:0 20px 40px -20px rgba(245,158,11,.65),inset 0 2px 0 rgba(255,255,255,.5);border:2px solid #f59e0b;'),
-      invStatB: soldView ? 'border-radius:24px;padding:26px 30px;color:#ffffff;background:#059669;background-image:linear-gradient(135deg,#10b981,#059669 60%,#047857);box-shadow:0 20px 40px -20px rgba(5,150,105,.6),inset 0 2px 0 rgba(255,255,255,.3);border:2px solid #059669;' : (holdView ? 'border-radius:24px;padding:26px 30px;color:#9f1239;background:#fff1f2;background-image:linear-gradient(135deg,#fff1f2,#ffe4e6 60%,#fecdd3);box-shadow:0 20px 40px -20px rgba(159,18,57,.35),inset 0 2px 0 rgba(255,255,255,.9);border:2px solid #fb7185;' : 'border-radius:24px;padding:26px 30px;color:#9a3412;background:#fff7ed;background-image:linear-gradient(135deg,#fff7ed,#ffedd5 60%,#fed7aa);box-shadow:0 20px 40px -20px rgba(234,88,12,.35),inset 0 2px 0 rgba(255,255,255,.9);border:2px solid #fb923c;'),
-      invStatC: soldView ? 'border-radius:24px;padding:26px 30px;color:#ffffff;background:#d97706;background-image:linear-gradient(135deg,#f59e0b,#d97706 60%,#b45309);box-shadow:0 20px 40px -20px rgba(217,119,6,.6),inset 0 2px 0 rgba(255,255,255,.3);border:2px solid #d97706;' : (holdView ? 'border-radius:24px;padding:26px 30px;color:#1e3a8a;background:#dbeafe;background-image:linear-gradient(135deg,#dbeafe,#bfdbfe 60%,#93c5fd);box-shadow:0 20px 40px -20px rgba(59,130,246,.35),inset 0 2px 0 rgba(255,255,255,.9);border:2px solid #93c5fd;' : 'border-radius:24px;padding:26px 30px;color:#5b21b6;background:#f5f3ff;background-image:linear-gradient(135deg,#f5f3ff,#ede9fe 60%,#ddd6fe);box-shadow:0 20px 40px -20px rgba(109,40,217,.35),inset 0 2px 0 rgba(255,255,255,.9);border:2px solid #c4b5fd;'),
+      invSummary: soldView ? [
+        { label: 'font-size:13px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#a7f3d0;text-shadow:0 1px 1px rgba(0,0,0,.35)', title: 'VALUE SOLD', valStyle: 'font-family:Newsreader,serif;font-weight:600;font-size:42px;line-height:1.05;color:#ffffff;text-shadow:0 1px 2px rgba(0,0,0,.3)', value: plotsValue, subStyle: 'font-size:15px;font-weight:700;color:#d1fae5;margin-top:3px;text-shadow:0 1px 1px rgba(0,0,0,.3)', sub: 'total volume settled' },
+        { label: 'font-size:13px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#a7f3d0;text-shadow:0 1px 1px rgba(0,0,0,.35)', title: 'PROPERTIES SOLD', valStyle: 'font-family:Newsreader,serif;font-weight:600;font-size:42px;line-height:1.05;color:#ffffff;text-shadow:0 1px 2px rgba(0,0,0,.3)', value: String(allSold.length), subStyle: 'font-size:15px;font-weight:700;color:#d1fae5;margin-top:3px;text-shadow:0 1px 1px rgba(0,0,0,.3)', sub: 'successfully closed' },
+        { label: 'font-size:13px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#a7f3d0;text-shadow:0 1px 1px rgba(0,0,0,.35)', title: 'EARNINGS', valStyle: 'font-family:Newsreader,serif;font-weight:600;font-size:42px;line-height:1.05;color:#ffffff;text-shadow:0 1px 2px rgba(0,0,0,.3)', value: m(soldEarn), subStyle: 'font-size:15px;font-weight:700;color:#d1fae5;margin-top:3px;text-shadow:0 1px 1px rgba(0,0,0,.3)', sub: 'commission generated' }
+      ] : (holdView ? [
+        { label: 'font-size:13px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#fca5a5', title: 'VALUE OFF MARKET', valStyle: 'font-family:Newsreader,serif;font-weight:600;font-size:42px;line-height:1.05;color:#fff1f2', value: plotsValue, subStyle: 'font-size:15px;font-weight:700;color:#fca5a5;margin-top:3px', sub: 'total volume on hold' },
+        { label: 'font-size:13px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#fca5a5', title: 'PROPERTIES HELD', valStyle: 'font-family:Newsreader,serif;font-weight:600;font-size:42px;line-height:1.05;color:#fff1f2', value: String(holdPool.length), subStyle: 'font-size:15px;font-weight:700;color:#fca5a5;margin-top:3px', sub: 'archived or paused' },
+        { label: 'font-size:13px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#fca5a5', title: 'PAST LINKS', valStyle: 'font-family:Newsreader,serif;font-weight:600;font-size:42px;line-height:1.05;color:#fff1f2', value: plotsNeed, subStyle: 'font-size:15px;font-weight:700;color:#fca5a5;margin-top:3px', sub: 'client presentations' }
+      ] : [
+        { label: 'font-size:13px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#fde047;text-shadow:0 1px 1px rgba(0,0,0,.25)', title: 'VALUE ON SALE', valStyle: 'font-family:Newsreader,serif;font-weight:600;font-size:42px;line-height:1.05;color:#ffffff;text-shadow:0 1px 2px rgba(0,0,0,.2)', value: plotsValue, subStyle: 'font-size:15px;font-weight:700;color:#dbeafe;margin-top:3px;text-shadow:0 1px 1px rgba(0,0,0,.2)', sub: 'total active inventory' },
+        { label: 'font-size:13px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#fde047;text-shadow:0 1px 1px rgba(0,0,0,.25)', title: 'READY TO SHOW', valStyle: 'font-family:Newsreader,serif;font-weight:600;font-size:42px;line-height:1.05;color:#ffffff;text-shadow:0 1px 2px rgba(0,0,0,.2)', value: plotsReady, subStyle: 'font-size:15px;font-weight:700;color:#dbeafe;margin-top:3px;text-shadow:0 1px 1px rgba(0,0,0,.2)', sub: 'available for visit' },
+        { label: 'font-size:13px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#fde047;text-shadow:0 1px 1px rgba(0,0,0,.25)', title: 'LIVE CLIENT LINKS', valStyle: 'font-family:Newsreader,serif;font-weight:600;font-size:42px;line-height:1.05;color:#ffffff;text-shadow:0 1px 2px rgba(0,0,0,.2)', value: plotsNeed, subStyle: 'font-size:15px;font-weight:700;color:#dbeafe;margin-top:3px;text-shadow:0 1px 1px rgba(0,0,0,.2)', sub: 'active presentations' }
+      ]),
+      invSumWrap: 'display:flex;flex-wrap:wrap;gap:22px;margin-top:16px;padding:22px 28px;border-radius:22px;' + 
+        (soldView ? 'color:#d1fae5;background:#064e3b;background-image:linear-gradient(140deg,#065f46 0%,#047857 50%,#022c22 100%);box-shadow:0 24px 46px -24px rgba(4,120,87,.9),inset 0 1px 0 rgba(255,255,255,.35)' : 
+        (holdView ? 'color:#fde8ec;background:#7f1d1d;background-image:linear-gradient(140deg,#991b1b,#5c1414);box-shadow:0 24px 46px -26px rgba(127,29,29,.9)' : 
+        'color:#eff6ff;background:#1e3a8a;background-image:linear-gradient(135deg,#2563eb 0%,#1d4ed8 45%,#1e3a8a 100%);box-shadow:0 24px 46px -24px rgba(29,78,216,.85),inset 0 1px 0 rgba(255,255,255,.35)')),
       invListLabel: soldView ? 'Sold and settled' : (holdView ? 'Unsold and archived' : 'Your properties'),
       invH1Style: "margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:34px;letter-spacing:-.015em;color:" + (soldView ? '#0a4a26' : (holdView ? '#7c2d12' : '#241f1c')),
       invSecLabelStyle: 'display:none',
@@ -3805,13 +3885,15 @@ export class Component extends DCLogic {
       })(),
       dealDetail, dd: dealDetail, closeDeal: () => this.setState({ selectedDeal: null, delArm: false, dealEdit: false }),
       dealSearch: s.dealSearch || '', dealSearchOn: !!(s.dealSearch || '').length, onDealSearch: (e) => this.setState({ dealSearch: e.target.value }), clearDealSearch: () => this.setState({ dealSearch: '' }),
+      dealSearchWrap: 'display:flex;align-items:center;gap:10px;width:280px;height:52px;padding:0 16px;border-radius:15px;background:#ffffff;box-shadow:inset 0 0 0 1.5px ' + (dView === 'done' ? '#a9d9bd' : (dView === 'lost' ? '#fecdd3' : '#bfdbfe')) + ',0 4px 12px -8px rgba(37,99,235,.15);',
+      dealSearchIcon: 'font-size:19px;color:' + (dView === 'done' ? '#0a6634' : (dView === 'lost' ? '#e11d48' : '#2563eb')) + ';',
       hasActive: !doneView && dealsActive.length > 0, noActive: !doneView && dealsActive.length === 0, hasDone: doneView && dealsDone.length > 0,
       dvTabs, dStrip, dStageChips, todayGroups, activeDeals, ledgerChips, ledgerRows, lostDeals,
       dSumWrap: 'display:flex;flex-wrap:wrap;gap:22px;margin-top:16px;padding:22px 28px;border-radius:22px;' + (dView === 'lost'
         ? 'color:#fde8ec;background:#7f1d1d;background-image:linear-gradient(140deg,#991b1b,#5c1414);box-shadow:0 24px 46px -26px rgba(127,29,29,.9)'
         : dView === 'done'
-        ? 'color:#d1fae5;background:#064e3b;background-image:linear-gradient(140deg,#065f46,#022c22);box-shadow:0 24px 46px -26px rgba(6,78,59,.9)'
-        : 'color:#fef3c7;background:#78350f;background-image:linear-gradient(140deg,#92400e,#451a03);box-shadow:0 24px 46px -26px rgba(120,53,15,.9)'),
+        ? 'color:#d1fae5;background:#064e3b;background-image:linear-gradient(140deg,#065f46 0%,#047857 50%,#022c22 100%);box-shadow:0 24px 46px -26px rgba(4,120,87,.9),inset 0 1px 0 rgba(255,255,255,.3)'
+        : 'color:#eff6ff;background:#1e3a8a;background-image:linear-gradient(135deg,#2563eb 0%,#1d4ed8 45%,#1e3a8a 100%);box-shadow:0 24px 46px -24px rgba(29,78,216,.85),inset 0 1px 0 rgba(255,255,255,.35)'),
       dSummary: (() => {
         if (dView === 'lost') {
           const lostVal = dLostAll.reduce((a, d) => a + d.value, 0);
@@ -3825,16 +3907,16 @@ export class Component extends DCLogic {
         }
         if (dView === 'done') {
           const rec = dDoneAll.reduce((a, d) => a + this.dealMoney(d).got, 0), due = dDoneAll.reduce((a, d) => a + this.dealMoney(d).due, 0);
-          const lab = () => 'font-size:12.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#6ee7b7';
-          const val = () => "font-family:'Newsreader',serif;font-weight:600;font-size:40px;line-height:1.05;color:#ecfdf5";
-          const sub = () => 'font-size:15px;font-weight:700;color:#6ee7b7;margin-top:2px';
+          const lab = () => 'font-size:13px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#a7f3d0;text-shadow:0 1px 1px rgba(0,0,0,.35)';
+          const val = () => "font-family:'Newsreader',serif;font-weight:600;font-size:42px;line-height:1.05;color:#ffffff;text-shadow:0 1px 2px rgba(0,0,0,.3)";
+          const sub = () => 'font-size:15px;font-weight:700;color:#d1fae5;margin-top:3px;text-shadow:0 1px 1px rgba(0,0,0,.3)';
           return [{ title: 'Sold', value: String(dDoneAll.length), sub: dDoneAll.length === 1 ? 'property closed' : 'properties closed', label: lab(), valStyle: val(), subStyle: sub() },
           { title: 'Total value', value: m(doneVal), sub: 'across all sales', label: lab(), valStyle: val(), subStyle: sub() },
           { title: 'You earned', value: m(rec), sub: due > 0 ? (m(due) + ' still to come') : 'all commission received', label: lab(), valStyle: val(), subStyle: sub() }];
         }
-        const lab = () => 'font-size:12.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#fde68a';
-        const val = () => "font-family:'Newsreader',serif;font-weight:600;font-size:40px;line-height:1.05;color:#fffbeb";
-        const sub = () => 'font-size:15px;font-weight:700;color:#fde68a;margin-top:2px';
+        const lab = () => 'font-size:13px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#fde047;text-shadow:0 1px 1px rgba(0,0,0,.25)';
+        const val = () => "font-family:'Newsreader',serif;font-weight:600;font-size:42px;line-height:1.05;color:#ffffff;text-shadow:0 1px 2px rgba(0,0,0,.2)";
+        const sub = () => 'font-size:15px;font-weight:700;color:#dbeafe;margin-top:3px;text-shadow:0 1px 1px rgba(0,0,0,.2)';
         return [{ title: 'Ongoing', value: String(dActiveAll.length), sub: dActiveAll.length === 1 ? 'deal in progress' : 'deals in progress', label: lab(), valStyle: val(), subStyle: sub() },
         { title: 'Money on the table', value: m(pipeline), sub: 'if all of them close', label: lab(), valStyle: val(), subStyle: sub() },
         { title: 'Your commission', value: m(commExp), sub: 'expected from these deals', label: lab(), valStyle: val(), subStyle: sub() }];
@@ -4395,7 +4477,7 @@ export class Component extends DCLogic {
       pPriceEcho: (() => { const v = parseFloat(pf.price); return isNaN(v) ? '—' : this.inr(v * 1e7); })(),
       pNextStyle: `display:flex;align-items:center;gap:10px;height:54px;padding:0 24px;border-radius:15px;font-size:17.5px;font-weight:800;${(pstep === 1 ? !!(pf.city && pf.area) : true) ? 'background:#241d0c;color:#f8c200;box-shadow:0 14px 26px -16px rgba(36,29,12,.9)' : 'background:#e6dcc6;color:#a99878;cursor:not-allowed'}`,
       pFinishStyle: 'display:flex;align-items:center;gap:10px;height:54px;padding:0 26px;border-radius:15px;font-size:17.5px;font-weight:800;background:#1d7a43;background-image:linear-gradient(140deg,#27a05a,#125c31);color:#eafff2;box-shadow:0 16px 30px -16px rgba(11,111,57,.95)',
-      plotsValue: m(portfolio), plotsReady: n(readyCount), plotsNeed: soldView ? m(soldEarn) : n(needCount), propsReady, propsNeedWork,
+      plotsValue, plotsReady, plotsNeed, propsReady, propsNeedWork,
       hasReady: propsReady.length > 0, noReady: propsReady.length === 0, hasNeedWork: propsNeedWork.length > 0, plotCityName,
       plotScopeLabel: s.plotCity === 'all' ? '' : ' in ' + s.plotCity,
       plotCityOpen: s.plotCityOpen, togglePlotCity: () => this.setState({ plotCityOpen: !s.plotCityOpen }), plotCityGrid, plotCityLabel,

@@ -328,8 +328,8 @@ export function renderApp(state: any) {
                 </div>
                 <div style="flex:1"></div>
                 <label
-                  style="display:flex;align-items:center;gap:10px;width:280px;height:52px;padding:0 16px;border-radius:15px;background:#fff8e6;box-shadow:inset 0 0 0 1.5px #f0d493">
-                  <i class="ph-bold ph-magnifying-glass" style="font-size:19px;color:#a3541b"></i>
+                  style="\${dealSearchWrap}">
+                  <i class="ph-bold ph-magnifying-glass" style="\${dealSearchIcon}"></i>
                   <input value="\${dealSearch}" onInput="\${__b(onDealSearch)}" placeholder="Buyer or property…"
                     style="border:none;outline:none;background:none;width:100%;font-size:16px;font-weight:600;color:#241f1c">
                 </label>
@@ -381,10 +381,10 @@ export function renderApp(state: any) {
                         </div>
                         <div style="flex:1;min-width:120px;text-align:right">
                           <div
-                            style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#0a6634">
+                            style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#b45309">
                             Your commission</div>
                           <div
-                            style="font-family:'Newsreader',serif;font-weight:600;font-size:31px;line-height:1.05;color:#0a6634">
+                            style="font-family:'Newsreader',serif;font-weight:600;font-size:31px;line-height:1.05;color:#b45309">
                             \${d.commFmt}</div>
                         </div>
                       </div>
@@ -418,7 +418,7 @@ export function renderApp(state: any) {
                   style="display:grid;grid-template-columns:repeat(auto-fill,minmax(430px,1fr));gap:16px;margin-top:20px">
                   \${ (ledgerRows || []).map(r => \`
                     <div
-                      style="border-radius:24px;background:#fff;padding:20px 22px 22px;box-shadow:0 0 0 2.5px #0f7a45,0 20px 40px -26px rgba(10,80,45,.75)">
+                      style="border-radius:24px;background:#f2fcf5;padding:20px 22px 22px;box-shadow:0 0 0 2.5px #0f7a45,0 20px 40px -26px rgba(10,80,45,.75)">
                       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
                         <span
                           style="display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:999px;background:#0a6634;color:#eafff2;font-size:15px;font-weight:800"><i
@@ -506,18 +506,18 @@ export function renderApp(state: any) {
                       <div style="\${d.moneyStyle}">
                         <div style="flex:1;min-width:120px">
                           <div
-                            style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8a7f6e">
+                            style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#fecdd3">
                             Deal price</div>
                           <div
-                            style="font-family:'Newsreader',serif;font-weight:600;font-size:31px;line-height:1.05;color:#241f1c">
+                            style="font-family:'Newsreader',serif;font-weight:600;font-size:31px;line-height:1.05;color:#fff">
                             \${d.priceFmt}</div>
                         </div>
                         <div style="flex:1;min-width:120px;text-align:right">
                           <div
-                            style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#b02a37">
+                            style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#fecdd3">
                             Lost commission</div>
                           <div
-                            style="font-family:'Newsreader',serif;font-weight:600;font-size:31px;line-height:1.05;color:#b02a37">
+                            style="font-family:'Newsreader',serif;font-weight:600;font-size:31px;line-height:1.05;color:#fff">
                             \${d.commFmt}</div>
                         </div>
                       </div>
@@ -744,7 +744,7 @@ export function renderApp(state: any) {
           \` : '' }
 
           \${ isInventory ? \`
-            <div style="max-width:1680px;margin:0 auto;padding:20px 32px 70px">
+            <div style="max-width:1680px;margin:0 auto;padding:20px 24px 70px">
               <div
                 style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
                 <div style="\${invSegWrapStyle}">
@@ -760,30 +760,14 @@ export function renderApp(state: any) {
                   style-active="transform:translateY(2px)"><i class="ph-bold ph-plus" style="font-size:21px"></i>\${invAddLabel}</button>
               </div>
 
-              <div
-                style="display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:16px;margin-top:18px;animation-delay:.04s">
-                <div style="\${invStatA}">
-                  <div style="display:flex;align-items:center;gap:9px;font-size:16.5px;font-weight:800;opacity:.9"><i
-                      class="\${invStatIconA}" style="font-size:22px"></i>\${invStatLabelA}\${plotScopeLabel}
+              <div style="\${invSumWrap}">
+                \${ (invSummary || []).map(k => \`
+                  <div style="flex:1 1 200px;min-width:170px">
+                    <div style="\${k.label}">\${k.title}</div>
+                    <div style="\${k.valStyle}">\${k.value}</div>
+                    <div style="\${k.subStyle}">\${k.sub}</div>
                   </div>
-                  <div
-                    style="font-family:'Newsreader',serif;font-weight:500;font-size:50px;line-height:1.05;margin-top:10px;white-space:nowrap">
-                    \${plotsValue}</div>
-                </div>
-                <div style="\${invStatB}">
-                  <div style="display:flex;align-items:center;gap:9px;font-size:16.5px;font-weight:800;opacity:.9"><i
-                      class="\${invStatIconB}" style="font-size:22px"></i>\${invStatLabelB}</div>
-                  <div
-                    style="font-family:'Newsreader',serif;font-weight:500;font-size:50px;line-height:1.05;margin-top:10px">
-                    \${plotsReady}</div>
-                </div>
-                <div style="\${invStatC}">
-                  <div style="display:flex;align-items:center;gap:9px;font-size:16.5px;font-weight:800;opacity:.9"><i
-                      class="\${invStatIconC}" style="font-size:22px"></i>\${invStatLabelC}</div>
-                  <div
-                    style="font-family:'Newsreader',serif;font-weight:500;font-size:50px;line-height:1.05;margin-top:10px;white-space:nowrap">
-                    \${plotsNeed}</div>
-                </div>
+                \`).join('') }
               </div>
 
               <div style="display:flex;align-items:center;gap:12px;margin-top:20px;margin-bottom:24px;flex-wrap:wrap;position:relative;z-index:26">
@@ -852,12 +836,12 @@ export function renderApp(state: any) {
                 </div>
               \` : '' }
               \${ hasReady ? \`
-                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:18px">
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:16px">
                   \${ (propsReady || []).map(p => \`
                     <div style="\${p.cardWrap}" style-hover="transform:translateY(-3px)">
                       <div style="\${p.accentBar}"></div>
                       <button onClick="\${__b(p.openDetail)}" title="Open this property"
-                        style="display:block;width:100%;height:224px;position:relative;background:#f1ede4;padding:0">
+                        style="display:block;width:100%;height:220px;position:relative;background:#f1ede4;padding:0;border:none;cursor:pointer">
                         \${ p.hasPhoto ? \`<span
                             style="\${p.photoStyle}"></span>\` : '' }
                         \${ p.noPhoto ? \`<span
@@ -867,42 +851,41 @@ export function renderApp(state: any) {
 
                         \${ p.showAvail ? \`\` : '' }
                       </button>
-                      <div style="padding:16px 18px 18px">
-                        <div style="display:flex;align-items:flex-start;gap:12px">
-                          <div style="flex:1;min-width:0">
-                            <div style="font-size:19px;font-weight:800;color:#181513">\${p.title}</div>
-                            <div
-                              style="display:flex;align-items:center;gap:6px;font-size:15.5px;font-weight:600;color:#574c43;margin-top:3px">
-                              <i class="ph-fill ph-map-pin" style="font-size:16px;color:#ea580c"></i>\${p.loc}</div>
+                      <div style="padding:12px 12px 13px;background:#ffffff;flex:1;display:flex;flex-direction:column;justify-content:space-between;min-height:0">
+                        <div style="\${p.catBoxStyle}">
+                          <div style="display:flex;align-items:flex-start;gap:8px">
+                            <div style="flex:1;min-width:0">
+                              <div style="\${p.catTitleStyle}">\${p.title}</div>
+                              <div style="\${p.catLocStyle}">
+                                <i class="ph-fill ph-map-pin" style="font-size:14px;color:\${p.catPinColor}"></i>\${p.loc}</div>
+                            </div>
+                            <button onClick="\${__b(p.openMenu)}" title="More"
+                              style="\${p.catMenuBtnStyle}"
+                              style-hover="filter:brightness(.92)"><i class="ph-bold ph-dots-three"
+                                style="font-size:18px"></i></button>
                           </div>
-                          <button onClick="\${__b(p.openMenu)}" title="More"
-                            style="width:40px;height:40px;border-radius:12px;background:#f4ecdd;color:#8a7a52;display:grid;place-items:center;flex:none"
-                            style-hover="background:#ecdcc0"><i class="ph-bold ph-dots-three"
-                              style="font-size:20px"></i></button>
                         </div>
                         <div
-                          style="display:flex;align-items:center;gap:10px;margin-top:14px;padding:8px 10px 8px 14px;border-radius:16px;background:#fdfbf7;border:1.5px solid #ecdcc0;box-shadow:0 2px 8px rgba(0,0,0,.03)">
+                          style="display:flex;align-items:center;gap:6px;margin-top:10px;padding:6px 7px 6px 10px;border-radius:14px;background:linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%);border:1.5px solid #bfdbfe;box-shadow:0 3px 10px -3px rgba(37,99,235,.16)">
                           <span
-                            style="display:flex;align-items:center;gap:6px;font-size:15px;font-weight:800;color:#574c43;flex:none"><i
-                              class="ph-fill ph-ruler" style="font-size:16px;color:#ea580c"></i>\${p.sizeText}</span>
-                          <div style="flex:1"></div>
+                            style="display:flex;align-items:center;gap:5px;font-size:14px;font-weight:800;color:#1e40af;flex:none"><i
+                              class="ph-fill ph-ruler" style="font-size:15px;color:#2563eb"></i>\${p.sizeText}</span>
+                          <div style="flex:1;min-width:2px"></div>
                           <button onClick="\${__b(p.editPrice)}" title="Update price"
-                            style="display:flex;align-items:center;gap:6px;padding:4px 12px;border-radius:12px;background:linear-gradient(135deg,#fef3c7,#fde68a);border:1.5px solid #f59e0b;box-shadow:0 2px 6px rgba(217,119,6,.15);text-align:left;flex:none"
+                            style="display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:10px;background:linear-gradient(135deg,#fef3c7,#fde68a);border:1.5px solid #f59e0b;box-shadow:0 2px 6px rgba(217,119,6,.15);text-align:left;flex:none;cursor:pointer"
                             style-hover="background:#fde68a">
-                            <span style="font-family:'Newsreader',serif;font-weight:700;font-size:25px;line-height:1;color:#92400e">\${p.priceFmt}</span>
-                            <i class="ph-bold ph-pencil-simple" style="font-size:13px;color:#b45309"></i>
+                            <span style="font-family:'Newsreader',serif;font-weight:700;font-size:22px;line-height:1;color:#92400e">\${p.priceFmt}</span>
+                            <i class="ph-bold ph-pencil-simple" style="font-size:12px;color:#b45309"></i>
                           </button>
                           \${ p.notSoldCard ? \`
                             <button onClick="\${__b(p.openShare)}" title="Send a private link"
-                              style="display:flex;align-items:center;gap:6px;height:40px;padding:0 14px;border-radius:12px;background:#f8a800;color:#241d0c;font-size:14.5px;font-weight:800;flex:none;white-space:nowrap;box-shadow:0 6px 14px -6px rgba(248,168,0,.8)"
+                              style="display:flex;align-items:center;gap:5px;height:38px;padding:0 11px;border-radius:10px;background:#f8a800;background-image:linear-gradient(140deg,#ffc43a,#f8a800 55%,#d97706);color:#241d0c;font-size:14px;font-weight:800;flex:none;white-space:nowrap;box-shadow:0 6px 14px -6px rgba(248,168,0,.8);cursor:pointer;border:none"
                               style-hover="background:#e69a00"><i class="ph-fill ph-paper-plane-tilt"
-                                style="font-size:15px"></i>Send<i class="ph-bold ph-arrow-right"
-                                style="font-size:13px"></i></button>
+                                style="font-size:14px"></i>Send<i class="ph-bold ph-arrow-right"
+                                style="font-size:12px"></i></button>
                           \` : '' }
                         </div>
                         <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:11px">
-
-
                           \${ p.hasShares ? \`\` : '' }
                         </div>
                         \${ p.isSoldCard ? \`
