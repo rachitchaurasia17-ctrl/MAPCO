@@ -1033,12 +1033,6 @@ export function renderApp(state: any) {
                           <div style="display:flex;align-items:center;gap:10px;margin-top:13px;flex-wrap:wrap">
                             <span style="\${c.stateStyle}"><i class="\${c.stateIcon}" style="font-size:16px"></i>\${c.stateLabel}</span>
                           </div>
-                          \${ c.hasBought ? \`\` : '' }
-                          \${ c.needsWork ? \`
-                            <div
-                              style="display:flex;align-items:center;gap:9px;margin-top:11px;font-size:14.5px;font-weight:700;color:#a3541b">
-                              <i class="ph-fill ph-info" style="font-size:17px"></i>Open to add what they want.</div>
-                          \` : '' }
                           <div style="display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:15px">
                             <button onClick="\${__b(c.sendLink)}" title="Send a private link"
                               style="display:flex;align-items:center;justify-content:center;gap:7px;height:50px;padding:0 14px;border-radius:14px;background:#f8a800;color:#241d0c;font-size:15.5px;font-weight:800;white-space:nowrap;flex:1 1 auto;min-width:0;overflow:hidden"

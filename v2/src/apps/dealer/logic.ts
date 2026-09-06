@@ -288,10 +288,6 @@ export class Component extends DCLogic {
     const bought = this.properties.some(pr => pr.sale && pr.sale.buyerId === c.id) || this.deals.some(d => d.client === c.name && d.stage === 'closed');
     if (bought) return 'bought';
     const links = this.clientLinks.filter(l => l.clientId === c.id || l.client === c.name);
-    const hasVisit = links.some(l => l.visit || (l.events || []).some(e => e.k === 'visit'));
-    const hasUnopened = links.some(l => l.status === 'active' && l.opens === 0);
-    const noteVisit = (c.notes || []).some(n => n.x && n.x.toLowerCase().includes('visit'));
-    if (hasVisit || hasUnopened || c.stage === 'Site visits' || noteVisit || this.knownDepth(c) < 2) return 'attention';
     const act = links.reduce((a, l) => a.concat(l.events || []), []);
     if (act.length && Math.min(...act.map(e => e.m)) <= 2880) return 'active';
     if (this.newClients.includes(c.id)) return 'new';
@@ -4526,13 +4522,11 @@ export class Component extends DCLogic {
         const pillS = (bg, col) => `display:inline-flex;align-items:center;gap:7px;height:34px;padding:0 13px;border-radius:999px;font-size:14px;font-weight:800;background:${bg};color:${col}`;
         const q = (s.cliQ || '').toLowerCase().trim();
         const stCount = (k) => liveC.filter(c => this.contactState(c) === k).length;
-        const hasAttn = stCount('attention') > 0;
-        const effCliFilter = s.cliFilter !== null ? s.cliFilter : (hasAttn ? 'attention' : 'all');
+        const effCliFilter = s.cliFilter !== null ? s.cliFilter : 'all';
         const cliDefs = [
-          { k: 'attention', l: 'Needs attention', n: stCount('attention') },
+          { k: 'all', l: 'All clients', n: liveC.length },
           { k: 'bought', l: 'Bought', n: stCount('bought') },
-          { k: 'active', l: 'Hot', n: stCount('active') },
-          { k: 'all', l: 'All clients', n: liveC.length }
+          { k: 'active', l: 'Hot', n: stCount('active') }
         ];
         const cliCards = liveC
           .filter(c => effCliFilter === 'all' || this.contactState(c) === effCliFilter)
@@ -4552,7 +4546,7 @@ export class Component extends DCLogic {
               actLine: la !== null ? ('Last activity ' + R(la)) : 'No link activity yet',
               boughtLine: bought.length ? (bought.length === 1 ? 'Bought 1 property' : 'Bought ' + bought.length + ' properties') : '',
               hasBought: bought.length > 0,
-              needsWork: st === 'attention',
+              needsWork: false,
               keyOpen: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); deskStore.loadClientWorkspace(c.id); this.setState({ selectedClient: c.id, cpTab: 'overview' }); } },
               sendLink: (e) => {
                 if (e && e.stopPropagation) e.stopPropagation();
@@ -4560,9 +4554,7 @@ export class Component extends DCLogic {
               },
               cardStyle: (st === 'bought'
                 ? 'min-width:0;text-align:left;background:#fff4d1;background-image:linear-gradient(150deg,#fff9e4,#ffeeb4);border-radius:22px;padding:20px 22px 20px 24px;border-left:10px solid #9a6a00;box-shadow:0 0 0 2px #f0c95e,0 20px 44px -26px rgba(150,105,0,.8);transition:transform .13s,box-shadow .13s;cursor:pointer'
-                : (st === 'attention'
-                  ? 'min-width:0;text-align:left;background:#ffe7e1;background-image:linear-gradient(155deg,#fff2ee,#ffdbd2);border-radius:22px;padding:20px 22px 20px 24px;border-left:10px solid #b02a37;box-shadow:0 0 0 2px #f6b6a6,0 18px 40px -28px rgba(150,40,20,.65);transition:transform .13s,box-shadow .13s;cursor:pointer'
-                  : 'min-width:0;text-align:left;background:' + m.b + ';background-image:linear-gradient(155deg,rgba(255,255,255,.82),rgba(255,255,255,.14) 66%);border-radius:22px;padding:20px 22px 20px 24px;border-left:10px solid ' + m.c + ';box-shadow:0 0 0 1.5px rgba(60,40,10,.08),0 16px 38px -30px rgba(40,30,10,.7);transition:transform .13s,box-shadow .13s;cursor:pointer')),
+                : 'min-width:0;text-align:left;background:' + m.b + ';background-image:linear-gradient(155deg,rgba(255,255,255,.82),rgba(255,255,255,.14) 66%);border-radius:22px;padding:20px 22px 20px 24px;border-left:10px solid ' + m.c + ';box-shadow:0 0 0 1.5px rgba(60,40,10,.08),0 16px 38px -30px rgba(40,30,10,.7);transition:transform .13s,box-shadow .13s;cursor:pointer'),
               avStyle: `width:54px;height:54px;border-radius:17px;flex:none;display:grid;place-items:center;font-size:19px;font-weight:800;background:${m.b};color:${m.c}`,
               open: () => this.setState({ selectedClient: c.id, cliEdit: false, noteDraft: '', cpTab: 'overview', cpPick: false, cpPickQ: '' }), stop: (e) => e.stopPropagation()
             };
@@ -4699,7 +4691,7 @@ export class Component extends DCLogic {
             prefs: (pc.prefs || []).map(t => ({ label: t, style: pillS('#f0ece4', '#5c4a2a') })), hasPrefs: (pc.prefs || []).length > 0,
             budget: pc.budget && pc.budget !== '—' ? pc.budget : 'Not noted',
             size: (pc.sizeFrom || pc.sizeTo) ? [pc.sizeFrom, pc.sizeTo].filter(Boolean).join(' – ') + ' sq yd' : 'Not noted',
-            needsAttention: st === 'attention',
+            needsAttention: false,
             missing: [!(pc.types || []).length && 'what they want', !(pc.areas || []).length && 'preferred area', !pc.bFrom && !pc.budgetMax && 'budget', !(pc.notes || []).length && 'a note'].filter(Boolean).join(', '),
             notes: (pc.notes || []).map(nt => ({ when: nt.t, text: nt.x })), hasNotes: (pc.notes || []).length > 0,
             noteDraft: s.noteDraft || '', onNote: (e) => this.setState({ noteDraft: e.target.value }), addNote: () => this.addNote(),
