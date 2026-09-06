@@ -4539,22 +4539,13 @@ export class Component extends DCLogic {
           .filter(c => effCliFilter === 'all' || this.contactState(c) === effCliFilter)
           .filter(c => !q || ((c.name + ' ' + c.phone + ' ' + c.city + ' ' + (c.business || '') + ' ' + (c.types || []).join(' ') + ' ' + (c.areas || []).join(' ') + ' ' + (c.budget || '')).toLowerCase().includes(q)))
           .map((c, idx) => {
-            const st = this.contactState(c), m = CS[st], la = lastActOf(c.id);
-            const live = linksOf(c.id).filter(l => l.status === 'active').length;
-            const bought = boughtOf(c);
             const theme = CARD_THEMES[idx % CARD_THEMES.length];
+            const biz = c.business || (this.CLIX[c.id] ? this.CLIX[c.id].business : '') || (c.city ? c.city + ' Business' : 'Business Owner');
+            const bgt = (c.budget && c.budget !== '—' && c.budget !== 'Not noted') ? c.budget : (c.bFrom || c.bTo ? ((c.bFrom >= 1 ? c.bFrom + ' Cr' : Math.round((c.bFrom || 0) * 100) + ' L') + (c.bTo ? (' – ' + (c.bTo >= 1 ? c.bTo + ' Cr' : Math.round((c.bTo || 0) * 100) + ' L')) : '')) : 'Budget on request');
             return {
               id: c.id, name: c.name, initials: this.initialsOf(c.name), phone: c.phone, tel: this.tel(c.phone), wa: this.waLink(c.phone),
-              business: c.business || '', hasBiz: !!c.business,
-              stateLabel: m.l, stateIcon: m.i, stateStyle: pillS(m.b, m.c),
-              reqLine: reqLine(c), budget: c.budget && c.budget !== '—' ? c.budget : 'Budget not noted',
-              stage: c.stage || 'Just looking',
-              linkLine: live ? (live === 1 ? '1 live link' : live + ' live links') : 'No live link',
-              linkStyle: `display:inline-flex;align-items:center;gap:7px;font-size:14.5px;font-weight:800;${live ? 'color:#4a2c99' : 'color:#9a8f80'}`,
-              actLine: la !== null ? ('Last activity ' + R(la)) : 'No link activity yet',
-              boughtLine: bought.length ? (bought.length === 1 ? 'Bought 1 property' : 'Bought ' + bought.length + ' properties') : '',
-              hasBought: bought.length > 0,
-              needsWork: false,
+              business: biz,
+              budget: bgt,
               keyOpen: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); deskStore.loadClientWorkspace(c.id); this.setState({ selectedClient: c.id, cpTab: 'overview' }); } },
               sendLink: (e) => {
                 if (e && e.stopPropagation) e.stopPropagation();
@@ -4562,7 +4553,6 @@ export class Component extends DCLogic {
               },
               cardStyle: `min-width:0;text-align:left;background:${theme.bg};background-image:${theme.bgGrad};border-radius:24px;padding:22px 24px;box-shadow:0 0 0 1.5px ${theme.border},0 18px 40px -26px ${theme.shadow};transition:transform .13s,box-shadow .13s;cursor:pointer`,
               moneyStyle: 'display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;padding:14px 18px;border-radius:18px;background:#ffffff;box-shadow:0 2px 8px rgba(0,0,0,.03)',
-              avStyle: `width:54px;height:54px;border-radius:17px;flex:none;display:grid;place-items:center;font-size:19px;font-weight:800;background:${m.b};color:${m.c}`,
               open: () => this.setState({ selectedClient: c.id, cliEdit: false, noteDraft: '', cpTab: 'overview', cpPick: false, cpPickQ: '' }), stop: (e) => e.stopPropagation()
             };
           });

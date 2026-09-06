@@ -1018,18 +1018,14 @@ export function renderApp(state: any) {
 
                           <button onClick="\${__b(c.open)}" style="display:block;width:100%;text-align:left;border:none;background:none;padding:0;cursor:pointer">
                             <span style="display:block;font-size:23px;font-weight:800;color:#241f1c;line-height:1.2;text-wrap:balance">\${c.name}</span>
-                            <span style="display:flex;align-items:center;gap:8px;font-size:16.5px;font-weight:700;color:#7a6f60;margin-top:6px"><i class="ph-fill ph-buildings" style="font-size:18px;color:#1a5aa8;flex:none"></i>\${c.reqLine}</span>
-                            <span style="display:block;font-size:15px;font-weight:600;color:#8a7f6e;margin-top:2px;padding-left:26px">\${c.phone}\${c.hasBiz ? ' · ' + c.business : ''}</span>
+                            <span style="display:flex;align-items:center;gap:7px;font-size:15.5px;font-weight:700;color:#7a6f60;margin-top:5px"><i class="ph-fill ph-briefcase" style="font-size:17px;color:#1a5aa8;flex:none"></i>\${c.business}</span>
+                            <span style="display:block;font-size:14.5px;font-weight:600;color:#8a7f6e;margin-top:2px;padding-left:24px">\${c.phone}</span>
                           </button>
 
                           <div style="\${c.moneyStyle}">
-                            <div style="flex:1;min-width:110px">
+                            <div>
                               <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8a7f6e">Budget</div>
-                              <div style="font-family:'Newsreader',serif;font-weight:600;font-size:28px;line-height:1.05;color:#241f1c;margin-top:2px">\${c.budget}</div>
-                            </div>
-                            <div style="flex:1;min-width:110px;text-align:right">
-                              <div style="font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#0a6634">Stage</div>
-                              <div style="font-family:'Newsreader',serif;font-weight:600;font-size:24px;line-height:1.05;color:#0a6634;margin-top:2px">\${c.stage}</div>
+                              <div style="font-family:'Newsreader',serif;font-weight:600;font-size:30px;line-height:1.05;color:#241f1c;margin-top:2px">\${c.budget}</div>
                             </div>
                           </div>
 
