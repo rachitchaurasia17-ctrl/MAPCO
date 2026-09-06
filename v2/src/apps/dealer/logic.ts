@@ -2326,8 +2326,8 @@ export class Component extends DCLogic {
 
     const dvTabs = [
       { k: 'active', l: 'Ongoing', n: dActiveAll.length, i: 'ph-fill ph-handshake', on: 'background:#1d4ed8;background-image:linear-gradient(140deg,#2563eb,#1d4ed8);color:#ffffff;box-shadow:0 14px 28px -12px rgba(29,78,216,.95),inset 0 0 0 2px #60a5fa;', off: 'background:transparent;color:#475569;' },
-      { k: 'done', l: 'Completed', n: dDoneAll.length, i: 'ph-fill ph-seal-check', on: 'background:#0a6634;color:#eafff2;box-shadow:0 10px 20px -10px rgba(10,102,52,.9);', off: 'background:transparent;color:#475569;' },
-      { k: 'lost', l: 'Lost', n: dLostAll.length, i: 'ph-fill ph-x-circle', on: 'background:#be123c;color:#fff;box-shadow:0 10px 20px -10px rgba(190,18,60,.9);', off: 'background:transparent;color:#475569;' }
+      { k: 'done', l: 'Completed', n: dDoneAll.length, i: 'ph-fill ph-seal-check', on: 'background:#0a6634;color:#eafff2;box-shadow:0 14px 28px -12px rgba(10,102,52,.95),inset 0 0 0 2px #2fd07f;', off: 'background:transparent;color:#475569;' },
+      { k: 'lost', l: 'Lost', n: dLostAll.length, i: 'ph-fill ph-x-circle', on: 'background:#be123c;color:#fff;box-shadow:0 14px 28px -12px rgba(190,18,60,.95),inset 0 0 0 2px #f43f5e;', off: 'background:transparent;color:#475569;' }
     ].map(t => {
       const on = dView === t.k; return {
         label: t.l, count: String(t.n), icon: t.i, go: () => this.setState({ dealView: t.k, dealStage: 'all', ledgerFilter: 'all' }),
@@ -3678,21 +3678,21 @@ export class Component extends DCLogic {
     const pageBgStyle = (() => {
       if (s.section === 'deals') {
         if (dView === 'lost') {
-          return 'background:#fff1f2;background-image:radial-gradient(60% 50% at 2% 0%,rgba(225,29,72,.16),transparent 65%),radial-gradient(50% 45% at 98% 100%,rgba(244,63,94,.12),transparent 65%);';
+          return 'background:#feeff1;background-image:radial-gradient(75% 65% at 0% 0%,rgba(225,29,72,.30),transparent 72%),radial-gradient(75% 65% at 100% 0%,rgba(244,63,94,.28),transparent 72%),radial-gradient(65% 55% at 95% 45%,rgba(225,29,72,.22),transparent 68%),radial-gradient(60% 45% at 50% 15%,rgba(251,113,133,.25),transparent 65%),radial-gradient(70% 60% at 85% 95%,rgba(190,18,60,.20),transparent 70%),radial-gradient(60% 50% at 15% 90%,rgba(253,164,175,.20),transparent 70%);';
         }
         if (dView === 'done') {
-          return 'background:#ebfbf2;background-image:radial-gradient(65% 55% at 2% 0%,rgba(16,185,129,.24),transparent 70%),radial-gradient(55% 45% at 98% 100%,rgba(5,150,105,.2),transparent 70%),radial-gradient(40% 30% at 50% 40%,rgba(52,211,153,.15),transparent 60%);';
+          return 'background:#e3f7ec;background-image:radial-gradient(75% 65% at 0% 0%,rgba(16,185,129,.34),transparent 72%),radial-gradient(75% 65% at 100% 0%,rgba(5,150,105,.30),transparent 72%),radial-gradient(65% 55% at 95% 45%,rgba(16,185,129,.24),transparent 68%),radial-gradient(60% 45% at 50% 15%,rgba(52,211,153,.28),transparent 65%),radial-gradient(70% 60% at 85% 95%,rgba(4,120,87,.22),transparent 70%),radial-gradient(60% 50% at 15% 90%,rgba(110,231,183,.20),transparent 70%);';
         }
-        return 'background:#f8faff;background-image:radial-gradient(65% 55% at 2% 0%,rgba(59,130,246,.15),transparent 65%),radial-gradient(55% 45% at 98% 100%,rgba(37,99,235,.12),transparent 65%),radial-gradient(40% 30% at 50% 25%,rgba(147,197,253,.16),transparent 60%);';
+        return 'background:#edf5fe;background-image:radial-gradient(75% 65% at 0% 0%,rgba(37,99,235,.32),transparent 72%),radial-gradient(75% 65% at 100% 0%,rgba(59,130,246,.30),transparent 72%),radial-gradient(65% 55% at 95% 45%,rgba(37,99,235,.24),transparent 68%),radial-gradient(60% 45% at 50% 15%,rgba(147,197,253,.28),transparent 65%),radial-gradient(70% 60% at 85% 95%,rgba(59,130,246,.22),transparent 70%),radial-gradient(60% 50% at 15% 90%,rgba(147,197,253,.20),transparent 70%);';
       }
       if (s.section === 'properties' || s.section === 'plots') {
         if (soldView) {
-          return 'background:#eefcf3;background-image:radial-gradient(65% 55% at 2% 0%,rgba(16,185,129,.26),transparent 70%),radial-gradient(55% 45% at 98% 100%,rgba(4,120,87,.22),transparent 70%);';
+          return 'background:#e3f7ec;background-image:radial-gradient(75% 65% at 0% 0%,rgba(16,185,129,.34),transparent 72%),radial-gradient(75% 65% at 100% 0%,rgba(5,150,105,.30),transparent 72%),radial-gradient(65% 55% at 95% 45%,rgba(16,185,129,.24),transparent 68%),radial-gradient(60% 45% at 50% 15%,rgba(52,211,153,.28),transparent 65%),radial-gradient(70% 60% at 85% 95%,rgba(4,120,87,.22),transparent 70%),radial-gradient(60% 50% at 15% 90%,rgba(110,231,183,.20),transparent 70%);';
         }
         if (holdView) {
-          return 'background:#fff0f2;background-image:radial-gradient(60% 50% at 2% 0%,rgba(225,29,72,.18),transparent 65%),radial-gradient(50% 45% at 98% 100%,rgba(190,18,60,.14),transparent 65%);';
+          return 'background:#feeff1;background-image:radial-gradient(75% 65% at 0% 0%,rgba(225,29,72,.30),transparent 72%),radial-gradient(75% 65% at 100% 0%,rgba(244,63,94,.28),transparent 72%),radial-gradient(65% 55% at 95% 45%,rgba(225,29,72,.22),transparent 68%),radial-gradient(60% 45% at 50% 15%,rgba(251,113,133,.25),transparent 65%),radial-gradient(70% 60% at 85% 95%,rgba(190,18,60,.20),transparent 70%),radial-gradient(60% 50% at 15% 90%,rgba(253,164,175,.20),transparent 70%);';
         }
-        return 'background:#f8faff;background-image:radial-gradient(65% 55% at 2% 0%,rgba(59,130,246,.15),transparent 65%),radial-gradient(55% 45% at 98% 100%,rgba(37,99,235,.12),transparent 65%),radial-gradient(40% 30% at 50% 25%,rgba(147,197,253,.16),transparent 60%);';
+        return 'background:#edf5fe;background-image:radial-gradient(75% 65% at 0% 0%,rgba(37,99,235,.32),transparent 72%),radial-gradient(75% 65% at 100% 0%,rgba(59,130,246,.30),transparent 72%),radial-gradient(65% 55% at 95% 45%,rgba(37,99,235,.24),transparent 68%),radial-gradient(60% 45% at 50% 15%,rgba(147,197,253,.28),transparent 65%),radial-gradient(70% 60% at 85% 95%,rgba(59,130,246,.22),transparent 70%),radial-gradient(60% 50% at 15% 90%,rgba(147,197,253,.20),transparent 70%);';
       }
       return '';
     })();
@@ -3722,7 +3722,7 @@ export class Component extends DCLogic {
       invSegHold: segBase + ';height:60px;padding:0 26px;font-size:18.5px;border-radius:16px;white-space:nowrap;' + (holdView ? 'background:#be123c;color:#fff;box-shadow:0 14px 28px -12px rgba(190,18,60,.95),inset 0 0 0 2px #e11d48;transform:scale(1.02)' : 'background:transparent;color:#786950;opacity:.75'),
       invSegLiveN: !soldView && !holdView ? 'font-size:13.5px;font-weight:800;border-radius:999px;padding:2px 9px;background:rgba(255,255,255,.24);color:#ffffff' : segNum(false),
       invSegSoldN: segNum(soldView), invSegHoldN: segNum(holdView),
-      invSegWrapStyle: 'display:flex;gap:6px;padding:6px;border-radius:20px;' + (soldView ? 'background:#d9f0e4;box-shadow:inset 0 0 0 2px #9fd6ba' : (holdView ? 'background:#ffe4e6;box-shadow:inset 0 0 0 2px #fecdd3' : 'background:#eff6ff;box-shadow:inset 0 0 0 1.5px #bfdbfe')),
+      invSegWrapStyle: 'display:flex;gap:6px;padding:6px;border-radius:20px;' + (soldView ? 'background:rgba(217,240,228,.85);box-shadow:inset 0 0 0 2px #6ee7b7,0 8px 20px -8px rgba(16,185,129,.35);backdrop-filter:blur(8px);' : (holdView ? 'background:rgba(255,228,230,.85);box-shadow:inset 0 0 0 2px #fca5a5,0 8px 20px -8px rgba(225,29,72,.35);backdrop-filter:blur(8px);' : 'background:rgba(239,246,255,.9);box-shadow:inset 0 0 0 2px #93c5fd,0 8px 20px -8px rgba(37,99,235,.35);backdrop-filter:blur(8px);')),
       invAddBtnStyle: 'display:flex;align-items:center;gap:10px;height:60px;padding:0 26px;border-radius:16px;font-size:18px;font-weight:800;white-space:nowrap;white-space:nowrap;transition:transform .12s;' + (!soldView && !holdView ? 'background:#f8a800;background-image:linear-gradient(140deg,#ffc43a,#f8a800 55%,#d97706);color:#241d0c;box-shadow:0 14px 28px -12px rgba(248,168,0,.95)' : 'background:#f8a800;color:#241d0c'),
       propQ: s.propQ, propQOn: !!s.propQ,
       onPropQ: (e) => this.setState({ propQ: e.target.value }), clearPropQ: () => this.setState({ propQ: '' }),
@@ -3734,7 +3734,7 @@ export class Component extends DCLogic {
       invFilterCountStyle: invFilterCount ? 'font-size:14px;font-weight:800;background:rgba(0,0,0,.2);border-radius:999px;padding:2px 9px' : 'display:none',
       invFilterChips, hasFilterChips: invFilterChips.length > 0, quickViews,
       invQuickSegWrap: 'display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:16px;background:' + (soldView ? '#d9f0e4' : '#eff6ff') + ';box-shadow:inset 0 0 0 1.5px ' + (soldView ? '#9fd6ba' : '#bfdbfe') + ';',
-      dealSegWrap: 'display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:18px;background:' + (dView === 'done' ? '#d9f0e4' : (dView === 'lost' ? '#ffe4e6' : '#eff6ff')) + ';box-shadow:inset 0 0 0 1.5px ' + (dView === 'done' ? '#9fd6ba' : (dView === 'lost' ? '#fecdd3' : '#bfdbfe')) + ';',
+      dealSegWrap: 'display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:18px;background:' + (dView === 'done' ? 'rgba(217,240,228,.85)' : (dView === 'lost' ? 'rgba(255,228,230,.85)' : 'rgba(239,246,255,.9)')) + ';box-shadow:inset 0 0 0 2px ' + (dView === 'done' ? '#6ee7b7' : (dView === 'lost' ? '#fca5a5' : '#93c5fd')) + ',0 8px 20px -8px ' + (dView === 'done' ? 'rgba(16,185,129,.35)' : (dView === 'lost' ? 'rgba(225,29,72,.35)' : 'rgba(37,99,235,.35)')) + ';backdrop-filter:blur(8px);',
       fCityRows: [{ k: 'all', l: 'All cities' }, ...this.CITIES.map(c => ({ k: c, l: c }))].map(ch => ({
         label: ch.l, go: () => this.setState({ plotCity: ch.k }), style: chipF(s.plotCity === ch.k),
         count: String(ch.k === 'all' ? this.properties.length : this.properties.filter(pr => pr.city === ch.k).length)
