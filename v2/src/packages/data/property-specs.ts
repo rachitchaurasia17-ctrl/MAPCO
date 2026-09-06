@@ -1,3 +1,4 @@
+import { DETAIL_SCHEMAS } from './property-details-schema';
 /* ═══════════════════════════════════════════════════════════════
    MAPCO V2 — Adaptive property specifications
    ---------------------------------------------------------------
@@ -54,9 +55,9 @@ export function propertyKindOf(type: string | undefined): PropertyKind {
 /**
  * The specification keys each kind accepts, extracted from the Desk's
  * `typeFields()` so the persisted model matches the rendered form field
- * for field. A key absent here for the current kind is never stored.
+ * for field. Known keys for other kinds are never stored; opaque legacy keys survive same-type edits.
  */
-export const PROPERTY_SPEC_KEYS: Readonly<Record<PropertyKind, readonly string[]>> = {
+const LEGACY_PROPERTY_SPEC_KEYS: Readonly<Record<PropertyKind, readonly string[]>> = {
   plot: ['approvalNote', 'block', 'corner', 'cornerCut', 'dimBack', 'dimFront', 'dimLeft',
     'dimRight', 'facing', 'frontage', 'depth', 'level', 'mainRoad', 'nearGreen', 'openSides',
     'parkFacing', 'plotNo', 'road', 'road2', 'shape', 'showPlotNo', 'tenure'],
@@ -96,6 +97,8 @@ export const PROPERTY_SPEC_KEYS: Readonly<Record<PropertyKind, readonly string[]
     'road', 'shutter', 'tenure', 'use', 'washrooms'],
 };
 
+export const PROPERTY_SPEC_KEYS = Object.fromEntries(Object.entries(LEGACY_PROPERTY_SPEC_KEYS).map(([kind, keys]) => [kind, [...new Set([...keys, ...DETAIL_SCHEMAS[kind as PropertyKind].map(f => f.key)])]])) as unknown as Record<PropertyKind, readonly string[]>;
+
 /** Every key any kind can hold — the union used for storage validation. */
 export const ALL_PROPERTY_SPEC_KEYS: readonly string[] =
   [...new Set(Object.values(PROPERTY_SPEC_KEYS).flat())].sort();
@@ -110,7 +113,7 @@ const MAX_SPEC_TEXT = 240;
 /**
  * Project a raw specification bag onto the model for `type`.
  *
- * - Keys that do not belong to this property's kind are DROPPED, so
+ * - Known keys that belong only to other kinds are DROPPED, so
  *   changing Flat → Plot cannot leave `beds: '3'` behind.
  * - Empty strings, null and undefined are dropped rather than stored as
  *   a value the dealer never entered.
@@ -123,6 +126,7 @@ const MAX_SPEC_TEXT = 240;
 export function normalizePropertySpecs(
   type: string | undefined,
   specs: unknown,
+  preserveUnknown = true,
 ): PropertySpecs | undefined {
   if (!specs || typeof specs !== 'object' || Array.isArray(specs)) return undefined;
   const allowed = new Set(propertySpecKeys(type));
@@ -130,7 +134,8 @@ export function normalizePropertySpecs(
   const out: Record<string, PropertySpecValue> = {};
 
   for (const key of Object.keys(source)) {
-    if (!allowed.has(key)) continue;
+    if (!allowed.has(key) && (!preserveUnknown || ALL_PROPERTY_SPEC_KEYS.includes(key))) continue;
+    if (['__proto__', 'constructor', 'prototype'].includes(key)) continue;
     const value = source[key];
     if (value === null || value === undefined) continue;
     if (typeof value === 'boolean') { out[key] = value; continue; }

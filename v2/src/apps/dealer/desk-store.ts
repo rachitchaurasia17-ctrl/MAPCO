@@ -28,7 +28,7 @@ import type {
   Client, ClientRequirements,
 } from '../../packages/data/types';
 import type { RepoError, RepoErrorCode } from '../../packages/data/contracts';
-import { normalizePropertySpecs } from '../../packages/data/property-specs';
+import { normalizePropertySpecs, ALL_PROPERTY_SPEC_KEYS } from '../../packages/data/property-specs';
 import { propertyLifecycle } from '../../packages/data/property-lifecycle';
 
 export type LoadState = 'idle' | 'loading' | 'ready' | 'error';
@@ -345,7 +345,11 @@ export function toCanonicalProperty(
   const isCommercial = WANT_BY_TYPE(type) === 'Commercial';
   // normalizePropertySpecs picks exactly this type's keys out of the flat
   // form, so switching Flat → Plot cannot carry `beds` across.
-  const specs = normalizePropertySpecs(type, form) ?? {};
+  const sameType = type === existing?.type;
+  const known = normalizePropertySpecs(type, { ...(sameType ? existing?.specs : {}), ...form }, false) ?? {};
+  // Preserve opaque older spec keys only from the saved same-type record.
+  const unknown = sameType ? Object.fromEntries(Object.entries(existing?.specs ?? {}).filter(([key]) => !ALL_PROPERTY_SPEC_KEYS.includes(key))) : {};
+  const specs = { ...unknown, ...known };
 
   return {
     ...(existing ?? {}),
@@ -367,13 +371,13 @@ export function toCanonicalProperty(
     views: existing?.views ?? 0,
     published: existing?.published ?? false,
     sold: existing?.sold ?? false,
-    ...(Object.keys(specs).length ? { specs } : {}),
+    specs: Object.keys(specs).length ? specs : undefined,
     ...(form.society ? { society: String(form.society) } : {}),
     ...(form.address ? { address: String(form.address) } : {}),
     ...(form.rate ? { rate: String(form.rate) } : {}),
     ...(form.highlights?.length ? { highlights: [...form.highlights] } : {}),
     ...(form.videos?.length ? { videos: [...form.videos] } : {}),
-    ...(form.notes ? { privateNotes: String(form.notes) } : {}),
+    ...(form.notes !== undefined ? { privateNotes: String(form.notes) } : {}),
     ...(form.registry ? { registryRef: String(form.registry) } : {}),
     ...(form.approval ? { approvalRef: String(form.approval) } : {}),
     ...(form.mapPlacement ? { mapPlacement: form.mapPlacement } : (form.sectorMapId ? { mapPlacement: { mapId: form.sectorMapId, x: (typeof form.sectorPinX === 'number' ? form.sectorPinX / 100 : 0.5), y: (typeof form.sectorPinY === 'number' ? form.sectorPinY / 100 : 0.5) } } : (existing?.mapPlacement ? { mapPlacement: existing.mapPlacement } : {}))),

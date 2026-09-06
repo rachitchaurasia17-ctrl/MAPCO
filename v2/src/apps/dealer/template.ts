@@ -4188,77 +4188,47 @@ export function renderApp(state: any) {
                         </div>
                       </div>
 
-                      <div
-                        style="border-radius:26px;background:#fff4e0;box-shadow:inset 0 0 0 2px #f0d9ae;padding:24px 26px;margin-top:16px">
-                        <div style="display:flex;align-items:center;gap:14px">
-                          <span
-                            style="width:46px;height:46px;border-radius:15px;flex:none;display:grid;place-items:center;background:#a3541b;color:#fff3e2;font-size:20px;font-weight:800">3</span>
-                          <div>
-                            <div style="font-size:23px;font-weight:800;color:#6e3a10">The details of this \${pKindWord}</div>
-                            <div style="font-size:16px;font-weight:600;color:#a3764a">Only what a buyer would ask you on
-                              the phone.</div>
-                          </div>
-                        </div>
 
-                        <div
-                          style="display:grid;grid-template-columns:1fr 2fr;gap:14px;margin-top:18px;align-items:end">
-                          <label style="display:block"><span style="\${pLab}">Size</span><input name="size"
-                              value="\${pform.size}" onInput="\${__b(onPForm)}" placeholder="250"
-                              style="\${pInput}"></label>
-                          <div><span style="\${pLab}">Measured in</span>
-                            <div style="display:flex;flex-wrap:wrap;gap:9px">\${ (pSizeUnits || []).map(u => \`<button onClick="\${__b(u.go)}" style="\${u.style}">\${u.label}</button>\`).join('') }</div>
-                          </div>
-                        </div>
-
-                        <div
-                          style="display:flex;align-items:center;gap:10px;margin-top:20px;padding:11px 15px;border-radius:14px;background:#fff;box-shadow:inset 0 0 0 1.5px #d7e6f6">
-                          <i class="\${pKindIcon}" style="font-size:20px;color:#1a5aa8;flex:none"></i>
-                          <div
-                            style="flex:1;min-width:0;font-size:15.5px;font-weight:800;color:#1a5aa8;text-wrap:pretty">
-                            \${pKindHint}</div>
-                        </div>
-
-                        <div
-                          style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-top:16px">
-                          \${ (pFields || []).map(f => \`
-                            <div style="\${f.wrap}">
-                              <div style="\${pLab}">\${f.label}</div>
-                              \${ f.isChips ? \`
-                                <div style="\${f.optsWrap}">
-                                  \${ (f.opts || []).map(o => \`<button
-                                      onClick="\${__b(o.go)}" style="\${o.style}">\${o.label}</button>\`).join('') }
-                                </div>
-                              \` : '' }
-                              \${ f.isText ? \`
-                                <input value="\${f.val}" onInput="\${__b(f.on)}" placeholder="\${f.ph}"
-                                  style="\${pInput}">
-                              \` : '' }
-                            </div>
-                          \`).join('') }
-                        </div>
-
-                        \${ pMoreOpen ? \`
-                          <div
-                            style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-top:14px;padding:18px;border-radius:20px;background:#f6faff;box-shadow:inset 0 0 0 1.5px #d7e6f6">
-                            \${ (pMoreFields || []).map(f => \`
-                              <div style="\${f.wrap}">
-                                <div style="\${pLab}">\${f.label}</div>
-                                \${ f.isChips ? \`
-                                  <div style="\${f.optsWrap}">
-                                    \${ (f.opts || []).map(o => \`<button
-                                        onClick="\${__b(o.go)}" style="\${o.style}">\${o.label}</button>\`).join('') }
-                                  </div>
-                                \` : '' }
-                                \${ f.isText ? \`
-                                  <input value="\${f.val}" onInput="\${__b(f.on)}" placeholder="\${f.ph}"
-                                    style="\${pInput}">
-                                \` : '' }
-                              </div>
-                            \`).join('') }
-                          </div>
-                        \` : '' }
-                      </div>
-
+<section class="property-details" aria-label="Property details">
+ <style>
+ .property-details{margin-top:16px;padding:24px;border-radius:24px;background:#fffaf2;color:#302a23;min-width:0}
+ .property-details h3{font:600 27px 'Newsreader',serif;margin:0 0 6px}
+ .property-details p{margin:0;color:#756b5e;font-size:14px;line-height:1.5}
+ .detail-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 20px;padding:18px 0}
+ .detail-field{display:flex;flex-direction:column;gap:7px;min-width:0;font-size:14px;font-weight:600}
+ .detail-field small{font-size:11px;font-weight:400;color:#807668;margin-left:6px}
+ .detail-input{width:100%;min-width:0;box-sizing:border-box;min-height:44px;padding:10px 12px;border:0;border-bottom:1px solid #d8cdbc;border-radius:8px;background:#f2ece2;color:#302a23;font:inherit}
+ .detail-input:focus-visible,.detail-choice:focus-visible,.detail-toggle:focus-visible{outline:2px solid #8b5cf6;outline-offset:3px}
+ .detail-options{display:flex;flex-wrap:wrap;gap:5px}
+ .detail-choice{min-height:44px;padding:8px 12px;border:0;border-radius:8px;background:#eee7dc;color:#514639;font:inherit;font-size:13px;cursor:pointer}
+ .detail-choice[aria-pressed="true"]{background:#302a23;color:#fffaf2}
+ .detail-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;padding:18px 0;border:0;border-top:1px solid #e5dbcf;background:transparent;text-align:left;color:inherit;font:inherit;font-weight:600;cursor:pointer}
+ .detail-clear{border:0;background:transparent;color:#756b5e;font-size:12px;text-align:left;cursor:pointer}
+ .detail-reveal{animation:detail-in .15s ease-out}
+ @keyframes detail-in{from{opacity:.6}to{opacity:1}}
+ @media(max-width:1100px){.detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+ @media(max-width:600px){.property-details{padding:18px 14px}.detail-grid{grid-template-columns:minmax(0,1fr);gap:16px}}
+ @media(prefers-reduced-motion:reduce){.detail-reveal{animation:none}}
+ </style>
+ <h3>\${pDetailsTitle}</h3><p>Everything a buyer may want to know. Add what you know; return to the rest later.</p>
+ <p style="margin-top:8px">\${pDetailsCompletion}</p>
+ <div class="detail-grid">
+  <label class="detail-field">Size <small>Required to list</small><input class="detail-input" name="size" type="number" min="0" step="any" value="\${pform.size}" onInput="\${__b(onPForm)}"></label>
+  <div class="detail-field">Measured in<div class="detail-options">\${(pSizeUnits || []).map(u => \`<button type="button" class="detail-choice" aria-pressed="\${pform.unit === u.label}" onClick="\${__b(u.go)}">\${u.label}</button>\`).join('')}</div></div>
+ </div>
+ \${(pDetailSections || []).map(g => \`
+ <div>
+  \${g.essential ? '<div style="font-weight:600">Essentials</div>' : \`<button type="button" class="detail-toggle" aria-expanded="\${g.open}" onClick="\${__b(g.toggle)}"><span>\${g.title}</span><span>\${g.open ? '−' : '+'}</span></button>\`}
+  \${g.open ? \`<div class="detail-grid detail-reveal">\${g.fields.map(f => \`
+   <div class="detail-field" role="group" aria-label="\${f.label}">
+    <label for="detail-\${f.key}">\${f.label}<small>\${f.hint}</small></label>
+    \${f.isInput ? \`<input id="detail-\${f.key}" class="detail-input" type="\${f.inputType}" min="0" step="any" value="\${f.value}" onChange="\${__b(f.on)}">\` : ''}
+    \${f.isSelect ? \`<select id="detail-\${f.key}" class="detail-input" onChange="\${__b(f.on)}"><option value="">Not specified</option>\${f.options.map(o => \`<option value="\${o.value}" \${o.selected ? 'selected' : ''}>\${o.label}</option>\`).join('')}</select>\` : ''}
+    \${f.isChoice ? \`<div id="detail-\${f.key}" class="detail-options">\${f.options.map(o => \`<button type="button" class="detail-choice" aria-pressed="\${o.selected}" onClick="\${__b(o.go)}">\${o.label}</button>\`).join('')}</div>\` : ''}
+   </div>\`).join('')}</div>\` : ''}
+ </div>\`).join('')}
+ <label class="detail-field" style="margin-top:16px">Internal dealer note <small>Private · optional</small><textarea class="detail-input" name="notes" rows="2" onChange="\${__b(onPForm)}">\${pDetailPrivateNote}</textarea></label>
+</section>
                       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
                         <div
                           style="border-radius:26px;background:#e4f6ea;box-shadow:inset 0 0 0 2px #b5ddc5;padding:24px 26px">
