@@ -851,7 +851,7 @@ export function renderApp(state: any) {
 
                         \${ p.showAvail ? \`\` : '' }
                       </button>
-                      <div style="padding:12px 12px 13px;background:#ffffff;flex:1;display:flex;flex-direction:column;justify-content:space-between;min-height:0">
+                      <div style="padding:12px 12px 13px;\${p.cardBodyStyle}flex:1;display:flex;flex-direction:column;justify-content:space-between;min-height:0">
                         <div style="\${p.catBoxStyle}">
                           <div style="display:flex;align-items:flex-start;gap:8px">
                             <div style="flex:1;min-width:0">
@@ -866,10 +866,10 @@ export function renderApp(state: any) {
                           </div>
                         </div>
                         <div
-                          style="display:flex;align-items:center;gap:6px;margin-top:10px;padding:6px 7px 6px 10px;border-radius:14px;background:linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%);border:1.5px solid #bfdbfe;box-shadow:0 3px 10px -3px rgba(37,99,235,.16)">
+                          style="\${p.catBarStyle}">
                           <span
-                            style="display:flex;align-items:center;gap:5px;font-size:14px;font-weight:800;color:#1e40af;flex:none"><i
-                              class="ph-fill ph-ruler" style="font-size:15px;color:#2563eb"></i>\${p.sizeText}</span>
+                            style="display:flex;align-items:center;gap:5px;font-size:14px;font-weight:800;color:\${p.sizeColor};flex:none"><i
+                              class="ph-fill ph-ruler" style="font-size:15px;color:\${p.sizeIconColor}"></i>\${p.sizeText}</span>
                           <div style="flex:1;min-width:2px"></div>
                           <button onClick="\${__b(p.editPrice)}" title="Update price"
                             style="display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:10px;background:linear-gradient(135deg,#fef3c7,#fde68a);border:1.5px solid #f59e0b;box-shadow:0 2px 6px rgba(217,119,6,.15);text-align:left;flex:none;cursor:pointer"

@@ -799,45 +799,65 @@ export class Component extends DCLogic {
     if (s.includes('industrial')) {
       return {
         cat: 'industrial', label: 'Industrial', icon: 'ph-fill ph-factory',
-        boxBg: 'linear-gradient(135deg, #f0fdfa 0%, #ccfbf1 100%)', boxBorder: '#99f6e4', boxShadow: '0 2px 8px -2px rgba(13,148,136,.15)',
+        cardBg: '#ccfbf1', cardGrad: 'linear-gradient(155deg, #e6fcf8 0%, #b3f7ec 48%, #72ecd9 100%)',
+        cardBorder: '#14b8a6', cardShadow: 'rgba(13,148,136,.28)',
+        boxBg: '#ffffff', boxBorder: 'rgba(255,255,255,.9)', boxShadow: '0 4px 12px -2px rgba(15,118,110,.14)',
         titleColor: '#134e4a', locColor: '#0f766e', pinColor: '#0d9488',
         tagBg: '#99f6e4', tagColor: '#115e59',
-        menuBg: '#ccfbf1', menuColor: '#0f766e', accent: '#0d9488'
+        menuBg: '#e6fcf8', menuColor: '#0f766e', accent: '#0d9488',
+        barBg: '#ffffff', barBorder: 'rgba(255,255,255,.9)', barShadow: '0 4px 12px -2px rgba(15,118,110,.14)',
+        sizeColor: '#134e4a', sizeIconColor: '#0d9488'
       };
     }
     if (s.includes('plot') || s.includes('land') || s.includes('agricultural')) {
       return {
         cat: 'plot', label: 'Plot', icon: 'ph-fill ph-map-pin-area',
-        boxBg: 'linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%)', boxBorder: '#fed7aa', boxShadow: '0 2px 8px -2px rgba(234,88,12,.15)',
+        cardBg: '#ffeed9', cardGrad: 'linear-gradient(155deg, #fff7ed 0%, #fed7aa 48%, #fba758 100%)',
+        cardBorder: '#f97316', cardShadow: 'rgba(234,88,12,.32)',
+        boxBg: '#ffffff', boxBorder: 'rgba(255,255,255,.9)', boxShadow: '0 4px 12px -2px rgba(154,52,18,.15)',
         titleColor: '#7c2d12', locColor: '#9a3412', pinColor: '#ea580c',
         tagBg: '#fed7aa', tagColor: '#c2410c',
-        menuBg: '#ffedd5', menuColor: '#c2410c', accent: '#ea580c'
+        menuBg: '#ffedd5', menuColor: '#c2410c', accent: '#ea580c',
+        barBg: '#ffffff', barBorder: 'rgba(255,255,255,.9)', barShadow: '0 4px 12px -2px rgba(154,52,18,.15)',
+        sizeColor: '#1e3a8a', sizeIconColor: '#2563eb'
       };
     }
     if (s.includes('commercial') || s.includes('sco') || s.includes('booth') || s.includes('office') || s.includes('showroom') || s.includes('shop') || s.includes('retail')) {
       return {
         cat: 'comm', label: 'Commercial', icon: 'ph-fill ph-storefront',
-        boxBg: 'linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%)', boxBorder: '#fecdd3', boxShadow: '0 2px 8px -2px rgba(225,29,72,.15)',
+        cardBg: '#ffe4e8', cardGrad: 'linear-gradient(155deg, #fff1f3 0%, #fecdd6 48%, #fda4b4 100%)',
+        cardBorder: '#f43f5e', cardShadow: 'rgba(225,29,72,.28)',
+        boxBg: '#ffffff', boxBorder: 'rgba(255,255,255,.9)', boxShadow: '0 4px 12px -2px rgba(159,18,57,.14)',
         titleColor: '#881337', locColor: '#9f1239', pinColor: '#e11d48',
         tagBg: '#fecdd3', tagColor: '#be123c',
-        menuBg: '#ffe4e6', menuColor: '#be123c', accent: '#e11d48'
+        menuBg: '#ffe4e6', menuColor: '#be123c', accent: '#e11d48',
+        barBg: '#ffffff', barBorder: 'rgba(255,255,255,.9)', barShadow: '0 4px 12px -2px rgba(159,18,57,.14)',
+        sizeColor: '#881337', sizeIconColor: '#e11d48'
       };
     }
     if (s.includes('kothi') || s.includes('villa') || s.includes('house') || s.includes('bungalow')) {
       return {
         cat: 'villa', label: 'Villa / Kothi', icon: 'ph-fill ph-house-line',
-        boxBg: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)', boxBorder: '#bbf7d0', boxShadow: '0 2px 8px -2px rgba(22,163,74,.15)',
+        cardBg: '#dcfce7', cardGrad: 'linear-gradient(155deg, #effef4 0%, #bbf7d0 48%, #86efac 100%)',
+        cardBorder: '#22c55e', cardShadow: 'rgba(22,163,74,.28)',
+        boxBg: '#ffffff', boxBorder: 'rgba(255,255,255,.9)', boxShadow: '0 4px 12px -2px rgba(22,101,52,.14)',
         titleColor: '#14532d', locColor: '#166534', pinColor: '#16a34a',
         tagBg: '#bbf7d0', tagColor: '#15803d',
-        menuBg: '#dcfce7', menuColor: '#15803d', accent: '#16a34a'
+        menuBg: '#dcfce7', menuColor: '#15803d', accent: '#16a34a',
+        barBg: '#ffffff', barBorder: 'rgba(255,255,255,.9)', barShadow: '0 4px 12px -2px rgba(22,101,52,.14)',
+        sizeColor: '#14532d', sizeIconColor: '#16a34a'
       };
     }
     return {
       cat: 'built', label: 'Flat / Apt', icon: 'ph-fill ph-buildings',
-      boxBg: 'linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%)', boxBorder: '#e9d5ff', boxShadow: '0 2px 8px -2px rgba(124,58,237,.15)',
+      cardBg: '#ede4ff', cardGrad: 'linear-gradient(155deg, #f5f0ff 0%, #e3d2ff 48%, #c4a6ff 100%)',
+      cardBorder: '#a855f7', cardShadow: 'rgba(124,58,237,.28)',
+      boxBg: '#ffffff', boxBorder: 'rgba(255,255,255,.9)', boxShadow: '0 4px 12px -2px rgba(126,34,206,.14)',
       titleColor: '#581c87', locColor: '#7e22ce', pinColor: '#9333ea',
       tagBg: '#e9d5ff', tagColor: '#7e22ce',
-      menuBg: '#f3e8ff', menuColor: '#7e22ce', accent: '#7c3aed'
+      menuBg: '#f3e8ff', menuColor: '#7e22ce', accent: '#7c3aed',
+      barBg: '#ffffff', barBorder: 'rgba(255,255,255,.9)', barShadow: '0 4px 12px -2px rgba(126,34,206,.14)',
+      sizeColor: '#581c87', sizeIconColor: '#7c3aed'
     };
   }
   readinessOf(pr) {
@@ -2876,11 +2896,15 @@ export class Component extends DCLogic {
         catLocStyle: `display:flex;align-items:center;gap:5px;font-size:13.5px;font-weight:600;color:${cat.locColor};margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;`,
         catPinColor: cat.pinColor,
         catMenuBtnStyle: `width:34px;height:34px;border-radius:9px;background:${cat.menuBg};color:${cat.menuColor};display:grid;place-items:center;flex:none;border:none;cursor:pointer;`,
+        catBarStyle: `display:flex;align-items:center;gap:6px;margin-top:10px;padding:6px 7px 6px 10px;border-radius:14px;background:${cat.barBg};border:1.5px solid ${cat.barBorder};box-shadow:${cat.barShadow};`,
+        cardBodyStyle: `background:${cat.cardBg};background-image:${cat.cardGrad};`,
         accent: cat.accent,
         accentBar: `height:5px;background:${cat.accent};`,
         cardWrap: (() => {
-          return 'background:#ffffff;border-radius:22px;overflow:hidden;box-shadow:0 0 0 1.5px #dbe7f7,0 16px 36px -18px rgba(37,99,235,.12);transition:transform .14s,box-shadow .14s;min-width:0;display:flex;flex-direction:column;';
-        })()
+          return `background:${cat.cardBg};background-image:${cat.cardGrad};border-radius:22px;overflow:hidden;box-shadow:0 0 0 1.5px ${cat.cardBorder},0 18px 36px -18px ${cat.cardShadow};transition:transform .14s,box-shadow .14s;min-width:0;display:flex;flex-direction:column;`;
+        })(),
+        sizeColor: cat.sizeColor,
+        sizeIconColor: cat.sizeIconColor
       };
     };
     const cityHas = this.CITIES.filter(c => this.properties.some(pr => pr.city === c));
