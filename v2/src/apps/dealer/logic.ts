@@ -473,7 +473,7 @@ export class Component extends DCLogic {
         addSpec('Power Load', U(pd.powerLoad, 'KVA'), 'ph-fill ph-lightning');
       } else {
         addSpec('Open Sides', pd.openSides || (pd.twoSide ? '2 Sides' : (pd.corner ? 'Corner' : '')), 'ph-fill ph-arrows-out');
-        addSpec('Second Road', has(pd.road2) ? (pd.road2 + ' ft') : (pd.corner ? 'Side road' : ''), 'ph-fill ph-road-horizon');
+        addSpec('Ground Level', pd.level, 'ph-fill ph-stairs');
       }
       addSpec('Ownership', pd.tenure, 'ph-fill ph-certificate');
       addSpec('Approvals', pd.approval || pd.approvalNote, 'ph-fill ph-seal-check');
@@ -544,7 +544,7 @@ export class Component extends DCLogic {
         [{ k: 'lift', l: 'Lift' }, { k: 'powerBackup', l: 'Power backup' }, { k: 'pantry', l: 'Pantry' }, { k: 'centralAc', l: 'Central AC' }, { k: 'conference', l: 'Conference room' }, { k: 'reception', l: 'Reception' }, { k: 'serverRoom', l: 'Server room' }, { k: 'terrace', l: 'Terrace' }]);
 
       addGroup('Commercial Position & Access', 'ph-fill ph-compass', '#a3541b', '#fff0d6', '#ecdcc0',
-        [{ label: 'Shutter Width', value: U(pd.shutter, 'ft') }, { label: 'Second Road', value: has(pd.road2) ? pd.road2 + ' ft' : '' }],
+        [{ label: 'Shutter Width', value: U(pd.shutter, 'ft') }, { label: 'Road in Front', value: U(pd.road, 'ft') }],
         [{ k: 'corner', l: 'Corner' }, { k: 'twoSide', l: 'Two-side open' }, { k: 'mainRoad', l: 'On the main road' }, { k: 'groundAccess', l: 'Direct ground access' }, { k: 'parkingAccess', l: 'Front parking' }, { k: 'basement', l: 'Basement' }, { k: 'mezzanine', l: 'Mezzanine' }]);
     } else if (K === 'indplot') {
       addGroup('Utilities & Infrastructure', 'ph-fill ph-plug', '#0a6634', '#d7f0e2', '#b3e2c8',
@@ -640,7 +640,7 @@ export class Component extends DCLogic {
     if (!best) { const f = Math.round(Math.sqrt(sqft / 1.3)); best = { f, d: Math.round(sqft / f) }; }
     return { f: String(best.f), d: String(best.d), yd: Math.round(sqft / 9) };
   }
-  DETAILKEYS = 'frontage depth road2 openSides access parkFacing mainRoad cornerCut nearGreen block shape level dimFront dimBack dimLeft dimRight approvalNote powerLoad water sewer effluent gas crane loadingBay officeBlock labourQtr yardArea shedArea phase use config kitchens builtup carpet landArea floorCount lawn lawnArea basement basementArea terrace barsati portico stilt sepEntry roofRights living dining store puja study servant servantBath lift powerBackup borewell solar security modularKitchen wardrobes ac piped flooring maintenance washrooms washroom pantry mezzanine shutter ceiling cabins seats conference reception serverRoom centralAc groundAccess parkingAccess twoSide fitout currentUse floorPlan'.split(' ');
+  DETAILKEYS = 'frontage depth openSides access parkFacing mainRoad nearGreen tpoint boundaryWall block shape level approvalNote powerLoad water sewer effluent gas crane loadingBay officeBlock labourQtr yardArea shedArea phase use config kitchens superArea builtup carpet landArea floorCount lawn lawnArea basement basementArea terrace barsati portico stilt sepEntry roofRights living dining store puja study servant servantBath lift powerBackup borewell solar security modularKitchen wardrobes ac piped flooring maintenance washrooms washroom pantry mezzanine shutter ceiling cabins seats conference reception serverRoom centralAc groundAccess parkingAccess twoSide fitout currentUse floorPlan'.split(' ');
   KINDMETA = {
     plot: { i: 'ph-fill ph-map-pin-area', h: 'A buyer asks about size, facing, road width and whether it is a corner. No rooms needed.' },
     indplot: { i: 'ph-fill ph-factory', h: 'Industrial buyers ask about frontage, road access, power load and water. Rooms do not matter.' },
@@ -653,141 +653,382 @@ export class Component extends DCLogic {
     office: { i: 'ph-fill ph-briefcase', h: 'Cabins, seating, conference and pantry are what an office buyer asks about.' },
     showroom: { i: 'ph-fill ph-storefront', h: 'Frontage, ceiling height and ground-floor visibility matter far more than rooms.' }
   };
-  typeFields(pf, pill) {
+  /* ─────────────────────────────────────────────────────────────────
+     THE SPEC SHEET — one shape, ten property types.
+
+     Every type answers the same five colour-coded cards in the same
+     order, so a dealer who has filled in a plot once already knows
+     where to look on an office, a booth or an industrial plot. Only
+     the questions inside each card change with the type.
+
+       1  Essentials         sky blue  · yellow answers
+       2  Features           lilac     · emerald answers
+       3  Legal & ownership  amber     · blue answers
+       4  How it is used     mint      · pink answers
+       5  Your private note  rose      · cyan answers
+
+     The colours are loud and every answer control is solid rather than
+     translucent on purpose: this sheet is filled in on a bright site
+     office desk, often on a phone, by someone who should never have to
+     hunt for a field or squint at a half-transparent one. */
+  SPEC_INK = '#1c1917';
+  SPEC_THEMES = {
+    ess: {
+      title: 'Essentials', hint: 'The first things a buyer asks on the phone.',
+      icon: 'ph-fill ph-ruler',
+      bg: '#bae6fd', ring: '#38bdf8', ink: '#062f42', sub: '#0b5f7d', ctl: '#fde047', ctlRing: '#b45309'
+    },
+    feat: {
+      title: 'Features', hint: 'Tap everything this one has. Tap again to undo.',
+      icon: 'ph-fill ph-sparkle',
+      bg: '#e9d5ff', ring: '#a855f7', ink: '#3b0764', sub: '#6b21a8', ctl: '#6ee7b7', ctlRing: '#0f766e'
+    },
+    legal: {
+      title: 'Legal & ownership', hint: 'Papers, authority, and the number on the file.',
+      icon: 'ph-fill ph-scroll',
+      bg: '#fde68a', ring: '#f59e0b', ink: '#432a04', sub: '#8a5a12', ctl: '#93c5fd', ctlRing: '#1d4ed8'
+    },
+    use: {
+      title: 'How it is used', hint: 'What a buyer can run here, and what is inside today.',
+      icon: 'ph-fill ph-storefront',
+      bg: '#bbf7d0', ring: '#22c55e', ink: '#052e18', sub: '#0a6634', ctl: '#f9a8d4', ctlRing: '#be185d'
+    },
+    note: {
+      title: 'Your private note', hint: 'Only you see this. It never reaches a customer, a link or marketing.',
+      icon: 'ph-fill ph-lock-key',
+      bg: '#fecaca', ring: '#ef4444', ink: '#450a0a', sub: '#9f1239', ctl: '#67e8f9', ctlRing: '#0e7490'
+    }
+  };
+  typeFields(pf) {
     const K = this.kindOf(pf.type), meta = this.KINDMETA[K] || this.KINDMETA.flat;
     const set = (o) => this.setP(o);
-    const WRAP = 'display:flex;flex-wrap:wrap;gap:8px';
-    const chips = (label, key, opts, fmt, wide) => {
-      const short = opts.every(v => String(v).length <= 4);
-      return {
-        label, isChips: true, isText: false, wrap: wide ? 'grid-column:1 / -1' : '',
-        optsWrap: short ? ('display:grid;grid-template-columns:repeat(' + opts.length + ',minmax(0,1fr));gap:8px') : WRAP,
-        opts: opts.map(v => ({
-          label: fmt ? fmt(v) : String(v), go: () => set({ [key]: v }),
-          style: pill(String(pf[key]) === String(v)) + (short ? ';justify-content:center;padding:0 8px' : '')
+    const TH = this.SPEC_THEMES, INK = this.SPEC_INK;
+
+    /* One answer control, painted in its own card's colour. Picked reads
+       as a solid ink block, unpicked as the loud colour — never a faint
+       outline, which is the state that gets misread across a desk. */
+    const ctl = (t, on) =>
+      'display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:54px;padding:0 18px;'
+      + 'border-radius:14px;font-size:16.5px;font-weight:800;line-height:1.15;text-align:center;'
+      + 'transition:all .14s;cursor:pointer;'
+      + (on
+        ? 'background:' + INK + ';color:' + t.ctl + ';border:2.5px solid ' + INK + ';box-shadow:0 12px 22px -14px rgba(0,0,0,.85)'
+        : 'background:' + t.ctl + ';color:' + INK + ';border:2.5px solid ' + t.ctlRing);
+    const box = (t) =>
+      'width:100%;height:58px;padding:0 16px;border-radius:14px;background:' + t.ctl
+      + ';border:2.5px solid ' + t.ctlRing + ';font-size:18px;font-weight:800;color:' + INK + ';outline:none';
+    const lab = (t) => 'display:block;font-size:15.5px;font-weight:800;color:' + t.ink + ';margin-bottom:9px';
+
+    /* Field factories, each bound to one card's colour. */
+    const F = (t) => ({
+      chips: (label, key, opts, fmt, wide) => {
+        const shown = opts.map(v => (fmt ? fmt(v) : String(v)));
+        // Counts (washrooms, cabins, parking) read as one even row of equal
+        // buttons. That row needs the full width of the card — squeezed into
+        // a single grid cell the labels wrap mid-word and stop being tappable.
+        const even = shown.every(s => s.length <= 6);
+        return {
+          label, labStyle: lab(t), isChips: true, isText: false, isNote: false,
+          wrap: (wide || even) ? 'grid-column:1 / -1' : '',
+          optsWrap: even
+            ? 'display:grid;grid-template-columns:repeat(' + opts.length + ',minmax(0,1fr));gap:10px;'
+              + 'max-width:' + (opts.length * 132) + 'px'
+            : 'display:flex;flex-wrap:wrap;gap:10px',
+          // Tapping the picked answer again clears it — a wrong tap is
+          // undone the same way it was made.
+          opts: opts.map((v, i) => {
+            const on = String(pf[key]) === String(v);
+            return { label: shown[i], tick: false, go: () => set({ [key]: on ? '' : v }), style: ctl(t, on) };
+          })
+        };
+      },
+      flags: (label, list) => ({
+        label, labStyle: lab(t), isChips: true, isText: false, isNote: false,
+        wrap: 'grid-column:1 / -1', optsWrap: 'display:flex;flex-wrap:wrap;gap:10px',
+        opts: list.map(f => ({
+          label: f.l, tick: !!pf[f.k], go: () => set({ [f.k]: !pf[f.k] }), style: ctl(t, !!pf[f.k])
         }))
-      };
-    };
-    const flags = (label, list) => ({
-      label, isChips: true, isText: false, wrap: 'grid-column:1 / -1', optsWrap: WRAP,
-      opts: list.map(f => ({ label: f.l, go: () => set({ [f.k]: !pf[f.k] }), style: pill(!!pf[f.k]) }))
+      }),
+      text: (label, key, ph, wide) => ({
+        label, labStyle: lab(t), isChips: false, isText: true, isNote: false,
+        wrap: wide ? 'grid-column:1 / -1' : '',
+        val: pf[key] || '', ph, inputStyle: box(t), on: (e) => set({ [key]: e.target.value })
+      }),
+      note: (label, key, ph) => ({
+        label, labStyle: lab(t), isChips: false, isText: false, isNote: true,
+        wrap: 'grid-column:1 / -1', val: pf[key] || '', ph,
+        inputStyle: 'width:100%;min-height:112px;padding:15px 16px;border-radius:14px;background:' + t.ctl
+          + ';border:2.5px solid ' + t.ctlRing + ';font-size:17px;font-weight:700;line-height:1.45;color:'
+          + INK + ';outline:none;resize:vertical;font-family:inherit',
+        on: (e) => set({ [key]: e.target.value })
+      })
     });
-    const text = (label, key, ph, wide) => ({
-      label, isChips: false, isText: true, wrap: wide ? 'grid-column:1 / -1' : '',
-      val: pf[key] || '', ph, on: (e) => set({ [key]: e.target.value })
-    });
+    const E = F(TH.ess), P = F(TH.feat), L = F(TH.legal), U = F(TH.use), N = F(TH.note);
+
     const FURN = ['Unfurnished', 'Semi-furnished', 'Furnished'];
     const AGE = ['New', '1–5 years', '5–10 years', '10+ years'];
-    const FLOORS = ['Ground', 'First', 'Second', 'Third', 'Basement'];
-    const N5 = ['1', '2', '3', '4', '5+'], N6 = ['1', '2', '3', '4', '5', '6+'], N4 = ['0', '1', '2', '3+'];
-    const YARD = (a, b) => { const f = parseFloat(a), d = parseFloat(b); if (!f || !d) return ''; return Math.round(f * d / 9).toLocaleString('en-IN') + ' sq yd  (' + Math.round(f * d).toLocaleString('en-IN') + ' sq ft)'; };
-    const dims = (fk, dk, l1, l2) => [text(l1 || 'Frontage (ft)', fk, '30'), text(l2 || 'Depth (ft)', dk, '75')];
-    const ROOMS = [{ k: 'living', l: 'Drawing / living' }, { k: 'dining', l: 'Dining' }, { k: 'store', l: 'Store room' }, { k: 'puja', l: 'Pooja room' }, { k: 'study', l: 'Study' }, { k: 'servant', l: 'Servant room' }, { k: 'servantBath', l: 'Servant washroom' }];
-    const SERV = [{ k: 'lift', l: 'Lift' }, { k: 'powerBackup', l: 'Power backup' }, { k: 'borewell', l: 'Borewell' }, { k: 'solar', l: 'Solar' }, { k: 'security', l: 'Gated security' }];
-    let secA = [], secB = [], secC = [], secD = [];
+    const POSS = ['Ready to move', 'In 3 months', 'In 6 months', 'Under construction'];
+    const BHK = ['1 BHK', '2 BHK', '3 BHK', '4 BHK', '5+ BHK'];
+    const N6 = ['1', '2', '3', '4', '5', '6+'], N4 = ['0', '1', '2', '3+'];
+    const CAR = (v) => v === '0' ? 'None' : v + ' car';
+    const NONE = (v) => v === '0' ? 'None' : v;
+    const TEN3 = ['Freehold', 'Leasehold', 'Power of attorney'], TEN2 = ['Freehold', 'Leasehold'];
+    const FIT = ['Bare shell', 'Semi-finished', 'Fully finished'];
+    const NOW = ['Lying vacant', 'Rented out', 'Owner is using it'];
+    const COMMUSE = ['Shop', 'Office', 'Restaurant', 'Clinic', 'Bank', 'Showroom'];
+    const FLOORING = ['Vitrified', 'Marble', 'Wooden', 'Tiles', 'Granite'];
+    const YARD = (a, b) => {
+      const f = parseFloat(a), d = parseFloat(b); if (!f || !d) return '';
+      return Math.round(f * d / 9).toLocaleString('en-IN') + ' sq yd  (' + Math.round(f * d).toLocaleString('en-IN') + ' sq ft)';
+    };
 
-    if (K === 'plot' || K === 'indplot') {
-      secA = [...dims('frontage', 'depth'),
-      chips('Facing', 'facing', this.FACING, null, true),
-      text('Road width in front (ft)', 'road', '30')];
-      
-      secB = [chips('Open sides', 'openSides', ['One side', 'Two side', 'Three side', 'Four side'], null, true),
-      flags('Position advantages', [{ k: 'corner', l: 'Corner plot' }, { k: 'parkFacing', l: 'Park facing' }, { k: 'mainRoad', l: 'On the main road' }, { k: 'nearGreen', l: 'Green belt behind' }, { k: 'cornerCut', l: 'Corner cut' }]),
-      chips('Ground level', 'level', ['Level with road', 'Above road', 'Below road'], null, true)];
-      
-      secC = [text('Plot number', 'plotNo', '1247'),
-      text('Block / pocket', 'block', 'B'),
-      chips('Plot shape', 'shape', ['Regular', 'Irregular', 'Corner cut', 'L-shape'], null, true),
-      text('Front dimension (ft)', 'dimFront', '30'), text('Back dimension (ft)', 'dimBack', '30'),
-      text('Left dimension (ft)', 'dimLeft', '75'), text('Right dimension (ft)', 'dimRight', '72'),
-      text('Second-side road width (ft)', 'road2', '24')];
-      
-      secD = [chips('Ownership', 'tenure', ['Freehold', 'Leasehold', 'Power of attorney'], null, true),
-      text('Approving authority', 'approvalNote', 'GMADA approved'),
-      flags('Show to customers', [{ k: 'showPlotNo', l: 'Show plot number to customers' }])];
+    let ess = [], feat = [], legal = [], use = [], useTitle = '', useHint = '';
+
+    if (K === 'plot') {
+      ess = [E.text('Frontage (ft)', 'frontage', '30'),
+      E.text('Depth (ft)', 'depth', '75'),
+      E.text('Road in front (ft)', 'road', '30'),
+      E.chips('Facing', 'facing', this.FACING, null, true),
+      E.chips('How many sides open', 'openSides', ['1 side open', '2 sides open', '3 sides open'], null, true)];
+
+      feat = [P.flags('Tick what applies', [{ k: 'corner', l: 'Corner plot' }, { k: 'parkFacing', l: 'Park facing' },
+      { k: 'mainRoad', l: 'On the main road' }, { k: 'nearGreen', l: 'Green belt behind' },
+      { k: 'tpoint', l: 'T-point' }, { k: 'boundaryWall', l: 'Boundary wall built' }]),
+      P.chips('Ground level', 'level', ['Level with road', 'Above road', 'Below road'], null, true),
+      P.chips('Plot shape', 'shape', ['Regular', 'Irregular', 'Corner cut', 'L-shape'], null, true)];
+
+      legal = [L.chips('Ownership', 'tenure', TEN3, null, true),
+      L.text('Approved by', 'approvalNote', 'GMADA approved'),
+      L.text('Plot number', 'plotNo', '1247'),
+      L.text('Block / pocket', 'block', 'B'),
+      L.flags('On the customer link', [{ k: 'showPlotNo', l: 'Show the plot number to customers' }])];
+
+      useTitle = 'What it suits';
+      useHint = 'What a buyer can put up here, and what stands on it today.';
+      use = [U.chips('What a buyer can build', 'use', ['House / kothi', 'Builder floor', 'Duplex', 'Hold as investment'], null, true),
+      U.chips('Right now it is', 'currentUse', ['Lying vacant', 'Somebody is using it', 'Encroached'], null, true)];
     }
-    else if (K === 'flat' || K === 'bfloor') {
-      secA = [chips('Configuration', 'config', ['1 BHK', '2 BHK', '3 BHK', '4 BHK', '5+ BHK'], null, true),
-      text('Super area (sq ft)', 'superArea', '1850'),
-      text('Built-up area (sq ft)', 'builtup', '1450'),
-      text('Carpet area (sq ft)', 'carpet', '1180'),
-      text('Floor this flat is on', 'floor', '2nd'),
-      text('Total floors in building', 'totalFloors', '4'),
-      chips('Facing', 'facing', this.FACING, null, true)];
-      
-      secB = [chips('Bedrooms', 'beds', N6), chips('Washrooms', 'baths', N6),
-      chips('Balconies', 'balconies', N4, (v) => v === '0' ? 'None' : v),
-      chips('Covered parking', 'parking', N4, (v) => v === '0' ? 'None' : v + ' car'),
-      chips('Furnishing', 'furnishing', FURN, null, true),
-      flags('Building / lifestyle', [{ k: 'lift', l: 'Lift' }, { k: 'powerBackup', l: 'Power backup' }, { k: 'security', l: 'Gated security' }, { k: 'servant', l: 'Servant room' }])];
-      
-      secC = [chips('Age of building', 'age', AGE, null, true),
-      chips('Kitchens', 'kitchens', ['1', '2'], null, false),
-      chips('Flooring', 'flooring', ['Vitrified', 'Marble', 'Wooden', 'Tiles', 'Granite'], null, true),
-      flags('Rooms it also has', [{ k: 'living', l: 'Drawing / living' }, { k: 'dining', l: 'Dining' }, { k: 'store', l: 'Store room' }, { k: 'puja', l: 'Pooja room' }, { k: 'study', l: 'Study' }]),
-      text('Monthly maintenance', 'maintenance', '₹2,400'),
-      flags('Extras', [{ k: 'modularKitchen', l: 'Modular kitchen' }, { k: 'wardrobes', l: 'Fitted wardrobes' }, { k: 'ac', l: 'ACs installed' }, { k: 'piped', l: 'Piped gas' }])];
-      
-      secD = [chips('Ownership', 'tenure', ['Freehold', 'Leasehold'], null, true),
-      text('Approving authority', 'approvalNote', 'GMADA approved'),
-      chips('Possession', 'possession', ['Ready to move', 'Within 3 months', 'Within 6 months', 'Under construction'], null, true),
-      text('Flat / unit number', 'plotNo', 'B-402')];
+    else if (K === 'indplot') {
+      ess = [E.text('Frontage (ft)', 'frontage', '100'),
+      E.text('Depth (ft)', 'depth', '200'),
+      E.text('Road in front (ft)', 'road', '60'),
+      E.text('Power load (KVA)', 'powerLoad', '150'),
+      E.text('Focal point / phase', 'phase', 'Phase 8-B'),
+      E.chips('Biggest truck that reaches it', 'access', ['Container truck', 'Small truck only'], null, true)];
+
+      feat = [P.flags('What is already built', [{ k: 'officeBlock', l: 'Office block' }, { k: 'labourQtr', l: 'Labour quarters' },
+      { k: 'loadingBay', l: 'Loading bay' }, { k: 'crane', l: 'Crane / gantry' },
+      { k: 'boundaryWall', l: 'Boundary wall' }, { k: 'mainRoad', l: 'On the main road' }]),
+      P.text('Covered shed (sq ft)', 'shedArea', '12000'),
+      P.text('Open yard (sq ft)', 'yardArea', '6000'),
+      P.text('Shed height (ft)', 'ceiling', '28'),
+      P.flags('Connections already in', [{ k: 'water', l: 'Water' }, { k: 'sewer', l: 'Sewerage' },
+      { k: 'effluent', l: 'Effluent / ETP line' }, { k: 'gas', l: 'Piped gas' }])];
+
+      legal = [L.chips('Ownership', 'tenure', TEN2, null, true),
+      L.text('Approved by', 'approvalNote', 'PSIEC allotted'),
+      L.text('Plot number', 'plotNo', 'B-142')];
+
+      useTitle = 'What it suits';
+      useHint = 'The kind of unit a buyer can run here.';
+      use = [U.chips('Suitable for', 'use', ['Any industry', 'Warehouse', 'Food unit', 'IT / office'], null, true),
+      U.chips('Right now it is', 'currentUse', NOW, null, true)];
+    }
+    else if (K === 'flat') {
+      ess = [E.chips('Configuration', 'config', BHK, null, true),
+      E.text('Super area (sq ft)', 'superArea', '1850'),
+      E.text('Carpet area (sq ft)', 'carpet', '1180'),
+      E.text('Which floor is it on', 'floor', '2nd'),
+      E.text('Floors in the building', 'totalFloors', '4'),
+      E.chips('Facing', 'facing', this.FACING, null, true)];
+
+      feat = [P.chips('Washrooms', 'baths', N6),
+      P.chips('Balconies', 'balconies', N4, NONE),
+      P.chips('Covered parking', 'parking', N4, CAR),
+      P.flags('Tick what it has', [{ k: 'lift', l: 'Lift' }, { k: 'powerBackup', l: 'Power backup' },
+      { k: 'security', l: 'Gated security' }, { k: 'modularKitchen', l: 'Modular kitchen' },
+      { k: 'wardrobes', l: 'Fitted wardrobes' }, { k: 'servant', l: 'Servant room' }])];
+
+      legal = [L.chips('Ownership', 'tenure', TEN2, null, true),
+      L.text('Approved by', 'approvalNote', 'GMADA approved'),
+      L.text('Flat number', 'plotNo', 'B-402')];
+
+      useTitle = 'Condition & running cost';
+      useHint = 'What it is like to live in from day one.';
+      use = [U.chips('Age of the building', 'age', AGE, null, true),
+      U.chips('Furnishing', 'furnishing', FURN, null, true),
+      U.chips('Possession', 'possession', POSS, null, true),
+      U.chips('Flooring', 'flooring', FLOORING, null, true),
+      U.text('Monthly maintenance', 'maintenance', '₹2,400')];
+    }
+    else if (K === 'bfloor') {
+      ess = [E.chips('Configuration', 'config', BHK, null, true),
+      E.chips('Which floor', 'floor', ['Ground', 'First', 'Second', 'Third'], null, true),
+      E.text('Plot size (sq yd)', 'landArea', '250'),
+      E.text('Built-up area (sq ft)', 'builtup', '1600'),
+      E.text('Floors in the building', 'totalFloors', '4'),
+      E.chips('Facing', 'facing', this.FACING, null, true)];
+
+      feat = [P.chips('Washrooms', 'baths', N6),
+      P.chips('Balconies', 'balconies', N4, NONE),
+      P.chips('Covered parking', 'parking', N4, CAR),
+      P.flags('Tick what it has', [{ k: 'sepEntry', l: 'Separate entry' }, { k: 'stilt', l: 'Stilt parking' },
+      { k: 'roofRights', l: 'Roof rights' }, { k: 'terrace', l: 'Terrace' }, { k: 'lift', l: 'Lift' },
+      { k: 'powerBackup', l: 'Power backup' }, { k: 'servant', l: 'Servant room' }])];
+
+      legal = [L.chips('Ownership', 'tenure', TEN2, null, true),
+      L.text('Approved by', 'approvalNote', 'GMADA approved'),
+      L.text('Floor / unit number', 'plotNo', '#1247, First')];
+
+      useTitle = 'Condition';
+      useHint = 'What it is like to live in from day one.';
+      use = [U.chips('Age of the building', 'age', AGE, null, true),
+      U.chips('Furnishing', 'furnishing', FURN, null, true),
+      U.chips('Possession', 'possession', POSS, null, true),
+      U.chips('Flooring', 'flooring', FLOORING, null, true)];
     }
     else if (K === 'kothi' || K === 'villa') {
-      secA = [text(K === 'villa' ? 'Land area (sq yd)' : 'Plot area (sq yd)', 'landArea', '500'),
-      text('Total built-up area (sq ft)', 'builtup', '4200'),
-      chips('Floors built', 'floorCount', ['1', '2', '3', '4'], null, false),
-      chips('Total bedrooms', 'beds', N6), chips('Total washrooms', 'baths', N6),
-      chips('Facing', 'facing', this.FACING, null, true)];
-      
-      secB = [chips('Covered parking', 'parking', N4, (v) => v === '0' ? 'None' : v + ' car'),
-      flags('Layout / features', [{ k: 'corner', l: 'Corner' }, { k: 'parkFacing', l: 'Park facing' }, { k: 'basement', l: 'Basement' }, { k: 'terrace', l: 'Terrace' }, { k: 'servant', l: 'Servant room' }, { k: 'lawn', l: 'Lawn / garden' }])];
-      
-      secC = [...dims('frontage', 'depth', 'Plot frontage (ft)', 'Plot depth (ft)'),
-      text('Carpet area (sq ft)', 'carpet', '3600'),
-      text('Basement area (sq ft)', 'basementArea', '900'),
-      text('Road width in front (ft)', 'road', '40'),
-      chips('Kitchens', 'kitchens', ['1', '2', '3'], null, false),
-      flags('Rooms it also has', [{ k: 'living', l: 'Drawing / living' }, { k: 'dining', l: 'Dining' }, { k: 'store', l: 'Store room' }, { k: 'puja', l: 'Pooja room' }, { k: 'study', l: 'Study' }]),
-      chips('Age', 'age', AGE, null, true)];
-      
-      secD = [chips('Ownership', 'tenure', ['Freehold', 'Leasehold', 'Power of attorney'], null, true),
-      text('Approving authority', 'approvalNote', 'GMADA approved'),
-      chips('Furnishing', 'furnishing', FURN, null, true)];
+      ess = [E.text(K === 'villa' ? 'Land area (sq yd)' : 'Plot area (sq yd)', 'landArea', '500'),
+      E.text('Built-up area (sq ft)', 'builtup', '4200'),
+      E.text('Road in front (ft)', 'road', '40'),
+      E.chips('Floors built', 'floorCount', ['1', '2', '3', '4']),
+      E.chips('Bedrooms', 'beds', N6),
+      E.chips('Washrooms', 'baths', N6),
+      E.chips('Facing', 'facing', this.FACING, null, true)];
+
+      feat = [P.chips('Covered parking', 'parking', N4, CAR),
+      P.chips('Kitchens', 'kitchens', ['1', '2', '3']),
+      P.flags('Tick what it has', [{ k: 'corner', l: 'Corner' }, { k: 'parkFacing', l: 'Park facing' },
+      { k: 'lawn', l: 'Lawn / garden' }, { k: 'basement', l: 'Basement' },
+      { k: 'terrace', l: 'Terrace / barsati' }, { k: 'servant', l: 'Servant room' },
+      { k: 'lift', l: 'Lift' }, { k: 'powerBackup', l: 'Power backup' }]),
+      P.flags('Extra rooms', [{ k: 'living', l: 'Drawing room' }, { k: 'puja', l: 'Pooja room' },
+      { k: 'study', l: 'Study' }, { k: 'store', l: 'Store room' }])];
+
+      legal = [L.chips('Ownership', 'tenure', TEN3, null, true),
+      L.text('Approved by', 'approvalNote', 'GMADA approved'),
+      L.text('House number', 'plotNo', '#1247')];
+
+      useTitle = 'Condition';
+      useHint = 'What a buyer walks into on day one.';
+      use = [U.chips('Age', 'age', AGE, null, true),
+      U.chips('Furnishing', 'furnishing', FURN, null, true),
+      U.chips('Possession', 'possession', POSS, null, true)];
+    }
+    else if (K === 'sco') {
+      ess = [E.text('Plot area (sq yd)', 'landArea', '110'),
+      E.text('Built-up area (sq ft)', 'builtup', '3800'),
+      E.text('Frontage (ft)', 'frontage', '22'),
+      E.text('Road in front (ft)', 'road', '80'),
+      E.chips('Floors built', 'floorCount', ['1', '2', '3', '4'])];
+
+      feat = [P.chips('Washrooms', 'washrooms', N6),
+      P.chips('Covered parking', 'parking', N4, CAR),
+      P.flags('Tick what applies', [{ k: 'corner', l: 'Corner' }, { k: 'mainRoad', l: 'On the main road' },
+      { k: 'twoSide', l: 'Open on two sides' }, { k: 'lift', l: 'Lift' }, { k: 'basement', l: 'Basement' },
+      { k: 'terrace', l: 'Terrace' }, { k: 'powerBackup', l: 'Power backup' }])];
+
+      legal = [L.chips('Ownership', 'tenure', TEN2, null, true),
+      L.text('Approved by', 'approvalNote', 'GMADA approved'),
+      L.text('SCO number', 'plotNo', 'SCO 42')];
+
+      use = [U.chips('Suitable for', 'use', COMMUSE, null, true),
+      U.chips('Condition inside', 'fitout', FIT, null, true),
+      U.chips('Right now it is', 'currentUse', NOW, null, true)];
+    }
+    else if (K === 'booth') {
+      ess = [E.text('Area (sq ft)', 'carpet', '400'),
+      E.text('Frontage (ft)', 'frontage', '12'),
+      E.text('Road in front (ft)', 'road', '60'),
+      E.chips('Which floor', 'floor', ['Ground', 'Ground + First'], null, true)];
+
+      feat = [P.flags('Tick what applies', [{ k: 'corner', l: 'Corner' }, { k: 'mainRoad', l: 'On the main road' },
+      { k: 'mezzanine', l: 'Mezzanine inside' }, { k: 'washroom', l: 'Washroom' },
+      { k: 'powerBackup', l: 'Power backup' }]),
+      P.chips('Parking outside', 'parkingAccess', ['Open parking', 'Paid parking', 'None'], null, true)];
+
+      legal = [L.chips('Ownership', 'tenure', TEN2, null, true),
+      L.text('Booth number', 'plotNo', 'Booth 18')];
+
+      use = [U.chips('Suitable for', 'use', ['Shop', 'Food counter', 'Chemist', 'Bank ATM', 'Office'], null, true),
+      U.chips('Condition inside', 'fitout', FIT, null, true),
+      U.chips('Right now it is', 'currentUse', NOW, null, true)];
+    }
+    else if (K === 'office') {
+      ess = [E.text('Carpet area (sq ft)', 'carpet', '2400'),
+      E.text('Which floor is it on', 'floor', '3rd'),
+      E.text('Floors in the building', 'totalFloors', '8'),
+      E.text('Seats it fits', 'seats', '40'),
+      E.chips('Cabins', 'cabins', N6)];
+
+      feat = [P.chips('Washrooms', 'washrooms', N6),
+      P.chips('Covered parking', 'parking', N4, CAR),
+      P.flags('Tick what it has', [{ k: 'lift', l: 'Lift' }, { k: 'powerBackup', l: 'Power backup' },
+      { k: 'centralAc', l: 'Central AC' }, { k: 'conference', l: 'Conference room' },
+      { k: 'reception', l: 'Reception' }, { k: 'pantry', l: 'Pantry' },
+      { k: 'serverRoom', l: 'Server room' }, { k: 'mainRoad', l: 'On the main road' }])];
+
+      legal = [L.chips('Ownership', 'tenure', TEN2, null, true),
+      L.text('Approved by', 'approvalNote', 'RERA registered'),
+      L.text('Unit number', 'plotNo', '304')];
+
+      useTitle = 'How it is used & running cost';
+      use = [U.chips('Condition inside', 'fitout', ['Bare shell', 'Semi-finished', 'Fully furnished'], null, true),
+      U.chips('Right now it is', 'currentUse', NOW, null, true),
+      U.text('Monthly maintenance', 'maintenance', '₹18,000')];
     }
     else {
-      secA = [text('Area (sq ft)', 'carpet', '1800'),
-      ...dims('frontage', 'depth', 'Frontage (ft)', 'Depth (ft)'),
-      chips('Which floor', 'floor', ['Ground', 'First', 'Basement', 'Ground + First'], null, true),
-      chips('Facing', 'facing', this.FACING, null, true),
-      text('Road width in front (ft)', 'road', '80')];
-      
-      secB = [flags('Features', [{ k: 'mainRoad', l: 'Main road visibility' }, { k: 'corner', l: 'Corner' }]),
-      chips('Suitable for', 'use', ['Shop', 'Office', 'Restaurant', 'Clinic', 'Bank', 'Gym'], null, true),
-      chips('Covered parking', 'parking', N4, (v) => v === '0' ? 'None' : v + ' car'),
-      chips('Washrooms', 'washrooms', N5),
-      flags('Services', [{ k: 'lift', l: 'Lift / escalator' }, { k: 'basement', l: 'Basement' }])];
-      
-      secC = [text('Ceiling height (ft)', 'ceiling', '14'),
-      text('Shutter / glass frontage (ft)', 'shutter', '22'),
-      chips('Condition', 'fitout', ['Bare shell', 'Semi-finished', 'Fully finished'], null, true)];
-      
-      secD = [chips('Ownership', 'tenure', ['Freehold', 'Leasehold'], null, true),
-      text('Current use', 'currentUse', 'Vacant')];
+      ess = [E.text('Carpet area (sq ft)', 'carpet', '1800'),
+      E.text('Glass front / shutter (ft)', 'shutter', '22'),
+      E.text('Ceiling height (ft)', 'ceiling', '14'),
+      E.text('Road in front (ft)', 'road', '80'),
+      E.chips('Which floor', 'floor', ['Ground', 'Ground + First', 'First', 'Basement'], null, true)];
+
+      feat = [P.chips('Washrooms', 'washrooms', N6),
+      P.chips('Covered parking', 'parking', N4, CAR),
+      P.flags('Tick what applies', [{ k: 'corner', l: 'Corner' }, { k: 'mainRoad', l: 'On the main road' },
+      { k: 'groundAccess', l: 'Straight in from the road' }, { k: 'mezzanine', l: 'Mezzanine' },
+      { k: 'basement', l: 'Basement' }, { k: 'lift', l: 'Lift / escalator' },
+      { k: 'centralAc', l: 'Central AC' }, { k: 'powerBackup', l: 'Power backup' }])];
+
+      legal = [L.chips('Ownership', 'tenure', TEN2, null, true),
+      L.text('Approved by', 'approvalNote', 'GMADA approved'),
+      L.text('Unit number', 'plotNo', 'SCO 42, Ground')];
+
+      use = [U.chips('Suitable for', 'use', COMMUSE, null, true),
+      U.chips('Condition inside', 'fitout', FIT, null, true),
+      U.chips('Right now it is', 'currentUse', NOW, null, true)];
     }
-    
+
+    const priv = [N.note('Anything you want to remember about this one', 'notes',
+      'Owner is firm on the price. Keys are with the guard. Papers are with his son in Delhi.')];
+
+    /* A card is only built when the type actually asks something in it —
+       a booth has no approving authority worth a whole amber card. */
+    const card = (t, fields, title, hint) => ({
+      title: title || t.title, hint: hint || t.hint, icon: t.icon, fields,
+      style: 'border-radius:24px;padding:20px 22px 22px;background:' + t.bg
+        + ';box-shadow:inset 0 0 0 2.5px ' + t.ring,
+      badgeStyle: 'width:46px;height:46px;border-radius:15px;flex:none;display:grid;place-items:center;'
+        + 'font-size:23px;background:' + INK + ';color:' + t.ctl,
+      titleStyle: 'font-size:21px;font-weight:800;line-height:1.2;color:' + t.ink,
+      hintStyle: 'font-size:15px;font-weight:700;margin-top:2px;color:' + t.sub,
+      gridStyle: 'display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:15px;margin-top:17px'
+    });
+    const built = (t, f, title, hint) => f.length ? [card(t, f, title, hint)] : [];
+
+    const openSecs = [...built(TH.ess, ess), ...built(TH.feat, feat)];
+    const moreSecs = [...built(TH.legal, legal), ...built(TH.use, use, useTitle, useHint), ...built(TH.note, priv)];
     const dimNote = YARD(pf.frontage, pf.depth);
+
     return {
       pKindIcon: meta.i, pKindHint: dimNote ? ('That works out to ' + dimNote + '.') : meta.h,
-      pFields: secA,
-      pMoreFields: [...secB, ...secC, ...secD],
-      pSections: [
-        { title: 'Essentials', fields: secA },
-        { title: 'Features', fields: secB },
-        { title: 'Advanced details', fields: secC, isAdvanced: true },
-        { title: 'Legal & Visibility', fields: secD, isAdvanced: true }
-      ],
-      pMoreStyle: 'display:flex;align-items:center;justify-content:center;gap:9px;height:54px;padding:0 24px;border-radius:14px;margin-top:20px;background:rgba(255,255,255,.08);color:#bfdbfe;box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.15);font-size:16.5px;font-weight:800;transition:all .15s;cursor:pointer;'
+      pSections: openSecs,
+      pMoreSections: moreSecs,
+      pMoreCount: moreSecs.reduce((n, s) => n + s.fields.length, 0),
+      // Kept so anything still reading the flat lists sees the same fields.
+      pFields: ess,
+      pMoreFields: [...feat, ...legal, ...use, ...priv]
     };
   }
   groupOf(t) {
@@ -4388,8 +4629,17 @@ export class Component extends DCLogic {
       pCityChips: this.CITIES.map(c => ({ label: c, go: () => this.setP({ city: c, sector: '' }), style: pill(pf.city === c) })),
       pTypeTiles, pIsPlot: pg === 'plot', pIsBuilt: pg === 'built', pIsComm: pg === 'comm',
       pSizeUnits, pFacing, pBeds, pBaths, pParking, pFurn, pAge, pUse,
-      ...this.typeFields(pf, pill),
+      ...this.typeFields(pf),
+      // The rest of the spec sheet is one tap away rather than hidden:
+      // the button says how many answers are waiting behind it.
       pMoreOpen: !!s.pMoreOpen,
+      pMoreShut: !s.pMoreOpen,
+      togglePMore: () => this.setState({ pMoreOpen: !s.pMoreOpen }),
+      pMoreStyle: 'display:flex;align-items:center;justify-content:center;gap:11px;width:100%;height:64px;'
+        + 'padding:0 24px;border-radius:18px;font-size:18.5px;font-weight:800;cursor:pointer;transition:all .15s;'
+        + (s.pMoreOpen
+          ? 'background:#1c1917;color:#fde047;border:2.5px solid #1c1917'
+          : 'background:#ffffff;color:#1c1917;border:2.5px dashed #a3541b'),
       onPRate: (e) => this.onPRate(e),
       pRateUnit: (() => { const u = pf.unit || 'sq yd'; return u === 'sq ft' ? 'sq ft' : (u === 'marla' || u === 'kanal') ? 'sq yd' : 'sq yd'; })(),
       pRateEcho: (() => { const r = parseFloat(pf.rate); return r ? ('₹' + Math.round(r).toLocaleString('en-IN')) : '—'; })(),

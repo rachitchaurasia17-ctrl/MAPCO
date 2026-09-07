@@ -68,13 +68,45 @@ describe('adaptive property specification model', () => {
   });
 
   it('bounds free text so a spec sheet cannot bloat the payload', () => {
-    const specs = normalizePropertySpecs('Kothi', { floorPlan: 'x'.repeat(400) });
-    expect((specs!.floorPlan as string).length).toBe(240);
+    const specs = normalizePropertySpecs('Kothi', { approvalNote: 'x'.repeat(400) });
+    expect((specs!.approvalNote as string).length).toBe(240);
+  });
+
+  it('has dropped the second-road and duplicate dimension fields', () => {
+    // The spec sheet asks for one road width and one frontage/depth pair.
+    // A key nobody can enter must not survive in the persisted model.
+    for (const key of ['road2', 'facing2', 'dimFront', 'dimBack', 'dimLeft', 'dimRight',
+      'cornerCut', 'floorPlan']) {
+      expect(ALL_PROPERTY_SPEC_KEYS).not.toContain(key);
+    }
+  });
+
+  it('asks every commercial and industrial kind its own questions', () => {
+    // Before the spec sheet was rebuilt these four kinds shared one generic
+    // field list, so an office was never asked about cabins or a server room
+    // and an industrial plot was never asked its power load.
+    expect(propertySpecKeys('Office')).toContain('cabins');
+    expect(propertySpecKeys('Office')).toContain('serverRoom');
+    expect(propertySpecKeys('Industrial Plot')).toContain('powerLoad');
+    expect(propertySpecKeys('Industrial Plot')).toContain('shedArea');
+    expect(propertySpecKeys('Showroom')).toContain('groundAccess');
+    expect(propertySpecKeys('Commercial Booth')).toContain('parkingAccess');
+    expect(propertySpecKeys('Commercial SCO')).toContain('twoSide');
+    // …and none of them borrows another's.
+    expect(propertySpecKeys('Commercial Booth')).not.toContain('cabins');
+    expect(propertySpecKeys('Residential Plot')).not.toContain('powerLoad');
+  });
+
+  it('persists the super area a flat is actually sold on', () => {
+    // The form has always asked for it; it used to be thrown away on save.
+    expect(propertySpecKeys('Flat')).toContain('superArea');
+    expect(normalizePropertySpecs('Flat', { superArea: '1850' })).toEqual({ superArea: '1850' });
   });
 
   it('reports which keys a type change would invalidate', () => {
-    expect(staleSpecKeys('Residential Plot', { beds: '3', frontage: '30' })).toEqual(['beds']);
-    expect(staleSpecKeys('Flat', { beds: '3' })).toEqual([]);
+    // A flat is asked its BHK configuration; a plot has no such question.
+    expect(staleSpecKeys('Residential Plot', { config: '3 BHK', frontage: '30' })).toEqual(['config']);
+    expect(staleSpecKeys('Flat', { config: '3 BHK' })).toEqual([]);
   });
 });
 
@@ -102,13 +134,13 @@ describe('specification persistence', () => {
     const id = `spec-type-change-${Date.now()}`;
     const asFlat = await adapter.properties.save(property(id, {
       type: 'Flat', want: 'Flat',
-      specs: { beds: '3', baths: '2', floor: 'Second' },
+      specs: { config: '3 BHK', baths: '2', floor: 'Second' },
     }));
     expect(asFlat.ok).toBe(true);
-    if (asFlat.ok) expect(asFlat.value.specs).toMatchObject({ beds: '3' });
+    if (asFlat.ok) expect(asFlat.value.specs).toMatchObject({ config: '3 BHK' });
 
-    // The dealer switches the type. Bedroom counts are meaningless on a plot
-    // and must not survive.
+    // The dealer switches the type. A BHK configuration is meaningless on a
+    // plot and must not survive.
     const asPlot = await adapter.properties.save({
       ...(asFlat.ok ? asFlat.value : property(id)),
       type: 'Residential Plot', want: 'Plot',
@@ -117,7 +149,7 @@ describe('specification persistence', () => {
     expect(asPlot.ok).toBe(true);
     if (asPlot.ok) {
       expect(asPlot.value.specs).toEqual({ frontage: '30' });
-      expect(asPlot.value.specs).not.toHaveProperty('beds');
+      expect(asPlot.value.specs).not.toHaveProperty('config');
       expect(asPlot.value.specs).not.toHaveProperty('floor');
     }
     await adapter.properties.remove(id);

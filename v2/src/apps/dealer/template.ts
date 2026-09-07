@@ -4139,10 +4139,30 @@ export function renderApp(state: any) {
                     <div style="max-width:1060px;margin:0 auto">
 
                       <div
-                        style="border-radius:26px;background:#e6f3fa;box-shadow:inset 0 0 0 2px #bcdcec;padding:24px 26px">
+                        style="border-radius:26px;background:#f1eafe;box-shadow:inset 0 0 0 2px #d6c6f2;padding:24px 26px">
                         <div style="display:flex;align-items:center;gap:14px">
                           <span
-                            style="width:46px;height:46px;border-radius:15px;flex:none;display:grid;place-items:center;background:#0f5f7a;color:#eaf7fb;font-size:20px;font-weight:800">1</span>
+                            style="width:46px;height:46px;border-radius:15px;flex:none;display:grid;place-items:center;background:#4a2c99;color:#efe8fb;font-size:20px;font-weight:800">1</span>
+                          <div>
+                            <div style="font-size:23px;font-weight:800;color:#33206b">What kind of property?</div>
+                            <div style="font-size:16px;font-weight:600;color:#6b5b8a">Tap one — the questions below
+                              change to match it.</div>
+                          </div>
+                        </div>
+                        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:18px">
+                          \${ (pTypeTiles || []).map(t => \`
+                            <button onClick="\${__b(t.go)}" style="\${t.style}"><span style="\${t.iconStyle}"><i
+                                  class="\${t.icon}"></i></span><span
+                                style="font-size:16px;font-weight:800;line-height:1.25">\${t.label}</span></button>
+                          \`).join('') }
+                        </div>
+                      </div>
+
+                      <div
+                        style="border-radius:26px;background:#e6f3fa;box-shadow:inset 0 0 0 2px #bcdcec;padding:24px 26px;margin-top:16px">
+                        <div style="display:flex;align-items:center;gap:14px">
+                          <span
+                            style="width:46px;height:46px;border-radius:15px;flex:none;display:grid;place-items:center;background:#0f5f7a;color:#eaf7fb;font-size:20px;font-weight:800">2</span>
                           <div>
                             <div style="font-size:23px;font-weight:800;color:#0b3f52">Where is it?</div>
                             <div style="font-size:16px;font-weight:600;color:#4d7d90">City first, then the sector — this
@@ -4169,34 +4189,12 @@ export function renderApp(state: any) {
                       </div>
 
                       <div
-                        style="border-radius:26px;background:#f1eafe;box-shadow:inset 0 0 0 2px #d6c6f2;padding:24px 26px;margin-top:16px">
-                        <div style="display:flex;align-items:center;gap:14px">
-                          <span
-                            style="width:46px;height:46px;border-radius:15px;flex:none;display:grid;place-items:center;background:#4a2c99;color:#efe8fb;font-size:20px;font-weight:800">2</span>
-                          <div>
-                            <div style="font-size:23px;font-weight:800;color:#33206b">What kind of property?</div>
-                            <div style="font-size:16px;font-weight:600;color:#6b5b8a">Tap one — the questions below
-                              change to match it.</div>
-                          </div>
-                        </div>
-                        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:18px">
-                          \${ (pTypeTiles || []).map(t => \`
-                            <button onClick="\${__b(t.go)}" style="\${t.style}"><span style="\${t.iconStyle}"><i
-                                  class="\${t.icon}"></i></span><span
-                                style="font-size:16px;font-weight:800;line-height:1.25">\${t.label}</span></button>
-                          \`).join('') }
-                        </div>
-                      </div>
-
-                      <div
                         style="border-radius:26px;background:#fff4e0;box-shadow:inset 0 0 0 2px #f0d9ae;padding:24px 26px;margin-top:16px">
                         <div style="display:flex;align-items:center;gap:14px">
                           <span
                             style="width:46px;height:46px;border-radius:15px;flex:none;display:grid;place-items:center;background:#a3541b;color:#fff3e2;font-size:20px;font-weight:800">3</span>
                           <div>
-                            <div style="font-size:23px;font-weight:800;color:#6e3a10">The details of this \${pKindWord}</div>
-                            <div style="font-size:16px;font-weight:600;color:#a3764a">Only what a buyer would ask you on
-                              the phone.</div>
+                            <div style="font-size:23px;font-weight:800;color:#6e3a10">How big is this \${pKindWord}?</div>
                           </div>
                         </div>
 
@@ -4218,45 +4216,73 @@ export function renderApp(state: any) {
                             \${pKindHint}</div>
                         </div>
 
-                        <div
-                          style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-top:16px">
-                          \${ (pFields || []).map(f => \`
-                            <div style="\${f.wrap}">
-                              <div style="\${pLab}">\${f.label}</div>
-                              \${ f.isChips ? \`
-                                <div style="\${f.optsWrap}">
-                                  \${ (f.opts || []).map(o => \`<button
-                                      onClick="\${__b(o.go)}" style="\${o.style}">\${o.label}</button>\`).join('') }
-                                </div>
-                              \` : '' }
-                              \${ f.isText ? \`
-                                <input value="\${f.val}" onInput="\${__b(f.on)}" placeholder="\${f.ph}"
-                                  style="\${pInput}">
-                              \` : '' }
-                            </div>
-                          \`).join('') }
-                        </div>
+                      </div>
 
-                        \${ pMoreOpen ? \`
-                          <div
-                            style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-top:14px;padding:18px;border-radius:20px;background:#f6faff;box-shadow:inset 0 0 0 1.5px #d7e6f6">
-                            \${ (pMoreFields || []).map(f => \`
-                              <div style="\${f.wrap}">
-                                <div style="\${pLab}">\${f.label}</div>
-                                \${ f.isChips ? \`
-                                  <div style="\${f.optsWrap}">
-                                    \${ (f.opts || []).map(o => \`<button
-                                        onClick="\${__b(o.go)}" style="\${o.style}">\${o.label}</button>\`).join('') }
-                                  </div>
-                                \` : '' }
-                                \${ f.isText ? \`
-                                  <input value="\${f.val}" onInput="\${__b(f.on)}" placeholder="\${f.ph}"
-                                    style="\${pInput}">
-                                \` : '' }
+                      <div style="display:grid;gap:16px;margin-top:16px">
+                        \${ (pSections || []).map(sec => \`
+                          <div style="\${sec.style}">
+                            <div style="display:flex;align-items:center;gap:13px">
+                              <span style="\${sec.badgeStyle}"><i class="\${sec.icon}"></i></span>
+                              <div style="flex:1;min-width:0">
+                                <div style="\${sec.titleStyle}">\${sec.title}</div>
+                                <div style="\${sec.hintStyle}">\${sec.hint}</div>
                               </div>
-                            \`).join('') }
+                            </div>
+                            <div style="\${sec.gridStyle}">
+                              \${ (sec.fields || []).map(f => \`
+                                <div style="\${f.wrap}">
+                                  <div style="\${f.labStyle}">\${f.label}</div>
+                                  \${ f.isChips ? \`
+                                    <div style="\${f.optsWrap}">
+                                      \${ (f.opts || []).map(o => \`<button onClick="\${__b(o.go)}"
+                                          style="\${o.style}">\${ o.tick ? \`<i class="ph-bold ph-check"
+                                            style="font-size:18px"></i>\` : '' }\${o.label}</button>\`).join('') }
+                                    </div>
+                                  \` : '' }
+                                  \${ f.isText ? \`<input value="\${f.val}" onInput="\${__b(f.on)}"
+                                    placeholder="\${f.ph}" style="\${f.inputStyle}">\` : '' }
+                                  \${ f.isNote ? \`<textarea onInput="\${__b(f.on)}" placeholder="\${f.ph}"
+                                    style="\${f.inputStyle}">\${f.val}</textarea>\` : '' }
+                                </div>
+                              \`).join('') }
+                            </div>
                           </div>
-                        \` : '' }
+                        \`).join('') }
+
+                        <button onClick="\${__b(togglePMore)}" style="\${pMoreStyle}">
+                          <i class="\${ pMoreOpen ? 'ph-bold ph-caret-up' : 'ph-bold ph-caret-down' }"
+                            style="font-size:21px"></i>\${ pMoreOpen ? 'Hide papers, use and your note' : 'Papers, how it is used and your private note' }
+                        </button>
+
+                        \${ pMoreOpen ? (pMoreSections || []).map(sec => \`
+                          <div style="\${sec.style}">
+                            <div style="display:flex;align-items:center;gap:13px">
+                              <span style="\${sec.badgeStyle}"><i class="\${sec.icon}"></i></span>
+                              <div style="flex:1;min-width:0">
+                                <div style="\${sec.titleStyle}">\${sec.title}</div>
+                                <div style="\${sec.hintStyle}">\${sec.hint}</div>
+                              </div>
+                            </div>
+                            <div style="\${sec.gridStyle}">
+                              \${ (sec.fields || []).map(f => \`
+                                <div style="\${f.wrap}">
+                                  <div style="\${f.labStyle}">\${f.label}</div>
+                                  \${ f.isChips ? \`
+                                    <div style="\${f.optsWrap}">
+                                      \${ (f.opts || []).map(o => \`<button onClick="\${__b(o.go)}"
+                                          style="\${o.style}">\${ o.tick ? \`<i class="ph-bold ph-check"
+                                            style="font-size:18px"></i>\` : '' }\${o.label}</button>\`).join('') }
+                                    </div>
+                                  \` : '' }
+                                  \${ f.isText ? \`<input value="\${f.val}" onInput="\${__b(f.on)}"
+                                    placeholder="\${f.ph}" style="\${f.inputStyle}">\` : '' }
+                                  \${ f.isNote ? \`<textarea onInput="\${__b(f.on)}" placeholder="\${f.ph}"
+                                    style="\${f.inputStyle}">\${f.val}</textarea>\` : '' }
+                                </div>
+                              \`).join('') }
+                            </div>
+                          </div>
+                        \`).join('') : '' }
                       </div>
 
                       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
