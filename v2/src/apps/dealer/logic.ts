@@ -4648,7 +4648,7 @@ export class Component extends DCLogic {
       })),
       pAddressOpen: !!s.pAddressOpen || !!(pf.address && pf.address.trim()),
       openAddress: () => this.setState({ pAddressOpen: true }),
-      pCityChips: this.CITIES.map(c => ({ label: c, go: () => this.setP({ city: c, sector: '' }), style: ctl(pf.city === c, b2Ctl, b2Ring) })),
+      pCityChips: this.CITIES.map(c => ({ label: c, go: () => this.setP({ city: c, sector: '' }), style: ctl(pf.city === c, b2Ctl, b2Ring) + ';padding:0 12px;font-size:15.5px' })),
       pTypeTiles, pIsPlot: pg === 'plot', pIsBuilt: pg === 'built', pIsComm: pg === 'comm',
       pSizeUnits: ['sq yd', 'sq ft', 'marla', 'kanal'].map(u => ({ label: u, go: () => this.setP({ unit: u }), style: ctl(pf.unit === u, b3Ctl, b3Ring) })),
       pFacing, pBeds, pBaths, pParking, pFurn, pAge, pUse,
