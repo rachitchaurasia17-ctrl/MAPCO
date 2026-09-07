@@ -46,8 +46,8 @@ export class Component extends DCLogic {
     sendLinkType: 'all', sendLinkCity: 'all', viewDoc: null
   };
 
-  CITIES = ['Mohali', 'Aerocity', 'Aerotropolis', 'New Chandigarh', 'Zirakpur', 'Kharar', 'Derabassi', 'Panchkula', 'Chandigarh'];
-  INTEREST = { 'New Chandigarh': 46, 'Aerocity': 41, 'Mohali': 34, 'Chandigarh': 26, 'Aerotropolis': 22, 'Zirakpur': 18, 'Panchkula': 14, 'Kharar': 9, 'Derabassi': 6 };
+  CITIES = ['Mohali', 'Aerocity', 'Aerotropolis', 'New Chandigarh', 'Zirakpur', 'Kharar', 'Panchkula', 'Chandigarh'];
+  INTEREST = { 'New Chandigarh': 46, 'Aerocity': 41, 'Mohali': 34, 'Chandigarh': 26, 'Aerotropolis': 22, 'Zirakpur': 18, 'Panchkula': 14, 'Kharar': 9 };
 
   NAV = [
     { key: 'areas', label: 'Home', icon: 'ph-house' },
@@ -248,7 +248,7 @@ export class Component extends DCLogic {
     C9: { types: ['Commercial SCO'], areas: ['Sector 82, Mohali'], bFrom: 2.5, bTo: 3.2, prefs: ['Main road', 'Corner'], stage: 'Site visits', business: 'Sharma Retail Outlets', notes: [{ t: 'Today', x: 'Asked for a site visit to Sector 82 SCO.' }] },
     C10: { types: ['Kothi'], areas: ['Sector 22, Chandigarh'], bFrom: 4, bTo: 4.5, prefs: ['North facing'], stage: 'Actively searching', business: 'Sethi Textiles', notes: [{ t: '5 days ago', x: 'Looking for 1 kanal kothi.' }] },
     C11: { types: ['Residential Plot'], areas: ['Aerotropolis'], bFrom: 1.5, bTo: 2, prefs: ['GMADA approved'], stage: 'Actively searching', business: 'Global Tech Solutions', notes: [{ t: 'Today', x: 'NRI — only free on WhatsApp video, evenings IST.' }] },
-    C12: { types: ['Residential Plot'], areas: ['Derabassi'], bFrom: 0.4, bTo: 0.55, prefs: ['Wide road'], stage: 'Actively searching', business: 'Kaur Fabrics', notes: [{ t: '1 week ago', x: 'Budget fixed under 55 lakh.' }] }
+    C12: { types: ['Residential Plot'], areas: ['Zirakpur'], bFrom: 0.4, bTo: 0.55, prefs: ['Wide road'], stage: 'Actively searching', business: 'Kaur Fabrics', notes: [{ t: '1 week ago', x: 'Budget fixed under 55 lakh.' }] }
   };
   PREFOPTS = ['Corner', 'Park facing', 'East facing', 'North facing', 'Wide road', 'Ready for registry', 'Gated society', 'Ready to move', 'Main road', 'Near school'];
   STAGEOPTS = ['Just looking', 'Actively searching', 'Site visits', 'Negotiating'];
@@ -642,16 +642,16 @@ export class Component extends DCLogic {
   }
   DETAILKEYS = 'frontage depth openSides access parkFacing mainRoad nearGreen tpoint boundaryWall block shape level approvalNote powerLoad water sewer effluent gas crane loadingBay officeBlock labourQtr yardArea shedArea phase use config kitchens superArea builtup carpet landArea floorCount lawn lawnArea basement basementArea terrace barsati portico stilt sepEntry roofRights living dining store puja study servant servantBath lift powerBackup borewell solar security modularKitchen wardrobes ac piped flooring maintenance washrooms washroom pantry mezzanine shutter ceiling cabins seats conference reception serverRoom centralAc groundAccess parkingAccess twoSide fitout currentUse floorPlan'.split(' ');
   KINDMETA = {
-    plot: { i: 'ph-fill ph-map-pin-area', h: 'A buyer asks about size, facing, road width and whether it is a corner. No rooms needed.' },
-    indplot: { i: 'ph-fill ph-factory', h: 'Industrial buyers ask about frontage, road access, power load and water. Rooms do not matter.' },
-    flat: { i: 'ph-fill ph-buildings', h: 'Pick the configuration and the rest fills in. Floor, lift and parking are what buyers ask first.' },
-    bfloor: { i: 'ph-fill ph-stack', h: 'Independent floor — which floor, separate entry, parking and how many floors in the building.' },
-    kothi: { i: 'ph-fill ph-house-line', h: 'A whole house — plot size, built-up area, floors and total rooms across the house.' },
-    villa: { i: 'ph-fill ph-house', h: 'Land area, built-up area, floors and the private lawn/parking. Society amenities go in Highlights.' },
-    sco: { i: 'ph-fill ph-storefront', h: 'Frontage, floors, basement and washrooms decide the price on an SCO. No bedrooms.' },
-    booth: { i: 'ph-fill ph-shopping-bag-open', h: 'Keep it short — area, frontage, where it sits and what it is used for.' },
-    office: { i: 'ph-fill ph-briefcase', h: 'Cabins, seating, conference and pantry are what an office buyer asks about.' },
-    showroom: { i: 'ph-fill ph-storefront', h: 'Frontage, ceiling height and ground-floor visibility matter far more than rooms.' }
+    plot: { i: 'ph-fill ph-map-pin-area', h: '' },
+    indplot: { i: 'ph-fill ph-factory', h: '' },
+    flat: { i: 'ph-fill ph-buildings', h: '' },
+    bfloor: { i: 'ph-fill ph-stack', h: '' },
+    kothi: { i: 'ph-fill ph-house-line', h: '' },
+    villa: { i: 'ph-fill ph-house', h: '' },
+    sco: { i: 'ph-fill ph-storefront', h: '' },
+    booth: { i: 'ph-fill ph-shopping-bag-open', h: '' },
+    office: { i: 'ph-fill ph-briefcase', h: '' },
+    showroom: { i: 'ph-fill ph-storefront', h: '' }
   };
   /* ─────────────────────────────────────────────────────────────────
      THE SPEC SHEET — one shape, ten property types.
@@ -676,27 +676,27 @@ export class Component extends DCLogic {
     ess: {
       title: 'Essentials', hint: 'The first things a buyer asks on the phone.',
       icon: 'ph-fill ph-ruler',
-      bg: '#bae6fd', ring: '#38bdf8', ink: '#062f42', sub: '#0b5f7d', ctl: '#fde047', ctlRing: '#b45309'
+      bg: '#bae6fd', ring: '#38bdf8', ink: '#062f42', sub: '#0b5f7d', ctl: '#ffffff', ctlRing: '#38bdf8'
     },
     feat: {
       title: 'Features', hint: 'Tap everything this one has. Tap again to undo.',
       icon: 'ph-fill ph-sparkle',
-      bg: '#e9d5ff', ring: '#a855f7', ink: '#3b0764', sub: '#6b21a8', ctl: '#6ee7b7', ctlRing: '#0f766e'
+      bg: '#e9d5ff', ring: '#a855f7', ink: '#3b0764', sub: '#6b21a8', ctl: '#ffffff', ctlRing: '#a855f7'
     },
     legal: {
       title: 'Legal & ownership', hint: 'Papers, authority, and the number on the file.',
       icon: 'ph-fill ph-scroll',
-      bg: '#fde68a', ring: '#f59e0b', ink: '#432a04', sub: '#8a5a12', ctl: '#93c5fd', ctlRing: '#1d4ed8'
+      bg: '#fde68a', ring: '#f59e0b', ink: '#432a04', sub: '#8a5a12', ctl: '#ffffff', ctlRing: '#f59e0b'
     },
     use: {
       title: 'How it is used', hint: 'What a buyer can run here, and what is inside today.',
       icon: 'ph-fill ph-storefront',
-      bg: '#bbf7d0', ring: '#22c55e', ink: '#052e18', sub: '#0a6634', ctl: '#f9a8d4', ctlRing: '#be185d'
+      bg: '#bbf7d0', ring: '#22c55e', ink: '#052e18', sub: '#0a6634', ctl: '#ffffff', ctlRing: '#22c55e'
     },
     note: {
       title: 'Your private note', hint: 'Only you see this. It never reaches a customer, a link or marketing.',
       icon: 'ph-fill ph-lock-key',
-      bg: '#fecaca', ring: '#ef4444', ink: '#450a0a', sub: '#9f1239', ctl: '#67e8f9', ctlRing: '#0e7490'
+      bg: '#fecaca', ring: '#ef4444', ink: '#450a0a', sub: '#9f1239', ctl: '#ffffff', ctlRing: '#ef4444'
     }
   };
   typeFields(pf) {
@@ -723,22 +723,25 @@ export class Component extends DCLogic {
     const F = (t) => ({
       chips: (label, key, opts, fmt, wide) => {
         const shown = opts.map(v => (fmt ? fmt(v) : String(v)));
-        // Counts (washrooms, cabins, parking) read as one even row of equal
-        // buttons. That row needs the full width of the card — squeezed into
-        // a single grid cell the labels wrap mid-word and stop being tappable.
         const even = shown.every(s => s.length <= 6);
+        const hasPlus = shown.some(s => s.includes('+'));
+        const filteredOpts = opts.filter((v, i) => !shown[i].includes('+'));
+        const filteredShown = shown.filter(s => !s.includes('+'));
         return {
           label, labStyle: lab(t), isChips: true, isText: false, isNote: false,
           wrap: (wide || even) ? 'grid-column:1 / -1' : '',
           optsWrap: even
-            ? 'display:grid;grid-template-columns:repeat(' + opts.length + ',minmax(0,1fr));gap:10px;'
-              + 'max-width:' + (opts.length * 132) + 'px'
+            ? 'display:grid;grid-template-columns:repeat(' + (filteredOpts.length + (hasPlus ? 1 : 0)) + ',minmax(0,1fr));gap:10px;'
+              + 'max-width:' + ((filteredOpts.length + (hasPlus ? 1 : 0)) * 132) + 'px'
             : 'display:flex;flex-wrap:wrap;gap:10px',
-          // Tapping the picked answer again clears it — a wrong tap is
-          // undone the same way it was made.
-          opts: opts.map((v, i) => {
+          hasManual: hasPlus,
+          manualKey: key,
+          manualVal: (!opts.includes(pf[key]) && pf[key]) ? pf[key] : '',
+          manualOn: (e) => set({ [key]: e.target.value }),
+          manualStyle: 'width:100%;min-width:60px;height:54px;border-radius:14px;text-align:center;font-size:16.5px;font-weight:800;background:' + t.ctl + ';color:' + INK + ';border:2.5px dashed ' + t.ctlRing + ';outline:none;',
+          opts: filteredOpts.map((v, i) => {
             const on = String(pf[key]) === String(v);
-            return { label: shown[i], tick: false, go: () => set({ [key]: on ? '' : v }), style: ctl(t, on) };
+            return { label: filteredShown[i], tick: false, go: () => set({ [key]: on ? '' : v }), style: ctl(t, on) };
           })
         };
       },
@@ -1273,12 +1276,12 @@ export class Component extends DCLogic {
     const cur = (this.state.pform.photos || []).slice(); const at = cur.indexOf(i); const to = at + dir;
     if (at < 0 || to < 0 || to >= cur.length) return; cur.splice(at, 1); cur.splice(to, 0, i); this.setP({ photos: cur });
   }
-  SHOWS = { 'New Chandigarh': 14, 'Mohali': 11, 'Aerocity': 9, 'Aerotropolis': 7, 'Zirakpur': 4, 'Panchkula': 3, 'Kharar': 2, 'Chandigarh': 2, 'Derabassi': 1 };
+  SHOWS = { 'New Chandigarh': 14, 'Mohali': 11, 'Aerocity': 9, 'Aerotropolis': 7, 'Zirakpur': 4, 'Panchkula': 3, 'Kharar': 2, 'Chandigarh': 2 };
   EXPIRY = [{ k: '24h', l: '24 hours' }, { k: '3d', l: '3 days' }, { k: '7d', l: '7 days' }, { k: 'custom', l: 'Custom' }];
   LOCVIS = [{ k: 'area', l: 'Area only', d: 'City and sector, nothing more', i: 'ph-fill ph-shield-check' }, { k: 'approx', l: 'Approximate', d: 'A highlighted zone on the map', i: 'ph-fill ph-circle-dashed' }, { k: 'exact', l: 'Exact spot', d: 'Turn on only if you trust them', i: 'ph-fill ph-crosshair' }];
   PRICEVIS = [{ k: 'hidden', l: 'Hidden', d: 'They call you to ask', i: 'ph-fill ph-eye-slash' }, { k: 'range', l: 'Show a range', d: 'Rough band only', i: 'ph-fill ph-arrows-horizontal' }, { k: 'exact', l: 'Exact price', d: 'Full number visible', i: 'ph-fill ph-tag' }];
   SHOTCAP = ['Site view', 'Approach road', 'Surroundings', 'Front road', 'Wide angle', 'Evening view'];
-  SECTORMAPS = { 'Mohali': ['Sector 79 sheet', 'Sector 88 sheet', 'Sector 66 sheet', 'Sector 82 sheet'], 'Aerocity': ['Aerocity master sheet', 'Aerocity Pocket B'], 'Aerotropolis': ['Aerotropolis master sheet'], 'New Chandigarh': ['Eco City sheet', 'Omaxe sheet', 'Altus zone sheet'], 'Zirakpur': ['VIP Road sheet', 'Dhakoli sheet'], 'Kharar': ['Sunny Enclave sheet'], 'Derabassi': ['Bhankharpur sheet'], 'Panchkula': ['Sector 9 sheet', 'Sector 20 sheet'], 'Chandigarh': ['Sector 22 sheet'] };
+  SECTORMAPS = { 'Mohali': ['Sector 79 sheet', 'Sector 88 sheet', 'Sector 66 sheet', 'Sector 82 sheet'], 'Aerocity': ['Aerocity master sheet', 'Aerocity Pocket B'], 'Aerotropolis': ['Aerotropolis master sheet'], 'New Chandigarh': ['Eco City sheet', 'Omaxe sheet', 'Altus zone sheet'], 'Zirakpur': ['VIP Road sheet', 'Dhakoli sheet'], 'Kharar': ['Sunny Enclave sheet'], 'Panchkula': ['Sector 9 sheet', 'Sector 20 sheet'], 'Chandigarh': ['Sector 22 sheet'] };
   PROPMAP = { P1: 'Sector 79 sheet', P2: 'Sector 88 sheet', P3: 'Sector 66 sheet', P5: 'Aerocity master sheet', P6: 'Aerocity Pocket B', P7: 'Aerotropolis master sheet', P9: 'Eco City sheet', P10: 'Omaxe sheet', P11: 'VIP Road sheet', P12: 'Dhakoli sheet', P13: 'Sector 9 sheet', P16: 'Bhankharpur sheet', P17: 'Sector 22 sheet' };
   DEALDATES = {
     D1: { start: 22, token: 3, due: 18 }, D2: { start: 28, token: 8, due: 24 }, D3: { start: 5 }, D4: { start: 1, token: 11 },
@@ -3749,9 +3752,29 @@ export class Component extends DCLogic {
     const FACING = ['East', 'West', 'North', 'South', 'North-East', 'North-West'];
     const pg = this.groupOf(pf.type);
     const pIsEdit = !!s.pEditId;
-    const inputBig = 'width:100%;height:62px;padding:0 18px;border-radius:15px;border:none;background:#fff8e6;box-shadow:inset 0 0 0 2px #f0d493;font-size:18px;font-weight:600;color:#241f1c;outline:none';
-    const areaBig = 'width:100%;min-height:104px;padding:16px 18px;border-radius:15px;border:none;background:#fff8e6;box-shadow:inset 0 0 0 2px #f0d493;font-size:17px;font-weight:500;color:#241f1c;outline:none;resize:vertical';
-    const pill = (on) => `height:56px;padding:0 20px;border-radius:15px;font-size:17px;font-weight:800;transition:all .15s;${on ? 'background:#e8681c;color:#fff;box-shadow:0 12px 22px -14px rgba(232,104,28,.95)' : 'background:#fff3d6;color:#4c463d;box-shadow:inset 0 0 0 2px #f0d493'}`;
+    const INK = '#1c1917';
+    // Style block 2 (Where is it?) inputs as Yellow (Essentials)
+    const b2Ctl = '#fde047', b2Ring = '#ca8a04';
+    // Style block 3 (Size) inputs as Blue (Legal) 
+    const b3Ctl = '#7dd3fc', b3Ring = '#0284c7';
+    // Style block 4 (Rate) inputs as Pink (Use)
+    const b4Ctl = '#f9a8d4', b4Ring = '#be185d';
+    
+    const inputB2 = `width:100%;height:58px;padding:0 16px;border-radius:14px;background:${b2Ctl};border:2.5px solid ${b2Ring};font-size:18px;font-weight:800;color:${INK};outline:none`;
+    const inputB3 = `width:100%;height:58px;padding:0 16px;border-radius:14px;background:${b3Ctl};border:2.5px solid ${b3Ring};font-size:18px;font-weight:800;color:${INK};outline:none`;
+    const inputB4 = `width:100%;height:58px;padding:0 16px;border-radius:14px;background:${b4Ctl};border:2.5px solid ${b4Ring};font-size:18px;font-weight:800;color:${INK};outline:none`;
+    const areaBig = `width:100%;min-height:104px;padding:16px 18px;border-radius:14px;background:${b2Ctl};border:2.5px solid ${b2Ring};font-size:17px;font-weight:800;color:${INK};outline:none;resize:vertical`;
+    
+    const ctl = (on, ctlColor, ringColor) =>
+      'display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:54px;padding:0 18px;'
+      + 'border-radius:14px;font-size:16.5px;font-weight:800;line-height:1.15;text-align:center;'
+      + 'transition:all .14s;cursor:pointer;'
+      + (on
+        ? 'background:' + INK + ';color:' + ctlColor + ';border:2.5px solid ' + INK + ';box-shadow:0 12px 22px -14px rgba(0,0,0,.85)'
+        : 'background:' + ctlColor + ';color:' + INK + ';border:2.5px solid ' + ringColor);
+
+    const pill = (on) => ctl(on, '#ffffff', '#94a3b8'); // fallback
+
     const pSteps = [{ n: 1, l: 'Property', i: 'ph-fill ph-house-line' }, { n: 2, l: 'Seller', i: 'ph-fill ph-user-circle' }, { n: 3, l: 'Photos', i: 'ph-fill ph-images' }, { n: 4, l: 'MAPCO Earth', i: 'ph-fill ph-globe-hemisphere-east' }].map(st => {
       const on = pstep === st.n, done = pstep > st.n;
       return {
@@ -3772,8 +3795,8 @@ export class Component extends DCLogic {
       const on = pf.type === t.k;
       return {
         label: t.k, icon: t.i, go: () => this.setP({ type: t.k }),
-        style: `display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:18px 16px;border-radius:18px;text-align:left;transition:all .16s;${on ? 'background:#ffffff;color:#4c1d95;box-shadow:0 16px 30px -18px rgba(255,255,255,.3)' : 'background:rgba(255,255,255,.08);color:#ede9fe'}`,
-        iconStyle: `width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:24px;${on ? 'background:#4c1d95;color:#ffffff' : 'background:rgba(255,255,255,.15);color:#ede9fe'}`
+        style: `display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:18px 16px;border-radius:18px;text-align:left;transition:all .16s;border:0;cursor:pointer;${on ? 'background:#ffffff;color:#4c1d95;box-shadow:0 16px 30px -18px rgba(0,0,0,.1)' : 'background:rgba(255,255,255,.4);color:#6b21a8'}`,
+        iconStyle: `width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:24px;${on ? 'background:#4c1d95;color:#ffffff' : 'background:rgba(255,255,255,.6);color:#6b21a8'}`
       };
     });
     const pkind = pg === 'plot' ? 'plot' : pg === 'comm' ? 'landmark' : 'project';
@@ -4613,9 +4636,10 @@ export class Component extends DCLogic {
       saveSellerStyle: `display:flex;align-items:center;gap:9px;height:60px;padding:0 24px;border-radius:16px;font-size:18px;font-weight:800;${(s.nsform.name.trim() && s.nsform.phone.trim()) ? 'background:#0a6634;color:#eafff2' : 'background:#e6dcc6;color:#a99878'}`,
       pRel, pConfirmWhen, pSellerDocs,
       pAvailYes: () => this.setP({ availConfirmed: true }), pAvailNo: () => this.setP({ availConfirmed: false }),
-      pAvailYesStyle: pill(!!pf.availConfirmed), pAvailNoStyle: pill(!pf.availConfirmed),
+      pAvailYesStyle: ctl(!!pf.availConfirmed, '#ffffff', '#94a3b8'), pAvailNoStyle: ctl(!pf.availConfirmed, '#ffffff', '#94a3b8'),
       pDocs, pHasDocs: pDocs.length > 0, pNoDocs: pDocs.length === 0,
-      pInput: inputBig, pArea: areaBig,
+      pInputB1: `width:100%;height:58px;padding:0 16px;border-radius:14px;background:#6ee7b7;border:2.5px solid #047857;font-size:18px;font-weight:800;color:${INK};outline:none`,
+      pInputB2: inputB2, pInputB3: inputB3, pInputB4: inputB4, pArea: areaBig,
       pCities: this.CITIES,
       pRecentCities: ['Mohali', 'Chandigarh', 'Aerocity', 'New Chandigarh'].map(c => ({
         label: c,
@@ -4626,9 +4650,10 @@ export class Component extends DCLogic {
       })),
       pAddressOpen: !!s.pAddressOpen || !!(pf.address && pf.address.trim()),
       openAddress: () => this.setState({ pAddressOpen: true }),
-      pCityChips: this.CITIES.map(c => ({ label: c, go: () => this.setP({ city: c, sector: '' }), style: pill(pf.city === c) })),
+      pCityChips: this.CITIES.map(c => ({ label: c, go: () => this.setP({ city: c, sector: '' }), style: ctl(pf.city === c, b2Ctl, b2Ring) })),
       pTypeTiles, pIsPlot: pg === 'plot', pIsBuilt: pg === 'built', pIsComm: pg === 'comm',
-      pSizeUnits, pFacing, pBeds, pBaths, pParking, pFurn, pAge, pUse,
+      pSizeUnits: ['sq yd', 'sq ft', 'marla', 'kanal'].map(u => ({ label: u, go: () => this.setP({ unit: u }), style: ctl(pf.unit === u, b3Ctl, b3Ring) })),
+      pFacing, pBeds, pBaths, pParking, pFurn, pAge, pUse,
       ...this.typeFields(pf),
       // The rest of the spec sheet is one tap away rather than hidden:
       // the button says how many answers are waiting behind it.

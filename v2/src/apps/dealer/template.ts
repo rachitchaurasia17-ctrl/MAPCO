@@ -4139,13 +4139,13 @@ export function renderApp(state: any) {
                     <div style="max-width:1060px;margin:0 auto">
 
                       <div
-                        style="border-radius:26px;background:#f1eafe;box-shadow:inset 0 0 0 2px #d6c6f2;padding:24px 26px">
+                        style="border-radius:26px;background:#e9d5ff;box-shadow:inset 0 0 0 2.5px #a855f7;padding:24px 26px">
                         <div style="display:flex;align-items:center;gap:14px">
                           <span
-                            style="width:46px;height:46px;border-radius:15px;flex:none;display:grid;place-items:center;background:#4a2c99;color:#efe8fb;font-size:20px;font-weight:800">1</span>
+                            style="width:46px;height:46px;border-radius:15px;flex:none;display:grid;place-items:center;background:#3b0764;color:#e9d5ff;font-size:20px;font-weight:800">1</span>
                           <div>
-                            <div style="font-size:23px;font-weight:800;color:#33206b">What kind of property?</div>
-                            <div style="font-size:16px;font-weight:600;color:#6b5b8a">Tap one — the questions below
+                            <div style="font-size:23px;font-weight:800;color:#3b0764">What kind of property?</div>
+                            <div style="font-size:16px;font-weight:600;color:#6b21a8">Tap one — the questions below
                               change to match it.</div>
                           </div>
                         </div>
@@ -4159,13 +4159,13 @@ export function renderApp(state: any) {
                       </div>
 
                       <div
-                        style="border-radius:26px;background:#e6f3fa;box-shadow:inset 0 0 0 2px #bcdcec;padding:24px 26px;margin-top:16px">
+                        style="border-radius:26px;background:#bae6fd;box-shadow:inset 0 0 0 2.5px #38bdf8;padding:24px 26px;margin-top:16px">
                         <div style="display:flex;align-items:center;gap:14px">
                           <span
-                            style="width:46px;height:46px;border-radius:15px;flex:none;display:grid;place-items:center;background:#0f5f7a;color:#eaf7fb;font-size:20px;font-weight:800">2</span>
+                            style="width:46px;height:46px;border-radius:15px;flex:none;display:grid;place-items:center;background:#062f42;color:#bae6fd;font-size:20px;font-weight:800">2</span>
                           <div>
-                            <div style="font-size:23px;font-weight:800;color:#0b3f52">Where is it?</div>
-                            <div style="font-size:16px;font-weight:600;color:#4d7d90">City first, then the sector — this
+                            <div style="font-size:23px;font-weight:800;color:#062f42">Where is it?</div>
+                            <div style="font-size:16px;font-weight:600;color:#0b5f7d">City first, then the sector — this
                               is how you will find it later.</div>
                           </div>
                         </div>
@@ -4176,25 +4176,25 @@ export function renderApp(state: any) {
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px">
                           <label style="display:block"><span style="\${pLab}">Sector or locality</span><input
                               name="area" value="\${pform.area}" onInput="\${__b(onPForm)}" placeholder="Sector 79"
-                              style="\${pInput}"></label>
+                              style="\${pInputB2}"></label>
                           <label style="display:block"><span style="\${pLab}">Society or project <span
                                 style="font-weight:600;color:#8fb4c4">— if any</span></span><input name="society"
                               value="\${pform.society}" onInput="\${__b(onPForm)}" placeholder="Omaxe, Eco City…"
-                              style="\${pInput}"></label>
+                              style="\${pInputB2}"></label>
                         </div>
                         <label style="display:block;margin-top:14px"><span style="\${pLab}">Address or landmark <span
                               style="font-weight:600;color:#8fb4c4">— helps you find it later</span></span><input
                             name="address" value="\${pform.address}" onInput="\${__b(onPForm)}"
-                            placeholder="Near the water tank, behind the school…" style="\${pInput}"></label>
+                            placeholder="Near the water tank, behind the school…" style="\${pInputB2}"></label>
                       </div>
 
                       <div
-                        style="border-radius:26px;background:#fff4e0;box-shadow:inset 0 0 0 2px #f0d9ae;padding:24px 26px;margin-top:16px">
+                        style="border-radius:26px;background:#fde68a;box-shadow:inset 0 0 0 2.5px #f59e0b;padding:24px 26px;margin-top:16px">
                         <div style="display:flex;align-items:center;gap:14px">
                           <span
-                            style="width:46px;height:46px;border-radius:15px;flex:none;display:grid;place-items:center;background:#a3541b;color:#fff3e2;font-size:20px;font-weight:800">3</span>
+                            style="width:46px;height:46px;border-radius:15px;flex:none;display:grid;place-items:center;background:#432a04;color:#fde68a;font-size:20px;font-weight:800">3</span>
                           <div>
-                            <div style="font-size:23px;font-weight:800;color:#6e3a10">How big is this \${pKindWord}?</div>
+                            <div style="font-size:23px;font-weight:800;color:#432a04">How big is this \${pKindWord}?</div>
                           </div>
                         </div>
 
@@ -4202,19 +4202,13 @@ export function renderApp(state: any) {
                           style="display:grid;grid-template-columns:1fr 2fr;gap:14px;margin-top:18px;align-items:end">
                           <label style="display:block"><span style="\${pLab}">Size</span><input name="size"
                               value="\${pform.size}" onInput="\${__b(onPForm)}" placeholder="250"
-                              style="\${pInput}"></label>
+                              style="\${pInputB3}"></label>
                           <div><span style="\${pLab}">Measured in</span>
                             <div style="display:flex;flex-wrap:wrap;gap:9px">\${ (pSizeUnits || []).map(u => \`<button onClick="\${__b(u.go)}" style="\${u.style}">\${u.label}</button>\`).join('') }</div>
                           </div>
                         </div>
 
-                        <div
-                          style="display:flex;align-items:center;gap:10px;margin-top:20px;padding:11px 15px;border-radius:14px;background:#fff;box-shadow:inset 0 0 0 1.5px #d7e6f6">
-                          <i class="\${pKindIcon}" style="font-size:20px;color:#1a5aa8;flex:none"></i>
-                          <div
-                            style="flex:1;min-width:0;font-size:15.5px;font-weight:800;color:#1a5aa8;text-wrap:pretty">
-                            \${pKindHint}</div>
-                        </div>
+
 
                       </div>
 
@@ -4249,12 +4243,7 @@ export function renderApp(state: any) {
                           </div>
                         \`).join('') }
 
-                        <button onClick="\${__b(togglePMore)}" style="\${pMoreStyle}">
-                          <i class="\${ pMoreOpen ? 'ph-bold ph-caret-up' : 'ph-bold ph-caret-down' }"
-                            style="font-size:21px"></i>\${ pMoreOpen ? 'Hide papers, use and your note' : 'Papers, how it is used and your private note' }
-                        </button>
-
-                        \${ pMoreOpen ? (pMoreSections || []).map(sec => \`
+                        \${ (pMoreSections || []).map(sec => \`
                           <div style="\${sec.style}">
                             <div style="display:flex;align-items:center;gap:13px">
                               <span style="\${sec.badgeStyle}"><i class="\${sec.icon}"></i></span>
@@ -4272,6 +4261,7 @@ export function renderApp(state: any) {
                                       \${ (f.opts || []).map(o => \`<button onClick="\${__b(o.go)}"
                                           style="\${o.style}">\${ o.tick ? \`<i class="ph-bold ph-check"
                                             style="font-size:18px"></i>\` : '' }\${o.label}</button>\`).join('') }
+                                      \${ f.hasManual ? \`<input type="text" inputmode="numeric" value="\${f.manualVal}" onInput="\${__b(f.manualOn)}" placeholder="..." style="\${f.manualStyle}">\` : '' }
                                     </div>
                                   \` : '' }
                                   \${ f.isText ? \`<input value="\${f.val}" onInput="\${__b(f.on)}"
@@ -4282,54 +4272,54 @@ export function renderApp(state: any) {
                               \`).join('') }
                             </div>
                           </div>
-                        \`).join('') : '' }
+                        \`).join('') }
                       </div>
 
                       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
                         <div
-                          style="border-radius:26px;background:#e4f6ea;box-shadow:inset 0 0 0 2px #b5ddc5;padding:24px 26px">
+                          style="border-radius:26px;background:#bbf7d0;box-shadow:inset 0 0 0 2.5px #22c55e;padding:24px 26px">
                           <div style="display:flex;align-items:center;gap:14px">
                             <span
-                              style="width:46px;height:46px;border-radius:15px;flex:none;display:grid;place-items:center;background:#0f7a45;color:#eafff2;font-size:20px;font-weight:800">4</span>
+                              style="width:46px;height:46px;border-radius:15px;flex:none;display:grid;place-items:center;background:#052e18;color:#bbf7d0;font-size:20px;font-weight:800">4</span>
                             <div>
-                              <div style="font-size:23px;font-weight:800;color:#0a4a2b">Rate per \${pRateUnit}</div>
-                              <div style="font-size:16px;font-weight:600;color:#4d8a68">Worked out for you — type either
+                              <div style="font-size:23px;font-weight:800;color:#052e18">Rate per \${pRateUnit}</div>
+                              <div style="font-size:16px;font-weight:600;color:#0a6634">Worked out for you — type either
                                 one.</div>
                             </div>
                           </div>
                           <div style="display:flex;align-items:flex-end;gap:14px;margin-top:18px;flex-wrap:wrap">
                             <label style="display:block;flex:1;min-width:170px"><span style="\${pLab}">Rate per \${pRateUnit} (₹)</span><input name="rate" value="\${pform.rate}"
-                                onInput="\${__b(onPRate)}" placeholder="66000" style="\${pInput}"></label>
+                                onInput="\${__b(onPRate)}" placeholder="66000" style="\${pInputB4}"></label>
                             <div
-                              style="font-family:'Newsreader',serif;font-weight:600;font-size:30px;color:#0a4a2b;padding-bottom:8px;white-space:nowrap">
+                              style="font-family:'Newsreader',serif;font-weight:600;font-size:30px;color:#052e18;padding-bottom:8px;white-space:nowrap">
                               \${pRateEcho}</div>
                           </div>
                           <div
                             style="display:flex;align-items:center;gap:9px;margin-top:12px;padding:12px 14px;border-radius:14px;background:#fff;flex-wrap:wrap">
-                            <i class="ph-fill ph-calculator" style="font-size:19px;color:#0f7a45"></i>
-                            <span style="font-size:15.5px;font-weight:700;color:#0a4a2b;flex:1;min-width:160px">\${pRateLine}</span>
+                            <i class="ph-fill ph-calculator" style="font-size:19px;color:#052e18"></i>
+                            <span style="font-size:15.5px;font-weight:700;color:#052e18;flex:1;min-width:160px">\${pRateLine}</span>
                           </div>
                         </div>
                         <div
-                          style="border-radius:26px;background:#fff0d0;box-shadow:inset 0 0 0 2px #edd39a;padding:24px 26px">
+                          style="border-radius:26px;background:#fde68a;box-shadow:inset 0 0 0 2.5px #f59e0b;padding:24px 26px">
                           <div style="display:flex;align-items:center;gap:14px">
                             <span
-                              style="width:46px;height:46px;border-radius:15px;flex:none;display:grid;place-items:center;background:#8a5a12;color:#fff6e2;font-size:20px;font-weight:800">5</span>
+                              style="width:46px;height:46px;border-radius:15px;flex:none;display:grid;place-items:center;background:#432a04;color:#fde68a;font-size:20px;font-weight:800">5</span>
                             <div>
-                              <div style="font-size:23px;font-weight:800;color:#6e4408">Your asking price</div>
-                              <div style="font-size:16px;font-weight:600;color:#a3764a">This is what customers see.
+                              <div style="font-size:23px;font-weight:800;color:#432a04">Your asking price</div>
+                              <div style="font-size:16px;font-weight:600;color:#8a5a12">This is what customers see.
                               </div>
                             </div>
                           </div>
                           <div style="display:flex;align-items:flex-end;gap:14px;margin-top:18px;flex-wrap:wrap">
                             <label style="display:block;flex:1;min-width:180px"><span style="\${pLab}">Price in
                                 crore</span><input name="price" value="\${pform.price}" onInput="\${__b(onPForm)}"
-                                placeholder="1.65" style="\${pInput}"></label>
+                                placeholder="1.65" style="\${pInputB3}"></label>
                             <div
-                              style="font-family:'Newsreader',serif;font-weight:600;font-size:34px;color:#8a5a12;padding-bottom:8px;white-space:nowrap">
+                              style="font-family:'Newsreader',serif;font-weight:600;font-size:34px;color:#432a04;padding-bottom:8px;white-space:nowrap">
                               \${pPriceEcho}</div>
                           </div>
-                          <div style="font-size:15.5px;font-weight:700;color:#a3764a;margin-top:10px;line-height:1.45">
+                          <div style="font-size:15.5px;font-weight:700;color:#8a5a12;margin-top:10px;line-height:1.45">
                             What the seller wants goes on the next step and stays private.</div>
                         </div>
                       </div>
@@ -4344,9 +4334,9 @@ export function renderApp(state: any) {
                   \${ pS2 ? \`
                     <div>
                       <div
-                        style="display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:16px;background:#efe8fb;box-shadow:inset 0 0 0 2px #d6c6f2">
-                        <i class="ph-fill ph-lock-key" style="font-size:24px;color:#4a2c99"></i>
-                        <div style="font-size:17px;font-weight:800;color:#3a1f7a">Private — only you see this. Never
+                        style="display:flex;align-items:center;gap:12px;padding:14px 18px;border-radius:16px;background:#fecaca;box-shadow:inset 0 0 0 2.5px #ef4444">
+                        <i class="ph-fill ph-lock-key" style="font-size:24px;color:#450a0a"></i>
+                        <div style="font-size:17px;font-weight:800;color:#450a0a">Private — only you see this. Never
                           goes to customers, links, Earth or marketing.</div>
                       </div>
 
@@ -4385,7 +4375,7 @@ export function renderApp(state: any) {
 
                       \${ sellerAdd ? \`
                         <div
-                          style="margin-top:18px;padding:22px 24px;border-radius:22px;background:#f3eeff;box-shadow:inset 0 0 0 2px #d6c6f2">
+                          style="margin-top:18px;padding:22px 24px;border-radius:22px;background:#e9d5ff;box-shadow:inset 0 0 0 2.5px #a855f7">
                           <div style="display:flex;align-items:center;gap:12px">
                             <div style="flex:1;font-size:21px;font-weight:800;color:#3a1f7a">New seller</div>
                             <button onClick="\${__b(closeSellerAdd)}"
@@ -4394,37 +4384,37 @@ export function renderApp(state: any) {
                           </div>
                           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px">
                             <label style="display:block"><span
-                                style="display:block;font-size:16px;font-weight:800;color:#5c4a2a;margin-bottom:8px">Seller
+                                style="display:block;font-size:16px;font-weight:800;color:#3b0764;margin-bottom:8px">Seller
                                 name</span><input name="name" value="\${nsform.name}" onInput="\${__b(onNS)}"
-                                placeholder="Balwinder Singh" style="\${pInput}"></label>
+                                placeholder="Balwinder Singh" style="\${pInputB1}"></label>
                             <label style="display:block"><span
-                                style="display:block;font-size:16px;font-weight:800;color:#5c4a2a;margin-bottom:8px">Phone
+                                style="display:block;font-size:16px;font-weight:800;color:#3b0764;margin-bottom:8px">Phone
                                 number</span><input name="phone" value="\${nsform.phone}" onInput="\${__b(onNS)}"
-                                placeholder="98146 22107" style="\${pInput}"></label>
+                                placeholder="98146 22107" style="\${pInputB1}"></label>
                             <label style="display:block"><span
-                                style="display:block;font-size:16px;font-weight:800;color:#5c4a2a;margin-bottom:8px">Another
-                                number <span style="font-weight:600;color:#a5946f">— if any</span></span><input
+                                style="display:block;font-size:16px;font-weight:800;color:#3b0764;margin-bottom:8px">Another
+                                number <span style="font-weight:600;color:#6b21a8">— if any</span></span><input
                                 name="phone2" value="\${nsform.phone2}" onInput="\${__b(onNS)}" placeholder="Optional"
-                                style="\${pInput}"></label>
+                                style="\${pInputB1}"></label>
                             <label style="display:block"><span
-                                style="display:block;font-size:16px;font-weight:800;color:#3a1f7a;margin-bottom:8px">City
-                                <span style="font-weight:600;color:#8f7ec0">— optional</span></span><input name="city"
+                                style="display:block;font-size:16px;font-weight:800;color:#3b0764;margin-bottom:8px">City
+                                <span style="font-weight:600;color:#6b21a8">— optional</span></span><input name="city"
                                 value="\${nsform.city}" onInput="\${__b(onNS)}" placeholder="Mohali"
-                                style="\${pInput}"></label>
+                                style="\${pInputB1}"></label>
                             <label style="display:block;grid-column:1 / -1"><span
-                                style="display:block;font-size:16px;font-weight:800;color:#3a1f7a;margin-bottom:8px">Business
-                                name <span style="font-weight:600;color:#8f7ec0">— if they sell under a
+                                style="display:block;font-size:16px;font-weight:800;color:#3b0764;margin-bottom:8px">Business
+                                name <span style="font-weight:600;color:#6b21a8">— if they sell under a
                                   firm</span></span><input name="business" value="\${nsform.business}"
-                                onInput="\${__b(onNS)}" placeholder="Gurpreet Realtors" style="\${pInput}"></label>
+                                onInput="\${__b(onNS)}" placeholder="Gurpreet Realtors" style="\${pInputB1}"></label>
                           </div>
-                          <div style="font-size:16px;font-weight:800;color:#5c4a2a;margin:18px 0 8px">What kind of
+                          <div style="font-size:16px;font-weight:800;color:#3b0764;margin:18px 0 8px">What kind of
                             seller</div>
                           <div style="display:flex;flex-wrap:wrap;gap:9px">\${ (pKinds || []).map(k => \`<button onClick="\${__b(k.go)}" style="\${k.style}">\${k.label}</button>\`).join('') }</div>
                           <label style="display:block;margin-top:16px"><span
-                              style="display:block;font-size:16px;font-weight:800;color:#5c4a2a;margin-bottom:8px">Note
-                              about this seller <span style="font-weight:600;color:#a5946f">—
+                              style="display:block;font-size:16px;font-weight:800;color:#3b0764;margin-bottom:8px">Note
+                              about this seller <span style="font-weight:600;color:#6b21a8">—
                                 optional</span></span><input name="note" value="\${nsform.note}" onInput="\${__b(onNS)}"
-                              placeholder="Prefers calls after 6 pm" style="\${pInput}"></label>
+                              placeholder="Prefers calls after 6 pm" style="\${pInputB1}"></label>
                           <button onClick="\${__b(saveSeller)}" style="\${saveSellerStyle}"
                             style-active="transform:translateY(2px)"><i class="ph-fill ph-check-circle"
                               style="font-size:21px"></i>Save seller and use it here</button>
@@ -4435,15 +4425,15 @@ export function renderApp(state: any) {
 
                       \${ pSellerPicked ? \`
                         <div
-                          style="margin-top:20px;padding:22px 24px;border-radius:22px;background:#f3eeff;box-shadow:inset 0 0 0 2px #d6c6f2">
+                          style="margin-top:20px;padding:22px 24px;border-radius:22px;background:#e9d5ff;box-shadow:inset 0 0 0 2.5px #a855f7">
                           <div style="display:flex;align-items:center;gap:13px;flex-wrap:wrap">
                             <span
-                              style="width:52px;height:52px;border-radius:50%;background:#4a2c99;color:#fff;display:grid;place-items:center;font-size:18px;font-weight:800;flex:none">\${pSellerInitials}</span>
+                              style="width:52px;height:52px;border-radius:50%;background:#3b0764;color:#e9d5ff;display:grid;place-items:center;font-size:18px;font-weight:800;flex:none">\${pSellerInitials}</span>
                             <div style="flex:1;min-width:0">
-                              <div style="font-size:21px;font-weight:800;color:#3a1f7a">\${pSellerName}</div>
-                              <div style="font-size:16.5px;color:#6b52a8">\${pSellerPhone} · \${pSellerKind}</div>
+                              <div style="font-size:21px;font-weight:800;color:#3b0764">\${pSellerName}</div>
+                              <div style="font-size:16.5px;color:#6b21a8">\${pSellerPhone} · \${pSellerKind}</div>
                               \${ pSellerHasBusiness ? \`
-                                <div style="font-size:16px;font-weight:700;color:#5b32c4">\${pSellerBusiness}</div>
+                                <div style="font-size:16px;font-weight:700;color:#6b21a8">\${pSellerBusiness}</div>
                               \` : '' }
                             </div>
                             <div
@@ -4535,8 +4525,8 @@ export function renderApp(state: any) {
                           </div>
                         \`).join('') }
                         <button onClick="\${__b(pAddPhoto)}"
-                          style="height:150px;border-radius:16px;background:#fff7e8;box-shadow:inset 0 0 0 2px #e6d6b4;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#a3541b"
-                          style-hover="background:#fff3d1"><i class="ph-bold ph-plus" style="font-size:32px"></i><span
+                          style="height:150px;border-radius:16px;background:#fde68a;box-shadow:inset 0 0 0 2.5px #f59e0b;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#432a04"
+                          style-hover="background:#facc15"><i class="ph-bold ph-plus" style="font-size:32px"></i><span
                             style="font-size:16.5px;font-weight:800">Add photo</span></button>
                       </div>
 
@@ -4562,24 +4552,24 @@ export function renderApp(state: any) {
                           </div>
                         \`).join('') }
                         <button onClick="\${__b(pAddVideo)}"
-                          style="height:150px;border-radius:16px;background:#f3eeff;box-shadow:inset 0 0 0 2px #d6c6f2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#4a2c99"
-                          style-hover="background:#eae0ff"><i class="ph-bold ph-plus" style="font-size:32px"></i><span
+                          style="height:150px;border-radius:16px;background:#e9d5ff;box-shadow:inset 0 0 0 2.5px #a855f7;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#3b0764"
+                          style-hover="background:#c084fc"><i class="ph-bold ph-plus" style="font-size:32px"></i><span
                             style="font-size:16.5px;font-weight:800">Add video</span></button>
                       </div>
 
                       <div
-                        style="margin-top:26px;padding:22px 24px;border-radius:22px;background:#efe8fb;box-shadow:inset 0 0 0 2px #d6c6f2">
+                        style="margin-top:26px;padding:22px 24px;border-radius:22px;background:#e9d5ff;box-shadow:inset 0 0 0 2.5px #a855f7">
                         <div style="display:flex;align-items:center;gap:13px;flex-wrap:wrap">
                           <span
-                            style="width:48px;height:48px;border-radius:15px;background:#4a2c99;color:#fff;display:grid;place-items:center;flex:none"><i
+                            style="width:48px;height:48px;border-radius:15px;background:#3b0764;color:#e9d5ff;display:grid;place-items:center;flex:none"><i
                               class="ph-fill ph-folder-open" style="font-size:24px"></i></span>
                           <div style="flex:1;min-width:0">
-                            <div style="font-size:21px;font-weight:800;color:#3a1f7a">Property documents</div>
-                            <div style="font-size:16px;color:#6b52a8">Tap a paper, then add its photos. More than one
+                            <div style="font-size:21px;font-weight:800;color:#3b0764">Property documents</div>
+                            <div style="font-size:16px;font-weight:600;color:#6b21a8">Tap a paper, then add its photos. More than one
                               photo per paper is fine.</div>
                           </div>
                           <span
-                            style="display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 15px;border-radius:999px;background:#fff;color:#4a2c99;font-size:14.5px;font-weight:800"><i
+                            style="display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 15px;border-radius:999px;background:#fff;color:#3b0764;font-size:14.5px;font-weight:800"><i
                               class="ph-fill ph-lock-key" style="font-size:16px"></i>Private</span>
                         </div>
                         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-top:16px">
