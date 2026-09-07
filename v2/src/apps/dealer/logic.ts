@@ -689,7 +689,7 @@ export class Component extends DCLogic {
       bg: '#fde68a', ring: '#f59e0b', ink: '#432a04', sub: '#8a5a12', ctl: '#ffffff', ctlRing: '#f59e0b'
     },
     use: {
-      title: 'How it is used', hint: 'What a buyer can run here, and what is inside today.',
+      title: 'How it is used', hint: '',
       icon: 'ph-fill ph-storefront',
       bg: '#bbf7d0', ring: '#22c55e', ink: '#052e18', sub: '#0a6634', ctl: '#ffffff', ctlRing: '#22c55e'
     },
@@ -807,7 +807,7 @@ export class Component extends DCLogic {
       L.flags('On the customer link', [{ k: 'showPlotNo', l: 'Show the plot number to customers' }])];
 
       useTitle = 'What it suits';
-      useHint = 'What a buyer can put up here, and what stands on it today.';
+      useHint = '';
       use = [U.chips('What a buyer can build', 'use', ['House / kothi', 'Builder floor', 'Duplex', 'Hold as investment'], null, true),
       U.chips('Right now it is', 'currentUse', ['Lying vacant', 'Somebody is using it', 'Encroached'], null, true)];
     }
@@ -1003,7 +1003,7 @@ export class Component extends DCLogic {
       U.chips('Right now it is', 'currentUse', NOW, null, true)];
     }
 
-    const priv = [N.note('Anything you want to remember about this one', 'notes',
+    const priv = [N.note('', 'notes',
       'Owner is firm on the price. Keys are with the guard. Papers are with his son in Delhi.')];
 
     /* A card is only built when the type actually asks something in it —
@@ -4668,7 +4668,7 @@ export class Component extends DCLogic {
       pRateEcho: (() => { const r = parseFloat(pf.rate); return r ? ('₹' + Math.round(r).toLocaleString('en-IN')) : '—'; })(),
       pRateLine: (() => {
         const sz = this.sizeNum(pf); const r = parseFloat(pf.rate); const cr = parseFloat(pf.price);
-        if (!sz) return 'Add the size above and this fills in by itself.';
+        if (!sz) return '';
         if (r) return Math.round(sz).toLocaleString('en-IN') + ' × ₹' + Math.round(r).toLocaleString('en-IN') + ' = ' + this.inr(Math.round(r * sz));
         if (cr) return 'Asking ' + this.inr(cr * 1e7) + ' works out to ₹' + Math.round(cr * 1e7 / sz).toLocaleString('en-IN') + ' per sq yd';
         return 'Type a rate, or the asking price on the right.';

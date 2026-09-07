@@ -4319,8 +4319,7 @@ export function renderApp(state: any) {
                               style="font-family:'Newsreader',serif;font-weight:600;font-size:34px;color:#432a04;padding-bottom:8px;white-space:nowrap">
                               \${pPriceEcho}</div>
                           </div>
-                          <div style="font-size:15.5px;font-weight:700;color:#8a5a12;margin-top:10px;line-height:1.45">
-                            What the seller wants goes on the next step and stays private.</div>
+
                         </div>
                       </div>
 
