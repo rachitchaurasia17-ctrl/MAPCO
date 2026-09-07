@@ -2260,7 +2260,7 @@ export class Component extends DCLogic {
       valueFmt: this.inr(d.value), commFmt: d.comm ? this.inr(d.comm) : '—', hasComm: !!d.comm,
       stageLabel: m.label, pill: `display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;font-size:12.5px;font-weight:800;white-space:nowrap;background:${m.bg};color:${m.color}`, dot: `width:7px;height:7px;border-radius:50%;background:${m.color};flex:none`,
       initials: this.initialsOf(d.client), tileIcon: this.propIcon(d.prop),
-      cardStyle: `display:flex;align-items:center;gap:15px;padding:15px 16px;min-width:0;background:${m.card};border:2.5px solid ${m.border};border-radius:18px;cursor:pointer;box-shadow:0 1px 2px rgba(30,28,22,.03),0 14px 34px -26px rgba(30,28,22,.6);transition:transform .12s`,
+      cardStyle: `display:flex;align-items:center;gap:15px;padding:15px 16px;min-width:0;background:${m.card};border:2.5px solid rgba(0,0,0,0.1);border-radius:18px;cursor:pointer;box-shadow:0 1px 2px rgba(30,28,22,.03),0 14px 34px -26px rgba(30,28,22,.6);transition:transform .12s`,
       tileStyle: `width:56px;height:56px;border-radius:15px;flex:none;display:grid;place-items:center;background:${m.bg};color:${m.color}`,
       tileStyleSm: `width:46px;height:46px;border-radius:13px;flex:none;display:grid;place-items:center;background:${m.bg};color:${m.color}`,
       open: () => this.setState({ selectedDeal: d.id, dealEdit: false, delArm: false })
@@ -2692,7 +2692,7 @@ export class Component extends DCLogic {
         hasNote: !!top, noteText: top ? top.t : '', noteIcon: top ? top.i : '',
         noteStyle: top ? ('display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 13px;border-radius:12px;background:' + top.b + ';color:' + top.c + ';font-size:14.5px;font-weight:800;text-wrap:pretty') : 'display:none',
         buyer: d.client, buyerPhone: cl.phone || '—',
-        cardStyle: 'border-radius:24px;padding:20px 22px 22px;background:' + cardColor.bg + ';background-image:linear-gradient(155deg,rgba(255,255,255,.74),rgba(255,255,255,0) 64%);border:2.5px solid ' + cardColor.border + ';box-shadow:0 20px 40px -28px rgba(40,30,10,.8)',
+        cardStyle: 'border-radius:24px;padding:20px 22px 22px;background:' + cardColor.bg + ';background-image:linear-gradient(155deg,rgba(255,255,255,.74),rgba(255,255,255,0) 64%);border:2.5px solid rgba(0,0,0,0.1);box-shadow:0 20px 40px -28px rgba(40,30,10,.8)',
         moneyStyle: 'display:flex;align-items:flex-end;gap:16px;margin-top:16px;padding:14px 16px;border-radius:17px;background:rgba(255,255,255,.88);box-shadow:0 0 0 1.5px rgba(255,255,255,.95);flex-wrap:wrap',
         propTitle: d.prop, propLoc: d.propSub,
         seller: S.name, sellerAsk: S.ask,
@@ -2753,7 +2753,7 @@ export class Component extends DCLogic {
         propTitle: d.prop, propLoc: d.propSub,
         priceFmt: this.inr(d.value), commFmt: this.inr(M.expected),
         reason: d.lostReason || 'Not recorded', when: d.lostOn || '',
-        cardStyle: 'border-radius:24px;padding:20px 22px 22px;background:#fff0f4;border:2.5px solid #fecdd3;box-shadow:0 20px 40px -28px rgba(127,29,29,.2)',
+        cardStyle: 'border-radius:24px;padding:20px 22px 22px;background:#fff0f4;border:2.5px solid rgba(0,0,0,0.1);box-shadow:0 20px 40px -28px rgba(127,29,29,.2)',
         moneyStyle: 'display:flex;align-items:flex-end;gap:16px;margin-top:16px;padding:14px 16px;border-radius:17px;background:#be123c;box-shadow:inset 0 0 0 1.5px #9f1239;flex-wrap:wrap',
         update: () => this.openUpdate(d.id),
         open: () => this.setState({ selectedDeal: d.id, dealTab: 'overview' })
@@ -4940,7 +4940,7 @@ export class Component extends DCLogic {
                 if (e && e.stopPropagation) e.stopPropagation();
                 this.setState({ selectedClient: null, linkBuild: 'new', lstep: 3, lSearchQ: '', lSearchQ2: '', lform: { ...this.blankL(), clientId: c.id } });
               },
-              cardStyle: `min-width:0;text-align:left;background:${theme.bg};background-image:${theme.bgGrad};border-radius:24px;padding:22px 24px;border:2.5px solid ${theme.border};box-shadow:0 18px 40px -26px ${theme.shadow};transition:transform .13s,box-shadow .13s;cursor:pointer`,
+              cardStyle: `min-width:0;text-align:left;background:${theme.bg};background-image:${theme.bgGrad};border-radius:24px;padding:22px 24px;border:2.5px solid rgba(0,0,0,0.1);box-shadow:0 18px 40px -26px ${theme.shadow};transition:transform .13s,box-shadow .13s;cursor:pointer`,
               moneyStyle: 'display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;padding:14px 18px;border-radius:18px;background:#ffffff;box-shadow:0 2px 8px rgba(0,0,0,.03)',
               open: () => this.setState({ selectedClient: c.id, cliEdit: false, noteDraft: '', cpTab: 'overview', cpPick: false, cpPickQ: '' }), stop: (e) => e.stopPropagation()
             };
@@ -4968,7 +4968,7 @@ export class Component extends DCLogic {
                   + (p.askPrice || p.price ? ' · ' + this.inr(p.askPrice || p.price) : ''),
                 style: 'display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:999px;background:#f4eeff;color:#4a2c99;font-size:13.5px;font-weight:800'
               })),
-              cardStyle: `min-width:0;text-align:left;background:${theme.bg};background-image:${theme.bgGrad};border-radius:24px;padding:22px 24px;border:2.5px solid ${theme.border};box-shadow:0 18px 40px -26px ${theme.shadow};transition:transform .13s,box-shadow .13s;cursor:pointer`,
+              cardStyle: `min-width:0;text-align:left;background:${theme.bg};background-image:${theme.bgGrad};border-radius:24px;padding:22px 24px;border:2.5px solid rgba(0,0,0,0.1);box-shadow:0 18px 40px -26px ${theme.shadow};transition:transform .13s,box-shadow .13s;cursor:pointer`,
               moneyStyle: 'display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;padding:14px 18px;border-radius:18px;background:#ffffff;box-shadow:0 2px 8px rgba(0,0,0,.03)',
               avStyle: 'width:54px;height:54px;border-radius:17px;flex:none;display:grid;place-items:center;font-size:19px;font-weight:800;background:#efe8fb;color:#4a2c99',
               open: () => { deskStore.loadSellerWorkspace(sl.id); this.setState({ sellerView: sl.id }); }, stop: (e) => e.stopPropagation()
@@ -5186,7 +5186,7 @@ export class Component extends DCLogic {
             id: l.id, status: l.status, client: l.client || '—', initials: this.initialsOf(l.client || '?'),
             sub: 'Sent ' + l.created + ' · ' + (l.status === 'active' ? ('expires ' + l.expires) : st.l.toLowerCase()),
             statusLabel: st.l, statusStyle: `display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 13px;border-radius:999px;font-size:13px;font-weight:800;background:rgba(255,255,255,.2);color:#ffffff;border:1px solid rgba(255,255,255,.3)`,
-            cardStyle: `background:${st.card};border-radius:24px;padding:22px 24px 22px 22px;border:2.5px solid ${st.ring};box-shadow:0 18px 40px -32px rgba(40,30,10,.8)`,
+            cardStyle: `background:${st.card};border-radius:24px;padding:22px 24px 22px 22px;border:2.5px solid rgba(0,0,0,0.1);box-shadow:0 18px 40px -32px rgba(40,30,10,.8)`,
             avStyle: `width:52px;height:52px;border-radius:17px;flex:none;display:grid;place-items:center;font-size:18px;font-weight:800;background:${st.b};color:${st.c}`,
             opened: l.opens ? ((l.opens === 1 ? 'Opened once' : 'Opened ' + l.opens + ' times') + ' · last ' + l.lastOpen) : 'Not opened yet',
             openedStyle: `font-size:15.5px;font-weight:800;${l.opens ? 'color:#a5f3c8' : 'color:#fcd34d'}`,
@@ -5357,7 +5357,7 @@ export class Component extends DCLogic {
                 icon: r.i
               })),
               hasMore: rs.length > 1,
-              card: 'width:100%;text-align:left;border-radius:20px;background:linear-gradient(135deg, #fff0f3, #ffe3e8);padding:17px 18px 18px;border:2.5px solid #ffd1d9;box-shadow:0 16px 34px -22px rgba(90,10,20,.6);transition:transform .15s;cursor:pointer',
+              card: 'width:100%;text-align:left;border-radius:20px;background:linear-gradient(135deg, #fff0f3, #ffe3e8);padding:17px 18px 18px;border:2.5px solid rgba(0,0,0,0.1);box-shadow:0 16px 34px -22px rgba(90,10,20,.6);transition:transform .15s;cursor:pointer',
               avStyle: 'width:52px;height:52px;border-radius:16px;flex:none;display:grid;place-items:center;font-size:19px;font-weight:800;background:' + R.b + ';color:' + R.c,
               reasonStyle: 'display:flex;align-items:center;gap:9px;margin-top:13px;padding:12px 14px;border-radius:14px;background:' + R.b + ';color:' + R.c + ';font-size:15.5px;font-weight:800;text-wrap:pretty;line-height:1.35'
             };
