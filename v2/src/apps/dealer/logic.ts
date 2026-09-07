@@ -3753,17 +3753,15 @@ export class Component extends DCLogic {
     const pg = this.groupOf(pf.type);
     const pIsEdit = !!s.pEditId;
     const INK = '#1c1917';
-    // Style block 2 (Where is it?) inputs as Yellow (Essentials)
-    const b2Ctl = '#fde047', b2Ring = '#ca8a04';
-    // Style block 3 (Size) inputs as Blue (Legal) 
-    const b3Ctl = '#7dd3fc', b3Ring = '#0284c7';
-    // Style block 4 (Rate) inputs as Pink (Use)
-    const b4Ctl = '#f9a8d4', b4Ring = '#be185d';
+    // Unified white buttons with section-themed rings
+    const b2Ctl = '#ffffff', b2Ring = '#38bdf8'; // Blue section ring
+    const b3Ctl = '#ffffff', b3Ring = '#f59e0b'; // Yellow section ring
+    const b4Ctl = '#ffffff', b4Ring = '#22c55e'; // Green section ring
     
     const inputB2 = `width:100%;height:58px;padding:0 16px;border-radius:14px;background:${b2Ctl};border:2.5px solid ${b2Ring};font-size:18px;font-weight:800;color:${INK};outline:none`;
     const inputB3 = `width:100%;height:58px;padding:0 16px;border-radius:14px;background:${b3Ctl};border:2.5px solid ${b3Ring};font-size:18px;font-weight:800;color:${INK};outline:none`;
     const inputB4 = `width:100%;height:58px;padding:0 16px;border-radius:14px;background:${b4Ctl};border:2.5px solid ${b4Ring};font-size:18px;font-weight:800;color:${INK};outline:none`;
-    const areaBig = `width:100%;min-height:104px;padding:16px 18px;border-radius:14px;background:${b2Ctl};border:2.5px solid ${b2Ring};font-size:17px;font-weight:800;color:${INK};outline:none;resize:vertical`;
+    const areaBig = `width:100%;min-height:104px;padding:16px 18px;border-radius:14px;background:#ffffff;border:2.5px solid #ef4444;font-size:17px;font-weight:800;color:${INK};outline:none;resize:vertical`;
     
     const ctl = (on, ctlColor, ringColor) =>
       'display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:54px;padding:0 18px;'
@@ -4638,7 +4636,7 @@ export class Component extends DCLogic {
       pAvailYes: () => this.setP({ availConfirmed: true }), pAvailNo: () => this.setP({ availConfirmed: false }),
       pAvailYesStyle: ctl(!!pf.availConfirmed, '#ffffff', '#94a3b8'), pAvailNoStyle: ctl(!pf.availConfirmed, '#ffffff', '#94a3b8'),
       pDocs, pHasDocs: pDocs.length > 0, pNoDocs: pDocs.length === 0,
-      pInputB1: `width:100%;height:58px;padding:0 16px;border-radius:14px;background:#6ee7b7;border:2.5px solid #047857;font-size:18px;font-weight:800;color:${INK};outline:none`,
+      pInputB1: `width:100%;height:58px;padding:0 16px;border-radius:14px;background:#ffffff;border:2.5px solid #a855f7;font-size:18px;font-weight:800;color:${INK};outline:none`,
       pInputB2: inputB2, pInputB3: inputB3, pInputB4: inputB4, pArea: areaBig,
       pCities: this.CITIES,
       pRecentCities: ['Mohali', 'Chandigarh', 'Aerocity', 'New Chandigarh'].map(c => ({
