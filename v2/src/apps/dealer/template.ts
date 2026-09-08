@@ -2966,18 +2966,18 @@ export function renderApp(state: any) {
             <div
               style="position:fixed;inset:0;z-index:88;display:flex;justify-content:center;align-items:flex-start;padding:24px;overflow-y:auto">
               <div onClick="\${__b(closeAddSeller)}"
-                style="position:fixed;inset:0;background:rgba(30,16,60,.62);animation:omVeil .2s ease both"></div>
+                style="position:fixed;inset:0;background:rgba(40,26,2,.62);animation:omVeil .2s ease both"></div>
               <div
-                style="position:relative;width:100%;max-width:860px;border-radius:30px;background:#f4efff;box-shadow:0 50px 100px -30px rgba(30,16,60,.85);overflow:hidden;">
-                <div style="display:flex;align-items:center;gap:16px;padding:22px 30px;background:#efe8fb">
+                style="position:relative;width:100%;max-width:860px;border-radius:30px;background:#fff6e0;box-shadow:0 50px 100px -30px rgba(40,26,2,.85);overflow:hidden;">
+                <div style="display:flex;align-items:center;gap:16px;padding:22px 30px;background:#fff0d6">
                   <span
-                    style="width:56px;height:56px;border-radius:18px;background:#4a2c99;color:#efe8fb;display:grid;place-items:center;flex:none"><i
+                    style="width:56px;height:56px;border-radius:18px;background:#a3541b;color:#fff6e6;display:grid;place-items:center;flex:none"><i
                       class="ph-fill ph-key" style="font-size:28px"></i></span>
                   <div style="flex:1;min-width:0">
                     <div
                       style="font-family:'Newsreader',serif;font-weight:500;font-size:32px;letter-spacing:-.02em;color:#241d0c">
                       Add a seller</div>
-                    <div style="font-size:17px;font-weight:700;color:#5b32c4">Save them once — reuse them on every
+                    <div style="font-size:17px;font-weight:700;color:#8a5a12">Save them once — reuse them on every
                       property they give you.</div>
                   </div>
                   <button onClick="\${__b(closeAddSeller)}"
@@ -3005,35 +3005,32 @@ export function renderApp(state: any) {
                   </div>
                   \${ sfDup ? \`
                     <div
-                      style="display:flex;align-items:center;gap:14px;margin-top:14px;padding:16px 18px;border-radius:18px;background:#f4eeff;box-shadow:inset 0 0 0 1.5px #d6c6f2">
-                      <i class="ph-fill ph-warning-circle" style="font-size:26px;color:#4a2c99;flex:none"></i>
+                      style="display:flex;align-items:center;gap:14px;margin-top:14px;padding:16px 18px;border-radius:18px;background:#fff6e0;box-shadow:inset 0 0 0 1.5px #fcd34d">
+                      <i class="ph-fill ph-warning-circle" style="font-size:26px;color:#a3541b;flex:none"></i>
                       <div style="flex:1;min-width:0">
-                        <div style="font-size:16.5px;font-weight:800;color:#3a1f7a">This number is already a saved
+                        <div style="font-size:16.5px;font-weight:800;color:#b45309">This number is already a saved
                           seller</div>
                         <div style="font-size:15px;color:#8a7f6e">\${sfDupName} · \${sfDupSub}</div>
                       </div>
                       <button onClick="\${__b(sfUseDup)}"
-                        style="height:48px;padding:0 18px;border-radius:14px;background:#4a2c99;color:#fff;font-size:15.5px;font-weight:800;flex:none">Open
+                        style="height:48px;padding:0 18px;border-radius:14px;background:#a3541b;color:#fff;font-size:15.5px;font-weight:800;flex:none">Open
                         them instead</button>
                     </div>
                   \` : '' }
                   <div
-                    style="font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#5b32c4;margin-top:22px">
+                    style="font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8a5a12;margin-top:22px">
                     What kind of seller</div>
                   <div style="display:flex;flex-wrap:wrap;gap:9px;margin-top:11px">\${ (sfKindChips || []).map(t => \`<button onClick="\${__b(t.go)}" style="\${t.style}">\${t.label}</button>\`).join('') }</div>
                   <div style="display:flex;align-items:center;gap:9px;margin-top:22px"><i class="ph-fill ph-lock-key"
-                      style="font-size:18px;color:#4a2c99"></i><span
-                      style="font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#4a2c99">Private
+                      style="font-size:18px;color:#a3541b"></i><span
+                      style="font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#a3541b">Private
                       note about this seller</span></div>
                   <textarea name="note" value="\${sf2.note}" onInput="\${__b(onSF2)}" rows="3"
                     placeholder="Prefers calls after 6 pm. Brother must also sign." style="\${cfArea}"></textarea>
-                  <div
-                    style="margin-top:16px;padding:16px 18px;border-radius:18px;background:#f4eeff;font-size:16px;font-weight:700;color:#3a1f7a;text-wrap:pretty">
-                    Asking price, visit instructions and availability belong to each property — you fill those when you
-                    attach this seller to a property.</div>
+                  
                 </div>
-                <div style="display:flex;align-items:center;gap:14px;padding:18px 30px;background:#efe8fb">
-                  <div style="flex:1;font-size:16px;font-weight:700;color:#5b32c4">Seller information never leaves your
+                <div style="display:flex;align-items:center;gap:14px;padding:18px 30px;background:#fff0d6">
+                  <div style="flex:1;font-size:16px;font-weight:700;color:#8a5a12">Seller information never leaves your
                     desk.</div>
                   <button onClick="\${__b(closeAddSeller)}"
                     style="height:60px;padding:0 24px;border-radius:17px;background:#fdf8ee;color:#6b6156;font-size:17px;font-weight:800">Cancel</button>
