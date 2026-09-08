@@ -4333,6 +4333,10 @@ export class Component extends DCLogic {
       }),
       lRecTime: lf.audio === 'none' ? '' : Math.floor(lf.secs / 60) + ':' + String(lf.secs % 60).padStart(2, '0'),
       lRecToggle: () => this.recL(),
+      lPreciseLoc: s.lPreciseLoc || false,
+      lTogglePreciseLoc: () => this.setState({ lPreciseLoc: !s.lPreciseLoc }),
+      lMapcoAi: s.lMapcoAi || false,
+      lToggleMapcoAi: () => this.setState({ lMapcoAi: !s.lMapcoAi }),
       lFootHint: lf.plots.length ? (lf.plots.length + (lf.plots.length === 1 ? ' property ready' : ' properties ready')) : 'Pick at least one property',
       lDoneSub: lName ? ('Private to ' + lName + ' · ' + lf.plots.length + ' plots') : '',
       lDoneUrl: 'mapco.in/p/' + ((lName || 'client').split(' ')[0].toLowerCase()) + '-' + (this._lslug || (this._lslug = Math.random().toString(36).slice(2, 7))),
@@ -4367,11 +4371,19 @@ export class Component extends DCLogic {
         };
       }),
       lSearchQ: s.lSearchQ || '', onLSearch: (e) => this.setState({ lSearchQ: e.target.value }),
+      lPropStatusFilter: s.lPropStatusFilter || 'onsale',
+      lSetPropStatusFilter: (status) => this.setState({ lPropStatusFilter: status }),
       lPropRows: (() => {
+        const statusFilter = s.lPropStatusFilter || 'onsale';
         const q = (s.lSearchQ || '').toLowerCase().trim();
         const typeFilter = s.sendLinkType || 'all';
         const cityFilter = s.sendLinkCity || 'all';
-        return this.properties.filter(pr => pr.status !== 'sold')
+        return this.properties.filter(pr => {
+          if (statusFilter === 'onsale') return pr.status !== 'sold' && pr.status !== 'unsold' && pr.status !== 'deleted';
+          if (statusFilter === 'sold') return pr.status === 'sold';
+          if (statusFilter === 'unsold') return pr.status === 'unsold' || pr.status === 'deleted';
+          return true;
+        })
           .filter(pr => {
             if (typeFilter !== 'all') {
               const pt = (pr.type || '').toLowerCase();
@@ -4440,7 +4452,7 @@ export class Component extends DCLogic {
       lNextStyle: `display:flex;align-items:center;gap:9px;height:58px;padding:0 24px;border-radius:14px;font-size:17px;font-weight:800;${(s.lstep === 1 ? !!(lf.clientId || (lf.newName || '').trim()) : lf.plots.length > 0) ? 'background:#241d0c;color:#f8c200' : 'background:#ddd2f5;color:#b3a37a;cursor:not-allowed'}`,
       lHint: s.lstep === 1 ? 'Type a new customer, or tap a saved one' : s.lstep === 2 ? 'Tap up to 4 plots' : '',
       lHeading: { 1: 'Step 1 of 3 · the customer', 2: 'Step 2 of 3 · the plots', 3: 'Step 3 of 3 · your voice' }[s.lstep],
-      lSendStyle: `display:flex;align-items:center;justify-content:center;gap:10px;height:56px;padding:0 24px;border-radius:15px;font-size:17.5px;font-weight:800;transition:all .2s;${lReady ? 'background:#12a150;color:#fff;box-shadow:0 14px 26px -16px rgba(18,161,80,.95)' : 'background:#e8f2eb;color:#a5b8ac'}`,
+      lSendStyle: `display:flex;align-items:center;justify-content:center;gap:10px;height:56px;padding:0 24px;border-radius:15px;font-size:17.5px;font-weight:800;transition:all .2s;${lReady ? 'background:#062f42;color:#ffffff;box-shadow:0 14px 26px -16px rgba(6,47,66,.95)' : 'background:#e0f2fe;color:#7dd3fc'}`,
       lAudioNone: lf.audio === 'none', lAudioRec: lf.audio === 'rec', lAudioDone: lf.audio === 'done',
       lAudioTime: Math.floor(lf.secs / 60) + ':' + String(lf.secs % 60).padStart(2, '0'),
       recL: () => this.recL(), dropL: () => this.dropL(),
@@ -5425,3 +5437,4 @@ export class Component extends DCLogic {
     };
   }
 }
+
