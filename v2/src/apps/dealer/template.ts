@@ -2861,9 +2861,9 @@ export function renderApp(state: any) {
                 style="position:fixed;inset:0;background:rgba(88,28,135,.4);backdrop-filter:blur(6px);animation:omVeil .2s ease both"></div>
               <div
                 style="position:relative;width:100%;max-width:1120px;border-radius:30px;background:#faf5ff;border:1px solid #a855f7;box-shadow:0 40px 80px -20px rgba(88,28,135,.4);overflow:hidden;">
-                <div style="display:flex;align-items:center;gap:16px;padding:22px 30px;background:#a855f7;">
+                <div style="display:flex;align-items:center;gap:16px;padding:22px 30px;background:linear-gradient(135deg, #8B5CF6 0%, #D946EF 100%);">
                   <span
-                    style="width:56px;height:56px;border-radius:18px;background:#ffffff;color:#a855f7;display:grid;place-items:center;flex:none"><i
+                    style="width:56px;height:56px;border-radius:18px;background:rgba(255,255,255,0.2);color:#ffffff;display:grid;place-items:center;flex:none"><i
                       class="ph-fill ph-user-plus" style="font-size:28px"></i></span>
                   <div style="flex:1;min-width:0">
                     <div
@@ -2969,19 +2969,19 @@ export function renderApp(state: any) {
                 style="position:fixed;inset:0;background:rgba(120,53,15,.4);backdrop-filter:blur(6px);animation:omVeil .2s ease both"></div>
               <div
                 style="position:relative;width:100%;max-width:860px;border-radius:30px;background:#fffaf0;border:1px solid #ffc93c;box-shadow:0 40px 80px -20px rgba(120,53,15,.4);overflow:hidden;">
-                <div style="display:flex;align-items:center;gap:16px;padding:22px 30px;background:#ffc93c;">
+                <div style="display:flex;align-items:center;gap:16px;padding:22px 30px;background:linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);">
                   <span
-                    style="width:56px;height:56px;border-radius:18px;background:#241d0c;color:#ffc93c;display:grid;place-items:center;flex:none"><i
+                    style="width:56px;height:56px;border-radius:18px;background:rgba(255,255,255,0.2);color:#ffffff;display:grid;place-items:center;flex:none"><i
                       class="ph-fill ph-key" style="font-size:28px"></i></span>
                   <div style="flex:1;min-width:0">
                     <div
-                      style="font-family:'Newsreader',serif;font-weight:500;font-size:32px;letter-spacing:-.02em;color:#241d0c">
+                      style="font-family:'Newsreader',serif;font-weight:500;font-size:32px;letter-spacing:-.02em;color:#ffffff">
                       Add a seller</div>
-                    <div style="font-size:17px;font-weight:700;color:rgba(36, 29, 12, 0.8)">Save them once — reuse them on every
+                    <div style="font-size:17px;font-weight:700;color:rgba(255, 255, 255, 0.9)">Save them once — reuse them on every
                       property they give you.</div>
                   </div>
                   <button onClick="\${__b(closeAddSeller)}"
-                    style="width:48px;height:48px;border-radius:15px;background:rgba(36, 29, 12, 0.1);color:#241d0c;display:grid;place-items:center;flex:none"
+                    style="width:48px;height:48px;border-radius:15px;background:rgba(255, 255, 255, 0.2);color:#ffffff;display:grid;place-items:center;flex:none"
                     style-hover="background:#fff"><i class="ph-bold ph-x" style="font-size:20px"></i></button>
                 </div>
                 <div data-scroll="" style="padding:24px 30px;max-height:70vh;overflow-y:auto">
