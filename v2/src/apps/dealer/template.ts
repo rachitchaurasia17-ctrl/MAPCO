@@ -1656,7 +1656,7 @@ export function renderApp(state: any) {
                           \${ (dd.commRows || []).map(r => \`
                             <div
                               style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.12)">
-                              <span style="flex:1;min-width:0;font-size:16px;font-weight:800">\${r.label}</span>
+                              <span style="flex:1;min-width:0;font-size:16px;font-weight:800">\\${r.label}</span>
                               <span style="font-family:'Newsreader',serif;font-size:23px;font-weight:600;flex:none">\${r.value}</span>
                             </div>
                           \`).join('') }
@@ -1680,7 +1680,7 @@ export function renderApp(state: any) {
                           \${ (dd.txRows || []).map(r => \`
                             <div
                               style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:15px;background:linear-gradient(135deg, #f0f7ff, #e4f0fc);box-shadow:inset 0 0 0 1.5px #c8dff8">
-                              <span style="flex:1;min-width:0;font-size:16.5px;font-weight:800;color:#241f1c">\${r.label}</span>
+                              <span style="flex:1;min-width:0;font-size:16.5px;font-weight:800;color:#241f1c">\\${r.label}</span>
                               <span
                                 style="font-family:'Newsreader',serif;font-size:24px;font-weight:600;color:#241f1c;flex:none">\${r.value}</span>
                             </div>
@@ -1731,7 +1731,7 @@ export function renderApp(state: any) {
                             \${ (p.rows || []).map(r => \`
                               <div style="display:flex;align-items:center;gap:10px;font-size:16px;color:#4b4239"><i
                                   class="\${r.icon}" style="font-size:17px;color:#8a7f6e;flex:none"></i><span
-                                  style="flex:1;min-width:0;font-weight:700">\${r.label}</span><span
+                                  style="flex:1;min-width:0;font-weight:700">\\${r.label}</span><span
                                   style="font-weight:800;color:#241f1c">\${r.value}</span></div>
                             \`).join('') }
                           </div>
@@ -2027,8 +2027,8 @@ export function renderApp(state: any) {
                             Important actions</div>
                           <div style="display:flex;flex-wrap:wrap;gap:8px">
                             \${ (ld.reasons || []).map(r => \`<span
-                                style="\${r.style}"><i class="\${r.icon}"
-                                  style="font-size:16px"></i>\${r.label}\${ r.when ? \`<span
+                                style="\\${r.style}"><i class="\${r.icon}"
+                                  style="font-size:16px"></i>\\${r.label}\${ r.when ? \`<span
                                     style="opacity:.7"> · \${r.when}</span>\` : '' }</span>\`).join('') }
                           </div>
                         </div>
@@ -3821,7 +3821,7 @@ export function renderApp(state: any) {
                 <div style="font-size:24px;font-weight:800;color:#3a1f7a">Name this document</div>
                 <div style="font-size:16.5px;color:#6b52a8;margin-top:4px">Then add its photos.</div>
                 <input value="\${docNewName}" onInput="\${__b(onDocNewName)}" placeholder="e.g. Panchayat NOC"
-                  style="\${pInput};margin-top:16px">
+                  style="\\${pInput};margin-top:16px">
                 <div style="display:flex;gap:10px;margin-top:16px">
                   <button onClick="\${__b(closeDocNew)}"
                     style="height:60px;padding:0 20px;border-radius:15px;background:#fff;color:#6b52a8;font-size:17px;font-weight:800">Cancel</button>
@@ -4140,16 +4140,16 @@ export function renderApp(state: any) {
                         </div>
                         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:18px">
                           <label style="display:block"><span style="\${pLab}">Sector or locality</span><input
-                              name="area" value="\${pform.area}" onInput="\${__b(onPForm)}" placeholder="Sector 79"
+                              name="area" value="\${pform.area}" onInput="\\${__b(onPForm)}" placeholder="Sector 79"
                               style="\${pInputB2}"></label>
                           <label style="display:block"><span style="\${pLab}">Society or project <span
                                 style="font-weight:600;color:#8fb4c4">— if any</span></span><input name="society"
-                              value="\${pform.society}" onInput="\${__b(onPForm)}" placeholder="Omaxe, Eco City…"
+                              value="\${pform.society}" onInput="\\${__b(onPForm)}" placeholder="Omaxe, Eco City…"
                               style="\${pInputB2}"></label>
                         </div>
                         <label style="display:block;margin-top:14px"><span style="\${pLab}">Address or landmark <span
                               style="font-weight:600;color:#8fb4c4">— helps you find it later</span></span><input
-                            name="address" value="\${pform.address}" onInput="\${__b(onPForm)}"
+                            name="address" value="\${pform.address}" onInput="\\${__b(onPForm)}"
                             placeholder="Near the water tank, behind the school…" style="\${pInputB2}"></label>
                       </div>
 
@@ -4166,7 +4166,7 @@ export function renderApp(state: any) {
                         <div
                           style="display:grid;grid-template-columns:1fr 2fr;gap:14px;margin-top:18px;align-items:end">
                           <label style="display:block"><span style="\${pLab}">Size</span><input name="size"
-                              value="\${pform.size}" onInput="\${__b(onPForm)}" placeholder="250"
+                              value="\${pform.size}" onInput="\\${__b(onPForm)}" placeholder="250"
                               style="\${pInputB3}"></label>
                           <div><span style="\${pLab}">Measured in</span>
                             <div style="display:flex;flex-wrap:wrap;gap:9px">\${ (pSizeUnits || []).map(u => \`<button onClick="\${__b(u.go)}" style="\${u.style}">\${u.label}</button>\`).join('') }</div>
@@ -4278,11 +4278,11 @@ export function renderApp(state: any) {
                           </div>
                           <div style="display:flex;align-items:flex-end;gap:14px;margin-top:18px;flex-wrap:wrap">
                             <label style="display:block;flex:1;min-width:180px"><span style="\${pLab}">Price in
-                                crore</span><input name="price" value="\${pform.price}" onInput="\${__b(onPForm)}"
+                                crore</span><input name="price" value="\${pform.price}" onInput="\\${__b(onPForm)}"
                                 placeholder="1.65" style="\${pInputB3}"></label>
                             <div
                               style="font-family:'Newsreader',serif;font-weight:600;font-size:34px;color:#432a04;padding-bottom:8px;white-space:nowrap">
-                              \${pPriceEcho}</div>
+                              \\${pPriceEcho}</div>
                           </div>
 
                         </div>
@@ -4395,8 +4395,8 @@ export function renderApp(state: any) {
                               style="width:52px;height:52px;border-radius:50%;background:#3b0764;color:#e9d5ff;display:grid;place-items:center;font-size:18px;font-weight:800;flex:none">\${pSellerInitials}</span>
                             <div style="flex:1;min-width:0">
                               <div style="font-size:21px;font-weight:800;color:#3b0764">\${pSellerName}</div>
-                              <div style="font-size:16.5px;color:#6b21a8">${pSellerPhone} ${pSellerPhone2 ? ' · ' + pSellerPhone2 : ''} · ${pSellerKind} ${pSellerCity ? ' · ' + pSellerCity : ''}</div>
-                                ${ pSellerNote ? `<div style="font-size:14.5px;font-weight:600;color:#5b32c4;margin-top:6px;background:rgba(255,255,255,0.45);padding:8px 12px;border-radius:10px;line-height:1.4"><em>Note: ${pSellerNote}</em></div>` : '' }
+                              <div style="font-size:16.5px;color:#6b21a8">\${pSellerPhone} \${pSellerPhone2 ? ' · ' + pSellerPhone2 : ''} · \${pSellerKind} \${pSellerCity ? ' · ' + pSellerCity : ''}</div>
+                                \${ pSellerNote ? \`<div style="font-size:14.5px;font-weight:600;color:#5b32c4;margin-top:6px;background:rgba(255,255,255,0.45);padding:8px 12px;border-radius:10px;line-height:1.4"><em>Note: \${pSellerNote}</em></div>\` : '' }
                               \${ pSellerHasBusiness ? \`
                                 <div style="font-size:16px;font-weight:700;color:#6b21a8">\${pSellerBusiness}</div>
                               \` : '' }
@@ -4408,11 +4408,11 @@ export function renderApp(state: any) {
 
                           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:22px">
                               <label style="display:block"><span
-                                  style="display:block;font-size:16px;font-weight:800;color:#3a1f7a;margin-bottom:8px">His asking price (crore)</span><input name="askPrice" value="${pform.askPrice}"
-                                  onInput="${__b(onPForm)}" placeholder="1.42" style="${pInput}"></label>
+                                  style="display:block;font-size:16px;font-weight:800;color:#3a1f7a;margin-bottom:8px">His asking price (crore)</span><input name="askPrice" value="\${pform.askPrice}"
+                                  onInput="\${__b(onPForm)}" placeholder="1.42" style="\${pInput}"></label>
                               <div style="display:flex;flex-direction:column;justify-content:flex-end">
                                   <span style="display:block;font-size:14px;font-weight:700;color:#6b21a8;margin-bottom:6px">Your selling price (from step 1)</span>
-                                  <div style="height:54px;display:flex;align-items:center;padding:0 18px;border-radius:15px;background:rgba(255,255,255,0.6);font-size:18px;font-weight:800;color:#3b0764;border:2px dashed #c084fc">${pPriceEcho}</div>
+                                  <div style="height:54px;display:flex;align-items:center;padding:0 18px;border-radius:15px;background:rgba(255,255,255,0.6);font-size:18px;font-weight:800;color:#3b0764;border:2px dashed #c084fc">\${pPriceEcho}</div>
                               </div>
                             </div>
 
@@ -4420,7 +4420,7 @@ export function renderApp(state: any) {
                               <span
                                   style="display:block;font-size:16px;font-weight:800;color:#3a1f7a;margin-bottom:10px">Relationship
                                   to the property</span>
-                                <div style="display:flex;flex-wrap:wrap;gap:9px">${ (pRel || []).map(r => `<button onClick="${__b(r.go)}" style="${r.style}">${r.label}</button>`).join('') }</div>
+                                <div style="display:flex;flex-wrap:wrap;gap:9px">\${ (pRel || []).map(r => \`<button onClick="\${__b(r.go)}" style="\${r.style}">\${r.label}</button>\`).join('') }</div>
                             </div>
                           </div>
 
@@ -4442,12 +4442,12 @@ export function renderApp(state: any) {
                           <label style="display:block;margin-top:18px"><span
                               style="display:block;font-size:16px;font-weight:800;color:#3a1f7a;margin-bottom:8px">How
                               to arrange a site visit</span><input name="visitNote" value="\${pform.visitNote}"
-                              onInput="\${__b(onPForm)}" placeholder="Call before coming, the gate stays locked"
-                              style="\${pInput}"></label>
+                              onInput="\\${__b(onPForm)}" placeholder="Call before coming, the gate stays locked"
+                              style="\\${pInput}"></label>
                           <label style="display:block;margin-top:14px"><span
                               style="display:block;font-size:16px;font-weight:800;color:#3a1f7a;margin-bottom:8px">Note
                               about this property</span><textarea name="sellerPropNote"
-                              value="\${pform.sellerPropNote}" onInput="\${__b(onPForm)}"
+                              value="\${pform.sellerPropNote}" onInput="\\${__b(onPForm)}"
                               placeholder="Owner in a hurry, will come down 5 lakh…"
                               style="\${pArea}"></textarea></label>
 
@@ -4610,7 +4610,7 @@ export function renderApp(state: any) {
                         <!-- Top Floating Controls -->
                         <div
                           style="position:absolute;top:0;left:0;right:0;z-index:4;display:flex;gap:10px;align-items:center;padding:14px 16px;pointer-events:none">
-                          <input id="dealer-earth-search" name="earthQ" value="\${pform.earthQ}" onInput="\${__b(onPForm)}"
+                          <input id="dealer-earth-search" name="earthQ" value="\${pform.earthQ}" onInput="\\${__b(onPForm)}"
                             placeholder="Search spot — Sector 79, Mohali"
                             style="max-width:320px;height:38px;padding:0 14px;border-radius:10px;border:none;background:rgba(255,253,247,.96);font-size:14px;font-weight:700;color:#241f1c;outline:none;box-shadow:0 4px 14px rgba(0,0,0,.3);pointer-events:auto">
                           
