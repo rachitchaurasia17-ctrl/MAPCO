@@ -4636,6 +4636,7 @@ export class Component extends DCLogic {
       pSellerList, pSellerPicked: !!pSellerPicked, pSellerNone: !pSellerPicked,
       pSellerName: pSellerPicked ? pSellerPicked.name : '', pSellerPhone: pSellerPicked ? pSellerPicked.phone : '',
       pSellerKind: pSellerPicked ? pSellerPicked.kind : '', pSellerInitials: pSellerPicked ? this.initialsOf(pSellerPicked.name) : '',
+        pSellerCity: pSellerPicked ? pSellerPicked.city : '', pSellerPhone2: pSellerPicked ? pSellerPicked.phone2 : '', pSellerNote: pSellerPicked ? pSellerPicked.note : '',
       sellerQ: s.sellerQ, onSellerQ: (e) => this.setState({ sellerQ: e.target.value }),
       sellerAdd: s.sellerAdd, sellerPick: !s.sellerAdd,
       openSellerAdd: () => this.setState({ sellerAdd: true }), closeSellerAdd: () => this.setState({ sellerAdd: false }),

@@ -4395,7 +4395,8 @@ export function renderApp(state: any) {
                               style="width:52px;height:52px;border-radius:50%;background:#3b0764;color:#e9d5ff;display:grid;place-items:center;font-size:18px;font-weight:800;flex:none">\${pSellerInitials}</span>
                             <div style="flex:1;min-width:0">
                               <div style="font-size:21px;font-weight:800;color:#3b0764">\${pSellerName}</div>
-                              <div style="font-size:16.5px;color:#6b21a8">\${pSellerPhone} · \${pSellerKind}</div>
+                              <div style="font-size:16.5px;color:#6b21a8">${pSellerPhone} ${pSellerPhone2 ? ' · ' + pSellerPhone2 : ''} · ${pSellerKind} ${pSellerCity ? ' · ' + pSellerCity : ''}</div>
+                                ${ pSellerNote ? `<div style="font-size:14.5px;font-weight:600;color:#5b32c4;margin-top:6px;background:rgba(255,255,255,0.45);padding:8px 12px;border-radius:10px;line-height:1.4"><em>Note: ${pSellerNote}</em></div>` : '' }
                               \${ pSellerHasBusiness ? \`
                                 <div style="font-size:16px;font-weight:700;color:#6b21a8">\${pSellerBusiness}</div>
                               \` : '' }
@@ -4405,15 +4406,21 @@ export function renderApp(state: any) {
                               Details for this property only</div>
                           </div>
 
-                          <div style="display:grid;grid-template-columns:1fr 1.3fr;gap:14px;margin-top:18px">
-                            <label style="display:block"><span
-                                style="display:block;font-size:16px;font-weight:800;color:#3a1f7a;margin-bottom:8px">Seller
-                                asking price (crore)</span><input name="askPrice" value="\${pform.askPrice}"
-                                onInput="\${__b(onPForm)}" placeholder="1.42" style="\${pInput}"></label>
-                            <div><span
-                                style="display:block;font-size:16px;font-weight:800;color:#3a1f7a;margin-bottom:8px">Relationship
-                                to the property</span>
-                              <div style="display:flex;flex-wrap:wrap;gap:9px">\${ (pRel || []).map(r => \`<button onClick="\${__b(r.go)}" style="\${r.style}">\${r.label}</button>\`).join('') }</div>
+                          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:22px">
+                              <label style="display:block"><span
+                                  style="display:block;font-size:16px;font-weight:800;color:#3a1f7a;margin-bottom:8px">His asking price (crore)</span><input name="askPrice" value="${pform.askPrice}"
+                                  onInput="${__b(onPForm)}" placeholder="1.42" style="${pInput}"></label>
+                              <div style="display:flex;flex-direction:column;justify-content:flex-end">
+                                  <span style="display:block;font-size:14px;font-weight:700;color:#6b21a8;margin-bottom:6px">Your selling price (from step 1)</span>
+                                  <div style="height:54px;display:flex;align-items:center;padding:0 18px;border-radius:15px;background:rgba(255,255,255,0.6);font-size:18px;font-weight:800;color:#3b0764;border:2px dashed #c084fc">${pPriceEcho}</div>
+                              </div>
+                            </div>
+
+                            <div style="margin-top:22px">
+                              <span
+                                  style="display:block;font-size:16px;font-weight:800;color:#3a1f7a;margin-bottom:10px">Relationship
+                                  to the property</span>
+                                <div style="display:flex;flex-wrap:wrap;gap:9px">${ (pRel || []).map(r => `<button onClick="${__b(r.go)}" style="${r.style}">${r.label}</button>`).join('') }</div>
                             </div>
                           </div>
 
