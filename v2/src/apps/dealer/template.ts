@@ -3050,15 +3050,15 @@ export function renderApp(state: any) {
                 style="position:relative;width:1280px;max-width:100%;height:100%;display:flex;flex-direction:column;background:#f5f1fd;border-radius:26px;overflow:hidden;box-shadow:0 50px 110px -30px rgba(0,0,0,.78);">
 
                 <div
-                  style="flex:none;display:flex;align-items:center;gap:16px;padding:16px 20px;background:#ffefd2;flex-wrap:wrap">
+                  style="flex:none;display:flex;align-items:center;gap:16px;padding:16px 20px;background:linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);flex-wrap:wrap">
                   <div style="flex:1 1 300px;min-width:0">
                     <h2
-                      style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:29px;line-height:1.1;letter-spacing:-.015em;color:#241f1c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                      style="margin:0;font-family:'Newsreader',serif;font-weight:500;font-size:29px;line-height:1.1;letter-spacing:-.015em;color:#ffffff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
                       \${propDetail.title} · \${propDetail.size}</h2>
                     <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:3px">
                       <span
-                        style="display:flex;align-items:center;gap:6px;font-size:15.5px;font-weight:700;color:#7a6f60"><i
-                          class="ph-fill ph-map-pin" style="font-size:17px;color:#a3541b"></i>\${propDetail.loc}</span>
+                        style="display:flex;align-items:center;gap:6px;font-size:15.5px;font-weight:700;color:rgba(255,255,255,0.8)"><i
+                          class="ph-fill ph-map-pin" style="font-size:17px;color:rgba(255,255,255,0.8)"></i>\${propDetail.loc}</span>
                       \${ propDetail.isBooked ? \`<button onClick="\${__b(propDetail.openBookedDeal)}"
                           style="\${propDetail.bookedStyle}" style-hover="background:#154a8c"><i
                             class="ph-fill ph-lock-key" style="font-size:15px"></i>\${propDetail.bookedIn}</button>\` : '' }
@@ -3079,7 +3079,7 @@ export function renderApp(state: any) {
                     \` : '' }
                     \${ propDetail.notSoldView ? \`
                       <button onClick="\${__b(propDetail.share)}"
-                        style="display:flex;align-items:center;gap:8px;height:46px;padding:0 17px;border-radius:14px;background:#f8a800;color:#241d0c;font-size:16px;font-weight:800;white-space:nowrap"><i
+                        style="display:flex;align-items:center;gap:8px;height:46px;padding:0 17px;border-radius:14px;background:#ffffff;color:#4F46E5;font-size:16px;font-weight:800;white-space:nowrap"><i
                           class="ph-fill ph-paper-plane-tilt" style="font-size:18px"></i>Send link</button>
                     \` : '' }
                     <div style="position:relative">
@@ -3127,8 +3127,8 @@ export function renderApp(state: any) {
 
 
                 <div data-scroll=""
-                  style="flex:none;display:flex;align-items:center;padding:12px 20px;background:#ffefd2;border-bottom:2px solid #f0c96a;overflow-x:auto">
-                  <div style="display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:18px;background:#fff3d6;box-shadow:inset 0 0 0 1.5px rgba(120,100,60,.16);">
+                  style="flex:none;display:flex;align-items:center;padding:12px 20px;background:#7C3AED;border-bottom:2px solid rgba(0,0,0,0.1);overflow-x:auto">
+                  <div style="display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:18px;background:rgba(0,0,0,0.2);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.1);">
                     \${ (propDetail.tabs || []).map(t => \`
                       <button onClick="\${__b(t.go)}" style="\${t.style}">
                         <i class="\${t.icon}" style="font-size:20px;flex:none"></i>

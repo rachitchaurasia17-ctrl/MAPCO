@@ -3515,7 +3515,7 @@ export class Component extends DCLogic {
       const pdTabs = PDT.map(t => {
         const on = pdTab === t.k; return {
           label: t.l, icon: t.i, sub: t.sub, go: () => this.setState({ pdTab: t.k, cardMenu: null }),
-          style: `display:flex;align-items:center;gap:8px;height:46px;padding:0 18px;border-radius:14px;font-size:15.5px;font-weight:800;white-space:nowrap;flex:none;transition:all .16s;${on ? 'background:#241d0c;color:#f8c200;box-shadow:0 8px 18px -8px rgba(36,29,12,.9)' : 'background:transparent;color:#786950;'}`,
+          style: `display:flex;align-items:center;gap:8px;height:46px;padding:0 18px;border-radius:14px;font-size:15.5px;font-weight:800;white-space:nowrap;flex:none;transition:all .16s;${on ? 'background:#ffffff;color:#4F46E5;box-shadow:0 8px 18px -8px rgba(0,0,0,.3)' : 'background:transparent;color:rgba(255,255,255,0.7);'}`,
           subStyle: `font-size:13.5px;font-weight:700;${on ? 'color:rgba(255,255,255,.82)' : 'opacity:.72'}`
         };
       });
@@ -3597,7 +3597,7 @@ export class Component extends DCLogic {
         priceWord: isSold ? 'Sold for' : 'Asking',
         priceHead: isSold && sale ? this.inr(sale.price) : this.inr(pd.price),
         priceWordStyle: `font-size:12px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:${isSold ? '#4ade80' : 'rgba(255,255,255,.68)'}`,
-        priceValStyle: `font-family:'Newsreader',serif;font-weight:600;font-size:30px;line-height:1.05;white-space:nowrap;color:${isSold ? '#4ade80' : '#ffcb45'}`,
+        priceValStyle: `font-family:'Newsreader',serif;font-weight:700;font-size:42px;line-height:1.05;white-space:nowrap;color:${isSold ? '#4ade80' : '#FBBF24'};text-shadow:0 2px 10px rgba(0,0,0,0.2)`,
         blueStat: 'display:flex;flex-direction:column;gap:3px;padding:14px 16px;border-radius:15px;background:#f3f7fd;box-shadow:inset 0 0 0 1.5px #d3e2f5',
         mktSub: mk ? [mk.created + ' creatives', mk.published + ' published', mk.scheduled + ' scheduled', mk.reels + (mk.reels === 1 ? ' reel' : ' reels')].join(' · ') : 'Nothing made yet',
         showAvail: pd.status !== 'sold',
