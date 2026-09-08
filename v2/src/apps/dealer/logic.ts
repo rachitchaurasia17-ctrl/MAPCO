@@ -40,7 +40,7 @@ export class Component extends DCLogic {
     savingSeller: false, sellerError: '', sellerEditId: null,
     savingSold: false, soldError: '', propError: '', propMissing: [],
     savingClient: false, clientError: '',
-    cliEdit: false, noteDraft: '', cpPick: false, cpPickQ: '', cpGroup: 'shortlisted', linkView: null, linkTab: 'focus', lkQ: '', lkFilter: 'all', linksTab: 'props', arch: null,
+    cliEdit: false, noteDraft: '', cpPick: false, cpPickQ: '', cpGroup: 'shortlisted', linkView: null, linkTab: 'focus', lkQ: '', lkFilter: 'all', linksTab: 'links', arch: null,
     cf: { name: '', phone: '', phone2: '', business: '', city: '', types: [], areas: [], budgetFrom: '', budgetTo: '', sizeFrom: '', sizeTo: '', prefs: [], customPref: '', stage: 'Just looking', note: '', areaDraft: '' },
     sf2: { name: '', phone: '', phone2: '', business: '', kind: 'Individual', city: '', note: '' },
     sendLinkType: 'all', sendLinkCity: 'all', viewDoc: null
@@ -5276,13 +5276,13 @@ export class Component extends DCLogic {
               style: `display:flex;align-items:center;gap:10px;height:54px;padding:0 24px;border-radius:14px;font-size:17.5px;font-weight:800;letter-spacing:-.01em;border:none;cursor:pointer;transition:all .18s;` +
                 (on
                   ? (isClients
-                    ? 'background:#4c1d95;background-image:linear-gradient(135deg,#3b1464,#5b21b6);color:#fff;box-shadow:0 10px 24px -10px rgba(59,20,100,.8),inset 0 0 0 1.5px #a78bfa;transform:scale(1.02);'
-                    : 'background:#c2410c;background-image:linear-gradient(135deg,#9a3412,#ea580c);color:#fff;box-shadow:0 10px 24px -10px rgba(194,65,12,.8),inset 0 0 0 1.5px #fb923c;transform:scale(1.02);')
-                  : 'background:transparent;color:#786950;'),
+                    ? 'background:#4c1d95;color:#f5f3ff;box-shadow:0 6px 14px -6px #4c1d95'
+                    : 'background:#9a3412;color:#fff7ed;box-shadow:0 6px 14px -6px #9a3412')
+                  : 'background:#f1f5f9;color:#64748b'),
               numStyle: `font-size:14px;font-weight:800;border-radius:999px;padding:2px 10px;` +
                 (on
                   ? 'background:rgba(255,255,255,.22);color:#ffffff'
-                  : 'background:rgba(0,0,0,.07);color:#6b5f4c')
+                  : 'background:#e2e8f0;color:#475569')
             };
           }),
           cliQ: s.cliQ || '', onCliQ: (e) => this.setState({ cliQ: e.target.value }),
@@ -5326,8 +5326,8 @@ export class Component extends DCLogic {
           hasCfAreas: (cf.areas || []).length > 0,
           cfAddArea: () => this.cfAddArea(), cfAddPref: () => this.cfAddPref(),
           cfSave: () => this.saveNewClient(),
-          cfSaveStyle: `display:flex;align-items:center;gap:10px;height:60px;padding:0 30px;border-radius:17px;font-size:18px;font-weight:800;${cfOK ? 'background:#0f7a45;color:#eafff2;box-shadow:0 16px 30px -16px rgba(15,122,69,.95)' : 'background:#e7e0d2;color:#a89e8b;cursor:not-allowed'}`,
-          cfDup: !!cfDupC, cfDupName: cfDupC ? cfDupC.name : '', cfDupSub: cfDupC ? (cfDupC.phone + ' · ' + (cfDupC.city || '')) : '',
+          cfSaveStyle: `display:flex;align-items:center;gap:10px;height:60px;padding:0 30px;border-radius:17px;font-size:18px;font-weight:800;${cfOK ? 'background:#0f7a45;color:#eafff2;box-shadow:0 16px 30px -16px rgba(15,122,69,.95)' : 'background:#e2e8f0;color:#94a3b8;cursor:not-allowed'}`,
+cfDup: !!cfDupC, cfDupName: cfDupC ? cfDupC.name : '', cfDupSub: cfDupC ? (cfDupC.phone + ' · ' + (cfDupC.city || '')) : '',
           cfUseDup: () => { if (cfDupC) this.useExistingClient(cfDupC.id); },
           sf2, onSF2: (e) => this.onSF2(e),
           sfKindChips: this.SELLERKINDS.map(k => ({ label: k, go: () => this.setSF2({ kind: k }), style: chip(sf2.kind === k, '#4a2c99', '#efe8fb') })),
@@ -5337,10 +5337,10 @@ export class Component extends DCLogic {
           sfUseDup: () => { if (sfDupS) { deskStore.loadSellerWorkspace(sfDupS.id); this.setState({ addSellerOpen: false, sellerEditId: null, contactMode: 'sellers', sellerView: sfDupS.id }); } },
           cp, cpOpen: !!cp,
           lkTabs: [
-            { k: 'follow', l: 'Needs attention', i: 'ph-fill ph-bell-ringing', n: followList.length },
-            { k: 'links', l: 'All links', i: 'ph-fill ph-paper-plane-tilt', n: this.clientLinks.length }
+            { k: 'links', l: 'All links', i: 'ph-fill ph-paper-plane-tilt', n: this.clientLinks.length },
+            { k: 'follow', l: 'Needs attention', i: 'ph-fill ph-bell-ringing', n: followList.length }
           ].map(t => {
-            const on = (t.k === 'links') === (s.linksTab === 'links');
+            const on = s.linksTab === 'follow' ? t.k === 'follow' : t.k === 'links';
             const isLinks = t.k === 'links';
             return {
               label: t.l, icon: t.i, count: String(t.n), go: () => this.setState({ linksTab: t.k }),
@@ -5349,11 +5349,11 @@ export class Component extends DCLogic {
                   ? (isLinks
                     ? 'background:#3730a3;background-image:linear-gradient(135deg,#312e81,#4f46e5);color:#fff;box-shadow:0 10px 24px -10px rgba(79,70,229,.8),inset 0 0 0 1.5px #818cf8;transform:scale(1.02);'
                     : 'background:#c2410c;background-image:linear-gradient(135deg,#9a3412,#ea580c);color:#fff;box-shadow:0 10px 24px -10px rgba(194,65,12,.8),inset 0 0 0 1.5px #fb923c;transform:scale(1.02);')
-                  : 'background:transparent;color:#786950;'),
+                  : (isLinks ? 'background:#e0e7ff;color:#3730a3;box-shadow:inset 0 0 0 1.5px rgba(55,48,163,.15);' : 'background:#ffedd5;color:#c2410c;box-shadow:inset 0 0 0 1.5px rgba(194,65,12,.15);')),
               numStyle: `font-size:14px;font-weight:800;border-radius:999px;padding:2px 10px;` +
                 (on
                   ? 'background:rgba(255,255,255,.22);color:#ffffff'
-                  : 'background:rgba(0,0,0,.07);color:#6b5f4c')
+                  : (isLinks ? 'background:#c7d2fe;color:#312e81' : 'background:#fdba74;color:#9a3412')
             };
           }),
           lkIsFollow: s.linksTab !== 'links', lkIsLinks: s.linksTab === 'links', lkIsProps: false,

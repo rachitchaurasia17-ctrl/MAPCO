@@ -2878,55 +2878,50 @@ export function renderApp(state: any) {
                 </div>
 
                 <div data-scroll="" style="padding:24px 30px;max-height:72vh;overflow-y:auto">
-                  <div
-                    style="padding:22px 24px;border-radius:22px;background:#fff6e0;box-shadow:inset 0 0 0 2px #f0c96a">
                     <div
-                      style="font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#a3541b">
-                      Required</div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px">
-                      <label style="display:block"><span style="\${cfLab}">Client name</span><input name="name"
-                          value="\${cf.name}" onInput="\${__b(onCF)}" placeholder="e.g. Harpreet Singh Gill"
-                          style="\${cfInput}"></label>
-                      <label style="display:block"><span style="\${cfLab}">Phone number</span><input name="phone"
-                          value="\${cf.phone}" onInput="\${__b(onCF)}" inputmode="tel" placeholder="+91 …"
-                          style="\${cfInput}"></label>
-                    </div>
-                    \${ cfDup ? \`
+                      style="padding:24px 26px;border-radius:26px;background:#e9d5ff;box-shadow:inset 0 0 0 2.5px #a855f7">
                       <div
-                        style="display:flex;align-items:center;gap:14px;margin-top:14px;padding:16px 18px;border-radius:18px;background:#fff2e0;box-shadow:inset 0 0 0 1.5px #f0d4ab">
-                        <i class="ph-fill ph-warning-circle" style="font-size:26px;color:#a3541b;flex:none"></i>
-                        <div style="flex:1;min-width:0">
-                          <div style="font-size:16.5px;font-weight:800;color:#7a4a13">You already have this number saved
-                          </div>
-                          <div style="font-size:15px;color:#8a7f6e">\${cfDupName} · \${cfDupSub}</div>
-                        </div>
-                        <button onClick="\${__b(cfUseDup)}"
-                          style="height:48px;padding:0 18px;border-radius:14px;background:#a3541b;color:#fff;font-size:15.5px;font-weight:800;flex:none">Open
-                          them instead</button>
+                        style="font-size:13.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#3b0764">
+                        Required</div>
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px">
+                        <label style="display:block"><span style="display:block;font-size:15.5px;font-weight:800;color:#3b0764;margin-bottom:8px">Client name</span><input name="name"
+                            value="\${cf.name}" onInput="\${__b(onCF)}" placeholder="e.g. Harpreet Singh Gill"
+                            style="width:100%;height:58px;padding:0 16px;border-radius:14px;background:#ffffff;border:2.5px solid #a855f7;font-size:18px;font-weight:800;color:#0f172a;outline:none"></label>
+                        <label style="display:block"><span style="display:block;font-size:15.5px;font-weight:800;color:#3b0764;margin-bottom:8px">Phone number</span><input name="phone"
+                            value="\${cf.phone}" onInput="\${__b(onCF)}" inputmode="tel" placeholder="+91 ?"
+                            style="width:100%;height:58px;padding:0 16px;border-radius:14px;background:#ffffff;border:2.5px solid #a855f7;font-size:18px;font-weight:800;color:#0f172a;outline:none"></label>
                       </div>
-                    \` : '' }
-                  </div>
+                      \${ cfDup ? \`
+                        <div
+                          style="display:flex;align-items:center;gap:14px;margin-top:14px;padding:16px 18px;border-radius:18px;background:#f3e8ff;box-shadow:inset 0 0 0 1.5px #d8b4fe">
+                          <i class="ph-fill ph-warning-circle" style="font-size:26px;color:#7e22ce;flex:none"></i>
+                          <div style="flex:1;min-width:0">
+                            <div style="font-size:16.5px;font-weight:800;color:#581c87">You already have this number saved</div>
+                            <div style="font-size:15px;color:#6b21a8">\${cfDupName} A \${cfDupSub}</div>
+                          </div>
+                          <button onClick="\${__b(cfUseDup)}"
+                            style="height:48px;padding:0 18px;border-radius:14px;background:#7e22ce;color:#fff;font-size:15.5px;font-weight:800;flex:none">Open them instead</button>
+                        </div>
+                      \` : '' }
+                    </div>
 
-                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;align-items:start">
-                    <div
-                      style="padding:22px 24px;border-radius:22px;background:#eaf5fd;box-shadow:inset 0 0 0 2px #b9dcf2">
+                    <div style="padding:24px 26px;border-radius:26px;background:#bae6fd;box-shadow:inset 0 0 0 2.5px #38bdf8;margin-top:16px">
                       <div
-                        style="font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#a3541b">
+                        style="font-size:13.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062f42">
                         Contact &amp; business <span
-                          style="font-weight:700;text-transform:none;letter-spacing:0;color:#b3a894">— optional</span>
+                          style="font-weight:700;text-transform:none;letter-spacing:0;color:#0b5f7d">?" optional</span>
                       </div>
                       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
-                        <label style="display:block"><span style="\${cfLab}">Another number</span><input name="phone2"
-                            value="\${cf.phone2}" onInput="\${__b(onCF)}" style="\${cfInput}"></label>
-                        <label style="display:block"><span style="\${cfLab}">City they live in</span><input
+                        <label style="display:block"><span style="display:block;font-size:15.5px;font-weight:800;color:#062f42;margin-bottom:8px">Another number</span><input name="phone2"
+                            value="\${cf.phone2}" onInput="\${__b(onCF)}" style="width:100%;height:58px;padding:0 16px;border-radius:14px;background:#ffffff;border:2.5px solid #38bdf8;font-size:18px;font-weight:800;color:#0f172a;outline:none"></label>
+                        <label style="display:block"><span style="display:block;font-size:15.5px;font-weight:800;color:#062f42;margin-bottom:8px">City they live in</span><input
                             name="city" value="\${cf.city}" onInput="\${__b(onCF)}" placeholder="Mohali"
-                            style="\${cfInput}"></label>
-                        <label style="display:block;grid-column:1 / -1"><span style="\${cfLab}">Business / firm
-                            name</span><input name="business" value="\${cf.business}" onInput="\${__b(onCF)}"
-                            placeholder="e.g. Gill Transport Co." style="\${cfInput}"></label>
+                            style="width:100%;height:58px;padding:0 16px;border-radius:14px;background:#ffffff;border:2.5px solid #38bdf8;font-size:18px;font-weight:800;color:#0f172a;outline:none"></label>
+                        <label style="display:block;grid-column:1 / -1"><span style="display:block;font-size:15.5px;font-weight:800;color:#062f42;margin-bottom:8px">Business / firm name</span><input name="business" value="\${cf.business}" onInput="\${__b(onCF)}"
+                            placeholder="e.g. Gill Transport Co." style="width:100%;height:58px;padding:0 16px;border-radius:14px;background:#ffffff;border:2.5px solid #38bdf8;font-size:18px;font-weight:800;color:#0f172a;outline:none"></label>
                       </div>
                       <div
-                        style="font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#a3541b;margin-top:22px">
+                        style="font-size:13.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#062f42;margin-top:22px">
                         Where are they buying</div>
                       <div style="display:flex;flex-wrap:wrap;gap:9px;margin-top:11px">\${ (cfAreaTags || []).map(t => \`<span style="\${t.style}">\${t.label}<button
                               onClick="\${__b(t.go)}"
@@ -2934,55 +2929,28 @@ export function renderApp(state: any) {
                                 class="ph-bold ph-x" style="font-size:13px"></i></button></span>\`).join('') }</div>
                       <div style="display:flex;gap:10px;margin-top:11px">
                         <input name="areaDraft" value="\${cf.areaDraft}" onInput="\${__b(onCF)}"
-                          placeholder="Sector 79, Aerocity, Eco City…" style="\${cfInput}">
+                          placeholder="Sector 79, Aerocity, Eco City?" style="width:100%;height:58px;padding:0 16px;border-radius:14px;background:#ffffff;border:2.5px solid #38bdf8;font-size:18px;font-weight:800;color:#0f172a;outline:none">
                         <button onClick="\${__b(cfAddArea)}"
-                          style="height:56px;padding:0 22px;border-radius:15px;background:#0f5f7a;color:#eaf7fb;font-size:16px;font-weight:800;flex:none">Add</button>
+                          style="height:58px;padding:0 22px;border-radius:15px;background:#0369a1;color:#f0f9ff;font-size:16px;font-weight:800;flex:none">Add</button>
                       </div>
-                      <div
-                        style="font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#a3541b;margin-top:22px">
-                        Budget &amp; size</div>
-                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:11px">
-                        <label style="display:block"><span style="\${cfLab}">Budget from (Cr)</span><input
-                            name="budgetFrom" value="\${cf.budgetFrom}" onInput="\${__b(onCF)}" inputmode="decimal"
-                            placeholder="1.5" style="\${cfInput}"></label>
-                        <label style="display:block"><span style="\${cfLab}">Budget to (Cr)</span><input
-                            name="budgetTo" value="\${cf.budgetTo}" onInput="\${__b(onCF)}" inputmode="decimal"
-                            placeholder="1.8" style="\${cfInput}"></label>
-                        <label style="display:block"><span style="\${cfLab}">Size from</span><input name="sizeFrom"
-                            value="\${cf.sizeFrom}" onInput="\${__b(onCF)}" placeholder="250"
-                            style="\${cfInput}"></label>
-                        <label style="display:block"><span style="\${cfLab}">Size to</span><input name="sizeTo"
-                            value="\${cf.sizeTo}" onInput="\${__b(onCF)}" placeholder="300"
-                            style="\${cfInput}"></label>
                       </div>
-                    </div>
-
+                    
                     <div
-                      style="padding:22px 24px;border-radius:22px;background:#eaf5fd;box-shadow:inset 0 0 0 2px #b9dcf2">
+                      style="padding:24px 26px;border-radius:26px;background:#fff6e0;box-shadow:inset 0 0 0 2.5px #fcd34d;margin-top:16px">
                       <div
-                        style="font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#a3541b">
-                        What are they looking for</div>
-                      <div style="display:flex;flex-wrap:wrap;gap:9px;margin-top:11px">\${ (cfTypeChips || []).map(t => \`<button onClick="\${__b(t.go)}" style="\${t.style}"><i
-                              class="\${t.icon}" style="font-size:19px"></i>\${t.label}</button>\`).join('') }</div>
-                      <div
-                        style="font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#a3541b;margin-top:22px">
-                        Preferences</div>
-                      <div style="display:flex;flex-wrap:wrap;gap:9px;margin-top:11px">\${ (cfPrefChips || []).map(t => \`<button onClick="\${__b(t.go)}" style="\${t.style}">\${t.label}</button>\`).join('') }</div>
-                      <div style="display:flex;gap:10px;margin-top:11px">
-                        <input name="customPref" value="\${cf.customPref}" onInput="\${__b(onCF)}"
-                          placeholder="Write your own — e.g. two-side open" style="\${cfInput}">
-                        <button onClick="\${__b(cfAddPref)}"
-                          style="height:56px;padding:0 22px;border-radius:15px;background:#0f5f7a;color:#eaf7fb;font-size:16px;font-weight:800;flex:none">Add</button>
+                        style="font-size:13.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#b45309">
+                        Add private notes <span
+                          style="font-weight:700;text-transform:none;letter-spacing:0;color:#d97706">?" only you can see this</span>
                       </div>
-
-                      <div style="display:flex;flex-wrap:wrap;gap:9px;margin-top:11px">\${ (cfStageChips || []).map(t => \`\`).join('') }</div>
-                      <div style="display:flex;align-items:center;gap:9px;margin-top:22px"></div>
-
+                      <div style="margin-top:12px">
+                        <textarea name="privateNote" onInput="\${__b(onCF)}"
+                          placeholder="Write any thoughts, observations, or private info..."
+                          style="width:100%;min-height:100px;padding:16px;border-radius:14px;background:#ffffff;border:2.5px solid #fcd34d;font-size:18px;font-weight:600;color:#0f172a;outline:none;resize:vertical">\${cf.privateNote || ''}</textarea>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div style="display:flex;align-items:center;gap:14px;padding:18px 30px;background:#fff0d6">
+                  <div style="display:flex;align-items:center;gap:14px;padding:18px 30px;background:#f8fafc;border-top:1px solid #e2e8f0">
                   <div style="flex:1;font-size:16px;font-weight:700;color:#8a5a12">You can fill the rest later from
                     their profile.</div>
                   <button onClick="\${__b(closeAddClientBig)}"
@@ -4860,8 +4828,8 @@ export function renderApp(state: any) {
                             </div>
                           </div>
 
-                          <div style="width:376px;height:728px;flex:none;position:relative;overflow:hidden;border-radius:46px;box-shadow:0 34px 80px -20px rgba(0,0,0,.35);background:#0f0a18;margin-top:-30px;margin-bottom:-50px;margin-right:-20px">
-                            <div style="width:396px;height:766px;transform:scale(0.95);transform-origin:top left;padding:12px;box-sizing:border-box">
+                          <div style="width:297px;height:600px;flex:none;position:relative;overflow:hidden;border-radius:36px;box-shadow:0 24px 60px -15px rgba(0,0,0,.25);background:#0f0a18;margin:auto">
+                              <div style="width:396px;height:800px;transform:scale(0.75);transform-origin:top left;padding:12px;box-sizing:border-box">
                               <div data-scroll="" style="width:100%;height:100%;border-radius:36px;overflow:auto;background:#140d20">
                                 \${ mob ? \`
                     <div style="position:relative;height:330px;flex:none">
