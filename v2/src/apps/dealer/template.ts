@@ -2966,12 +2966,12 @@ export function renderApp(state: any) {
             <div
               style="position:fixed;inset:0;z-index:88;display:flex;justify-content:center;align-items:flex-start;padding:24px;overflow-y:auto">
               <div onClick="\${__b(closeAddSeller)}"
-                style="position:fixed;inset:0;background:rgba(40,26,2,.62);animation:omVeil .2s ease both"></div>
+                style="position:fixed;inset:0;background:rgba(28,20,6,.55);backdrop-filter:blur(5px);animation:omVeil .2s ease both"></div>
               <div
-                style="position:relative;width:100%;max-width:860px;border-radius:30px;background:#fff6e0;box-shadow:0 50px 100px -30px rgba(40,26,2,.85);overflow:hidden;">
-                <div style="display:flex;align-items:center;gap:16px;padding:22px 30px;background:#fff0d6">
+                style="position:relative;width:100%;max-width:860px;border-radius:30px;background:#fffaf0;border:1px solid #ddd2f5;box-shadow:0 50px 100px -30px rgba(24,16,4,.8);overflow:hidden;">
+                <div style="display:flex;align-items:center;gap:16px;padding:22px 30px;border-bottom:1px solid #e4dbf7">
                   <span
-                    style="width:56px;height:56px;border-radius:18px;background:#a3541b;color:#fff6e6;display:grid;place-items:center;flex:none"><i
+                    style="width:56px;height:56px;border-radius:18px;background:#ffc93c;color:#1f1a12;display:grid;place-items:center;flex:none"><i
                       class="ph-fill ph-key" style="font-size:28px"></i></span>
                   <div style="flex:1;min-width:0">
                     <div
@@ -2988,24 +2988,24 @@ export function renderApp(state: any) {
                   <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
                     <label style="display:block"><span style="\${cfLab}">Seller / owner name</span><input name="name"
                         value="\${sf2.name}" onInput="\${__b(onSF2)}" placeholder="e.g. Balwinder Singh"
-                        style="\${cfInput}"></label>
+                        style="\${sfInput}"></label>
                     <label style="display:block"><span style="\${cfLab}">Primary phone</span><input name="phone"
                         value="\${sf2.phone}" onInput="\${__b(onSF2)}" inputmode="tel" placeholder="+91 …"
-                        style="\${cfInput}"></label>
+                        style="\${sfInput}"></label>
                     <label style="display:block"><span style="\${cfLab}">Another number <span
                           style="font-weight:600;color:#b3a894">— optional</span></span><input name="phone2"
-                        value="\${sf2.phone2}" onInput="\${__b(onSF2)}" style="\${cfInput}"></label>
+                        value="\${sf2.phone2}" onInput="\${__b(onSF2)}" style="\${sfInput}"></label>
                     <label style="display:block"><span style="\${cfLab}">City <span
                           style="font-weight:600;color:#b3a894">— optional</span></span><input name="city"
-                        value="\${sf2.city}" onInput="\${__b(onSF2)}" placeholder="Mohali" style="\${cfInput}"></label>
+                        value="\${sf2.city}" onInput="\${__b(onSF2)}" placeholder="Mohali" style="\${sfInput}"></label>
                     <label style="display:block;grid-column:1 / -1"><span style="\${cfLab}">Business / firm details
                         <span style="font-weight:600;color:#b3a894">— optional</span></span><input name="business"
                         value="\${sf2.business}" onInput="\${__b(onSF2)}"
-                        placeholder="e.g. Gurpreet Realtors, GST 03ABCDE…" style="\${cfInput}"></label>
+                        placeholder="e.g. Gurpreet Realtors, GST 03ABCDE…" style="\${sfInput}"></label>
                   </div>
                   \${ sfDup ? \`
                     <div
-                      style="display:flex;align-items:center;gap:14px;margin-top:14px;padding:16px 18px;border-radius:18px;background:#fff6e0;box-shadow:inset 0 0 0 1.5px #fcd34d">
+                      style="display:flex;align-items:center;gap:14px;margin-top:14px;padding:16px 18px;border-radius:18px;background:#fffaf0;border:1px solid #ddd2f5">
                       <i class="ph-fill ph-warning-circle" style="font-size:26px;color:#a3541b;flex:none"></i>
                       <div style="flex:1;min-width:0">
                         <div style="font-size:16.5px;font-weight:800;color:#b45309">This number is already a saved
@@ -3026,10 +3026,10 @@ export function renderApp(state: any) {
                       style="font-size:13px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#a3541b">Private
                       note about this seller</span></div>
                   <textarea name="note" value="\${sf2.note}" onInput="\${__b(onSF2)}" rows="3"
-                    placeholder="Prefers calls after 6 pm. Brother must also sign." style="\${cfArea}"></textarea>
+                    placeholder="Prefers calls after 6 pm. Brother must also sign." style="\${sfArea}"></textarea>
                   
                 </div>
-                <div style="display:flex;align-items:center;gap:14px;padding:18px 30px;background:#fff0d6">
+                <div style="display:flex;align-items:center;gap:14px;padding:18px 30px;border-top:1px solid #e4dbf7">
                   <div style="flex:1;font-size:16px;font-weight:700;color:#8a5a12">Seller information never leaves your
                     desk.</div>
                   <button onClick="\${__b(closeAddSeller)}"
