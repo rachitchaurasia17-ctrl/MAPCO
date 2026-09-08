@@ -2068,7 +2068,7 @@ export function renderApp(state: any) {
                         <div style="display:flex;flex-direction:column;gap:9px">
                           \${ (ld.timeline || []).map(a => \`
                             <div
-                              style="display:flex;align-items:center;gap:13px;padding:13px 15px;border-radius:16px;background:#fffdf7;box-shadow:inset 0 0 0 1.5px #ecdcc0">
+                              style="display:flex;align-items:center;gap:13px;padding:13px 15px;border-radius:16px;background:#eef2ff;box-shadow:inset 0 0 0 2px #c7d2fe">
                               <span style="\${a.iconStyle}"><i class="\${a.icon}"></i></span>
                               <span
                                 style="flex:1;min-width:0;font-size:16.5px;font-weight:800;color:#241f1c;text-wrap:pretty">\${a.text}</span>
@@ -2170,7 +2170,7 @@ export function renderApp(state: any) {
 
                       <div style="border-radius:24px;background:#fffdf7;box-shadow:0 0 0 1.5px #ece3d2;overflow:hidden">
                         <div
-                          style="display:flex;align-items:center;gap:13px;padding:15px 22px;background:#fdf0d4;flex-wrap:wrap">
+                          style="display:flex;align-items:center;gap:13px;padding:15px 22px;background:linear-gradient(135deg, #F43F5E 0%, #FB923C 100%);flex-wrap:wrap">
                           <span
                             style="width:42px;height:42px;border-radius:13px;background:#a3541b;color:#fff;display:grid;place-items:center;flex:none"><i
                               class="ph-fill ph-user-focus" style="font-size:21px"></i></span>
@@ -2564,7 +2564,7 @@ export function renderApp(state: any) {
                               <span
                                 style="font-family:'Newsreader',serif;font-weight:600;font-size:24px;color:#b8460f;flex:none">\${d.valueFmt}</span>
                               <span style="\${d.pill};flex:none">\${d.stageLabel}</span>
-                              <i class="ph-bold ph-arrow-right" style="font-size:18px;color:#a3541b;flex:none"></i>
+                              <i class="ph-bold ph-arrow-right" style="font-size:18px;color:#4f46e5;flex:none"></i>
                             </button>
                           \`).join('') }
                           \${ cp.noDeals ? \`
@@ -3006,7 +3006,7 @@ export function renderApp(state: any) {
                   \${ sfDup ? \`
                     <div
                       style="display:flex;align-items:center;gap:14px;margin-top:14px;padding:16px 18px;border-radius:18px;background:#fff6e0;box-shadow:inset 0 0 0 1.5px #fcd34d">
-                      <i class="ph-fill ph-warning-circle" style="font-size:26px;color:#a3541b;flex:none"></i>
+                      <i class="ph-fill ph-warning-circle" style="font-size:26px;color:#4f46e5;flex:none"></i>
                       <div style="flex:1;min-width:0">
                         <div style="font-size:16.5px;font-weight:800;color:#b45309">This number is already a saved
                           seller</div>
@@ -3300,7 +3300,7 @@ export function renderApp(state: any) {
                         <div
                           style="display:flex;align-items:center;gap:14px;padding:18px 22px;background:#fdf0d4;flex-wrap:wrap">
                           <span
-                            style="width:44px;height:44px;border-radius:14px;background:#9a6a00;color:#fff;display:grid;place-items:center;flex:none"><i
+                            style="width:44px;height:44px;border-radius:14px;background:#ffffff;color:#F43F5E;display:grid;place-items:center;flex:none;box-shadow:0 4px 12px rgba(244,63,94,0.3)"><i
                               class="\${propDetail.typeIcon}" style="font-size:22px"></i></span>
                           <div style="flex:1;min-width:180px">
                             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
@@ -3308,20 +3308,20 @@ export function renderApp(state: any) {
                                 style="font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#9a6a00">\${propDetail.typeLabel}</span>
                               \${ propDetail.isNegotiable ? \`
                                 <span
-                                  style="font-size:11px;font-weight:800;padding:2px 7px;border-radius:6px;background:rgba(154,106,0,.15);color:#7a5400">Negotiable</span>
+                                  style="font-size:11px;font-weight:800;padding:2px 7px;border-radius:6px;background:rgba(255,255,255,0.25);color:#ffffff">Negotiable</span>
                               \` : '' }
                               \${ propDetail.isFixedPrice ? \`
                                 <span
-                                  style="font-size:11px;font-weight:800;padding:2px 7px;border-radius:6px;background:rgba(0,0,0,.08);color:#5c5446">Fixed
+                                  style="font-size:11px;font-weight:800;padding:2px 7px;border-radius:6px;background:rgba(255,255,255,0.25);color:#ffffff">Fixed
                                   price</span>
                               \` : '' }
                             </div>
                             <div
-                              style="font-size:21px;font-weight:800;color:#241f1c;margin-top:3px;line-height:1.25">
+                              style="font-size:21px;font-weight:800;color:#ffffff;margin-top:3px;line-height:1.25">
                               \${propDetail.headline}</div>
                           </div>
                           <button onClick="\${__b(propDetail.editGo)}"
-                            style="display:flex;align-items:center;gap:8px;height:46px;padding:0 18px;border-radius:13px;background:#9a6a00;color:#fff;font-size:15.5px;font-weight:800;flex:none;box-shadow:0 6px 16px -6px rgba(154,106,0,.6)"><i
+                            style="display:flex;align-items:center;gap:8px;height:46px;padding:0 18px;border-radius:13px;background:#ffffff;color:#F43F5E;font-size:15.5px;font-weight:800;flex:none;box-shadow:0 6px 16px -6px rgba(0,0,0,0.2)"><i
                               class="ph-fill ph-pencil-simple" style="font-size:17px"></i>Edit property</button>
                         </div>
 
@@ -3340,20 +3340,20 @@ export function renderApp(state: any) {
                         <div style="padding:20px 22px 22px">
                           <!-- Level 2: Key Specs Grid (6-8 structured facts) -->
                           <div
-                            style="font-size:12.5px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:#8a7f6e;margin-bottom:10px">
+                            style="font-size:12.5px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:#4338ca;margin-bottom:10px">
                             Key Specifications</div>
                           <div
                             style="display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:10px">
                             \${ (propDetail.keySpecs || []).map(s => \`
                               <div
-                                style="display:flex;align-items:center;gap:11px;padding:13px 14px;border-radius:16px;background:#fffdf7;box-shadow:inset 0 0 0 1.5px #ecdcc0">
-                                <i class="\${s.icon}" style="font-size:21px;color:#a3541b;flex:none"></i>
+                                style="display:flex;align-items:center;gap:11px;padding:13px 14px;border-radius:16px;background:#eef2ff;box-shadow:inset 0 0 0 2px #c7d2fe">
+                                <i class="\${s.icon}" style="font-size:21px;color:#4f46e5;flex:none"></i>
                                 <div style="flex:1;min-width:0">
                                   <div
-                                    style="font-size:11px;font-weight:800;color:#9c907e;text-transform:uppercase;letter-spacing:.06em">
+                                    style="font-size:11px;font-weight:800;color:#6366f1;text-transform:uppercase;letter-spacing:.06em">
                                     \${s.label}</div>
                                   <div
-                                    style="font-size:17px;font-weight:800;color:#241f1c;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                                    style="font-size:17px;font-weight:800;color:#312e81;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
                                     \${s.value}</div>
                                 </div>
                               </div>
@@ -3362,7 +3362,7 @@ export function renderApp(state: any) {
 
                           <!-- Level 3: Grouped Property Details -->
                           <div
-                            style="font-size:12.5px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:#8a7f6e;margin-top:24px;margin-bottom:10px">
+                            style="font-size:12.5px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:#0369a1;margin-top:24px;margin-bottom:10px">
                             Property Breakdown</div>
                           <div
                             style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px">

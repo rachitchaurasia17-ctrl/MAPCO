@@ -525,29 +525,29 @@ export class Component extends DCLogic {
 
     // Position & Boundaries for Plots
     if (K === 'plot' || K === 'indplot') {
-      addGroup('Position & Dimensions', 'ph-fill ph-compass', '#a3541b', '#fff0d6', '#ecdcc0',
+      addGroup('Position & Dimensions', 'ph-fill ph-compass', '#ea580c', '#ffedd5', '#fed7aa',
         [{ label: 'Shape', value: pd.shape }, { label: 'Ground Level', value: pd.level }, { label: 'Frontage', value: has(pd.frontage) ? pd.frontage + ' ft' : '' }, { label: 'Depth', value: has(pd.depth) ? pd.depth + ' ft' : '' }],
         [{ k: 'corner', l: 'Corner plot' }, { k: 'twoSide', l: 'Two-side open' }, { k: 'parkFacing', l: 'Park facing' }, { k: 'mainRoad', l: 'Main road' }, { k: 'nearGreen', l: 'Near green belt' }, { k: 'cornerCut', l: 'Corner cut' }]);
     }
 
     // Building & Facilities / Fittings
     if (K === 'flat' || K === 'bfloor' || K === 'kothi' || K === 'villa') {
-      addGroup('Building & Facilities', 'ph-fill ph-buildings', '#1a5aa8', '#e1ecfb', '#d7e6f6',
+      addGroup('Building & Facilities', 'ph-fill ph-buildings', '#0284c7', '#e0f2fe', '#bae6fd',
         [{ label: 'Flooring', value: pd.flooring }, { label: 'Maintenance', value: pd.maintenance }, { label: 'Roof Rights', value: pd.roofRights ? 'Yes' : '' }],
         [{ k: 'lift', l: 'Lift' }, { k: 'powerBackup', l: 'Power backup' }, { k: 'security', l: 'Gated security' }, { k: 'modularKitchen', l: 'Modular kitchen' }, { k: 'wardrobes', l: 'Fitted wardrobes' }, { k: 'ac', l: 'ACs installed' }, { k: 'piped', l: 'Piped gas' }, { k: 'solar', l: 'Solar' }, { k: 'borewell', l: 'Borewell' }]);
       
-      addGroup('Layout & Rooms Inside', 'ph-fill ph-door-open', '#a3541b', '#fff0d6', '#ecdcc0', [],
+      addGroup('Layout & Rooms Inside', 'ph-fill ph-door-open', '#e11d48', '#ffe4e6', '#fecdd3', [],
         [{ k: 'living', l: 'Drawing / living' }, { k: 'dining', l: 'Dining room' }, { k: 'store', l: 'Store room' }, { k: 'puja', l: 'Pooja room' }, { k: 'study', l: 'Study room' }, { k: 'servant', l: 'Servant room' }, { k: 'servantBath', l: 'Servant washroom' }, { k: 'barsati', l: 'Barsati' }, { k: 'sepEntry', l: 'Separate entry' }, { k: 'terrace', l: 'Private terrace' }, { k: 'portico', l: 'Portico' }, { k: 'stilt', l: 'Stilt parking' }, { k: 'lawn', l: 'Lawn' }, { k: 'basement', l: 'Basement' }]);
     } else if (K === 'sco' || K === 'office' || K === 'showroom') {
-      addGroup('Services & Facilities', 'ph-fill ph-plug', '#1a5aa8', '#e1ecfb', '#d7e6f6',
+      addGroup('Services & Facilities', 'ph-fill ph-plug', '#0d9488', '#ccfbf1', '#99f6e4',
         [{ label: 'Washrooms', value: pd.washrooms }, { label: 'Ceiling Height', value: U(pd.ceiling, 'ft') }, { label: 'Cabins', value: pd.cabins }, { label: 'Workstations / Seats', value: pd.seats }],
         [{ k: 'lift', l: 'Lift' }, { k: 'powerBackup', l: 'Power backup' }, { k: 'pantry', l: 'Pantry' }, { k: 'centralAc', l: 'Central AC' }, { k: 'conference', l: 'Conference room' }, { k: 'reception', l: 'Reception' }, { k: 'serverRoom', l: 'Server room' }, { k: 'terrace', l: 'Terrace' }]);
 
-      addGroup('Commercial Position & Access', 'ph-fill ph-compass', '#a3541b', '#fff0d6', '#ecdcc0',
+      addGroup('Commercial Position & Access', 'ph-fill ph-compass', '#9333ea', '#f3e8ff', '#d8b4fe',
         [{ label: 'Shutter Width', value: U(pd.shutter, 'ft') }, { label: 'Road in Front', value: U(pd.road, 'ft') }],
         [{ k: 'corner', l: 'Corner' }, { k: 'twoSide', l: 'Two-side open' }, { k: 'mainRoad', l: 'On the main road' }, { k: 'groundAccess', l: 'Direct ground access' }, { k: 'parkingAccess', l: 'Front parking' }, { k: 'basement', l: 'Basement' }, { k: 'mezzanine', l: 'Mezzanine' }]);
     } else if (K === 'indplot') {
-      addGroup('Utilities & Infrastructure', 'ph-fill ph-plug', '#0a6634', '#d7f0e2', '#b3e2c8',
+      addGroup('Utilities & Infrastructure', 'ph-fill ph-plug', '#059669', '#d1fae5', '#a7f3d0',
         [{ label: 'Industrial Phase', value: pd.phase }, { label: 'Yard Area', value: U(pd.yardArea, 'sq ft') }, { label: 'Current Use', value: pd.use }],
         [{ k: 'water', l: 'Water line' }, { k: 'sewer', l: 'Sewer line' }, { k: 'effluent', l: 'Effluent line' }, { k: 'gas', l: 'Gas pipeline' }, { k: 'crane', l: 'Crane / gantry' }, { k: 'loadingBay', l: 'Loading bay' }, { k: 'built', l: 'Shed built' }, { k: 'officeBlock', l: 'Office block' }, { k: 'labourQtr', l: 'Labour quarters' }]);
     }
@@ -559,13 +559,13 @@ export class Component extends DCLogic {
         return p.length > 1 ? { label: p[0].trim(), value: p.slice(1).join('—').trim() } : { label: s, value: '' };
       });
       if (floorItems.length) {
-        addGroup(K === 'kothi' || K === 'villa' ? 'Floor by Floor Layout' : 'Floor-wise Configuration', 'ph-fill ph-list-numbers', '#0a6634', '#d7f0e2', '#b3e2c8', floorItems, []);
+        addGroup(K === 'kothi' || K === 'villa' ? 'Floor by Floor Layout' : 'Floor-wise Configuration', 'ph-fill ph-list-numbers', '#059669', '#d1fae5', '#a7f3d0', floorItems, []);
       }
     }
 
     // Project & Locality (if any project / society / block)
     if (pd.society || pd.block || pd.address) {
-      addGroup('Project & Locality', 'ph-fill ph-buildings', '#4a2c99', '#ebe3fa', '#d5c5f2',
+      addGroup('Project & Locality', 'ph-fill ph-buildings', '#7c3aed', '#ede9fe', '#ddd6fe',
         [{ label: 'Project / Society', value: pd.society }, { label: 'Block / Pocket', value: pd.block }, { label: 'Address', value: pd.address }, { label: 'Locality', value: pd.loc }, { label: 'City', value: pd.city }], []);
     }
 
