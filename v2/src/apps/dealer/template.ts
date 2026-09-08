@@ -2858,12 +2858,12 @@ export function renderApp(state: any) {
             <div
               style="position:fixed;inset:0;z-index:88;display:flex;justify-content:center;align-items:flex-start;padding:24px;overflow-y:auto">
               <div onClick="\${__b(closeAddClientBig)}"
-                style="position:fixed;inset:0;background:rgba(40,26,2,.62);animation:omVeil .2s ease both"></div>
+                style="position:fixed;inset:0;background:rgba(88,28,135,.4);backdrop-filter:blur(6px);animation:omVeil .2s ease both"></div>
               <div
-                style="position:relative;width:100%;max-width:1120px;border-radius:30px;background:#fff6e0;box-shadow:0 50px 100px -30px rgba(40,26,2,.85);overflow:hidden;">
-                <div style="display:flex;align-items:center;gap:16px;padding:22px 30px;background:#fff0d6">
+                style="position:relative;width:100%;max-width:1120px;border-radius:30px;background:linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);border:1px solid #d8b4fe;box-shadow:0 40px 80px -20px rgba(88,28,135,.4);overflow:hidden;">
+                <div style="display:flex;align-items:center;gap:16px;padding:22px 30px;border-bottom:1px solid #e9d5ff">
                   <span
-                    style="width:56px;height:56px;border-radius:18px;background:#a3541b;color:#fff6e6;display:grid;place-items:center;flex:none"><i
+                    style="width:56px;height:56px;border-radius:18px;background:#d8b4fe;color:#581c87;display:grid;place-items:center;flex:none"><i
                       class="ph-fill ph-user-plus" style="font-size:28px"></i></span>
                   <div style="flex:1;min-width:0">
                     <div
@@ -2966,12 +2966,12 @@ export function renderApp(state: any) {
             <div
               style="position:fixed;inset:0;z-index:88;display:flex;justify-content:center;align-items:flex-start;padding:24px;overflow-y:auto">
               <div onClick="\${__b(closeAddSeller)}"
-                style="position:fixed;inset:0;background:rgba(28,20,6,.55);backdrop-filter:blur(5px);animation:omVeil .2s ease both"></div>
+                style="position:fixed;inset:0;background:rgba(120,53,15,.4);backdrop-filter:blur(6px);animation:omVeil .2s ease both"></div>
               <div
-                style="position:relative;width:100%;max-width:860px;border-radius:30px;background:#ffefd2;border:1px solid #ffd166;box-shadow:0 50px 100px -30px rgba(64,40,0,.8);overflow:hidden;">
-                <div style="display:flex;align-items:center;gap:16px;padding:22px 30px;background:#ffe3a8;border-bottom:1px solid #ffc93c">
+                style="position:relative;width:100%;max-width:860px;border-radius:30px;background:linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);border:1px solid #fde047;box-shadow:0 40px 80px -20px rgba(120,53,15,.4);overflow:hidden;">
+                <div style="display:flex;align-items:center;gap:16px;padding:22px 30px;border-bottom:1px solid #fde047">
                   <span
-                    style="width:56px;height:56px;border-radius:18px;background:#ffc93c;color:#1f1a12;display:grid;place-items:center;flex:none"><i
+                    style="width:56px;height:56px;border-radius:18px;background:#fbbf24;color:#78350f;display:grid;place-items:center;flex:none"><i
                       class="ph-fill ph-key" style="font-size:28px"></i></span>
                   <div style="flex:1;min-width:0">
                     <div
@@ -3029,7 +3029,7 @@ export function renderApp(state: any) {
                     placeholder="Prefers calls after 6 pm. Brother must also sign." style="\${cfArea}"></textarea>
                   
                 </div>
-                <div style="display:flex;align-items:center;gap:14px;padding:18px 30px;background:#ffe3a8;border-top:1px solid #ffc93c">
+                <div style="display:flex;align-items:center;gap:14px;padding:18px 30px;border-top:1px solid #fde047">
                   <div style="flex:1;font-size:16px;font-weight:700;color:#8a5a12">Seller information never leaves your
                     desk.</div>
                   <button onClick="\${__b(closeAddSeller)}"
