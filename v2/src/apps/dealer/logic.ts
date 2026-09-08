@@ -5353,7 +5353,7 @@ cfDup: !!cfDupC, cfDupName: cfDupC ? cfDupC.name : '', cfDupSub: cfDupC ? (cfDup
               numStyle: `font-size:14px;font-weight:800;border-radius:999px;padding:2px 10px;` +
                 (on
                   ? 'background:rgba(255,255,255,.22);color:#ffffff'
-                  : (isLinks ? 'background:#c7d2fe;color:#312e81' : 'background:#fdba74;color:#9a3412')
+                  : (isLinks ? 'background:#c7d2fe;color:#312e81' : 'background:#fdba74;color:#9a3412'))
             };
           }),
           lkIsFollow: s.linksTab !== 'links', lkIsLinks: s.linksTab === 'links', lkIsProps: false,
