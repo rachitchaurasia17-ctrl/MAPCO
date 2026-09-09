@@ -4,8 +4,26 @@
     {
       "name": "mapco-dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "v2", "run", "dev", "--", "--port", "5177", "--strictPort"],
+      "runtimeArgs": [
+        "--prefix",
+        "v2",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5177",
+        "--strictPort"
+      ],
       "port": 5177
+    },
+    {
+      "name": "mapco-dev-supabase",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": [
+        "/c",
+        "set VITE_DATA_MODE=supabase&& npm --prefix v2 run dev -- --port 5178 --strictPort"
+      ],
+      "port": 5178
     }
   ]
 }

@@ -17,7 +17,7 @@ import {
   type DataAdapterV2,
   type AuthRepository, type ActivationState, type AccountState,
   type PropertyRepository, type CustomerRepository, type DealRepository, type RecordSaleInput,
-  type StartDealInput, type SetDealStageInput, type RecordDealPaymentInput,
+  type StartDealInput, type SetDealStageInput, type RecordDealPaymentInput, type UpdateDealInput,
   type SellerRepository, type SaveSellerInput, type AssignPropertySellerInput,
 
   type PropertyDocumentRepository, type UploadPropertyDocumentInput,
@@ -587,6 +587,18 @@ class SupaPropertyDocuments implements PropertyDocumentRepository {
 type UnknownDeal = Record<string, unknown> & { id?: unknown };
 
 class SupaDeals implements DealRepository {
+  async update(input: UpdateDealInput, o?: QueryOptions): Promise<Result<PipelineDeal>> {
+    const a = aborted<PipelineDeal>(o); if (a) return a;
+    try {
+      const c = await client();
+      const { data, error } = await c.rpc('plotmap_update_deal_details', { p_payload: input });
+      if (error) return toErr(error);
+      const env = (data ?? {}) as { ok?: boolean; reason?: string; deal?: Record<string, unknown> };
+      if (!env.ok || !env.deal) return err('validation', env.reason || 'The deal could not be saved');
+      const deal = normalizePipelineDeal(input.dealId, env.deal);
+      return deal ? ok(deal) : err('unknown', 'Deal response was invalid');
+    } catch (e) { return toErr(e); }
+  }
   async list(p?: PageParams, o?: QueryOptions): Promise<Result<Page<Deal>>> {
     /*
      * Legacy crm_records can contain the retired opportunity pipeline under
@@ -704,6 +716,8 @@ class SupaDeals implements DealRepository {
       const { data, error } = await c.rpc('plotmap_start_deal', {
         p_payload: {
           propertyId: input.propertyId,
+          name: input.name ?? null,
+          commissionTotal: input.commissionTotal ?? null,
           buyerId: input.buyerId ?? null,
           newBuyer: input.newBuyer ?? null,
           stage: input.stage ?? 'negotiating',
@@ -837,6 +851,7 @@ function readDealWorkspace(dealId: string, env: Record<string, unknown>): Result
     money: {
       value: num('value'), token: num('token'),
       expectedBuyer: num('expectedBuyer'), expectedSeller: num('expectedSeller'),
+      expectedUnallocated: num('expectedUnallocated'), receivedUnallocated: num('receivedUnallocated'),
       expected: num('expected'),
       receivedBuyer: num('receivedBuyer'), receivedSeller: num('receivedSeller'),
       received: num('received'), due: num('due'),

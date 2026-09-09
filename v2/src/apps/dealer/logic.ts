@@ -1,6 +1,8 @@
 // @ts-nocheck
 import { DCLogic, Router } from '../../framework/dc';
 import { deskStore } from './desk-store';
+import { loadDeskLinks } from './desk-links';
+import { loadDeskDeals } from './desk-deals';
 import { MAP_REGISTRY as CANONICAL_SECTOR_MAPS } from '../../packages/maps/sector-map-registry';
 import { loadGoogleMaps, importMapsLibrary, GOOGLE_MAPS_MAP_ID } from '../../packages/maps/google-loader';
 import { productRoutes } from '../../packages/ui/product-routes';
@@ -40,7 +42,7 @@ export class Component extends DCLogic {
     contactMode: 'clients', cliQ: '', cliFilter: null, sellQ: '', addClientBig: false, addSellerOpen: false, sellerProfile: null,
     savingSeller: false, sellerError: '', sellerEditId: null,
     savingSold: false, soldError: '', propError: '', propMissing: [],
-    savingClient: false, clientError: '',
+    savingClient: false, clientError: '', loadingLinks: false, linkLoadError: '', dashboardError: '',
     cliEdit: false, noteDraft: '', cpPick: false, cpPickQ: '', cpGroup: 'shortlisted', linkView: null, linkTab: 'focus', lkQ: '', lkFilter: 'all', linksTab: 'links', arch: null,
     cf: { name: '', phone: '', phone2: '', business: '', city: '', types: [], areas: [], budgetFrom: '', budgetTo: '', sizeFrom: '', sizeTo: '', prefs: [], customPref: '', stage: 'Just looking', note: '', areaDraft: '' },
     sf2: { name: '', phone: '', phone2: '', business: '', kind: 'Individual', city: '', note: '' },
@@ -48,7 +50,7 @@ export class Component extends DCLogic {
   };
 
   CITIES = ['Mohali', 'Aerocity', 'Aerotropolis', 'New Chandigarh', 'Zirakpur', 'Kharar', 'Panchkula', 'Chandigarh'];
-  INTEREST = { 'New Chandigarh': 46, 'Aerocity': 41, 'Mohali': 34, 'Chandigarh': 26, 'Aerotropolis': 22, 'Zirakpur': 18, 'Panchkula': 14, 'Kharar': 9 };
+  INTEREST = {};
 
   NAV = [
     { key: 'areas', label: 'Home', icon: 'ph-house' },
@@ -112,126 +114,8 @@ export class Component extends DCLogic {
   }
   waLink(p) { return 'https://wa.me/' + String(p || '').replace(/[^0-9]/g, ''); }
 
-  TODAY = 25;
-  deals = [
-    {
-      id: 'D1', name: 'Gill · Sector 79 plot', client: 'Harpreet Singh Gill', clientId: 'C1', prop: 'Residential Plot · 250 sq yd', propSub: 'Sector 79, Mohali', area: 'Mohali', propId: 'P1',
-      value: 16000000, comm: 240000, token: 500000, stage: 'registry', created: '6 Aug', createdDay: 6,
-      cB: 1, cS: 0.5, registryDay: 29,
-      next: { k: 'Collect document', note: 'Registry papers from Balwinder — fard and mutation', day: 26 },
-      pay: [{ k: 'token', amt: 500000, d: '20 Aug', note: 'Cash, receipt signed' }],
-      hist: [{ s: 'negotiating', d: '6 Aug' }, { s: 'token', d: '20 Aug' }, { s: 'registry', d: '24 Aug' }],
-      docs: [{ n: 'Token receipt', have: true, d: '20 Aug' }, { n: 'Agreement to Sell', have: true, d: '21 Aug' }, { n: 'Payment proof', have: false }, { n: 'Final registry copy', have: false }],
-      log: [{ d: '24 Aug', t: 'Stage changed to Registry / Closing', i: 'ph-fill ph-flag-banner', c: '#1a5aa8' }, { d: '22 Aug', t: 'Deal value changed ₹1.62 Cr → ₹1.60 Cr', i: 'ph-fill ph-pencil-simple', c: '#a3541b' }, { d: '21 Aug', t: 'Agreement to Sell signed', i: 'ph-fill ph-file-text', c: '#4a2c99' }, { d: '20 Aug', t: '₹5 L token recorded', i: 'ph-fill ph-coins', c: '#0a6634' }, { d: '6 Aug', t: 'Deal created', i: 'ph-fill ph-handshake', c: '#6b6156' }],
-      seller: { name: 'Balwinder Singh', phone: '+91 98146 22107' }
-    },
-
-    {
-      id: 'D2', name: 'Simar · Aerocity 300', client: 'Simarjeet Kaur', clientId: 'C2', prop: 'Residential Plot · 300 sq yd', propSub: 'Aerocity, Mohali', area: 'Aerocity', propId: 'P5',
-      value: 27000000, comm: 540000, token: 800000, stage: 'token', created: '12 Aug', createdDay: 12,
-      cB: 1, cS: 1, registryDay: 0,
-      next: { k: 'Collect token', note: 'Balance ₹4 L token promised on Tuesday', day: 25 },
-      pay: [{ k: 'token', amt: 800000, d: '22 Aug', note: 'RTGS, first part' }],
-      hist: [{ s: 'negotiating', d: '12 Aug' }, { s: 'token', d: '22 Aug' }],
-      docs: [{ n: 'Token receipt', have: true, d: '22 Aug' }, { n: 'Agreement to Sell', have: false }, { n: 'Payment proof', have: true, d: '22 Aug' }],
-      log: [{ d: '22 Aug', t: '₹8 L token recorded', i: 'ph-fill ph-coins', c: '#0a6634' }, { d: '22 Aug', t: 'Stage changed to Token / Booked', i: 'ph-fill ph-flag-banner', c: '#1a5aa8' }, { d: '12 Aug', t: 'Deal created', i: 'ph-fill ph-handshake', c: '#6b6156' }],
-      seller: { name: 'Karnail Singh Brar', phone: '+91 99885 31220' }
-    },
-
-    {
-      id: 'D3', name: 'Dr Verma · Panchkula kothi', client: 'Dr. Neeraj Verma', clientId: 'C3', prop: 'Kothi · 300 sq yd', propSub: 'Sector 9, Panchkula', area: 'Panchkula', propId: 'P13',
-      value: 31000000, comm: 620000, token: 0, stage: 'negotiating', created: '2 Aug', createdDay: 2,
-      cB: 1, cS: 1, registryDay: 0,
-      next: { k: 'Call buyer', note: 'He wanted a final number from the brothers', day: 24 },
-      pay: [],
-      hist: [{ s: 'negotiating', d: '2 Aug' }],
-      docs: [{ n: 'Token receipt', have: false }, { n: 'Agreement to Sell', have: false }],
-      log: [{ d: '19 Aug', t: 'Deal value changed ₹3.20 Cr → ₹3.10 Cr', i: 'ph-fill ph-pencil-simple', c: '#a3541b' }, { d: '14 Aug', t: 'Seller meeting recorded', i: 'ph-fill ph-users-three', c: '#4a2c99' }, { d: '2 Aug', t: 'Deal created', i: 'ph-fill ph-handshake', c: '#6b6156' }],
-      seller: { name: 'Verma family (direct)', phone: '+91 98720 55014' }
-    },
-
-    {
-      id: 'D4', name: 'Vikram · Sector 88', client: 'Vikram Ahluwalia', clientId: 'C7', prop: 'Residential Plot · 200 sq yd', propSub: 'Sector 88, Mohali', area: 'Mohali', propId: 'P2',
-      value: 12500000, comm: 218750, token: 200000, stage: 'token', created: '9 Aug', createdDay: 9,
-      cB: 1, cS: 0.75, registryDay: 31,
-      next: { k: 'Registry', note: 'Fix the slot at the tehsil for 31 Aug', day: 27 },
-      pay: [{ k: 'token', amt: 200000, d: '18 Aug', note: 'Cheque cleared' }, { k: 'commB', amt: 60000, d: '23 Aug', note: 'Part of buyer side' }],
-      hist: [{ s: 'negotiating', d: '9 Aug' }, { s: 'token', d: '18 Aug' }],
-      docs: [{ n: 'Token receipt', have: true, d: '18 Aug' }, { n: 'Agreement to Sell', have: true, d: '19 Aug' }, { n: 'Payment proof', have: false }],
-      log: [{ d: '23 Aug', t: '₹60,000 commission received from buyer', i: 'ph-fill ph-hand-coins', c: '#0a6634' }, { d: '19 Aug', t: 'Agreement to Sell signed', i: 'ph-fill ph-file-text', c: '#4a2c99' }, { d: '18 Aug', t: '₹2 L token recorded', i: 'ph-fill ph-coins', c: '#0a6634' }, { d: '9 Aug', t: 'Deal created', i: 'ph-fill ph-handshake', c: '#6b6156' }],
-      seller: { name: 'GMADA allottee', phone: '+91 98159 74430' }
-    },
-
-    {
-      id: 'D5', name: 'Jindal villa · Omaxe', client: 'Baldev Raj Jindal', clientId: 'C5', prop: 'Villa · 400 sq yd', propSub: 'Omaxe, New Chandigarh', area: 'New Chandigarh', propId: 'P10',
-      value: 46500000, comm: 813750, token: 0, stage: 'negotiating', created: '16 Aug', createdDay: 16,
-      cB: 0.75, cS: 1, registryDay: 0,
-      next: { k: 'Meet buyer', note: 'Wants to walk the villa again with his wife', day: 25 },
-      pay: [],
-      hist: [{ s: 'negotiating', d: '16 Aug' }],
-      docs: [{ n: 'Token receipt', have: false }],
-      log: [{ d: '21 Aug', t: 'Deal value changed ₹4.80 Cr → ₹4.65 Cr', i: 'ph-fill ph-pencil-simple', c: '#a3541b' }, { d: '16 Aug', t: 'Deal created', i: 'ph-fill ph-handshake', c: '#6b6156' }],
-      seller: { name: 'Omaxe (builder)', phone: '+91 172 400 1200' }
-    },
-
-    {
-      id: 'D7', name: 'Bansal · Eco City 500', client: 'Rajesh Bansal', clientId: 'C6', prop: 'Residential Plot · 500 sq yd', propSub: 'Eco City, New Chandigarh', area: 'New Chandigarh', propId: 'P9',
-      value: 22800000, comm: 456000, token: 0, stage: 'negotiating', created: '20 Aug', createdDay: 20,
-      cB: 1, cS: 1, registryDay: 0,
-      next: { k: 'Call seller', note: 'Brother must also agree before we take a token', day: 28 },
-      pay: [],
-      hist: [{ s: 'negotiating', d: '20 Aug' }],
-      docs: [{ n: 'Token receipt', have: false }],
-      log: [{ d: '20 Aug', t: 'Deal created', i: 'ph-fill ph-handshake', c: '#6b6156' }],
-      seller: { name: 'Jaswant Rai', phone: '+91 94170 88231' }
-    },
-
-    {
-      id: 'D8', name: 'Mehta · Zirakpur floor', client: 'Anil Mehta', clientId: 'C4', prop: 'Builder Floor · 1450 sq ft', propSub: 'VIP Road, Zirakpur', area: 'Zirakpur', propId: 'P11',
-      value: 7600000, comm: 152000, token: 0, stage: 'negotiating', created: '21 Aug', createdDay: 21,
-      cB: 1, cS: 1, registryDay: 0,
-      next: { k: 'Site visit', note: 'Family visit on Saturday morning', day: 26 },
-      pay: [],
-      hist: [{ s: 'negotiating', d: '21 Aug' }],
-      docs: [{ n: 'Token receipt', have: false }],
-      log: [{ d: '21 Aug', t: 'Deal created', i: 'ph-fill ph-handshake', c: '#6b6156' }],
-      seller: { name: 'Motia Group', phone: '+91 98723 11900' }
-    },
-
-    {
-      id: 'D6', name: 'Sunita · Aerocity flat', client: 'Sunita Rani', clientId: 'C8', prop: '3 BHK Flat · 1650 sq ft', propSub: 'Aerocity, Mohali', area: 'Aerocity', propId: 'P6',
-      value: 10200000, comm: 204000, token: 1000000, stage: 'closed', created: '2 Jul', createdDay: 2, closedOn: '18 Aug', closedDay: 18,
-      cB: 1, cS: 1, registryDay: 18,
-      next: { k: 'Commission follow-up', note: 'Seller side ₹1.02 L still to come', day: 23 },
-      pay: [{ k: 'token', amt: 1000000, d: '20 Jul', note: '' }, { k: 'commB', amt: 102000, d: '18 Aug', note: 'Buyer side settled at registry' }],
-      hist: [{ s: 'negotiating', d: '2 Jul' }, { s: 'token', d: '20 Jul' }, { s: 'registry', d: '10 Aug' }, { s: 'closed', d: '18 Aug' }],
-      docs: [{ n: 'Token receipt', have: true, d: '20 Jul' }, { n: 'Agreement to Sell', have: true, d: '22 Jul' }, { n: 'Payment proof', have: true, d: '18 Aug' }, { n: 'Final registry copy', have: true, d: '18 Aug' }, { n: 'Commission receipt', have: false }],
-      log: [{ d: '18 Aug', t: 'Deal completed — registry done', i: 'ph-fill ph-seal-check', c: '#0a6634' }, { d: '18 Aug', t: '₹1.02 L commission received from buyer', i: 'ph-fill ph-hand-coins', c: '#0a6634' }, { d: '20 Jul', t: '₹10 L token recorded', i: 'ph-fill ph-coins', c: '#0a6634' }, { d: '2 Jul', t: 'Deal created', i: 'ph-fill ph-handshake', c: '#6b6156' }],
-      seller: { name: 'Resale · owner', phone: '+91 98550 09912' }
-    },
-
-    {
-      id: 'D10', name: 'Kirandeep · Sector 70 flat', client: 'Kirandeep Sandhu', clientId: 'C9', prop: '3 BHK Flat · 1450 sq ft', propSub: 'Sector 70, Mohali', area: 'Mohali', propId: 'P12',
-      value: 9800000, comm: 196000, token: 500000, stage: 'closed', created: '20 Jun', createdDay: 20, closedOn: '12 Aug', closedDay: 12,
-      cB: 1, cS: 1, registryDay: 12,
-      next: null,
-      pay: [{ k: 'token', amt: 500000, d: '2 Jul', note: '' }, { k: 'commB', amt: 98000, d: '12 Aug', note: '' }, { k: 'commS', amt: 98000, d: '14 Aug', note: 'Seller paid two days later' }],
-      hist: [{ s: 'negotiating', d: '20 Jun' }, { s: 'token', d: '2 Jul' }, { s: 'registry', d: '5 Aug' }, { s: 'closed', d: '12 Aug' }],
-      docs: [{ n: 'Token receipt', have: true, d: '2 Jul' }, { n: 'Agreement to Sell', have: true, d: '6 Jul' }, { n: 'Payment proof', have: true, d: '12 Aug' }, { n: 'Final registry copy', have: true, d: '12 Aug' }, { n: 'Commission receipt', have: true, d: '14 Aug' }],
-      log: [{ d: '14 Aug', t: '₹98,000 commission received from seller — fully settled', i: 'ph-fill ph-hand-coins', c: '#0a6634' }, { d: '12 Aug', t: 'Deal completed — registry done', i: 'ph-fill ph-seal-check', c: '#0a6634' }, { d: '20 Jun', t: 'Deal created', i: 'ph-fill ph-handshake', c: '#6b6156' }],
-      seller: { name: 'Gurmeet Kaur', phone: '+91 98722 40118' }
-    },
-
-    {
-      id: 'D9', name: 'Sethi · Sector 22 kothi', client: 'Manpreet Sethi', clientId: 'C10', prop: 'Kothi · 500 sq yd', propSub: 'Sector 22, Chandigarh', area: 'Chandigarh', propId: '', outside: true,
-      value: 41000000, comm: 0, token: 0, stage: 'lost', created: '14 Jul', createdDay: 14, lostOn: '12 Aug', lostDay: 12, lostReason: 'Price not agreed', lastStage: 'negotiating',
-      cB: 1, cS: 1, registryDay: 0, next: null, pay: [],
-      hist: [{ s: 'negotiating', d: '14 Jul' }, { s: 'lost', d: '12 Aug' }],
-      docs: [],
-      log: [{ d: '12 Aug', t: 'Deal marked lost — price not agreed', i: 'ph-fill ph-x-circle', c: '#b02a37' }, { d: '3 Aug', t: 'Owner refused below ₹4.30 Cr', i: 'ph-fill ph-chat-text', c: '#a3541b' }, { d: '14 Jul', t: 'Deal created', i: 'ph-fill ph-handshake', c: '#6b6156' }],
-      seller: { name: 'Owner (direct)', phone: '—' }
-    },
-  ];
+  TODAY = new Date().getDate();
+  deals = [];
   /* Clients are canonical — Mark Sold resolves the buyer server-side and
      appends to that client's purchase history, so a fixture id would not
      exist. Filled in place by deskStore.loadClients(). */
@@ -1342,29 +1226,7 @@ export class Component extends DCLogic {
     D1: { start: 22, token: 3, due: 18 }, D2: { start: 28, token: 8, due: 24 }, D3: { start: 5 }, D4: { start: 1, token: 11 },
     D5: { start: 7 }, D6: { start: 2, token: 22, close: 6 }, D7: { start: 9 }, D8: { start: 12 }, D9: { start: 4 }
   };
-  clientLinks = [
-    {
-      id: 'L1', clientId: 'c2', client: 'Priya Mehta', props: ['sec79', 'aero'], created: '24 Jul', expires: '27 Jul', status: 'active', audio: true, loc: 'area', price: 'hidden',
-      events: [{ m: 12, k: 'view', p: 'sec79' }, { m: 13, k: 'earth', p: 'sec79' }, { m: 15, k: 'open' }, { m: 186, k: 'photos', p: 'sec79' }, { m: 190, k: 'view', p: 'sec79' }, { m: 193, k: 'audio' }, { m: 196, k: 'open' }, { m: 1380, k: 'visit', p: 'sec79' }, { m: 1392, k: 'view', p: 'sec79' }, { m: 1400, k: 'view', p: 'aero' }, { m: 1410, k: 'open' }, { m: 2760, k: 'view', p: 'sec79' }, { m: 2770, k: 'open' }]
-    },
-    {
-      id: 'L2', clientId: 'c1', client: 'Rajiv Sharma', props: ['ecocity', 'block5'], created: '22 Jul', expires: '25 Jul', status: 'active', audio: true, loc: 'area', price: 'range',
-      events: [{ m: 96, k: 'view', p: 'ecocity' }, { m: 99, k: 'wa' }, { m: 104, k: 'open' }, { m: 1520, k: 'view', p: 'ecocity' }, { m: 1530, k: 'open' }]
-    },
-    {
-      id: 'L3', clientId: 'c3', client: 'Amandeep Singh', props: ['omx', 'sec66', 'panchkula20'], created: '18 Jul', expires: '21 Jul', status: 'expired', audio: false, loc: 'approx', price: 'hidden',
-      events: [{ m: 8600, k: 'view', p: 'omx' }, { m: 8620, k: 'earth', p: 'omx' }, { m: 8640, k: 'call' }, { m: 8660, k: 'view', p: 'omx' }, { m: 8700, k: 'view', p: 'sec66' }, { m: 8760, k: 'open' }, { m: 10100, k: 'view', p: 'omx' }, { m: 10140, k: 'open' }]
-    },
-    {
-      id: 'L4', clientId: 'c5', client: 'Suresh Gupta', props: ['sec66a'], created: '20 Jul', expires: '23 Jul', status: 'revoked', audio: true, loc: 'exact', price: 'exact',
-      events: [{ m: 6100, k: 'audio' }, { m: 6120, k: 'view', p: 'sec66a' }, { m: 6140, k: 'open' }]
-    },
-    { id: 'L5', clientId: 'c4', client: 'Neha Kapoor', props: ['panchkula20', 'sec66a'], created: '2 Aug', expires: '9 Aug', status: 'active', audio: true, loc: 'area', price: 'hidden', events: [] },
-    {
-      id: 'L6', clientId: 'c6', client: 'Harpreet Kaur', props: ['omx'], created: '21 Aug', expires: '28 Aug', status: 'active', audio: false, loc: 'area', price: 'range',
-      events: [{ m: 52, k: 'view', p: 'omx' }, { m: 58, k: 'photos', p: 'omx' }, { m: 60, k: 'open' }]
-    },
-  ];
+  clientLinks = [];
   shares = [
     { id: 'S1', propId: 'ecocity', client: 'Simarjeet Kaur', created: '22 Jul', expires: '25 Jul', status: 'active', loc: 'area', price: 'hidden', audio: true, opened: '23 Jul, 9:12 pm', opens: 5, played: true, called: true, wa: false, visit: true },
     { id: 'S2', propId: 'ecocity', client: 'Karan Gupta', created: '18 Jul', expires: '21 Jul', status: 'expired', loc: 'approx', price: 'range', audio: true, opened: '19 Jul, 1:40 pm', opens: 3, played: false, called: false, wa: true, visit: false },
@@ -1400,6 +1262,14 @@ export class Component extends DCLogic {
     return n < this.TODAY ? ((this.TODAY - n) + ' days ago') : (n + ' Aug');
   }
   dealMoney(d) {
+    if (d.money) {
+      const m = d.money;
+      return { value: m.value, token: m.token, buyerPaid: m.token,
+        remaining: Math.max(0, m.value - m.token), cB: m.expectedBuyer,
+        cS: m.expectedSeller, expected: m.expected, gotB: m.receivedBuyer,
+        gotS: m.receivedSeller, got: m.received, due: m.due,
+        fully: m.fullySettled, none: m.received === 0 };
+    }
     const pay = d.pay || [];
     const sum = (k) => pay.filter(p => p.k === k).reduce((a, p) => a + p.amt, 0);
     const token = sum('token');
@@ -1448,37 +1318,58 @@ export class Component extends DCLogic {
     req.forEach(r => { if (!own.some(o => o.name === r)) own.push({ name: r, kind: 'deal', have: false, required: true }); });
     return { prop, own };
   }
-  dealNext(id, patch) {
+  async dealNext(id, patch) {
     const d = this.deals.find(x => x.id === id); if (!d) return;
-    d.next = { ...(d.next || { k: 'Call buyer', note: '', day: this.TODAY }), ...patch }; this.forceUpdate();
+    const next = { ...(d.next || {}), ...patch };
+    if (!next.k) { window.alert('Choose the follow-up action first.'); return; }
+    await this.updateDeal({ dealId: id, nextAction: { kind: next.k, note: next.note || '',
+      ...(next.day ? { dueOn: this.dealDayDate(next.day) } : {}) } });
   }
-  confirmStage() {
-    const f = this.state.stgFor; if (!f) return; const d = this.deals.find(x => x.id === f.id);
+  dealDayDate(day) {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), Number(day), 12).toLocaleDateString('en-CA');
+  }
+  async updateDeal(input) {
+    if (this._savingDeal) return false;
+    this._savingDeal = true;
+    try {
+      const result = await adapter.deals.update(input);
+      if (!result.ok) { window.alert(result.error.message || 'The deal could not be saved.'); return false; }
+      await this.loadDeals(); return true;
+    } finally { this._savingDeal = false; }
+  }
+  async confirmStage() {
+    const f = this.state.stgFor; if (!f) return;
     const dr = this.state.stgDraft || {};
-    if (f.to === 'closed') {
-      this.setState({ stgFor: null, stgDraft: null });
-      if (d && d.propId) this.openSold(d.propId); else this.completeDeal(f.id); return;
+    if (f.to === 'closed') { this.setState({ stgFor: null, stgDraft: null }); this.completeDeal(f.id); return; }
+    const input = { dealId: f.id, stage: f.to };
+    if (f.to === 'token' && String(dr.amt || '').trim()) {
+      const amount = Math.round(Number(dr.amt) * 1e5);
+      if (!Number.isFinite(amount) || amount <= 0) { window.alert('Enter a positive token amount.'); return; }
+      input.tokenPayment = { amount };
     }
-    if (f.to === 'token') { const v = parseFloat(dr.amt); if (v > 0) this.dealPay(f.id, 'token', Math.round(v * 1e5), 'Token taken'); }
-    if (f.to === 'registry' && d) { d.next = { k: 'Registry', day: parseInt(dr.date) || this.TODAY, note: 'Registry / closing' }; }
-    this.dealStage(f.id, f.to); this.setState({ stgFor: null, stgDraft: null });
+    if (f.to === 'registry' && dr.date) input.registryDate = this.dealDayDate(dr.date);
+    if (await this.updateDeal(input)) this.setState({ stgFor: null, stgDraft: null });
   }
-  dealStage(id, st) {
-    const d = this.deals.find(x => x.id === id); if (!d || d.stage === st) return;
-    d.stage = st; (d.hist = d.hist || []).push({ s: st, d: this.TODAY + ' Aug' });
-    (d.log = d.log || []).unshift({ d: 'Today', t: 'Stage changed to ' + this.ds(st).l, i: 'ph-fill ph-flag-banner', c: '#1a5aa8' });
-    if (st === 'closed') {
-      d.closedOn = this.TODAY + ' Aug'; d.closedDay = this.TODAY;
-      const pr = d.propId ? this.properties.find(p => p.id === d.propId) : null; if (pr) { pr.status = 'sold'; pr.published = false; pr.dealId = d.id; }
-    }
-    this.forceUpdate();
+  async dealStage(id, st, fields = {}) {
+    if (st === 'closed') { this.completeDeal(id); return false; }
+    const result = await adapter.deals.setStage({ dealId: id, stage: st, ...fields });
+    if (!result.ok) { window.alert(result.error.message || 'The deal stage could not be saved.'); return false; }
+    await this.loadDeals();
+    return true;
   }
-  dealPay(id, k, amt, note) {
-    const d = this.deals.find(x => x.id === id); if (!d || !amt) return;
-    (d.pay = d.pay || []).push({ k, amt: +amt, d: this.TODAY + ' Aug', note: note || '' });
-    const L = { token: 'token recorded', buyerPay: 'buyer payment recorded', commB: 'commission received from buyer', commS: 'commission received from seller' };
-    (d.log = d.log || []).unshift({ d: 'Today', t: this.inr(+amt) + ' ' + (L[k] || 'payment recorded'), i: k === 'token' ? 'ph-fill ph-coins' : 'ph-fill ph-hand-coins', c: '#0a6634' });
-    this.forceUpdate();
+  async dealPay(id, k, amt, note) {
+    const kind = { token: 'token', commB: 'commission-buyer', commS: 'commission-seller' }[k];
+    if (!kind) { window.alert('Buyer-to-seller balance payments cannot be recorded in this commission ledger. No payment was saved.'); return false; }
+    if (!Number.isFinite(+amt) || +amt <= 0) { window.alert('Enter a payment greater than zero.'); return false; }
+    if (this._recordingDealPayment) return false;
+    this._recordingDealPayment = true;
+    try {
+      const result = await adapter.deals.recordPayment({ dealId: id, kind, amount: +amt, note });
+      if (!result.ok) { window.alert(result.error.message || 'The payment could not be saved.'); return false; }
+      await this.loadDeals();
+      return true;
+    } finally { this._recordingDealPayment = false; }
   }
   dealDocToggle(id, name) {
     const d = this.deals.find(x => x.id === id); if (!d) return;
@@ -1499,32 +1390,24 @@ export class Component extends DCLogic {
     });
   }
   setUp(o) { this.setState({ upDraft: { ...(this.state.upDraft || {}), ...o } }); }
-  saveUpdate() {
+  async saveUpdate() {
     const s = this.state, u = s.upDraft || {}, d = this.deals.find(x => x.id === s.upFor); if (!d) return;
-    const nv = Math.round((parseFloat(u.price) || 0) * 1e7);
-    if (nv && nv !== d.value) { (d.log = d.log || []).unshift({ d: 'Today', t: 'Deal price changed ' + this.inr(d.value) + ' → ' + this.inr(nv), i: 'ph-fill ph-pencil-simple', c: '#a3541b' }); d.value = nv; }
-    const tk = Math.round((parseFloat(u.token) || 0) * 1e5);
-    if (tk > 0) {
-      (d.pay = d.pay || []).push({ k: 'token', amt: tk, d: u.tokenDay + ' Aug', note: '' });
-      (d.log = d.log || []).unshift({ d: 'Today', t: this.inr(tk) + ' token recorded', i: 'ph-fill ph-coins', c: '#0a6634' });
+    if (u.stage === 'closed') { this.completeDeal(d.id); return; }
+    const value = Math.round(Number(u.price) * 1e7);
+    if (!Number.isFinite(value) || value <= 0) { window.alert('Enter a positive deal value.'); return; }
+    const input = { dealId: d.id, value, stage: u.stage,
+      registryDate: u.regDay ? this.dealDayDate(u.regDay) : null,
+      nextAction: u.nextK ? { kind: u.nextK, note: u.note || '',
+        ...(u.nextDay ? { dueOn: this.dealDayDate(u.nextDay) } : {}) } : null };
+    if (String(u.token || '').trim()) {
+      const amount = Math.round(Number(u.token) * 1e5);
+      if (!Number.isFinite(amount) || amount <= 0) { window.alert('Enter a positive token amount.'); return; }
+      input.tokenPayment = { amount, receivedOn: this.dealDayDate(u.tokenDay) };
     }
-    if (u.regDay && u.regDay !== d.registryDay) {
-      d.registryDay = u.regDay;
-      (d.log = d.log || []).unshift({ d: 'Today', t: 'Registry set for ' + u.regDay + ' Aug', i: 'ph-fill ph-stamp', c: '#5b32c4' });
-    }
-    const oldNext = d.next || {};
-    if (oldNext.k !== u.nextK || oldNext.day !== u.nextDay || oldNext.note !== u.note) {
-      d.next = { k: u.nextK, day: u.nextDay, note: u.note || '' };
-      (d.log = d.log || []).unshift({ d: 'Today', t: 'Next action set — ' + u.nextK + ' ' + this.dayLabel(u.nextDay).toLowerCase(), i: this.NEXTICON[u.nextK] || 'ph-fill ph-note-pencil', c: '#a3541b' });
-    }
-    if (u.stage && u.stage !== d.stage) this.dealStage(d.id, u.stage);
-    this.setState({ upFor: null, upDraft: null });
+    if (await this.updateDeal(input)) this.setState({ upFor: null, upDraft: null });
   }
-  dealLost(id, reason) {
-    const d = this.deals.find(x => x.id === id); if (!d) return;
-    d.lastStage = d.stage; d.stage = 'lost'; d.lostReason = reason; d.lostOn = this.TODAY + ' Aug'; d.lostDay = this.TODAY;
-    (d.log = d.log || []).unshift({ d: 'Today', t: 'Deal marked lost — ' + reason.toLowerCase(), i: 'ph-fill ph-x-circle', c: '#b02a37' });
-    this.setState({ dealLostFor: null });
+  async dealLost(id, reason) {
+    if (await this.dealStage(id, 'lost', { reason })) this.setState({ dealLostFor: null });
   }
   LOSTREASONS = ['Buyer backed out', 'Price not agreed', 'Seller withdrew', 'Property sold elsewhere', 'Finance issue', 'Documentation issue', 'Other'];
   tel(p) { return 'tel:' + (p || '').replace(/[^0-9+]/g, ''); }
@@ -1542,6 +1425,40 @@ export class Component extends DCLogic {
     // those, instead of a query per property.
     Promise.all([deskStore.loadClients(), deskStore.loadSellers()])
       .then(() => deskStore.loadProperties());
+    void this.loadClientLinks();
+    void this.loadDashboard();
+    void this.loadDeals();
+  }
+  async loadDeals() {
+    if (this.state.loadingDeals) return;
+    this.setState({ loadingDeals: true });
+    try {
+      const rows = await loadDeskDeals();
+      this.deals.splice(0, this.deals.length, ...rows);
+      this.forceUpdate();
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : 'Deals could not be loaded.');
+    } finally { this.setState({ loadingDeals: false }); }
+  }
+  async loadDashboard() {
+    const result = await adapter.demandSignals.get();
+    if (!result.ok) { this.setState({ dashboardError: 'Presentation activity could not be loaded. Open Home again to retry.' }); return; }
+    this.INTEREST = Object.fromEntries(result.value.map(row => [row.city, row.opens]));
+    this.setState({ dashboardError: '' });
+  }
+  async loadClientLinks() {
+    if (this.state.loadingLinks) return;
+    this.setState({ loadingLinks: true, linkLoadError: '' });
+    try {
+      const links = await loadDeskLinks();
+      this.clientLinks.splice(0, this.clientLinks.length, ...links);
+      this.initLinks();
+      this.setState({ linkLoadError: '' });
+    } catch (error) {
+      this.setState({ linkLoadError: error instanceof Error ? error.message : 'Client links could not be loaded.' });
+    } finally {
+      this.setState({ loadingLinks: false });
+    }
   }
   moneyOn() { const s = this.state; return (s.section === 'properties' && s.invView === 'sold') || (s.section === 'deals' && s.dealView === 'done'); }
   sellerOn() { const s = this.state; return s.section === 'clients' && s.contactMode === 'sellers'; }
@@ -1569,13 +1486,16 @@ export class Component extends DCLogic {
     this.setState({ p: 1 });
   }
   celebrateSold(id) {
-    const pr = this.properties.find(x => x.id === id); if (!pr) return; pr.status = 'sold'; pr.published = false;
-    this.setState({ propDetail: null, delPlot: false, cardMenu: null, celebrate: { kind: 'sold', title: pr.type + ' · ' + pr.size, sub: pr.loc, amount: this.inr(pr.price), comm: this.inr(Math.round(pr.price * 0.015)) } });
+    this.openSold(id);
   }
   completeDeal(id) {
-    const d = this.deals.find(x => x.id === id); if (!d) return; d.stage = 'closed';
-    const pr = d.propId ? this.properties.find(x => x.id === d.propId) : null; if (pr) { pr.status = 'sold'; pr.published = false; }
-    this.setState({ selectedDeal: null, dealEdit: false, delArm: false, celebrate: { kind: 'closed', title: d.name || d.prop, sub: d.client + ' · ' + d.propSub, amount: this.inr(d.value), comm: d.comm ? this.inr(d.comm) : '—' } });
+    const d = this.deals.find(x => x.id === id); if (!d) return;
+    if (!d.propId) { window.alert('Link a saved property before completing this deal. No sale was recorded.'); return; }
+    this.openSold(d.propId);
+    this.setState({ soldForm: { ...this.state.soldForm, buyerId: d.clientId || '',
+      buyerName: d.client || '', buyerPhone: d.phone || '',
+      price: d.value > 0 ? String(d.value / 1e7) : '',
+      comm: d.money ? String(d.money.expected / 1e5) : '' } });
   }
   closeCelebrate() { this.setState({ celebrate: null }); }
   componentDidUpdate() {
@@ -1824,6 +1744,9 @@ export class Component extends DCLogic {
     this._gMapInitPromise = null;
   }
   go(k) {
+    if (k === 'deals') void this.loadDeals();
+    if (k === 'areas' || k === 'dashboard') void this.loadDashboard();
+    if (k === 'links') void this.loadClientLinks();
     if (this._raf) cancelAnimationFrame(this._raf);
     this._raf = null;
     this.setState({ section: k, selectedDeal: null, dealEdit: false, selectedClient: null, plotCityOpen: false, p: 1 });
@@ -1906,21 +1829,32 @@ export class Component extends DCLogic {
       this.clientLinks.unshift({ id: result.value.id, clientId: cid, client: name, props: f.plots.slice(),
         created: 'today', expires: result.value.expiresAt ? new Date(result.value.expiresAt).toLocaleDateString('en-IN') : '',
         status: 'active', audio: Boolean(this._lAudioBlob), loc: f.loc, price: f.price, includeIntelligence: f.includeIntelligence === true, events: [] });
+      this.initLinks();
       this.setState({ linkBuild: 'done', lastLink: result.value.id, lastLinkUrl: result.value.url });
+      await this.loadClientLinks();
     } catch (error) { this.setState({ linkError: error instanceof Error ? error.message : 'Could not create this link. Please try again.' }); }
     finally { this.setState({ sendingLink: false }); }
   }
-  revokeLink(id) { const l = this.clientLinks.find(x => x.id === id); if (l) l.status = 'revoked'; this.forceUpdate(); }
-  deleteLink(id) { this.clientLinks = this.clientLinks.filter(x => x.id !== id); this.forceUpdate(); }
-  savePrice() {
-    const pr = this.properties.find(x => x.id === this.state.priceEdit); const v = parseFloat(this.state.priceVal);
-    if (pr && !isNaN(v)) pr.price = Math.round(v * 1e7);
+  async revokeLink(id) {
+    const result = await adapter.clientLinks.revoke(id);
+    if (!result.ok) { window.alert('This link could not be stopped. Please retry.'); return; }
+    await this.loadClientLinks();
+  }
+  deleteLink(id) {
+    window.alert('Link history cannot be permanently deleted. Stop the link to prevent further access.');
+  }
+  async savePrice() {
+    const saved = await deskStore.updatePropertyPrice(this.state.priceEdit, Math.round(Number(this.state.priceVal) * 1e7));
+    if (!saved) { window.alert(deskStore.lastWriteError); return; }
     this.setState({ priceEdit: null, priceVal: '' });
   }
-  publish(id) { const pr = this.properties.find(x => x.id === id); if (pr) { pr.published = true; pr.ready = true; pr.gap = ''; } this.forceUpdate(); }
-  doUnpublish() {
-    const id = this.state.unpubFor; const pr = this.properties.find(x => x.id === id);
-    if (pr) { pr.published = false; pr.ready = false; pr.gap = (this.state.unpubReason || 'Taken off the map by you'); }
+  async publish(id) {
+    const saved = await deskStore.restoreProperty(id);
+    if (!saved) window.alert(deskStore.lastWriteError);
+  }
+  async doUnpublish() {
+    const saved = await deskStore.archiveProperty(this.state.unpubFor, this.state.unpubReason || '');
+    if (!saved) { window.alert(deskStore.lastWriteError); return; }
     this.setState({ unpubFor: null, unpubReason: '' });
   }
   openSold(id) {
@@ -1929,7 +1863,7 @@ export class Component extends DCLogic {
       soldFor: id, cardMenu: null, propDetail: null,
       soldForm: {
         price: pr.price ? String(pr.price / 1e7) : '', buyerId: '', buyerName: '', buyerPhone: '', buyerNew: false, buyerQ: '',
-        comm: pr.price ? String(Math.round(pr.price * 0.015 / 1e5)) : '', date: new Date().toISOString().slice(0, 10)
+        comm: '', date: new Date().toISOString().slice(0, 10)
       }
     });
   }
@@ -1963,6 +1897,7 @@ export class Component extends DCLogic {
       ...(isNaN(cv) ? {} : { commission: Math.round(cv * 1e5) }),
     });
     if (!ok) { this.setState({ savingSold: false, soldError: deskStore.lastWriteError }); return; }
+    await this.loadDeals();
     const comm = isNaN(cv) ? 0 : Math.round(cv * 1e5);
     this.setState({
       savingSold: false, soldError: '', soldFor: null, propDetail: null,
@@ -2155,10 +2090,12 @@ export class Component extends DCLogic {
      any completed deal all survive. */
   async archiveProp(id) {
     const done = await deskStore.archiveProperty(id);
+    if (!done) { window.alert(deskStore.lastWriteError); return; }
     this.setState({ propDetail: null, cardMenu: null, delPlot: false, propError: done ? '' : deskStore.lastWriteError });
   }
   async restoreProp(id) {
     const done = await deskStore.restoreProperty(id);
+    if (!done) { window.alert(deskStore.lastWriteError); return; }
     this.setState({ cardMenu: null, propError: done ? '' : deskStore.lastWriteError });
   }
   blankShare() { return { clientId: '', newName: '', newPhone: '', expiry: '3d', loc: 'area', price: 'hidden', photos: [0, 1, 2, 3], audio: 'none', secs: 0 }; }
@@ -2187,39 +2124,30 @@ export class Component extends DCLogic {
   deleteDeal(id) { this.deals = this.deals.filter(d => d.id !== id); this.setState({ selectedDeal: null, delArm: false }); }
   linkProp(id, propId) { const d = this.deals.find(x => x.id === id); if (d) { const pr = this.properties.find(p => p.id === propId); d.propId = propId; if (pr) { d.propSub = pr.loc; } } this.setState({ linkFor: null }); this.forceUpdate(); }
   unlinkProp(id) { const d = this.deals.find(x => x.id === id); if (d) { d.propId = ''; } this.forceUpdate(); }
-  submitAdd() {
-    const w = this.state.wiz; let clientName = '';
-    const pr = w.propId ? this.properties.find(p => p.id === w.propId) : null;
-    if (w.useNewClient && (w.ncName || '').trim()) {
-      clientName = w.ncName.trim();
-      const cid = 'C' + (this.clients.length + 1);
-      this.clients.unshift({ id: cid, name: clientName, phone: w.ncPhone || '—', city: pr ? pr.city : 'Mohali', budget: '—', budgetMax: 0, want: pr ? pr.want : 'Plot', status: 'active', seen: 'just now', note: 'Added while recording a deal.', viewed: [], interest: w.propId ? [w.propId] : [] });
-      this.newClients = [cid, ...this.newClients];
-    } else { const c = this.clients.find(x => x.id === w.clientId); if (c) { clientName = c.name; if (w.propId) { c.interest = Array.from(new Set([...(c.interest || []), w.propId])); } } }
-    if (!clientName) { this.setState({ addOpen: false }); return; }
-    const id = 'D' + (this.deals.length + 1);
-    const propLabel = pr ? (pr.type + ' · ' + pr.size) : ('Property' + (w.mpSize ? ' · ' + w.mpSize : ''));
-    const sub = pr ? pr.loc : ((w.mpLoc || '').trim() || '—');
-    const val = (parseFloat(w.value) || 0) * 1e7;
-    const commRs = (parseFloat(w.comm) || 0) * 1e5;
-    const pct = val ? +(commRs / val * 100).toFixed(2) : 1;
-    const cid2 = this.clients.find(x => x.name === clientName);
-    const when = this.TODAY + ' Aug';
-    const d = {
-      id, name: (w.name || '').trim() || (clientName + ' · ' + (pr ? pr.loc : ((w.mpLoc || '').trim() || 'deal'))),
-      client: clientName, clientId: cid2 ? cid2.id : '',
-      prop: propLabel, propSub: sub, area: pr ? pr.city : 'Mohali', propId: w.propId || '', outside: !w.propId,
-      value: val, comm: commRs || Math.round(val * 0.02), token: 0, stage: w.stage === 'enquiry' ? 'negotiating' : w.stage,
-      created: when, createdDay: this.TODAY, registryDay: 0,
-      cB: commRs ? pct : 1, cS: commRs ? 0 : 1,
-      next: { k: 'Call buyer', note: 'First follow-up on this deal', day: this.TODAY + 1 },
-      pay: [], hist: [{ s: w.stage === 'enquiry' ? 'negotiating' : w.stage, d: when }],
-      docs: [{ n: 'Token receipt', have: false }],
-      log: [{ d: when, t: 'Deal created', i: 'ph-fill ph-handshake', c: '#6b6156' }],
-      seller: { name: w.sellerName || '—', phone: w.sellerPhone || '—' }
-    };
-    this.deals.unshift(d);
-    this.setState({ addOpen: false, section: 'deals', dealView: 'active', selectedDeal: d.id, dealTab: 'overview', delArm: false, wiz: this.blankWiz() });
+  async submitAdd() {
+    if (this._startingDeal) return;
+    const w = this.state.wiz;
+    if (w.useManualProp || !w.propId) { window.alert('Save this property in Properties first, then select it here. The deal needs a saved property.'); return; }
+    if ((w.sellerName || '').trim() || (w.sellerPhone || '').trim()) { window.alert('Seller details are inherited from the selected property. Update its Seller section first, then leave these fields empty.'); return; }
+    if (!w.useNewClient && !w.clientId) { window.alert('Choose a buyer.'); return; }
+    if (w.useNewClient && !(w.ncName || '').trim()) { window.alert('Enter the buyer name.'); return; }
+    if (!['negotiating', 'token', 'registry'].includes(w.stage)) { window.alert('Start the deal at Negotiating, Token or Registry. Record completion from Mark Sold.'); return; }
+    const input = { propertyId: w.propId, name: (w.name || '').trim(), stage: w.stage,
+      ...(w.useNewClient ? { newBuyer: { name: w.ncName.trim(), phone: (w.ncPhone || '').trim() } } : { buyerId: w.clientId }) };
+    for (const [field, key, multiplier] of [['value', 'value', 1e7], ['comm', 'commissionTotal', 1e5]]) {
+      if (!String(w[field] || '').trim()) continue;
+      const amount = Math.round(Number(w[field]) * multiplier);
+      if (!Number.isFinite(amount) || amount < 0 || (key === 'value' && amount === 0)) { window.alert('Enter a valid ' + (field === 'comm' ? 'commission' : 'deal value') + '.'); return; }
+      input[key] = amount;
+    }
+    this._startingDeal = true;
+    try {
+      const result = await adapter.deals.start(input);
+      if (!result.ok) { window.alert(result.error.message || 'The deal could not be created.'); return; }
+      await deskStore.loadClients(); await this.loadDeals();
+      this.setState({ addOpen: false, section: 'deals', dealView: 'active', selectedDeal: result.value.id,
+        dealTab: 'overview', delArm: false, wiz: this.blankWiz() });
+    } finally { this._startingDeal = false; }
   }
   submitAddClient() {
     const f = this.state.cform; if (!f.name) { this.setState({ addClientOpen: false }); return; }
@@ -2262,7 +2190,11 @@ export class Component extends DCLogic {
   cfFrom(c) {
     return {
       name: c.name, phone: c.phone === '—' ? '' : c.phone, phone2: c.phone2 || '', business: c.business || '', city: c.city || '',
-      types: this.typesFor(c).slice(), areas: (c.areas || []).slice(), budgetFrom: c.bFrom ? String(c.bFrom) : '', budgetTo: c.bTo ? String(c.bTo) : '',
+      /* typesFor() invents a type for display when none was recorded.
+         Seeding the EDIT form from it meant the next save wrote that
+         invention onto the client as if they had said it. The form shows
+         only what was actually recorded. */
+      types: (c.types || []).slice(), areas: (c.areas || []).slice(), budgetFrom: c.bFrom ? String(c.bFrom) : '', budgetTo: c.bTo ? String(c.bTo) : '',
       sizeFrom: c.sizeFrom || '', sizeTo: c.sizeTo || '', prefs: (c.prefs || []).slice(), customPref: '', stage: c.stage || 'Just looking', note: '', areaDraft: ''
     };
   }
@@ -2309,8 +2241,8 @@ export class Component extends DCLogic {
     const c = this.clients.find(x => x.id === cid); if (!c) return;
     const arr = (c.interest || []).slice(); const i = arr.indexOf(pid);
     if (i >= 0) arr.splice(i, 1); else arr.push(pid);
-    c.interest = arr; this.forceUpdate();
-    await deskStore.setClientInterest(cid, arr);
+    const saved = await deskStore.setClientInterest(cid, arr);
+    this.setState({ clientError: saved ? '' : deskStore.lastWriteError });
   }
   /* Archiving is non-destructive — links, deals and purchases survive. */
   async archiveClient(id) {
@@ -2442,7 +2374,7 @@ export class Component extends DCLogic {
       }));
 
     // Demand rows (shared with home hot-city)
-    const maxOpens = Math.max(...Object.values(this.INTEREST));
+    const maxOpens = Math.max(1, ...Object.values(this.INTEREST));
     const toneMap = { coral: { c: '#b5322a', b: '#f6ded9', bar: '#d13b2a' }, indigo: { c: '#b04a12', b: '#fbe4d3', bar: '#d95d1e' }, azure: { c: '#a86a08', b: '#fbeecb', bar: '#e79a1f' }, mute: { c: '#8a8177', b: '#f3eeff', bar: '#c9c0b0' } };
     const demandRows = this.CITIES.map(city => {
       const opens = this.INTEREST[city] || 0;
@@ -2545,7 +2477,7 @@ export class Component extends DCLogic {
     const bigBtn = (on, tone, dark) => 'display:flex;align-items:center;gap:13px;padding:16px 18px;border-radius:18px;text-align:left;transition:box-shadow .2s;' + (on ? (tone === 'money' ? 'background:#12a150;background-image:linear-gradient(140deg,#2ec474,#0b6f39);color:#f2fff7;box-shadow:0 18px 36px -18px rgba(0,0,0,.55)' : 'background:#241d0c;background-image:linear-gradient(140deg,#3d3115,#1c1608);color:#ffe9ae;box-shadow:0 18px 36px -18px rgba(36,29,12,.75)') : (dark ? 'background:rgba(255,255,255,.12);color:#d7f0e0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.24)' : 'background:rgba(255,255,255,.74);color:#4c463d;box-shadow:inset 0 0 0 1px rgba(120,100,60,.22)'));
 
     const MONN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    const TODAY = 13, CALM = 7, CALY = 2026, calMonth = 'August 2026';
+    const calNow = new Date(), TODAY = calNow.getDate(), CALM = calNow.getMonth(), CALY = calNow.getFullYear(), calMonth = calNow.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
     const evAll = [];
     this.deals.forEach(d => {
       const dd = this.DEALDATES[d.id]; if (!dd) return; const nm = d.name || d.prop;
@@ -2840,11 +2772,12 @@ export class Component extends DCLogic {
         receivedLine: M.fully ? this.inr(M.got) + ' in hand' : (this.inr(M.due) + ' still due'),
         row: 'display:flex;align-items:center;gap:14px;row-gap:10px;flex-wrap:wrap;padding:16px 20px;border-radius:16px;margin-bottom:8px;box-shadow:0 0 0 1.5px #a6e3c0;' + (M.fully ? 'background:#e6f8ed' : 'background:#e6f8ed'),
         showCollect: M.due > 0,
-        collect: (e) => {
+        collect: async (e) => {
           if (e && e.stopPropagation) e.stopPropagation();
           const need = M.due, sideS = M.cS - M.gotS;
-          if (sideS > 0) this.dealPay(d.id, 'commS', sideS, 'Seller side settled');
-          if (need - Math.max(0, sideS) > 0) this.dealPay(d.id, 'commB', need - Math.max(0, sideS), 'Buyer side settled');
+          if (!window.confirm('Record the full outstanding commission of ' + this.inr(need) + ' as received?')) return;
+          if (sideS > 0 && !await this.dealPay(d.id, 'commS', sideS, 'Seller side settled')) return;
+          if (need - Math.max(0, sideS) > 0) await this.dealPay(d.id, 'commB', need - Math.max(0, sideS), 'Buyer side settled');
         },
         open: () => this.setState({ selectedDeal: d.id, dealTab: 'money' })
       };
@@ -3077,7 +3010,7 @@ export class Component extends DCLogic {
           lastStageLabel: dsOf(d.stageBeforeLost || 'negotiating').l,
 
           commRows: [
-            { label: 'From buyer' + (d.cBMode === 'fixed' ? ' (fixed)' : ' (' + (d.cB || 0) + '%)'), value: this.inr(M.cB) },
+            { label: d.money?.expectedUnallocated ? 'Recorded commission (payer not noted)' : 'From buyer' + (d.cBMode === 'fixed' ? ' (fixed)' : ' (' + (d.cB || 0) + '%)'), value: this.inr(d.money?.expectedUnallocated || M.cB) },
             { label: 'From seller' + (d.cSMode === 'fixed' ? ' (fixed)' : ' (' + (d.cS || 0) + '%)'), value: this.inr(M.cS) },
             { label: 'Already received', value: this.inr(M.got) },
             { label: 'Still due', value: this.inr(M.due) }
@@ -3094,8 +3027,9 @@ export class Component extends DCLogic {
           payAdd: [{ k: 'token', l: 'Token' }, { k: 'commB', l: 'Buyer commission' }, { k: 'commS', l: 'Seller commission' }].map(a => ({
             label: a.l,
             go: () => {
-              const amt = a.k === 'token' ? Math.round(d.value * 0.03) : Math.round(d.value * ((a.k === 'commB' ? d.cB : d.cS) || 0) / 100) - (a.k === 'commB' ? M.gotB : M.gotS);
-              if (amt > 0) this.dealPay(d.id, a.k, amt, 'Recorded from the deal room');
+              const input = window.prompt('Enter ' + a.l.toLowerCase() + ' actually received, in rupees:');
+              if (input === null) return;
+              this.dealPay(d.id, a.k, Number(input.replace(/,/g, '').trim()), 'Recorded from the deal room');
             },
             style: 'display:flex;align-items:center;gap:6px;height:42px;padding:0 14px;border-radius:12px;background:#241d0c;color:#f8c200;font-size:14.5px;font-weight:800;white-space:nowrap'
           })),
@@ -4948,27 +4882,27 @@ export class Component extends DCLogic {
       dLinkOpens: n(this.clientLinks.reduce((a, l) => a + l.opens, 0)), dLinkSub: (this.clientLinks.filter(l => l.status === 'active').length || 0) + ' links live now', pieSegs, pieLegend, wantTiles, attentionRows,
       pieTop: pieLegend.slice(0, 5), pieTopPct: pieLegend[0] ? pieLegend[0].pct : '', pieTopName: pieLegend[0] ? pieLegend[0].city : '',
       todayTiles: (() => {
-        const activeToday = new Set((this.clientLinks || []).filter(l => (l.events || []).some(e => e.m < 1440)).map(l => l.clientId)).size || 5;
-        const followUps = (this.clients || []).filter(c => { try { return ['active', 'attention'].includes(this.contactState(c)); } catch (e) { return false; } }).length || 3;
-        const stale = (this.properties || []).filter(p => p.status === 'available' && p.ps && p.ps.availConfirmed === false).length || 2;
+        const activeToday = new Set((this.clientLinks || []).filter(l => (l.events || []).some(e => e.m < 1440)).map(l => l.clientId)).size;
+        const followUps = (this.clients || []).filter(c => { try { return ['active', 'attention'].includes(this.contactState(c)); } catch (e) { return false; } }).length;
+        const stale = (this.properties || []).filter(p => p.status === 'available' && p.ps && p.ps.availConfirmed === false).length;
         const sentIds = new Set([].concat(...(this.clientLinks || []).map(l => l.props || [])));
-        const mktReady = (this.properties || []).filter(p => p.status === 'available' && (p.photoCount || 0) >= 6 && !sentIds.has(p.id)).length || 4;
+        const mktReady = (this.properties || []).filter(p => p.status === 'available' && (p.photoCount || 0) >= 6 && !sentIds.has(p.id)).length;
         const T = [
           {
             l: 'Clients active today', s: 'Viewed links or properties', v: activeToday, ic: 'ph-fill ph-eye',
-            bg: '#0f7a45', bgi: 'linear-gradient(145deg,#17a05c 0%,#0f7a45 55%,#075c32 100%)', fg: '#eafff2', dim: '#a8e3c3', glow: '#2fd07f', f: 'See who', go: () => this.setState({ tab: 'links', linksTab: 'follow' })
+            bg: '#0f7a45', bgi: 'linear-gradient(145deg,#17a05c 0%,#0f7a45 55%,#075c32 100%)', fg: '#eafff2', dim: '#a8e3c3', glow: '#2fd07f', f: 'See who', go: () => this.setState({ section: 'links', linksTab: 'follow' })
           },
           {
             l: 'Needs attention', s: 'Real reasons to contact them', v: followUps, ic: 'ph-fill ph-bell-ringing',
-            bg: '#c0490c', bgi: 'linear-gradient(145deg,#ea580c 0%,#c0490c 55%,#963406 100%)', fg: '#fff3ea', dim: '#f3c3a4', glow: '#ff8a4c', f: 'View attention', go: () => this.setState({ tab: 'links', linksTab: 'follow' })
+            bg: '#c0490c', bgi: 'linear-gradient(145deg,#ea580c 0%,#c0490c 55%,#963406 100%)', fg: '#fff3ea', dim: '#f3c3a4', glow: '#ff8a4c', f: 'View attention', go: () => this.setState({ section: 'links', linksTab: 'follow' })
           },
           {
             l: 'Properties to check', s: 'Seller availability getting old', v: stale, ic: 'ph-fill ph-clock-countdown',
-            bg: '#c0490c', bgi: 'linear-gradient(145deg,#e2571f 0%,#c0490c 55%,#963406 100%)', fg: '#fff3ea', dim: '#f3c3a4', glow: '#ff8a4c', f: 'Check these', go: () => this.setState({ tab: 'inventory' })
+            bg: '#c0490c', bgi: 'linear-gradient(145deg,#e2571f 0%,#c0490c 55%,#963406 100%)', fg: '#fff3ea', dim: '#f3c3a4', glow: '#ff8a4c', f: 'Check these', go: () => this.setState({ section: 'properties' })
           },
           {
             l: 'Marketing ready', s: 'Posts and reels ready to go', v: mktReady, ic: 'ph-fill ph-megaphone',
-            bg: '#4a2c99', bgi: 'linear-gradient(145deg,#6b3fd4 0%,#4a2c99 55%,#341c73 100%)', fg: '#f1ebff', dim: '#c6b3ee', glow: '#8b6bee', f: 'Make a post', go: () => this.setState({ tab: 'inventory' })
+            bg: '#4a2c99', bgi: 'linear-gradient(145deg,#6b3fd4 0%,#4a2c99 55%,#341c73 100%)', fg: '#f1ebff', dim: '#c6b3ee', glow: '#8b6bee', f: 'Make a post', go: () => this.setState({ section: 'properties' })
           }];
         return T.map(t => ({
           label: t.l, sub: t.s, count: String(t.v), icon: t.ic, foot: t.f, go: t.go,
@@ -5173,7 +5107,10 @@ export class Component extends DCLogic {
             };
           }).filter(Boolean);
           const evAll = myLinks.reduce((a, l) => a.concat((l.events || []).map(e => ({ ...e, lid: l.id }))), []).sort((a, b) => a.m - b.m).slice(0, 14);
-          const dls = this.deals.filter(d => d.client === pc.name);
+          /* Joined by NAME, this attached a demo deal to any real client who
+             happened to share one — a deal and a commission the dealer never
+             recorded. Identity is the only safe join. */
+          const dls = this.deals.filter(d => d.clientId && d.clientId === pc.id);
           const bought = boughtOf(pc);
           const cpTab = s.cpTab || 'overview';
           const CPT = [
@@ -5304,7 +5241,7 @@ export class Component extends DCLogic {
             noNotes: (pc.notes || []).length === 0, noActivity: evAll.length === 0,
             noProps: propRows.filter(r => cpGroup === 'sold' ? r.isBought : !r.isBought).length === 0,
             archIdle: s.arch !== 'c',
-            startEdit: () => this.setState({ cliEdit: true, cf: this.cfFrom(pc) }),
+            startEdit: () => this.setState({ cliEdit: true, clientError: '', cf: this.cfFrom(pc) }),
             cancelEdit: () => this.setState({ cliEdit: false, cf: this.blankCF() }),
             saveEdit: () => this.saveClientEdit(),
             sendLink: () => this.setState({ selectedClient: null, linkBuild: 'new', lstep: 1, lSearchQ: '', lSearchQ2: '', lform: { ...this.blankL(), clientId: pc.id } }),
@@ -5435,7 +5372,15 @@ export class Component extends DCLogic {
               numStyle: `font-size:12px;font-weight:800;border-radius:999px;padding:1px 7px;${on ? 'background:rgba(255,255,255,.24)' : 'background:rgba(0,0,0,.08);color:#6b5f4c'}`
             };
           }),
-          cliCards, cliEmpty: cliCards.length === 0, cliAny: cliCards.length > 0,
+          cliCards,
+          /* A failed load is not an empty address book. Mirrors sellers. */
+          cliLoading: deskStore.clientsStatus.state === 'loading' && cliCards.length === 0,
+          cliError: deskStore.clientsStatus.state === 'error'
+            ? (deskStore.clientsStatus.error || 'Clients could not be loaded.') : (!s.selectedClient && !s.addClientBig ? s.clientError : ''),
+          cliRetry: () => deskStore.loadClients(),
+          cliEmpty: cliCards.length === 0 && deskStore.clientsStatus.state !== 'loading'
+            && deskStore.clientsStatus.state !== 'error',
+          cliAny: cliCards.length > 0,
           sellCards, sellAny: sellCards.length > 0,
           /* Truthful states: a screen with no sellers because the request is
              still in flight, or failed, must never read as "no sellers yet". */

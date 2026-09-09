@@ -71,6 +71,31 @@ describe('pipeline deal normalization', () => {
 });
 
 describe('deal pipeline repository', () => {
+  it('persists a name, unallocated commission and a combined stage/payment edit', async () => {
+    const keys = await fixture('details');
+    const created = await adapter.deals.start({ ...keys, name: 'Recorded deal', commissionTotal: 35000, value: 9000000 });
+    expect(created.ok).toBe(true); if (!created.ok) return;
+    const edited = await adapter.deals.update({ dealId: created.value.id, value: 9500000,
+      name: 'Updated deal', stage: 'token', nextAction: { kind: 'Call buyer', note: 'After 7pm', dueOn: '2026-09-10' },
+      tokenPayment: { amount: 100000, receivedOn: '2026-09-09' } });
+    expect(edited.ok).toBe(true);
+    const read = await adapter.deals.workspace(created.value.id);
+    expect(read.ok).toBe(true); if (!read.ok) return;
+    expect(read.value.deal).toMatchObject({ name: 'Updated deal', value: 9500000, stage: 'token', nextAction: { note: 'After 7pm' } });
+    expect(read.value.money).toMatchObject({ expected: 35000, expectedUnallocated: 35000, token: 100000 });
+    expect(read.value.payments).toHaveLength(1);
+  });
+  it('rejects invalid payment edits before changing the deal value', async () => {
+    const created = await adapter.deals.start({ ...await fixture('details-invalid'), value: 9000000 });
+    expect(created.ok).toBe(true); if (!created.ok) return;
+    const edited = await adapter.deals.update({ dealId: created.value.id, value: 9500000, tokenPayment: { amount: -1 } });
+    expect(edited.ok).toBe(false);
+    const read = await adapter.deals.workspace(created.value.id);
+    expect(read.ok).toBe(true); if (read.ok) {
+      expect(read.value.deal.value).toBe(9000000);
+      expect(read.value.payments).toHaveLength(0);
+    }
+  });
   it('starts a deal on a canonical client and property without duplicating either', async () => {
     const { propertyId, buyerId } = await fixture('start');
     const started = await adapter.deals.start({

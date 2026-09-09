@@ -1,12 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { adapter } from '../src/packages/data/mock-adapter-v2';
 import { CLIENTS } from '../src/packages/data/mock-adapter';
 import {
-  DeskStore, toDeskProperty, toCanonicalProperty, missingForOnSale,
+  DeskStore, toDeskProperty, toCanonicalProperty, missingForOnSale, budgetLabel,
 } from '../src/apps/dealer/desk-store';
 import type { Property } from '../src/packages/data/types';
-
-const uniq = (p: string) => `${p}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
 const baseForm = {
   city: 'Mohali', area: 'Test Enclave', type: 'Residential Plot',
@@ -211,6 +209,34 @@ describe('Desk ↔ canonical property round trip', () => {
 });
 
 describe('property store', () => {
+  it('does not write when an edited property cannot be read', async () => {
+    const store = new DeskStore();
+    const read = vi.spyOn(adapter.properties, 'get').mockResolvedValue({ ok: false,
+      error: { code: 'network', message: 'offline' } });
+    const write = vi.spyOn(adapter.properties, 'save');
+    try {
+      const result = await store.saveProperty(baseForm, { id: 'existing-id' });
+      expect(result.error).toMatch(/retry before saving/i);
+      expect(write).not.toHaveBeenCalled();
+    } finally { read.mockRestore(); write.mockRestore(); }
+  });
+
+  it('persists a price and off-market reason without changing geographic placement', async () => {
+    const store = new DeskStore();
+    const created = await store.saveProperty(baseForm);
+    const original = created.property!;
+    expect(await store.updatePropertyPrice(original.id, 9200000)).toBe(true);
+    expect(await store.archiveProperty(original.id, 'Owner temporarily unavailable')).toBe(true);
+    const read = await adapter.properties.get(original.id);
+    expect(read.ok).toBe(true);
+    if (read.ok) {
+      expect(read.value.price).toBe(9200000);
+      expect(read.value.offMarketReason).toBe('Owner temporarily unavailable');
+      expect(read.value.location).toEqual(original.location);
+      expect(read.value.mapPlacement).toEqual(original.mapPlacement);
+    }
+    await adapter.properties.remove(original.id);
+  });
   it('loads canonical inventory and keeps the array reference', async () => {
     const store = new DeskStore();
     const reference = store.properties;
@@ -234,8 +260,8 @@ describe('property store', () => {
     const store = new DeskStore();
     await store.loadSellers();
     await store.loadProperties();
-    const id = uniq('desk-prop');
-    const result = await store.saveProperty({ ...baseForm, area: 'Persisted Enclave' }, { id });
+    const result = await store.saveProperty({ ...baseForm, area: 'Persisted Enclave' });
+    const id = result.property!.id;
     expect(result.error).toBeUndefined();
     expect(result.property?.id).toBe(id);
 
@@ -253,11 +279,11 @@ describe('property store', () => {
   it('keeps an incomplete property as a Draft and says what is missing', async () => {
     const store = new DeskStore();
     await store.loadProperties();
-    const id = uniq('desk-draft');
     const result = await store.saveProperty(
       { city: 'Mohali', area: 'Incomplete', type: 'Flat' },
-      { id, lifecycle: 'on-sale' },
+      { lifecycle: 'on-sale' },
     );
+    const id = result.property!.id;
     expect(result.error).toBeUndefined();
     expect(result.property?.lifecycle).toBe('draft');
     expect(result.missing).toEqual(expect.arrayContaining(['size']));
@@ -267,8 +293,8 @@ describe('property store', () => {
   it('takes a property off the market and puts it back without losing anything', async () => {
     const store = new DeskStore();
     await store.loadProperties();
-    const id = uniq('desk-archive');
-    await store.saveProperty({ ...baseForm, area: 'Archive Test' }, { id });
+    const created = await store.saveProperty({ ...baseForm, area: 'Archive Test' });
+    const id = created.property!.id;
 
     expect(await store.archiveProperty(id)).toBe(true);
     expect(store.properties.find((p) => p.id === id)!.status).toBe('onhold');
@@ -287,8 +313,8 @@ describe('property store', () => {
     const store = new DeskStore();
     await store.loadSellers();
     await store.loadProperties();
-    const id = uniq('desk-sold');
-    await store.saveProperty({ ...baseForm, area: 'Sold Test' }, { id });
+    const created = await store.saveProperty({ ...baseForm, area: 'Sold Test' });
+    const id = created.property!.id;
     const buyerId = CLIENTS[0]!.id;
 
     expect(await store.markSold({
@@ -321,5 +347,33 @@ describe('property store', () => {
     expect(store.propertiesStatus.error).toMatch(/could not reach/i);
     expect(store.properties).toHaveLength(0);
     (adapter.properties as { list: unknown }).list = original;
+  });
+});
+
+describe('the budget band a dealer reads on a contact card', () => {
+  /* The lower unit was stripped unconditionally, which is only correct when
+     both ends share it. A 80 lakh – 1.5 crore client rendered as "₹80–1.5 Cr",
+     where the 80 reads as crore: off by a factor of 100. Legacy contacts carry
+     a stored budget string, so this only ever showed on clients created
+     through the app — i.e. every real one from now on. */
+  const L = 1e5, CR = 1e7;
+
+  it('keeps the unit when the two ends differ', () => {
+    expect(budgetLabel(80 * L, 1.5 * CR)).toBe('₹80 L–1.5 Cr');
+  });
+
+  it('still drops the redundant unit when both ends share it', () => {
+    expect(budgetLabel(1.2 * CR, 2 * CR)).toBe('₹1.2–2 Cr');
+    expect(budgetLabel(40 * L, 60 * L)).toBe('₹40–60 L');
+  });
+
+  it('renders a single-sided band unchanged', () => {
+    expect(budgetLabel(undefined, 1.5 * CR)).toBe('₹1.5 Cr');
+    expect(budgetLabel(80 * L, undefined)).toBe('₹80 L+');
+    expect(budgetLabel(undefined, undefined)).toBe('');
+  });
+
+  it('never claims a band the dealer did not record', () => {
+    expect(budgetLabel(0, 0)).toBe('');
   });
 });

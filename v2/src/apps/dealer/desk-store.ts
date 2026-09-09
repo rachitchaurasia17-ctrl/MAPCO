@@ -468,11 +468,20 @@ const crore = (rupees: number | undefined): string =>
 
 /** "₹1.2–1.8 Cr" from what was actually recorded — never a made-up band. */
 export function budgetLabel(min: number | undefined, max: number | undefined): string {
+  const unit = (v: number) => (v / CRORE >= 1 ? 'Cr' : 'L');
   const fmt = (v: number) => {
     const cr = v / CRORE;
     return cr >= 1 ? `${+cr.toFixed(2)} Cr` : `${Math.round(v / 1e5)} L`;
   };
-  if (min && max && min !== max) return `₹${fmt(min).replace(/ (Cr|L)$/, '')}–${fmt(max)}`;
+  if (min && max && min !== max) {
+    /* Dropping the lower unit is only right when both ends share it
+       ("₹1.2–1.8 Cr"). Across units it produced "₹80–1.5 Cr" for a
+       80 lakh – 1.5 crore client: the 80 reads as crore, off by 100x.
+       Legacy contacts hid this behind a stored budget string, so it only
+       showed on clients created through the app. */
+    const lower = unit(min) === unit(max) ? fmt(min).replace(/ (Cr|L)$/, '') : fmt(min);
+    return `₹${lower}–${fmt(max)}`;
+  }
   if (max) return `₹${fmt(max)}`;
   if (min) return `₹${fmt(min)}+`;
   return '';
@@ -494,7 +503,7 @@ export function toDeskClient(client: Client): Record<string, unknown> {
     stage: r.stage ?? '',
     // Desk renders `notes` as {t,x}; canonical stores {at,text}.
     notes: (client.notes ?? []).map((n) => ({ t: n.at, x: n.text })),
-    budget: client.budget || budgetLabel(r.budgetMin, r.budgetMax),
+    budget: budgetLabel(r.budgetMin, r.budgetMax) || client.budget || '',
     budgetMax: client.budgetMax || r.budgetMax || 0,
     plots: [...(client.purchased ?? [])],
     hot: client.status === 'hot',
@@ -538,7 +547,7 @@ export function toCanonicalClient(
     ? [{ at: new Date().toISOString(), text: noteText }, ...(existing?.notes ?? [])].slice(0, 200)
     : existing?.notes;
 
-  const want = types[0] ? deskWantOf(types[0]) : (existing?.want ?? '');
+  const want = types[0] ? deskWantOf(types[0]) : '';
 
   return {
     ...(existing ?? {}),
@@ -547,17 +556,17 @@ export function toCanonicalClient(
     phone: String(form.phone ?? existing?.phone ?? '').trim(),
     city: String(form.city ?? existing?.city ?? '').trim(),
     want: want as Client['want'],
-    budget: budgetLabel(budgetMin, budgetMax) || existing?.budget || '',
-    budgetMax: budgetMax ?? existing?.budgetMax ?? 0,
+    budget: budgetLabel(budgetMin, budgetMax),
+    budgetMax: budgetMax ?? 0,
     status: existing?.status ?? 'active',
     seen: existing?.seen ?? '',
     note: existing?.note ?? '',
     viewed: existing?.viewed ?? [],
     interest: existing?.interest ?? [],
     purchased: existing?.purchased ?? [],
-    ...(String(form.phone2 ?? '').trim() ? { alternatePhone: String(form.phone2).trim() } : {}),
-    ...(String(form.business ?? '').trim() ? { business: String(form.business).trim() } : {}),
-    ...(hasRequirements ? { requirements } : {}),
+    alternatePhone: String(form.phone2 ?? '').trim(),
+    business: String(form.business ?? '').trim(),
+    requirements: hasRequirements ? requirements : existing ? {} : undefined,
     ...(notes?.length ? { notes } : {}),
   } as Client;
 }
@@ -832,12 +841,12 @@ export class DeskStore {
     options: { id?: string; lifecycle?: PropertyLifecycle } = {},
   ): Promise<PropertyWriteResult> {
     this.lastWriteError = '';
-    const existingRow = options.id
-      ? this.properties.find((p) => p.id === options.id)
-      : undefined;
-    const existing = existingRow
-      ? await this.readCanonical(String(existingRow.id))
-      : undefined;
+    const existing = options.id ? await this.readCanonical(options.id) : undefined;
+    if (options.id && !existing) {
+      this.lastWriteError = 'Could not load this property. Please retry before saving changes.';
+      this.notify();
+      return { error: this.lastWriteError, errorCode: 'not_found' };
+    }
 
     const wanted: PropertyLifecycle = options.lifecycle
       ?? (form.avail === 'onhold' ? 'archived' : 'on-sale');
@@ -861,12 +870,36 @@ export class DeskStore {
     return result.ok ? result.value : undefined;
   }
 
+  async updatePropertyPrice(id: string, price: number): Promise<boolean> {
+    this.lastWriteError = '';
+    if (!Number.isFinite(price) || price <= 0) {
+      this.lastWriteError = 'Enter a price greater than zero.';
+      this.notify();
+      return false;
+    }
+    const property = await this.readCanonical(id);
+    if (!property) {
+      this.lastWriteError = 'Could not load this property. Please retry.';
+      this.notify();
+      return false;
+    }
+    const result = await adapter.properties.save({ ...property, price });
+    if (!result.ok) {
+      this.lastWriteError = message(result.error, 'Could not update this price');
+      this.notify();
+      return false;
+    }
+    await this.loadProperties();
+    return true;
+  }
+
   /** Off-market / archive. Non-destructive — history and media survive. */
-  async archiveProperty(id: string): Promise<boolean> {
+  async archiveProperty(id: string, reason?: string): Promise<boolean> {
     this.lastWriteError = '';
     const existing = await this.readCanonical(id);
     if (!existing) { this.lastWriteError = 'This property is no longer available.'; this.notify(); return false; }
-    const result = await adapter.properties.save({ ...existing, lifecycle: 'archived' });
+    const result = await adapter.properties.save({ ...existing, lifecycle: 'archived',
+      ...(reason !== undefined ? { offMarketReason: reason.trim() } : {}) });
     if (!result.ok) {
       this.lastWriteError = message(result.error, 'Could not take this property off the market');
       this.notify();
@@ -964,6 +997,11 @@ export class DeskStore {
       return null;
     }
     const existing = id ? await this.readCanonicalClient(id) : undefined;
+    if (id && !existing) {
+      this.lastWriteError = 'Could not load this client. Please retry before saving changes.';
+      this.notify();
+      return null;
+    }
     const result = await adapter.customers.save(toCanonicalClient(form, existing, id));
     if (!result.ok) {
       this.lastWriteError = message(result.error, 'Could not save this client');
@@ -1020,7 +1058,11 @@ export class DeskStore {
   async setClientInterest(id: string, propertyIds: readonly string[]): Promise<boolean> {
     this.lastWriteError = '';
     const existing = await this.readCanonicalClient(id);
-    if (!existing) return false;
+    if (!existing) {
+      this.lastWriteError = 'Could not load this client. Please retry before updating the shortlist.';
+      this.notify();
+      return false;
+    }
     const result = await adapter.customers.save({ ...existing, interest: [...propertyIds] });
     if (!result.ok) {
       this.lastWriteError = message(result.error, 'Could not update the shortlist');

@@ -57,11 +57,24 @@ export class DCLogic {
       }
     });
 
-    (window as any).__dcEvents = (window as any).__dcEvents || {};
+    /* Every render mints a fresh id per bound handler and parks the closure on
+       window.__dcEvents, because the only way an inline onclick string can
+       reach a method is through a global. Nothing ever released them, so the
+       registry grew for the life of the tab — measured at ~100 new closures
+       per keystroke in the Add Property wizard (each one retaining this
+       component), which is a real leak over a long session on a desk machine.
+
+       The previous render's ids can be released once its HTML is gone, which
+       happens on the innerHTML assignment below. Released per instance, not
+       wholesale: the marketing app is a second DCLogic sharing this registry. */
+    const registry: Record<string, unknown> = ((window as any).__dcEvents ??= {});
+    const retiring: string[] = (this as any).__dcEventIds || [];
+    const minted: string[] = [];
     props.__b = (fn: any) => {
       if (typeof fn !== 'function') return fn;
-      const id = 'ev_' + Math.random().toString(36).substr(2, 9);
-      (window as any).__dcEvents[id] = fn;
+      const id = 'ev_' + Math.random().toString(36).slice(2, 11);
+      registry[id] = fn;
+      minted.push(id);
       return `window.__dcEvents['${id}'](event)`;
     };
 
@@ -144,6 +157,13 @@ export class DCLogic {
 
       // RENDER
       root.innerHTML = (this as any).__templateFn(props);
+
+      // The old markup — and every onclick string pointing at the previous
+      // ids — is gone as of the line above, so those closures are now
+      // unreachable and safe to drop. Assigned before componentDidUpdate, which
+      // may render again.
+      for (const id of retiring) delete registry[id];
+      (this as any).__dcEventIds = minted;
 
       // POST-RENDER STATE RESTORE
       for (const s of scrollStates) {

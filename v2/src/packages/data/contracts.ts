@@ -293,6 +293,8 @@ export interface RecordSaleInput {
 
 /** Start a deal from an existing Client + Property. Neither is duplicated. */
 export interface StartDealInput {
+  name?: string;
+  commissionTotal?: number;
   propertyId: string;
   /** existing canonical client id, or provide newBuyer to create a minimal one. */
   buyerId?: string;
@@ -323,7 +325,19 @@ export interface RecordDealPaymentInput {
   note?: string;
 }
 
+export interface UpdateDealInput {
+  dealId: string;
+  name?: string;
+  value?: number;
+  nextAction?: DealNextAction | null;
+  registryDate?: string | null;
+  stage?: 'negotiating' | 'token' | 'registry';
+  tokenPayment?: { amount: number; receivedOn?: string };
+}
+
 export interface DealRepository {
+  /** Save details, optional stage and token receipt as one transaction. */
+  update(input: UpdateDealInput, opts?: QueryOptions): Promise<Result<PipelineDeal>>;
   /** The completed-sales register. */
   list(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<Deal>>>;
   get(id: string, opts?: QueryOptions): Promise<Result<Deal>>;

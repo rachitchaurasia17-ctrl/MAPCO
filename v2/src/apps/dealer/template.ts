@@ -1027,6 +1027,23 @@ export function renderApp(state: any) {
                       \`).join('') }
                     </div>
                   \` : '' }
+                  \${ cliLoading ? \`
+                    <div
+                      style="margin-top:22px;padding:56px 40px;text-align:center;border-radius:24px;background:#fffdf7;box-shadow:inset 0 0 0 1.5px #d6c6f2">
+                      <i class="ph-fill ph-circle-notch" style="font-size:46px;color:#b9a6e0"></i>
+                      <div style="font-size:20px;font-weight:800;color:#241f1c;margin-top:12px">Loading clients…</div>
+                    </div>
+                  \` : '' }
+                  \${ cliError ? \`
+                    <div role="alert"
+                      style="margin-top:22px;padding:56px 40px;text-align:center;border-radius:24px;background:#fff5ec;box-shadow:inset 0 0 0 2px #f5c9a0">
+                      <i class="ph-fill ph-warning-circle" style="font-size:46px;color:#c0490c"></i>
+                      <div style="font-size:20px;font-weight:800;color:#241f1c;margin-top:12px">Clients could not be loaded</div>
+                      <div style="font-size:16.5px;color:#6b6156;margin-top:6px">\${ cliError }</div>
+                      <button onClick="\${__b(cliRetry)}"
+                        style="margin-top:16px;height:52px;padding:0 24px;border-radius:15px;background:#4a2c99;color:#efe8fb;font-size:16.5px;font-weight:800">Try again</button>
+                    </div>
+                  \` : '' }
                   \${ cliEmpty ? \`
                     <div
                       style="margin-top:22px;padding:56px 40px;text-align:center;border-radius:24px;background:#fffdf7;box-shadow:inset 0 0 0 1.5px #e6d6b4">
@@ -1291,7 +1308,7 @@ export function renderApp(state: any) {
                     <div
                       style="padding:52px 36px;text-align:center;border-radius:24px;background:#fffdf7;box-shadow:inset 0 0 0 1.5px #e6d6b4;margin-top:14px">
                       <i class="ph-fill ph-paper-plane-tilt" style="font-size:44px;color:#c8b795"></i>
-                      <div style="font-size:20px;font-weight:800;color:#241f1c;margin-top:12px">No link matches this
+                      <div style="font-size:20px;font-weight:800;color:#241f1c;margin-top:12px">\${ loadingLinks ? 'Loading client links…' : (linkLoadError || 'No link matches this') }
                       </div>
                     </div>
                   \` : '' }
@@ -1313,10 +1330,9 @@ export function renderApp(state: any) {
                     <h1
                       style="margin:8px 0 0;font-family:'Newsreader',serif;font-weight:500;font-size:40px;letter-spacing:-.02em;color:#fff8e6">
                       \${greeting}, \${ownerFirst}.</h1>
-                    <p style="margin:8px 0 0;font-size:17px;color:#c9b48a">Only from your own presentations and the
-                      links you sent.</p>
+                    <p role="status" style="margin:8px 0 0;font-size:17px;color:#c9b48a">\${dashboardError || 'Only from your own presentations and the links you sent.'}</p>
                   </div>
-                  <a href="Client Presentation.dc.html"
+                  <a href="/app/earth/index.html"
                     style="display:flex;align-items:center;gap:11px;white-space:nowrap;height:62px;padding:0 26px;border-radius:16px;background:#f8a800;color:#241d0c;font-size:18px;font-weight:800;text-decoration:none;box-shadow:0 16px 34px -16px rgba(244,174,20,.95)"
                     style-hover="background:#f4ae14"><i class="ph-fill ph-projector-screen-chart"
                       style="font-size:22px"></i>Show the map</a>
@@ -2114,7 +2130,7 @@ export function renderApp(state: any) {
                           style="font-size:15px"></i>\${cp.stateLabel}</span>
                     </div>
                     <div style="font-size:15.5px;color:#ddd6fe;margin-top:3px">\${ cp.hasBiz ? \`<span
-                          style="font-weight:700;color:#fef08a">\${cp.business} · </span>\` : '' }\${cp.phone}\${ cp.hasPhone2 ? \` · \${cp.phone2}\` : '' } · \${cp.city}</div>
+                          style="font-weight:700;color:#fef08a">\${cp.business} · </span>\` : '' }\${clientError || cp.phone}\${ cp.hasPhone2 ? \` · \${cp.phone2}\` : '' } · \${cp.city}</div>
                   </div>
                   <div
                     style="display:flex;align-items:center;gap:9px;flex-wrap:nowrap;justify-content:flex-end;flex:none">
@@ -2942,16 +2958,15 @@ export function renderApp(state: any) {
                           style="font-weight:700;text-transform:none;letter-spacing:0;color:#d97706">?" only you can see this</span>
                       </div>
                       <div style="margin-top:12px">
-                        <textarea name="privateNote" onInput="\${__b(onCF)}"
+                        <textarea name="note" onInput="\${__b(onCF)}"
                           placeholder="Write any thoughts, observations, or private info..."
-                          style="width:100%;min-height:100px;padding:16px;border-radius:14px;background:#ffffff;border:2.5px solid #fcd34d;font-size:18px;font-weight:600;color:#0f172a;outline:none;resize:vertical">\${cf.privateNote || ''}</textarea>
+                          style="width:100%;min-height:100px;padding:16px;border-radius:14px;background:#ffffff;border:2.5px solid #fcd34d;font-size:18px;font-weight:600;color:#0f172a;outline:none;resize:vertical">\${cf.note || ''}</textarea>
                       </div>
                     </div>
                   </div>
 
                   <div style="display:flex;align-items:center;gap:14px;padding:18px 30px;background:#f8fafc;border-top:1px solid #e2e8f0">
-                  <div style="flex:1;font-size:16px;font-weight:700;color:#8a5a12">You can fill the rest later from
-                    their profile.</div>
+                  <div role="status" style="flex:1;font-size:16px;font-weight:700;color:#8a5a12">\${ clientError || 'You can fill the rest later from their profile.' }</div>
                   <button onClick="\${__b(closeAddClientBig)}"
                     style="height:60px;padding:0 24px;border-radius:17px;background:#fdf8ee;color:#6b6156;font-size:17px;font-weight:800">Cancel</button>
                   <button onClick="\${__b(cfSave)}" style="\${cfSaveStyle}"><i class="ph-fill ph-check-circle"

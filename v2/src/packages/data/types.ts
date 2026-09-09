@@ -97,6 +97,8 @@ export interface Property {
   clientVisible?: boolean;
   /** Canonical state. Optional only while legacy rows are normalized on read. */
   lifecycle?: PropertyLifecycle;
+  /** Dealer-private reason recorded when taking a property off market. */
+  offMarketReason?: string;
   /** Immutable completed-sale association written by the atomic sale command. */
   sale?: { finalPrice: number; soldAt: string; buyerId: string; dealId: string };
   views: number;
@@ -390,6 +392,9 @@ export interface DealNextAction {
 
 /** A deal in flight. Every field is dealer-private. */
 export interface PipelineDeal {
+  name?: string;
+  /** Agreed total when no payer breakdown was recorded. */
+  commissionTotal?: number;
   id: string;
   stage: DealStage;
   propertyId: string;
@@ -436,6 +441,9 @@ export interface DealStageEvent {
  * `due > 0` — commission outlives the sale.
  */
 export interface DealMoney {
+  /** Legacy recorded totals with no recorded payer side. */
+  expectedUnallocated?: number;
+  receivedUnallocated?: number;
   value: number;
   token: number;
   expectedBuyer: number;

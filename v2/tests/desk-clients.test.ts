@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { adapter } from '../src/packages/data/mock-adapter-v2';
 import {
   DeskStore, toDeskClient, toCanonicalClient,
@@ -98,6 +98,43 @@ describe('Needs Attention', () => {
 });
 
 describe('client store', () => {
+  it('persists clearing previously recorded optional requirements and contact fields', async () => {
+    const store = new DeskStore();
+    const id = (await store.saveClient({ ...FULL_FORM, phone: '+91 90000 88999' }))!;
+    expect(id).toBeTruthy();
+    await store.saveClient({ name: FULL_FORM.name, phone: '+91 90000 88999',
+      phone2: '', business: '', types: [], areas: [], prefs: [], budgetFrom: '', budgetTo: '' }, id);
+    const fresh = new DeskStore();
+    await fresh.loadClients();
+    const client = fresh.clients.find(c => c.id === id)!;
+    expect(client.types).toEqual([]);
+    expect(client.areas).toEqual([]);
+    expect(client.phone2).toBe('');
+    expect(client.business).toBe('');
+    expect(client.budget).toBe('');
+    expect(client.want).toBe('');
+    await fresh.archiveClient(id);
+  });
+
+  it('never writes an edit when the original client cannot be read', async () => {
+    const store = new DeskStore();
+    const read = vi.spyOn(adapter.customers, 'get').mockResolvedValue({
+      ok: false, error: { code: 'network', message: 'offline', retryable: true },
+    });
+    const write = vi.spyOn(adapter.customers, 'save');
+    try {
+      expect(await store.saveClient(FULL_FORM, 'existing-client')).toBeNull();
+      expect(write).not.toHaveBeenCalled();
+      expect(store.lastWriteError).toMatch(/retry before saving/i);
+    } finally { read.mockRestore(); write.mockRestore(); }
+  });
+
+  it('reports a missing client when updating the shortlist', async () => {
+    const store = new DeskStore();
+    expect(await store.setClientInterest('missing-client', ['property-id'])).toBe(false);
+    expect(store.lastWriteError).toMatch(/retry before updating/i);
+  });
+
   it('keeps the array reference so the renderer stays attached', async () => {
     const store = new DeskStore();
     const reference = store.clients;

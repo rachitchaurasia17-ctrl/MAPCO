@@ -22,7 +22,7 @@ import {
   type Scenario, type Result, type Page, type PageParams, type QueryOptions,
   type AuthRepository, type ActivationState, type AccountState,
   type PropertyRepository, type CustomerRepository, type DealRepository, type RecordSaleInput,
-  type StartDealInput, type SetDealStageInput, type RecordDealPaymentInput,
+  type StartDealInput, type SetDealStageInput, type RecordDealPaymentInput, type UpdateDealInput,
   type SellerRepository, type SaveSellerInput, type AssignPropertySellerInput,
   type PropertyDocumentRepository, type UploadPropertyDocumentInput,
   type DemandRepository, type DemandRecord, type DemandDraft, type DemandMatch,
@@ -536,6 +536,23 @@ class MockPropertyDocumentRepository implements PropertyDocumentRepository {
 }
 
 class MockDealRepository implements DealRepository {
+  async update(input: UpdateDealInput, opts?: QueryOptions): Promise<Result<PipelineDeal>> {
+    const a = aborted<PipelineDeal>(opts); if (a) return a;
+    const deal = PIPELINE_DEALS.find(d => d.id === input.dealId);
+    if (!deal) return err('not_found', 'That deal is no longer available');
+    if (deal.stage === 'closed' || deal.stage === 'lost') return err('validation', 'Reopen the deal before editing it');
+    if (input.value !== undefined && (!Number.isFinite(input.value) || input.value <= 0)) return err('validation', 'Enter a positive deal value');
+    if (input.tokenPayment && (!Number.isFinite(input.tokenPayment.amount) || input.tokenPayment.amount <= 0)) return err('validation', 'Enter a positive token payment');
+    if (input.name !== undefined) deal.name = input.name.trim();
+    if (input.value !== undefined) deal.value = input.value;
+    if (input.nextAction !== undefined) deal.nextAction = input.nextAction ?? undefined;
+    if (input.registryDate !== undefined) deal.registryDate = input.registryDate ?? undefined;
+    if (input.stage) deal.stage = input.stage;
+    if (input.tokenPayment) await this.recordPayment({ dealId: deal.id, kind: 'token', ...input.tokenPayment });
+    DEAL_STAGE_EVENTS.push({ dealId: deal.id, stage: deal.stage, occurredAt: new Date().toISOString(), note: 'Deal details updated' });
+    persistMock(); persistDeskMock();
+    return ok(deal);
+  }
   async list(params?: PageParams, opts?: QueryOptions): Promise<Result<Page<Deal>>> {
     const a = aborted<Page<Deal>>(opts); if (a) return a;
     const s = scenarioResult<Deal>(); if (s) return s;
@@ -688,6 +705,8 @@ class MockDealRepository implements DealRepository {
 
     const deal: PipelineDeal = {
       id: mockId('deal'),
+      ...(input.name ? { name: input.name.trim() } : {}),
+      ...(input.commissionTotal !== undefined ? { commissionTotal: input.commissionTotal } : {}),
       stage: input.stage ?? 'negotiating',
       propertyId: prop.id,
       prop: `${prop.area} ${prop.type.toLowerCase().includes('plot') ? 'plot' : 'site'}`,
@@ -777,7 +796,7 @@ class MockDealRepository implements DealRepository {
     const expectedSeller = expectedCommissionSide(value, deal.commission.seller);
     const receivedBuyer = sum('commission-buyer');
     const receivedSeller = sum('commission-seller');
-    const expected = expectedBuyer + expectedSeller;
+    const expected = expectedBuyer + expectedSeller + (deal.commissionTotal ?? 0);
     const received = receivedBuyer + receivedSeller;
 
     return ok({
@@ -797,6 +816,7 @@ class MockDealRepository implements DealRepository {
       money: {
         value, token: sum('token'),
         expectedBuyer, expectedSeller, expected,
+        expectedUnallocated: deal.commissionTotal ?? 0,
         receivedBuyer, receivedSeller, received,
         due: Math.max(0, expected - received),
         fullySettled: expected > 0 && received >= expected,

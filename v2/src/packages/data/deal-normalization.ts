@@ -204,6 +204,8 @@ export function normalizePipelineDeal(id: string, payload: UnknownRecord): Pipel
   return {
     id,
     stage: readDealStage(payload.stage),
+    ...(text(payload, 'name') ? { name: text(payload, 'name') } : {}),
+    ...(optionalAmount(payload, 'commissionTotal') !== undefined ? { commissionTotal: optionalAmount(payload, 'commissionTotal') } : {}),
     propertyId,
     prop: text(payload, 'prop', 'property', 'name'),
     propSub: text(payload, 'propSub'),
