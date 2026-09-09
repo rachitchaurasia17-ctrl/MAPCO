@@ -192,3 +192,90 @@ describe('DC lifecycle regression', () => {
     expect(probe.updates).toBe(2);
   });
 });
+
+describe('closing the property wizard', () => {
+  /* The ✕ is titled "Save and close" and the backdrop does the same thing, but
+     both ran saveDraft(), which forced lifecycle 'draft'. Opening a live
+     property to fix a typo and closing it therefore unpublished it and dropped
+     it out of every client link already sent, silently. */
+  const closeWith = async (existing: Record<string, unknown> | null, avail = 'available') => {
+    const component = new Component() as any;
+    component.setState = (patch: Record<string, unknown>) => {
+      component.state = { ...component.state, ...patch };
+    };
+    component.state.pform = { ...component.blankP(), city: 'Mohali', area: 'Sector 79', avail };
+    component.state.pEditId = existing ? existing.id : null;
+    component.properties = existing ? [existing] : [];
+    const save = vi.spyOn(deskStore, 'saveProperty')
+      .mockResolvedValue({ property: { id: 'p1', photos: [] } } as never);
+    await component.saveDraft();
+    const lifecycle = save.mock.calls[0]?.[1]?.lifecycle;
+    save.mockRestore();
+    return lifecycle;
+  };
+
+  it('keeps a live property on sale', async () => {
+    expect(await closeWith({ id: 'p1', draft: false, status: 'available' })).toBe('on-sale');
+  });
+
+  it('leaves a sold property sold', async () => {
+    expect(await closeWith({ id: 'p1', draft: false, status: 'sold' })).toBe('sold');
+  });
+
+  it('keeps an off-market property archived', async () => {
+    expect(await closeWith({ id: 'p1', draft: false, status: 'onhold' }, 'onhold')).toBe('archived');
+  });
+
+  it('still closes a draft as a draft', async () => {
+    expect(await closeWith({ id: 'p1', draft: true, status: 'available' })).toBe('draft');
+  });
+
+  it('still closes a brand new property as a draft', async () => {
+    expect(await closeWith(null)).toBe('draft');
+  });
+});
+
+describe('the wizard step a fix button opens', () => {
+  /* Steps are 1 Property / 2 Seller / 3 Photos / 4 MAPCO Earth. Every fix
+     button pointed one step short, so "Set the exact spot" opened Photos and
+     the pin could never be dropped from the place that asks for it. */
+  it('sends the readiness fixes to the step that asks for the missing thing', () => {
+    const component = new Component() as any;
+    const steps = new Map(
+      component.readinessOf({ id: 'p', photoCount: 0, earth: false, price: 0 })
+        .miss.map((m: any) => [m.k, m.step]),
+    );
+    expect(steps.get('photos')).toBe(3);   // Photos
+    expect(steps.get('earth')).toBe(4);    // MAPCO Earth
+    expect(steps.get('price')).toBe(1);    // Property
+  });
+
+  it('opens MAPCO Earth from "Set the exact spot", not Photos', () => {
+    const source = readFileSync(resolve(__dirname, '../src/apps/dealer/logic.ts'), 'utf8');
+    expect(source).toContain('setEarth: () => this.openEdit(pd.id, 4)');
+    expect(source).toContain('setPhotos: () => this.openEdit(pd.id, 3)');
+  });
+});
+
+describe('the MAPCO Earth search box', () => {
+  it('does not re-render the Desk on every keystroke', () => {
+    /* onPForm calls setState, which rebuilds the whole Desk from one HTML
+       string. That destroys the input node, so the next syncEarthMap binds a
+       fresh Autocomplete and drops the place_changed listener on the instance
+       whose dropdown the dealer is mid-click — searching could never place a
+       pin. The Earth step mutates pform directly everywhere else for exactly
+       this reason. */
+    expect(dealerTemplate).toContain('id="dealer-earth-search"');
+    const input = /<input id="dealer-earth-search"[^>]*>/.exec(dealerTemplate)?.[0] ?? '';
+    expect(input).toContain('__b(onEarthQ)');
+    expect(input).not.toContain('onPForm');
+
+    const component = new Component() as any;
+    let rendered = 0;
+    component.setState = () => { rendered += 1; };
+    component.state.pform = { ...component.blankP() };
+    component.renderVals().onEarthQ({ target: { value: 'Sector 79' } });
+    expect(component.state.pform.earthQ).toBe('Sector 79');
+    expect(rendered, 'typing must not trigger a re-render').toBe(0);
+  });
+});

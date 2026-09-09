@@ -10,6 +10,9 @@
    contact (phone/whatsapp) IS present so the buyer can reach them.
    ═══════════════════════════════════════════════════════════════ */
 import { formatINR } from './utils';
+import './client-presentation.css';
+import { clientPresentation } from './client-presentation';
+import { isClientCoordinate } from '../data/client-location';
 import type { ClientSafeMap, ClientSafePayload, ClientSafeProperty } from '../data/contracts';
 import type { ClientLink, Property } from '../data/types';
 
@@ -89,6 +92,7 @@ export function renderClientLinkView(
   let audioPlayReported = false;
   const activeMapByProperty = new Map<string, string>();
   const activeModeByMap = new Map<string, 'original' | 'threeD'>();
+  const visitDrafts = new Map<string, { date: string; time: string }>();
   let mapResizeObserver: ResizeObserver | null = null;
 
   const dealer = payload.dealerDisplayName || 'Your dealer';
@@ -113,15 +117,10 @@ export function renderClientLinkView(
     const heroUrl = photos[activeShot] || '';
     const priceLabel = p.price !== undefined ? formatINR(p.price) : 'Price on call';
     const multi = properties.length > 1;
-    const outerMin = opts.embedded ? 'height:100%;min-height:100%' : 'min-height:100vh';
-
-    const segs = photos.length > 1
-      ? `<div id="pm-cl-segs" style="display:flex;gap:5px;margin-bottom:12px">${photos.map((_, i) => `<span style="flex:1;height:4px;border-radius:2px;background:${i === activeShot ? '#ffc93c' : 'rgba(255,255,255,.28)'}"></span>`).join('')}</div>`
-      : '';
 
     const facts = [
       { icon: 'ph-fill ph-ruler', label: p.size },
-      { icon: 'ph-fill ph-compass', label: `${p.facing} facing` },
+      { icon: 'ph-fill ph-compass', label: p.facing ? `${p.facing} facing` : '' },
       { icon: 'ph-fill ph-road-horizon', label: p.position },
     ].filter((f) => f.label);
     const factsHtml = facts.map((f) => `<span style="display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:800;color:#fff6e0;background:rgba(255,255,255,.08);border-radius:12px;padding:10px 14px"><i class="${f.icon}" style="font-size:15px;color:#ffc93c"></i>${esc(f.label)}</span>`).join('');
@@ -172,7 +171,9 @@ export function renderClientLinkView(
       <div style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#9d8bc7;margin-top:24px">Around the city</div>
       <div style="display:flex;flex-direction:column;gap:12px;margin-top:13px">${intelCity.map(intelRow).join('')}</div>` : '';
 
-    const intelHtml = localHtml + cityHtml;
+    const intelHtml = intelCategories.length || intelCity.length
+      ? localHtml + cityHtml + `<details class="cl-all-places"><summary>See all nearby places</summary>${intelCategories.map(category => category.places.map(intelRow).join('')).join('')}</details>`
+      : `<p class="cl-muted">Your dealer has not shared a location report for this property yet. Ask them about schools, healthcare or daily conveniences.</p>`;
 
     // Prefer saved map IDs. Label matching is only a compatibility path for old
     // snapshots that contain no IDs at all; it never overrides real placement.
@@ -229,46 +230,9 @@ export function renderClientLinkView(
       ? `<a data-client-event="call_clicked" href="tel:${esc(telNum)}" style="display:flex;align-items:center;justify-content:center;gap:9px;height:54px;border-radius:15px;background:#12a150;color:#fff;font-size:16px;font-weight:800;text-decoration:none"><i class="ph-fill ph-phone" style="font-size:20px"></i>Call ${esc(dealerFirst)}</a>`
       : '';
 
-    container.innerHTML = `
-<div class="pm-buyer" style="background:#0f0a18;${outerMin};display:flex;justify-content:center;position:relative;font-family:'Hanken Grotesk',system-ui,sans-serif">
-  <div style="width:100%;max-width:480px;background:#140d20;position:relative;display:flex;flex-direction:column">
-    ${multi ? `<div style="position:sticky;top:0;z-index:6;display:flex;align-items:center;gap:8px;padding:11px 12px;background:rgba(20,13,32,.96);backdrop-filter:blur(8px);border-bottom:1px solid rgba(255,255,255,.08);overflow-x:auto">
-      <span style="flex:none;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#8a7ab0;padding-left:4px">${properties.length} plots</span>
-      ${properties.map((o, i) => `<button class="pm-cl-go" data-go="${i}" style="flex:none;padding:8px 14px;border-radius:999px;font-size:13px;font-weight:800;border:none;cursor:pointer;white-space:nowrap;${i === activeIndex ? 'background:#ffc93c;color:#241d0c' : 'background:rgba(255,255,255,.09);color:#c9b6ef'}">${esc(o.area)}</button>`).join('')}
-    </div>` : ''}
-    <div style="position:relative;height:320px;flex:none">
-      <div id="pm-cl-hero" style="position:absolute;inset:0;background:#241a33;display:grid;place-items:center;color:#6b5a90;overflow:hidden">${heroUrl ? `<img data-client-hero-image src="${esc(heroUrl)}" alt="" style="display:block;width:100%;height:100%;object-fit:cover">` : '<i class="ph-fill ph-image" style="font-size:44px"></i>'}</div>
-      <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,10,24,.66) 0%,rgba(15,10,24,.05) 34%,rgba(20,13,32,.96) 100%)"></div>
-      <div style="position:absolute;top:16px;left:16px;right:16px;display:flex;align-items:center;gap:11px">
-        <div style="width:40px;height:40px;border-radius:50%;background:#ffc93c;color:#241d0c;display:grid;place-items:center;font-size:14px;font-weight:800;flex:none">${esc((dealer.charAt(0) || 'M').toUpperCase())}</div>
-        <div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:800;color:#fff6e0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(dealer)}</div><div style="font-size:11.5px;font-weight:700;color:#c9b6ef">Chosen for you by ${esc(dealer)}</div></div>
-      </div>
-      ${photos.length > 1 ? `<button id="pm-cl-prev" aria-label="Previous photo" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(20,13,32,.62);color:#fff6e0;display:grid;place-items:center;border:none;cursor:pointer"><i class="ph-bold ph-caret-left" style="font-size:19px"></i></button><button id="pm-cl-next" aria-label="Next photo" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;background:rgba(20,13,32,.62);color:#fff6e0;display:grid;place-items:center;border:none;cursor:pointer"><i class="ph-bold ph-caret-right" style="font-size:19px"></i></button>` : ''}
-      <div style="position:absolute;bottom:14px;left:16px;right:16px">
-        ${segs}
-        <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px">
-          <div style="min-width:0"><div style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#ffc93c">${esc(p.loc || p.area)}</div><div style="font-family:'Newsreader',serif;font-weight:500;font-size:27px;line-height:1.1;color:#fffdf7;margin-top:3px">${esc(p.area)} · ${esc(p.size)}</div></div>
-          <span style="font-size:11.5px;font-weight:800;color:#fff6e0;background:rgba(255,255,255,.16);border-radius:999px;padding:6px 12px;flex:none">Photo ${activeShot + 1}/${photos.length || 1}</span>
-        </div>
-      </div>
-    </div>
-    <div style="padding:8px 18px 26px;flex:1">
-      ${p.loc ? `<div style="display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:700;color:#c9b6ef"><i class="ph-fill ph-map-pin" style="font-size:17px;color:#ffc93c"></i>${esc(p.loc)}</div>` : ''}
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:14px">${factsHtml}</div>
-      <div style="display:flex;align-items:center;gap:11px;background:linear-gradient(135deg,#ffc93c,#f4881f);border-radius:16px;padding:15px 18px;margin-top:16px"><i class="ph-fill ph-tag" style="font-size:21px;color:#3a2410"></i><span style="font-size:20px;font-weight:800;color:#241d0c">${priceLabel}</span></div>
-      ${voiceHtml}${whyHtml}${intelHtml}${mapsHtml}${moreHtml}
-      <div style="display:flex;flex-direction:column;gap:10px;margin-top:24px">
-        ${callHtml}
-        <a data-client-event="whatsapp_clicked" href="${esc(waHref('Hi ' + dealer + ', I am interested in ' + p.area))}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:9px;height:52px;border-radius:15px;background:#0e3b28;color:#7be0a4;font-size:15px;font-weight:800;text-decoration:none;border:1px solid #1c6b47"><i class="ph-fill ph-whatsapp-logo" style="font-size:19px"></i>WhatsApp</a>
-        <div style="display:flex;gap:10px">
-          <a data-client-event="visit_requested" href="${esc(waHref('Hi ' + dealer + ', I would like to visit ' + p.area))}" target="_blank" rel="noopener" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;height:50px;border-radius:14px;background:#ffc93c;color:#241d0c;font-size:15px;font-weight:800;text-decoration:none"><i class="ph-fill ph-calendar-check" style="font-size:18px"></i>Site visit</a>
-          <a href="${esc(waHref('Hi ' + dealer + ', I have a question about ' + p.area))}" target="_blank" rel="noopener" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;height:50px;border-radius:14px;background:rgba(255,255,255,.08);color:#efe7ff;font-size:15px;font-weight:800;text-decoration:none"><i class="ph-fill ph-chat-circle-dots" style="font-size:18px"></i>Ask</a>
-        </div>
-      </div>
-      <div style="text-align:center;padding:22px 0 4px;font-size:12px;color:#8a7ab0;line-height:1.6">${payload.buyerName ? `Shared privately by ${esc(dealer)} for ${esc(payload.buyerName)}<br>` : ''}<span style="display:inline-flex;align-items:center;gap:6px"><i class="ph-fill ph-shield-check" style="font-size:14px"></i>Powered by MAPCO · Please keep this page to yourself.</span></div>
-    </div>
-  </div>
-</div>`;
+    container.innerHTML = clientPresentation({ payload, property: p, activeIndex, activeShot, photos, heroUrl, priceLabel,
+      factsHtml, voiceHtml, whyHtml, intelHtml, mapsHtml, moreHtml, callHtml,
+      whatsapp: waHref('Hi ' + dealer + ', I am interested in ' + p.area), embedded: opts.embedded });
 
     wire();
   }
@@ -278,6 +242,46 @@ export function renderClientLinkView(
     const hero = container.querySelector<HTMLElement>('#pm-cl-hero');
     const time = container.querySelector<HTMLElement>('#pm-cl-time');
     const p = properties[activeIndex] || properties[0];
+    container.querySelectorAll<HTMLAnchorElement>('a[href^="#cl-"]').forEach(anchor => {
+      if (anchor.id === 'cl-request-visit') return;
+      anchor.addEventListener('click', event => {
+        event.preventDefault();
+        container.querySelector(anchor.getAttribute('href')!)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+    const visitDate = container.querySelector<HTMLInputElement>('#cl-visit-date');
+    const visitTime = container.querySelector<HTMLSelectElement>('#cl-visit-time');
+    const visitLink = container.querySelector<HTMLAnchorElement>('#cl-request-visit');
+    const visitStatus = container.querySelector<HTMLElement>('#cl-visit-status');
+    const draft = visitDrafts.get(p.id);
+    if (draft && visitDate && visitTime) { visitDate.value = draft.date; visitTime.value = draft.time; }
+    const saveVisitDraft = () => visitDrafts.set(p.id, { date: visitDate?.value || '', time: visitTime?.value || '' });
+    visitDate?.addEventListener('input', saveVisitDraft);
+    visitTime?.addEventListener('change', saveVisitDraft);
+    visitLink?.addEventListener('click', event => {
+      const date = visitDate?.value || '', timeValue = visitTime?.value || '';
+      const visitAt = new Date(`${date}T${timeValue}:00+05:30`);
+      if (!visitDate?.checkValidity() || !visitTime?.checkValidity() || !Number.isFinite(visitAt.getTime()) || visitAt.getTime() <= Date.now()) {
+        event.preventDefault();
+        if (visitStatus) visitStatus.textContent = 'Please choose a future date and time for your visit.';
+        if (!visitDate?.checkValidity()) visitDate?.focus(); else visitTime?.focus();
+        return;
+      }
+      if (opts.embedded) {
+        event.preventDefault();
+        if (visitStatus) visitStatus.textContent = 'Preview: the client can send this date and time to you on WhatsApp.';
+        return;
+      }
+      if (!waNum) {
+        event.preventDefault();
+        if (visitStatus) visitStatus.textContent = 'Your dealer has not added a WhatsApp number to this link. Please contact them directly to confirm a visit.';
+        return;
+      }
+      visitLink.href = waHref(`Hi ${dealer}, I would like to visit ${p.area} (${p.size}) on ${date} at ${timeValue} IST. Please confirm availability.`);
+      visitLink.target = '_blank'; visitLink.rel = 'noopener';
+      opts.onEvent?.('visit_requested', p.id);
+      if (visitStatus) visitStatus.textContent = 'Send the prepared WhatsApp message to request your visit. Your dealer will confirm the time.';
+    });
     // Keep navigation on the same normalized list used to paint the initial
     // hero. A hostile later photo must never re-enter via Next/Previous.
     const photos = (p?.photos ?? []).map(safeMediaUrl).filter(Boolean);
@@ -288,10 +292,8 @@ export function renderClientLinkView(
       if (heroImage && url) heroImage.src = url;
       const segsBox = container.querySelector('#pm-cl-segs');
       if (segsBox) segsBox.querySelectorAll('span').forEach((s, i) => { (s as HTMLElement).style.background = i === activeShot ? '#ffc93c' : 'rgba(255,255,255,.28)'; });
-      const counter = container.querySelector('div[style*="Photo"]');
-      const label = container.querySelector('.pm-buyer span[style*="border-radius:999px"]');
+      const label = container.querySelector('#pm-cl-photo-count');
       if (label) label.textContent = `Photo ${activeShot + 1}/${photos.length || 1}`;
-      void counter;
     };
     container.querySelector('#pm-cl-prev')?.addEventListener('click', () => { activeShot = (activeShot - 1 + photos.length) % photos.length; refreshHero(); });
     container.querySelector('#pm-cl-next')?.addEventListener('click', () => { activeShot = (activeShot + 1) % photos.length; refreshHero(); });
@@ -471,15 +473,16 @@ export function previewPayloadFromLink(
       size: p.size,
       facing: p.facing,
       position: p.position,
-      photos: [...p.photos],
-      approvals: [...p.approvals],
-      landmarks: p.landmarks.map((l) => ({ name: l.name, distance: l.distance, icon: l.icon })),
+      photos: [...(p.photos || [])],
+      approvals: [...(p.approvals || [])],
+      landmarks: (p.landmarks || []).map((l) => ({ name: l.name, distance: l.distance, icon: l.icon })),
       ...(locationVisible ? { loc: p.loc } : {}),
       ...(priceVisible ? { price: p.price } : {}),
       ...(precise ? { mapCity: p.city, mapSector: p.sector } : {}),
       ...(precise && p.masterplanId ? { masterplanId: p.masterplanId } : {}),
       ...(precise && p.sectorMapId ? { sectorMapId: p.sectorMapId } : {}),
       ...(precise && p.mapPlacement ? { placement: { ...p.mapPlacement } } : {}),
+      ...(precise && isClientCoordinate(p.location) ? { location: { latitude: p.location.latitude, longitude: p.location.longitude } } : {}),
     }));
   return {
     dealerDisplayName,

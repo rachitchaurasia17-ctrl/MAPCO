@@ -53,6 +53,42 @@ describe('Desk ↔ canonical property round trip', () => {
     expect(with_.earth).toBe(true);
   });
 
+  it('never hands the Desk an undefined identity string', () => {
+    /* The Desk calls .toUpperCase() and .split() on these directly while
+       building the client-link preview. A seeded or imported row can be
+       missing one — dealer-b's b-prop-1 on MAPCO-DEV has no `city` at all —
+       and an undefined here threw inside renderVals(), which takes the whole
+       dashboard down: no re-render, so every button silently stopped working. */
+    const bare = toDeskProperty({ id: 'bare', photos: [] } as unknown as Property);
+    for (const key of ['city', 'area', 'loc', 'sector', 'size']) {
+      expect(typeof bare[key], key).toBe('string');
+    }
+    expect(() => String(bare.city).toUpperCase()).not.toThrow();
+    expect(() => String(bare.loc).split(', ').slice(-1)[0]).not.toThrow();
+  });
+
+  it('never invents a raster pin the dealer did not drop', () => {
+    /* setP auto-latches sectorMapId from a fuzzy match on the typed area, so a
+       dealer can end up with a sheet they never chose. Defaulting x/y to 0.5
+       then put a pin at its dead centre and showed it to buyers on
+       precise-location links — the raster twin of the lat/lng fabrication the
+       canonical Earth block refuses to make. */
+    const auto = toCanonicalProperty(
+      { ...baseForm, sectorMapId: 'sector-79-mohali' }, undefined, 'auto-latched');
+    expect(auto.mapPlacement).toBeUndefined();
+    expect(auto.sectorMapId).toBe('sector-79-mohali');   // association is fine
+
+    const placed = toCanonicalProperty(
+      { ...baseForm, sectorMapId: 'sector-79-mohali', sectorPinX: 41.23, sectorPinY: 67.89 },
+      undefined, 'really-placed');
+    expect(placed.mapPlacement).toEqual({ mapId: 'sector-79-mohali', x: 0.4123, y: 0.6789 });
+
+    // A half-placed pin is still no pin.
+    const half = toCanonicalProperty(
+      { ...baseForm, sectorMapId: 'sector-79-mohali', sectorPinX: 41.23 }, undefined, 'half');
+    expect(half.mapPlacement).toBeUndefined();
+  });
+
   it('lifts the flat form back into type-scoped specs', () => {
     const canonical = toCanonicalProperty(baseForm, undefined, 'p2');
     expect(canonical.specs).toMatchObject({ corner: true, frontage: '30', depth: '75' });

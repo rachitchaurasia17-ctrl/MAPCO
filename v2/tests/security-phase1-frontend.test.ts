@@ -154,4 +154,24 @@ describe('deployment security header contract', () => {
     expect(scriptDirective).toBe(" script-src 'self'");
     expect(csp).toContain("default-src 'none'");
   });
+
+  it('lets the buyer page frame Google Maps, and nothing else', () => {
+    /* The satellite panel embeds a Google Maps frame. Under default-src 'none'
+       that needs an explicit frame-src, and it was missing: the dealer preview
+       renders on a route whose CSP already allows these hosts, so the panel
+       looked perfect and was a blank box for the actual buyer. Two hosts
+       because maps.google.com redirects to www.google.com. */
+    const csp = routeHeaders('/client/(.*)').get('Content-Security-Policy') ?? '';
+    const frameDirective = csp.split(';').find((part) => part.trim().startsWith('frame-src'))?.trim() ?? '';
+    expect(frameDirective).toBe('frame-src https://maps.google.com https://www.google.com');
+    // Framing is a narrow grant, never a wildcard or a blanket https:.
+    expect(frameDirective).not.toMatch(/\*|'unsafe|\shttps:(\s|$)/);
+
+    // The meta tag governs dev, the header governs production. If they drift,
+    // the feature works in one and silently dies in the other.
+    const clientHtml = readFileSync(resolve(__dirname, '../client/index.html'), 'utf8');
+    const metaCsp = /Content-Security-Policy[^>]*content="([^"]+)"/.exec(clientHtml)?.[1] ?? '';
+    const metaFrame = metaCsp.split(';').find((part) => part.trim().startsWith('frame-src'))?.trim() ?? '';
+    expect(metaFrame).toBe(frameDirective);
+  });
 });

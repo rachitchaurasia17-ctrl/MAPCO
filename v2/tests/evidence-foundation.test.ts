@@ -40,9 +40,13 @@ function section(startsWith: string, endsBefore: string): string {
 }
 
 describe('migration hygiene', () => {
-  it('is the newest migration and applies as one transaction', () => {
+  it('ships as exactly one file and applies as one transaction', () => {
+    // Deliberately NOT "is the newest migration": later migrations are expected
+    // and must not break this contract. What matters is that this file exists
+    // once, under its own version, and is atomic.
     const all = readdirSync(MIGRATIONS).filter((f) => f.endsWith('.sql')).sort();
-    expect(all[all.length - 1]).toBe(FILE);
+    expect(all).toContain(FILE);
+    expect(all.filter((f) => f.startsWith('20260903000100'))).toEqual([FILE]);
     expect(code.trimStart().startsWith('begin;')).toBe(true);
     expect(code.trimEnd().endsWith('commit;')).toBe(true);
   });

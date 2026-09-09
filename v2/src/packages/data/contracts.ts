@@ -579,6 +579,8 @@ export interface ClientSafeProperty {
   readonly masterplanId?: string;
   readonly sectorMapId?: string;
   readonly placement?: { readonly mapId: string; readonly x: number; readonly y: number };
+  /** Saved Earth coordinate, included only for an exact-location link. */
+  readonly location?: { readonly latitude: number; readonly longitude: number };
   /**
    * Buyer-safe Property Intelligence, attached server-side by
    * resolve-client-link. It has already passed through
@@ -625,6 +627,7 @@ export interface ClientSafePayload {
   readonly voiceNote?: { readonly url: string; readonly seconds: number };
   readonly priceVisible: boolean;
   readonly locationVisible: boolean;
+  readonly intelligenceVisible?: boolean;
 }
 
 /**
@@ -664,6 +667,7 @@ export interface CreateClientLinkInput {
   /** ON → show the property pin on its sector map + city masterplan (exact).
    *  OFF → area-level location only. */
   locationPrecise?: boolean;
+  includeIntelligence?: boolean;
   expiresInDays: number;
   /** per-property photo refs, e.g. { "<propId>": ["external:0","external:1"] } */
   photoSelections: Record<string, string[]>;

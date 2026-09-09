@@ -1,3 +1,4 @@
+import { isClientCoordinate } from '../data/client-location';
 import { Property, PropertyType, WantType, Facing, Client, type PropertyPhotoStorageRef } from '../data/types';
 import {
   getMap, registerMaps, mountMapEngine, addPropertyToMap, relatedMapPair,
@@ -812,9 +813,10 @@ export class GenerateLinkFlow {
     // Preserve the modal's scroll position so clicks don't jump the view up.
     const prevScroll = this.el.querySelector<HTMLElement>('[data-scroll]')?.scrollTop ?? 0;
     const restore = () => { const sc = this.el.querySelector<HTMLElement>('[data-scroll]'); if (sc) sc.scrollTop = prevScroll; };
-    const origin = window.location.origin;
     if (this.result) {
-      const full = origin + this.result.url;
+      // Already absolute and token-carrying — see data/client-link-url.ts.
+      // Prepending the origin here produced "https://hosthttps://host/client/".
+      const full = this.result.url;
       const client = this.clients.find((item) => item.id === this.chosenClient);
       // Open WhatsApp straight to the client's number (if we have it) with the link.
       const phone = (client?.phone || '').replace(/[^0-9]/g, '');
@@ -828,7 +830,7 @@ export class GenerateLinkFlow {
     }
 
     const preciseAvailable = this.chosenProps.length > 0 && this.chosenProps.every((id) =>
-      Boolean(this.properties.find((property) => property.id === id)?.mapPlacement));
+      Boolean(this.properties.find((property) => property.id === id)?.mapPlacement || isClientCoordinate(this.properties.find((property) => property.id === id)?.location)));
     const preciseOn = this.locationPrecise && preciseAvailable;
     const ready = Boolean(this.chosenClient && this.chosenProps.length) && !this.busy;
     const priceLabelFor = (id: string) => { const v = Number(this.prices[id]); return v > 0 ? formatINR(v) : 'Price on call'; };
@@ -842,7 +844,7 @@ export class GenerateLinkFlow {
         <div style="margin-top:22px;font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">Price for this link <span style="font-weight:700;text-transform:none;letter-spacing:0;color:#a5946f">· blank = Price on call</span></div>
         <div style="display:flex;flex-direction:column;gap:9px;margin-top:11px">${this.chosenProps.length ? this.chosenProps.map((id) => { const p = this.properties.find((x) => x.id === id); if (!p) return ''; return `<div style="display:flex;align-items:center;gap:11px"><span style="flex:1;min-width:0;font-size:14px;font-weight:700;color:#4c463d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(p.area)}</span><div style="display:flex;align-items:center;gap:6px;background:#faf7ff;border:1px solid #e4dbf7;border-radius:11px;padding:0 12px"><span style="color:#8d8271;font-weight:800">₹</span><input data-price-for="${esc(id)}" inputmode="numeric" value="${esc(this.prices[id] ?? '')}" placeholder="Price on call" style="width:150px;height:44px;border:none;outline:none;background:none;font-size:15px;font-weight:700;color:#241f1c"></div></div>`; }).join('') : '<div style="font-size:13.5px;color:#8d8271">Pick plots above to set their price.</div>'}</div>
         <div style="margin-top:22px;font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">Location</div>
-        <button type="button" data-act="toggle-precise" ${preciseAvailable ? '' : 'disabled'} style="display:flex;align-items:center;gap:13px;width:100%;margin-top:11px;padding:14px 16px;border-radius:14px;background:${preciseOn ? '#dcf3e5' : '#faf7ff'};border:1px solid ${preciseOn ? '#12a150' : '#e4dbf7'};text-align:left;cursor:${preciseAvailable ? 'pointer' : 'not-allowed'};opacity:${preciseAvailable ? '1' : '.62'}"><span style="width:46px;height:28px;border-radius:999px;flex:none;background:${preciseOn ? '#12a150' : '#d8cff0'};position:relative;transition:background .15s"><span style="position:absolute;top:3px;left:${preciseOn ? '21px' : '3px'};width:22px;height:22px;border-radius:50%;background:#fff;transition:left .15s"></span></span><span style="flex:1;min-width:0"><span style="display:block;font-size:15px;font-weight:800;color:#241f1c">Precise map placement ${preciseOn ? 'ON' : 'OFF'}</span><span style="display:block;font-size:12.5px;color:#8d8271">${!preciseAvailable ? 'Every selected property needs a stored map placement before an exact pin can be shared.' : preciseOn ? 'The stored plot placement is shared on its related maps.' : 'Client sees the overall area/sector only — no exact pin.'}</span></span></button>
+        <button type="button" data-act="toggle-precise" ${preciseAvailable ? '' : 'disabled'} style="display:flex;align-items:center;gap:13px;width:100%;margin-top:11px;padding:14px 16px;border-radius:14px;background:${preciseOn ? '#dcf3e5' : '#faf7ff'};border:1px solid ${preciseOn ? '#12a150' : '#e4dbf7'};text-align:left;cursor:${preciseAvailable ? 'pointer' : 'not-allowed'};opacity:${preciseAvailable ? '1' : '.62'}"><span style="width:46px;height:28px;border-radius:999px;flex:none;background:${preciseOn ? '#12a150' : '#d8cff0'};position:relative;transition:background .15s"><span style="position:absolute;top:3px;left:${preciseOn ? '21px' : '3px'};width:22px;height:22px;border-radius:50%;background:#fff;transition:left .15s"></span></span><span style="flex:1;min-width:0"><span style="display:block;font-size:15px;font-weight:800;color:#241f1c">Exact location ${preciseOn ? 'ON' : 'OFF'}</span><span style="display:block;font-size:12.5px;color:#8d8271">${!preciseAvailable ? 'Save an Earth location or map placement for each selected property to share an exact pin.' : preciseOn ? 'The saved location is shared with your client, including satellite view when available.' : 'Client sees the overall area/sector only — no exact pin.'}</span></span></button>
         <div style="margin-top:14px;display:flex;align-items:center;gap:10px"><div style="font-size:13.5px;color:#4c463d;font-weight:700">Link expires in</div><select data-act="expiry" style="height:38px;border:1px solid #ddd0f5;border-radius:10px;padding:0 10px;font:inherit;font-size:14px;background:#fff">${[3, 7, 14, 30].map((d) => `<option value="${d}"${this.expiresInDays === d ? ' selected' : ''}>${d} days</option>`).join('')}</select></div>
         <div style="margin-top:22px;font-size:12.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#8d8271">Your voice <span style="font-weight:700;text-transform:none;letter-spacing:0;color:#a5946f">· optional</span></div>
         ${this.audioBlob
@@ -934,9 +936,9 @@ export class GenerateLinkFlow {
       clientId: this.chosenClient,
       propertyIds: [...this.chosenProps],
       priceVisibility: Object.keys(customPrices).length ? 'shown' : 'hidden',
-      locationVisibility: this.locationPrecise && this.chosenProps.every((id) => Boolean(this.properties.find((property) => property.id === id)?.mapPlacement)) ? 'exact' : 'area',
+      locationVisibility: this.locationPrecise && this.chosenProps.every((id) => Boolean(this.properties.find((property) => property.id === id)?.mapPlacement || isClientCoordinate(this.properties.find((property) => property.id === id)?.location))) ? 'exact' : 'area',
       customPrices,
-      locationPrecise: this.locationPrecise && this.chosenProps.every((id) => Boolean(this.properties.find((property) => property.id === id)?.mapPlacement)),
+      locationPrecise: this.locationPrecise && this.chosenProps.every((id) => Boolean(this.properties.find((property) => property.id === id)?.mapPlacement || isClientCoordinate(this.properties.find((property) => property.id === id)?.location))),
       expiresInDays: this.expiresInDays,
       photoSelections: this.photoSelections(),
       audioBlob: this.audioBlob,

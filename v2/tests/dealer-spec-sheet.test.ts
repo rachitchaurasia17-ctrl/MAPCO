@@ -10,15 +10,24 @@ const TYPES = [
   'Commercial SCO', 'Commercial Booth', 'Office', 'Showroom', 'Industrial Plot',
 ];
 
-/* The five cards, in order, with the colour each is painted. */
+/* The five cards, in order. `bg` paints the card; `ring` is the card's own
+   colour on every control inside it.
+
+   Controls used to be filled with a distinct colour per card. They are now
+   filled solid white (5f9cc7f, "form input fields to have solid white
+   background") so an answer reads cleanly across a desk, and each card keeps
+   its identity through the control's border instead of its fill. The contract
+   this test defends is unchanged: every control is legible, and no card
+   silently borrows another card's colour. */
 const CARDS = [
-  { title: 'Essentials', bg: '#bae6fd', ctl: '#fde047' },
-  { title: 'Features', bg: '#e9d5ff', ctl: '#6ee7b7' },
-  { title: 'Legal & ownership', bg: '#fde68a', ctl: '#93c5fd' },
-  { title: null, bg: '#bbf7d0', ctl: '#f9a8d4' },   // "how it is used" — titled per type
-  { title: 'Your private note', bg: '#fecaca', ctl: '#67e8f9' },
+  { title: 'Essentials', bg: '#bae6fd', ring: '#38bdf8' },
+  { title: 'Features', bg: '#e9d5ff', ring: '#a855f7' },
+  { title: 'Legal & ownership', bg: '#fde68a', ring: '#f59e0b' },
+  { title: null, bg: '#bbf7d0', ring: '#22c55e' },   // "how it is used" — titled per type
+  { title: 'Your private note', bg: '#fecaca', ring: '#ef4444' },
 ];
 
+const CTL_FILL = '#ffffff';
 const INK = '#1c1917';
 
 /** Build one type's spec sheet and record every key its controls write. */
@@ -51,15 +60,31 @@ describe('the dealer spec sheet', () => {
     }
   });
 
-  it('paints every answer in its own card colour, always on near-black text', () => {
+  it('keeps every answer legible and carrying its own card colour', () => {
     for (const type of TYPES) {
       const { sections } = sheetFor(type);
       sections.forEach((section: any, i: number) => {
         for (const field of section.fields) {
           const styles = field.opts ? field.opts.map((o: any) => o.style) : [field.inputStyle];
           for (const style of styles) {
-            expect(style, type + ' / ' + field.label).toContain(CARDS[i].ctl);
-            expect(style, type + ' / ' + field.label).toContain(INK);
+            const where = type + ' / ' + field.label;
+            // Near-black ink on every control, as the text colour or — for a
+            // picked chip, which inverts into a solid block — as the fill.
+            expect(style, where).toContain(INK);
+
+            if (style.includes('background:' + INK)) {
+              // Picked chip: inverted, white text, no border colour. It carries
+              // no card identity, which is the accepted cost of the white fill.
+              expect(style, where).toContain('color:' + CTL_FILL);
+            } else {
+              // Every other control: white fill, and the border is where this
+              // card's identity now lives.
+              expect(style, where).toContain('background:' + CTL_FILL);
+              expect(style, where).toContain(CARDS[i].ring);
+              for (const other of CARDS.filter((_, j) => j !== i)) {
+                if (other.ring !== CARDS[i].ring) expect(style, where).not.toContain(other.ring);
+              }
+            }
           }
         }
       });

@@ -6,6 +6,7 @@ import { loadGoogleMaps, importMapsLibrary, GOOGLE_MAPS_MAP_ID } from '../../pac
 import { productRoutes } from '../../packages/ui/product-routes';
 import { adapter } from '../../packages/data/adapter';
 import { AddPropertyTelemetry } from './add-property-telemetry';
+import { previewPayloadFromLink, renderClientLinkView } from '../../packages/ui/client-link-view';
 
 /* Add Property evidence. Fire-and-forget in every direction: the repository
    resolves ok() on all failure paths, the promise is never awaited, and the
@@ -371,8 +372,9 @@ export class Component extends DCLogic {
   PTYPES = [{ k: 'Residential Plot', i: 'ph-fill ph-map-pin-area', g: 'plot' }, { k: 'Flat', i: 'ph-fill ph-buildings', g: 'built' }, { k: 'Builder Floor', i: 'ph-fill ph-stack', g: 'built' }, { k: 'Kothi', i: 'ph-fill ph-house-line', g: 'built' }, { k: 'Villa', i: 'ph-fill ph-house', g: 'built' }, { k: 'Commercial SCO', i: 'ph-fill ph-storefront', g: 'comm' }, { k: 'Commercial Booth', i: 'ph-fill ph-shopping-bag-open', g: 'comm' }, { k: 'Office', i: 'ph-fill ph-briefcase', g: 'comm' }, { k: 'Showroom', i: 'ph-fill ph-shopping-cart', g: 'comm' }, { k: 'Industrial Plot', i: 'ph-fill ph-factory', g: 'plot' }];
   HIGHLIGHTS = ['Park Facing', 'Corner', 'Wide Road', 'Prime Location', 'Clear Title', 'GMADA Approved', 'RERA Approved', 'Gated', 'Near Market', 'Ready to Move'];
   RS = { ready: { l: 'Ready to show', c: '#1d4ed8', b: '#dbeafe', bd: '#93c5fd', i: 'ph-fill ph-seal-check' }, attention: { l: 'Needs attention', c: '#a33417', b: '#ffdccb', bd: '#f3bb98', i: 'ph-fill ph-warning' }, draft: { l: 'Draft', c: '#6b5320', b: '#f6e6bd', bd: '#e2cd97', i: 'ph-fill ph-note-pencil' }, sold: { l: 'Sold', c: '#0a6634', b: '#c9f0d9', bd: '#8fdcae', i: 'ph-fill ph-seal-check' } };
-  buildPropertyOverview(pd) {
-    if (!pd) return { headline: '', typeIcon: 'ph-fill ph-house-line', typeLabel: '', isNegotiable: true, isFixedPrice: false, highlightChips: [], hasHighlightChips: false, keySpecs: [], detailGroups: [], moreDetailsList: [], moreDetailsCount: 0, hasMoreDetails: false, hasCustomNotes: false, customNotes: '' };
+  buildPropertyOverview(pdInput) {
+    if (!pdInput) return { headline: '', typeIcon: 'ph-fill ph-house-line', typeLabel: '', isNegotiable: true, isFixedPrice: false, highlightChips: [], hasHighlightChips: false, keySpecs: [], detailGroups: [], moreDetailsList: [], moreDetailsCount: 0, hasMoreDetails: false, hasCustomNotes: false, customNotes: '' };
+    const pd = { ...pdInput, ...(pdInput.specs || {}) };
     const K = this.kindOf(pd.type);
     const has = (v) => v !== undefined && v !== null && String(v).trim() !== '' && String(v) !== '—';
     const U = (v, u) => {
@@ -594,6 +596,54 @@ export class Component extends DCLogic {
     addMore('Current Use', pd.currentUse);
     addMore('Suitable For', pd.use);
 
+    // Read the same questions used by Add Property; never maintain a second,
+    // incomplete specification list in the overview.
+    const sheet = this.typeFields(pd);
+    const savedGroups = [...sheet.pSections, ...sheet.pMoreSections].map(section => ({
+      title: section.title,
+      icon: 'ph-fill ph-list-checks',
+      items: section.fields.filter(field => has(field.recordedValue)).map(field => ({
+        label: field.label || 'Note',
+        value: typeof field.recordedValue === 'boolean' ? (field.recordedValue ? 'Yes' : 'No') : String(field.recordedValue),
+      })),
+      chips: [], hasChips: false,
+      headColor: 'color:#624a92',
+      wrap: 'padding:20px;border-radius:20px;background:#fff;box-shadow:inset 0 0 0 1.5px #e7dff5',
+    })).filter(group => group.items.length).map(group => ({ ...group, hasItems: true }));
+    const basics = [
+      { label: 'City', value: pd.city }, { label: 'Area / sector', value: pd.area || pd.loc },
+      { label: 'Society', value: pd.society }, { label: 'Address', value: pd.address },
+      { label: 'Property size', value: pd.size },
+      { label: 'Listed price', value: has(pd.price) ? this.inr(pd.price) : '' },
+      { label: 'Price terms', value: pd.negotiable === false ? 'Fixed price' : 'Negotiable' },
+      { label: 'Availability', value: pd.status || pd.avail },
+      { label: 'Exact location', value: pd.earth || pd.location ? 'Saved on map' : 'Not set yet' },
+      { label: 'Highlights', value: (pd.highlights || []).join(' · ') },
+      { label: 'Additional details', value: pd.customHl },
+      { label: 'Registry status', value: pd.registry },
+    ].filter(item => has(item.value)).map(item => ({ ...item, value: String(item.value) }));
+    savedGroups.unshift({ title: 'Location & listing', icon: 'ph-fill ph-map-pin', items: basics,
+      chips: [], hasChips: false, hasItems: true, headColor: 'color:#624a92',
+      wrap: 'padding:20px;border-radius:20px;background:#fff;box-shadow:inset 0 0 0 1.5px #e7dff5' });
+    const sellerFacts = pd.ps || {};
+    const seller = this.sellers.find(record => record.id === sellerFacts.sellerId);
+    const privateItems = [
+      { label: 'Seller', value: seller?.name }, { label: 'Phone', value: seller?.phone },
+      { label: 'Relationship', value: sellerFacts.relation },
+      { label: 'Seller asking price', value: has(sellerFacts.askPrice) ? this.inr(sellerFacts.askPrice) : '' },
+      { label: 'Visit instructions', value: sellerFacts.visitNote },
+      { label: 'Seller note', value: sellerFacts.note },
+      { label: 'Last availability check', value: sellerFacts.lastConfirmed },
+    ].filter(item => has(item.value)).map(item => ({ ...item, value: String(item.value) }));
+    if (privateItems.length) savedGroups.push({ ...savedGroups[0], title: 'Seller & visits · dealer only',
+      icon: 'ph-fill ph-lock-key', items: privateItems });
+    const mediaItems = [
+      { label: 'Photos in gallery', value: String((pd.photos || []).length || pd.photoCount || 0) },
+      { label: 'Videos', value: String((pd.videos || []).length) },
+      { label: 'Documents', value: (pd.docs || []).map(doc => typeof doc === 'string' ? doc : doc.name || doc.label).filter(Boolean).join(' · ') || 'None added' },
+    ];
+    savedGroups.push({ ...savedGroups[0], title: 'Photos & documents', icon: 'ph-fill ph-images', items: mediaItems });
+
     return {
       headline,
       typeIcon,
@@ -603,10 +653,10 @@ export class Component extends DCLogic {
       highlightChips,
       hasHighlightChips: highlightChips.length > 0,
       keySpecs,
-      detailGroups,
+      detailGroups: savedGroups,
       moreDetailsList,
       moreDetailsCount: moreDetailsList.length,
-      hasMoreDetails: moreDetailsList.length > 0 || has(pd.notes) || (pd.highlights && pd.highlights.length > 0),
+      hasMoreDetails: false,
       hasCustomNotes: has(pd.notes) || has(pd.customHl),
       customNotes: [pd.customHl, pd.notes].filter(has).join(' · ')
     };
@@ -728,7 +778,7 @@ export class Component extends DCLogic {
         const filteredOpts = opts.filter((v, i) => !shown[i].includes('+'));
         const filteredShown = shown.filter(s => !s.includes('+'));
         return {
-          label, labStyle: lab(t), isChips: true, isText: false, isNote: false,
+          label, recordedValue: pf[key], labStyle: lab(t), isChips: true, isText: false, isNote: false,
           wrap: (wide || even) ? 'grid-column:1 / -1' : '',
           optsWrap: even
             ? 'display:grid;grid-template-columns:repeat(' + (filteredOpts.length + (hasPlus ? 1 : 0)) + ',minmax(0,1fr));gap:10px;'
@@ -746,19 +796,19 @@ export class Component extends DCLogic {
         };
       },
       flags: (label, list) => ({
-        label, labStyle: lab(t), isChips: true, isText: false, isNote: false,
+        label, recordedValue: list.filter(f => pf[f.k] === true).map(f => f.l).join(' · '), labStyle: lab(t), isChips: true, isText: false, isNote: false,
         wrap: 'grid-column:1 / -1', optsWrap: 'display:flex;flex-wrap:wrap;gap:10px',
         opts: list.map(f => ({
           label: f.l, tick: !!pf[f.k], go: () => set({ [f.k]: !pf[f.k] }), style: ctl(t, !!pf[f.k])
         }))
       }),
       text: (label, key, ph, wide) => ({
-        label, labStyle: lab(t), isChips: false, isText: true, isNote: false,
+        label, recordedValue: pf[key], labStyle: lab(t), isChips: false, isText: true, isNote: false,
         wrap: wide ? 'grid-column:1 / -1' : '',
         val: pf[key] || '', ph, inputStyle: box(t), on: (e) => set({ [key]: e.target.value })
       }),
       note: (label, key, ph) => ({
-        label, labStyle: lab(t), isChips: false, isText: false, isNote: true,
+        label, recordedValue: pf[key], labStyle: lab(t), isChips: false, isText: false, isNote: true,
         wrap: 'grid-column:1 / -1', val: pf[key] || '', ph,
         inputStyle: 'width:100%;min-height:112px;padding:15px 16px;border-radius:14px;background:' + t.ctl
           + ';border:2.5px solid ' + t.ctlRing + ';font-size:17px;font-weight:700;line-height:1.45;color:'
@@ -1100,9 +1150,14 @@ export class Component extends DCLogic {
   }
   readinessOf(pr) {
     const miss = [];
-    if (!pr.photoCount) miss.push({ k: 'photos', label: 'No photos yet', fix: 'Add photos', icon: 'ph-fill ph-camera', step: 2 });
-    if (!pr.earth) miss.push({ k: 'earth', label: 'Exact location not confirmed on MAPCO Earth', fix: 'Set location', icon: 'ph-fill ph-crosshair', step: 3 });
-    if (!this.PROPMAP[pr.id]) miss.push({ k: 'sector', label: 'Sector map not linked', fix: 'Link map', icon: 'ph-fill ph-map-trifold', step: 3 });
+    /* step is the wizard step the fix button opens: 1 Property / 2 Seller /
+       3 Photos / 4 MAPCO Earth. These were all one short, so every fix button
+       opened the step before the one that asks for the missing thing. */
+    if (!pr.photoCount) miss.push({ k: 'photos', label: 'No photos yet', fix: 'Add photos', icon: 'ph-fill ph-camera', step: 3 });
+    if (!pr.earth) miss.push({ k: 'earth', label: 'Exact location not confirmed on MAPCO Earth', fix: 'Set location', icon: 'ph-fill ph-crosshair', step: 4 });
+    // The wizard has no sector-map picker; 4 is the nearest step that is about
+    // the map at all. Linking a sector map still happens in Map Studio.
+    if (!this.PROPMAP[pr.id]) miss.push({ k: 'sector', label: 'Sector map not linked', fix: 'Link map', icon: 'ph-fill ph-map-trifold', step: 4 });
     if (!pr.price) miss.push({ k: 'price', label: 'Price not set', fix: 'Add price', icon: 'ph-fill ph-tag', step: 1 });
     if (!pr.size || pr.size === '—') miss.push({ k: 'size', label: 'Size missing', fix: 'Add details', icon: 'ph-fill ph-ruler', step: 1 });
     const state = pr.status === 'sold' ? 'sold' : (pr.draft ? 'draft' : 'ready');
@@ -1352,7 +1407,7 @@ export class Component extends DCLogic {
     const cB = side(d.cBMode || (d.cB ? 'pct' : 'none'), d.cB, d.cBFix), cS = side(d.cSMode || (d.cS ? 'pct' : 'none'), d.cS, d.cSFix);
     const expected = cB + cS, gotB = sum('commB'), gotS = sum('commS'), got = gotB + gotS;
     return {
-      value: d.value, token, remaining: Math.max(0, d.value - token),
+      value: d.value, token, buyerPaid: token + sum('buyerPay'), remaining: Math.max(0, d.value - token - sum('buyerPay')),
       cB, cS, expected, gotB, gotS, got, due: Math.max(0, expected - got),
       fully: expected > 0 && got >= expected, none: got === 0
     };
@@ -1526,6 +1581,10 @@ export class Component extends DCLogic {
   componentDidUpdate() {
     this.applyTheme();
     this.syncEarthMap();
+    for (const id of ['dealer-client-presentation', 'dealer-builder-presentation']) {
+      const preview = document.getElementById(id);
+      if (preview && this._clientPreview) renderClientLinkView(preview, this._clientPreview, { embedded: true });
+    }
   }
   async syncEarthMap() {
     const el = document.getElementById('dealer-earth-map');
@@ -1782,42 +1841,74 @@ export class Component extends DCLogic {
   setL(patch) { this.setState({ lform: { ...this.state.lform, ...patch } }); }
   onLForm(e) { this.setL({ [e.target.name]: e.target.value }); }
   toggleLPlot(id) { const cur = this.state.lform.plots; const next = cur.includes(id) ? cur.filter(x => x !== id) : (cur.length >= 4 ? cur : [...cur, id]); this.setL({ plots: next }); }
-  recL() {
-    const f = this.state.lform;
-    if (f.audio === 'rec') {
-      if (this._lrec) { clearInterval(this._lrec); this._lrec = null; }
-      this.setL({ audio: 'done' });
-      return;
-    }
-    if (f.audio === 'done') return;
-    if (this._lrec) { clearInterval(this._lrec); this._lrec = null; }
-    this.setL({ audio: 'rec', secs: 0 });
-    this._lrec = setInterval(() => {
-      const g = this.state.lform;
-      if (g.audio !== 'rec') {
-        if (this._lrec) { clearInterval(this._lrec); this._lrec = null; }
-        return;
-      }
-      if (g.secs >= 120) {
-        if (this._lrec) { clearInterval(this._lrec); this._lrec = null; }
-        this.setL({ audio: 'done' });
-        return;
-      }
-      this.setL({ secs: g.secs + 1 });
-    }, 1000);
+  async recL() {
+    if (this._lRecorder?.state === 'recording') { this._lRecorder.stop(); return; }
+    if (this.state.lform.audio === 'done' || this._lStarting) return;
+    this._lStarting = true;
+    try {
+      if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') throw Error('Voice recording is unavailable in this browser. You can send the link without a voice note.');
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mime = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
+      const recorder = new MediaRecorder(stream, { mimeType: mime });
+      this._lRecorder = recorder; this._lAudioBlob = null;
+      const chunks = [];
+      recorder.ondataavailable = event => { if (event.data.size) chunks.push(event.data); };
+      recorder.onstop = () => {
+        stream.getTracks().forEach(track => track.stop()); clearInterval(this._lrec); this._lrec = null;
+        if (this._lRecorder !== recorder) return;
+        this._lAudioBlob = new Blob(chunks, { type: mime });
+        this.setL({ audio: this._lAudioBlob.size ? 'done' : 'none' });
+      };
+      recorder.start(); this.setL({ audio: 'rec', secs: 0 });
+      this._lrec = setInterval(() => {
+        const secs = this.state.lform.secs + 1; this.setL({ secs });
+        if (secs >= 120 && recorder.state === 'recording') recorder.stop();
+      }, 1000);
+    } catch (error) { this.setState({ linkError: error.message || 'Microphone access was not available. You can send without a voice note.' }); }
+    finally { this._lStarting = false; }
   }
   dropL() {
-    if (this._lrec) { clearInterval(this._lrec); this._lrec = null; }
+    const recorder = this._lRecorder; this._lRecorder = null;
+    if (recorder?.state === 'recording') recorder.stop();
+    if (this._lrec) clearInterval(this._lrec);
+    this._lrec = null; this._lAudioBlob = null;
     this.setL({ audio: 'none', secs: 0 });
   }
-  sendLink() {
+  async sendLink() {
+    if (this.state.sendingLink || this.state.lform.audio === 'rec') return;
     const f = this.state.lform; const c = f.clientId ? this.clients.find(x => x.id === f.clientId) : null;
     const name = c ? c.name : ((f.newName || '').trim() || 'New customer');
-    const id = 'L' + (this.clientLinks.length + 1);
-    let cid = f.clientId;
-    if (!cid && (f.newName || '').trim()) { const nc = this.createClient({ name: (f.newName || '').trim(), phone: (f.newPhone || '').trim(), business: (f.newBusiness || '').trim() }); cid = nc.id; }
-    this.clientLinks.unshift({ id, clientId: cid, client: name, props: f.plots.slice(), created: 'today', expires: this.EXPIRY.find(e => e.k === f.expiry).l + ' from now', status: 'active', audio: f.audio === 'done', loc: f.loc, price: f.price, events: [] });
-    this.setState({ linkBuild: 'done', lastLink: id });
+    this.setState({ sendingLink: true, linkError: '', linkCopied: false });
+    try {
+      let cid = f.clientId;
+      if (!cid) {
+        cid = await deskStore.saveClient({ ...this.blankCF(), name, phone: (f.newPhone || '').trim(), business: f.newBusiness || '' });
+        if (!cid) throw Error(deskStore.lastWriteError || 'Could not save this client.');
+        this.setL({ clientId: cid });
+      }
+      const selected = await Promise.all(f.plots.map(id => adapter.properties.get(id)));
+      const photoSelections = {}, customPrices = {};
+      selected.forEach((result, index) => {
+        if (!result.ok) throw Error(result.error.message || 'Could not load a selected property.');
+        const property = result.value;
+        photoSelections[f.plots[index]] = (property.photos || []).slice(0, 8)
+          .flatMap((url, photoIndex) => /^https:\/\//.test(url) ? ['external:' + photoIndex] : []);
+        if (property.price > 0) customPrices[property.id] = property.price;
+      });
+      const result = await adapter.clientLinks.create({ clientId: cid, propertyIds: f.plots,
+        priceVisibility: ['exact', 'shown'].includes(f.price) ? 'shown' : 'hidden',
+        locationVisibility: f.loc === 'exact' ? 'exact' : (f.loc === 'hidden' ? 'hidden' : 'area'),
+        includeIntelligence: f.includeIntelligence === true, customPrices, photoSelections,
+        audioBlob: f.audio === 'done' ? this._lAudioBlob : undefined, audioSeconds: f.secs,
+        expiresInDays: { '1d': 1, '3d': 3, '7d': 7, '14d': 14, '30d': 30 }[f.expiry] || 3,
+      });
+      if (!result.ok) throw Error(result.error.message || 'Could not create this link.');
+      this.clientLinks.unshift({ id: result.value.id, clientId: cid, client: name, props: f.plots.slice(),
+        created: 'today', expires: result.value.expiresAt ? new Date(result.value.expiresAt).toLocaleDateString('en-IN') : '',
+        status: 'active', audio: Boolean(this._lAudioBlob), loc: f.loc, price: f.price, includeIntelligence: f.includeIntelligence === true, events: [] });
+      this.setState({ linkBuild: 'done', lastLink: result.value.id, lastLinkUrl: result.value.url });
+    } catch (error) { this.setState({ linkError: error instanceof Error ? error.message : 'Could not create this link. Please try again.' }); }
+    finally { this.setState({ sendingLink: false }); }
   }
   revokeLink(id) { const l = this.clientLinks.find(x => x.id === id); if (l) l.status = 'revoked'; this.forceUpdate(); }
   deleteLink(id) { this.clientLinks = this.clientLinks.filter(x => x.id !== id); this.forceUpdate(); }
@@ -2031,15 +2122,28 @@ export class Component extends DCLogic {
       addPropertyTelemetry.abandoned(this.state.pstep);
       this.setState({ addPlotOpen: false, pstep: 1, pEditId: null, pform: this.blankP() }); return;
     }
-    const result = await deskStore.saveProperty(f, { id: this.state.pEditId || undefined, lifecycle: 'draft' });
+    /* Closing must never unpublish live inventory. The ✕ is labelled "Save and
+       close", and forcing 'draft' here demoted an on-sale property the moment
+       a dealer opened it to fix a typo and closed — dropping it out of every
+       client link already sent, with nothing said. A NEW record still closes
+       as a draft; an existing one keeps the state it already had.
+       deskStore still downgrades to 'draft' by itself if the edit left the
+       record incomplete, so nothing can be published that should not be. */
+    const editing = this.state.pEditId
+      ? this.properties.find(p => p.id === this.state.pEditId) : null;
+    const lifecycle = !editing ? 'draft'
+      : editing.draft ? 'draft'
+        : editing.status === 'sold' ? 'sold'
+          : f.avail === 'onhold' ? 'archived' : 'on-sale';
+    const result = await deskStore.saveProperty(f, { id: this.state.pEditId || undefined, lifecycle });
     if (result.error) {
       addPropertyTelemetry.persistFailed('draft', result.errorCode);
       this.setState({ propError: result.error }); return;
     }
     addPropertyTelemetry.persisted({
       propertyId: result.property.id,
-      lifecycle: 'draft',
-      downgraded: false,
+      lifecycle: (result.missing && result.missing.length) ? 'draft' : lifecycle,
+      downgraded: !!(result.missing && result.missing.length),
       hasMapPlacement: !!result.property.mapPlacement,
       hasLocation: !!result.property.location,
       photoCount: (result.property.photos || []).length,
@@ -2973,18 +3077,20 @@ export class Component extends DCLogic {
           lastStageLabel: dsOf(d.stageBeforeLost || 'negotiating').l,
 
           commRows: [
-            { label: 'Buyer commission (' + (d.cB || 1) + '%)', value: this.inr(M.cB) },
-            { label: 'Seller commission (' + (d.cS || 1) + '%)', value: this.inr(M.cS) },
+            { label: 'From buyer' + (d.cBMode === 'fixed' ? ' (fixed)' : ' (' + (d.cB || 0) + '%)'), value: this.inr(M.cB) },
+            { label: 'From seller' + (d.cSMode === 'fixed' ? ' (fixed)' : ' (' + (d.cS || 0) + '%)'), value: this.inr(M.cS) },
             { label: 'Already received', value: this.inr(M.got) },
             { label: 'Still due', value: this.inr(M.due) }
           ],
-          commState: M.fully ? 'Commission fully received' : (M.due > 0 ? (this.inr(M.due) + ' due on registry') : 'No commission entered yet'),
+          commissionProgress: M.expected > 0 ? Math.min(100, Math.round(M.got / M.expected * 100)) : 0,
+          commissionReceived: this.inr(M.got),
+          commissionPending: this.inr(M.due),
+          commState: M.fully ? 'Commission fully received' : (M.due > 0 ? (this.inr(M.due) + ' commission pending') : 'No commission entered yet'),
           commStateIcon: M.fully ? 'ph-fill ph-seal-check' : 'ph-fill ph-hourglass-high',
           commStateStyle: 'display:flex;align-items:center;gap:9px;margin-top:16px;padding:13px 15px;border-radius:14px;font-size:16.5px;font-weight:800;' + (M.fully ? 'background:rgba(255,255,255,.2);color:#eafff2' : 'background:#241d0c;color:#f8c200'),
           txRows: [{ label: 'Agreed deal value', value: this.inr(d.value) },
-          { label: 'Token received', value: M.token ? this.inr(M.token) : 'Not yet' },
-          { label: 'Balance to pay', value: this.inr(M.remaining) },
-          { label: 'Seller\'s asking price', value: ps && ps.askPrice ? this.inr(ps.askPrice) : '—' }],
+          { label: 'Payments recorded', value: this.inr(M.buyerPaid) },
+          { label: 'Property amount pending', value: this.inr(M.remaining) }],
           payAdd: [{ k: 'token', l: 'Token' }, { k: 'commB', l: 'Buyer commission' }, { k: 'commS', l: 'Seller commission' }].map(a => ({
             label: a.l,
             go: () => {
@@ -3664,8 +3770,11 @@ export class Component extends DCLogic {
         earthOn: !!pd.earth, earthOff: !pd.earth,
         earthLabel: pd.earth ? 'Exact location confirmed' : 'Exact location not set',
         earthStyle: `display:inline-flex;align-items:center;gap:9px;height:48px;padding:0 18px;border-radius:14px;font-size:16.5px;font-weight:800;${pd.earth ? 'background:#d9f5e3;color:#0a6634' : 'background:#ffdccb;color:#a33417'}`,
-        setEarth: () => this.openEdit(pd.id, 3),
-        setPhotos: () => this.openEdit(pd.id, 2),
+        // Wizard steps are 1 Property / 2 Seller / 3 Photos / 4 MAPCO Earth.
+        // These pointed one step short — "Set the exact spot" landed on Photos,
+        // so the pin could never be dropped from the place that asks for it.
+        setEarth: () => this.openEdit(pd.id, 4),
+        setPhotos: () => this.openEdit(pd.id, 3),
         sheetName: sheet || '', hasSheet: !!sheet, noSheet: !sheet,
         sheetAvailable: (this.SECTORMAPS[pd.city] || []).length > 0,
         sheetLabel: sheet ? 'Sector map linked' : ((this.SECTORMAPS[pd.city] || []).length ? 'Sector map not linked' : 'No sector map for this area'),
@@ -3918,6 +4027,13 @@ export class Component extends DCLogic {
     const mobPr = mobIds.length ? this.properties.find(pr => pr.id === (s.mobileFor || mobIds[0])) || this.properties.find(pr => pr.id === mobIds[0]) : null;
     const mobShot = s.propShot % 6;
     const mobName = mobLink ? mobLink.client : lName;
+    this._clientPreview = mobPr ? previewPayloadFromLink({
+      props: [mobPr.id, ...mobIds.filter(id => id !== mobPr.id)],
+      loc: (mobLink ? mobLink.loc : lf.loc) === 'exact' ? 'exact' : ((mobLink ? mobLink.loc : lf.loc) === 'hidden' ? 'hidden' : 'area'),
+      price: ['shown', 'exact'].includes(mobLink ? mobLink.price : lf.price) ? 'shown' : 'hidden',
+      audio: 'none',
+    }, this.properties, this.bizName || this.ownerName, { buyerName: mobName }) : null;
+    if (this._clientPreview) this._clientPreview.intelligenceVisible = mobLink ? mobLink.includeIntelligence !== false : lf.includeIntelligence === true;
     const mob = mobPr ? {
       title: mobPr.type + ' · ' + mobPr.size, kicker: (mobLink ? mobLink.loc : lf.loc) === 'exact' ? mobPr.loc.toUpperCase() : mobPr.city.toUpperCase(),
       area: (mobLink ? mobLink.loc : lf.loc) === 'exact' ? mobPr.loc : ((mobLink ? mobLink.loc : lf.loc) === 'approx' ? mobPr.loc.split(', ').slice(-1)[0] + ' · approximate zone' : mobPr.city + ' area'),
@@ -4333,15 +4449,16 @@ export class Component extends DCLogic {
       }),
       lRecTime: lf.audio === 'none' ? '' : Math.floor(lf.secs / 60) + ':' + String(lf.secs % 60).padStart(2, '0'),
       lRecToggle: () => this.recL(),
-      lPreciseLoc: s.lPreciseLoc || false,
-      lTogglePreciseLoc: () => this.setState({ lPreciseLoc: !s.lPreciseLoc }),
-      lMapcoAi: s.lMapcoAi || false,
-      lToggleMapcoAi: () => this.setState({ lMapcoAi: !s.lMapcoAi }),
+      lPreciseLoc: lf.loc === 'exact',
+      lTogglePreciseLoc: () => this.setL({ loc: lf.loc === 'exact' ? 'area' : 'exact' }),
+      lMapcoAi: lf.includeIntelligence === true,
+      lToggleMapcoAi: () => this.setL({ includeIntelligence: !lf.includeIntelligence }),
       lFootHint: lf.plots.length ? (lf.plots.length + (lf.plots.length === 1 ? ' property ready' : ' properties ready')) : 'Pick at least one property',
       lDoneSub: lName ? ('Private to ' + lName + ' · ' + lf.plots.length + ' plots') : '',
-      lDoneUrl: 'mapco.in/p/' + ((lName || 'client').split(' ')[0].toLowerCase()) + '-' + (this._lslug || (this._lslug = Math.random().toString(36).slice(2, 7))),
+      lDoneUrl: s.lastLinkUrl || '',
+      lSendError: s.linkError || '',
       lCopyLabel: s.linkCopied ? 'Copied' : 'Copy link',
-      lCopy: () => this.setState({ linkCopied: true }),
+      lCopy: async () => { try { await navigator.clipboard.writeText(s.lastLinkUrl); this.setState({ linkCopied: true }); } catch { this.setState({ linkError: 'Copy was blocked. Select and copy the link above.' }); } },
       lPickText: lf.plots.length === 0 ? 'Pick up to 4' : (lf.plots.length === 1 ? '1 property chosen' : lf.plots.length + ' properties chosen'),
       lSteps: [{ n: 1, l: 'Property', i: 'ph-fill ph-house-line' }, { n: 2, l: 'Customer', i: 'ph-fill ph-user-circle' }, { n: 3, l: 'Voice note', i: 'ph-fill ph-microphone' }].map(st => {
         const on = s.lstep === st.n, done = s.lstep > st.n;
@@ -4535,20 +4652,33 @@ export class Component extends DCLogic {
           tel: this.tel(sl.phone), wa: this.waLink(sl.phone),
           facts: (() => {
             const sold = props.filter(pr => pr.status === 'sold');
-            const asks = props.map(pr => (pr.ps || {}).askPrice).filter(Boolean);
+            const asks = live.map(pr => (pr.ps || {}).askPrice).filter(Boolean);
             const rels = [...new Set(props.map(pr => (pr.ps || {}).relation).filter(Boolean))];
-            const conf = props.map(pr => pr.ps).filter(p => p && p.availConfirmed);
-            const stale = props.map(pr => pr.ps).filter(p => p && !p.availConfirmed);
+            const conf = live.map(pr => pr.ps).filter(p => p && p.availConfirmed);
+            const stale = live.map(pr => pr.ps).filter(p => p && !p.availConfirmed);
             const out = [{ l: 'Seller type', v: sl.kind || 'Individual', i: 'ph-fill ph-identification-card' },
             { l: 'Phone', v: sl.phone, i: 'ph-fill ph-phone' },
             { l: 'City', v: sl.city || '—', i: 'ph-fill ph-buildings' }];
             if (sl.business) out.push({ l: 'Business / firm', v: sl.business, i: 'ph-fill ph-briefcase' });
-            out.push({ l: 'His role', v: rels.length ? rels.join(', ') : 'Owner', i: 'ph-fill ph-user-check' });
+            out.push({ l: 'Relationship to property', v: rels.length ? rels.join(', ') : 'Not recorded', i: 'ph-fill ph-user-check' });
             out.push({ l: 'On sale with you', v: live.length + (live.length === 1 ? ' property' : ' properties'), i: 'ph-fill ph-storefront' });
             if (sold.length) out.push({ l: 'Already sold', v: sold.length + (sold.length === 1 ? ' property' : ' properties'), i: 'ph-fill ph-seal-check' });
-            if (asks.length) out.push({ l: 'What he asks in total', v: this.inr(asks.reduce((a, b) => a + b, 0)), i: 'ph-fill ph-tag' });
+            if (asks.length) out.push({ l: 'Seller asking total · ' + asks.length + ' on sale', v: this.inr(asks.reduce((a, b) => a + b, 0)), i: 'ph-fill ph-tag' });
             out.push({ l: 'Availability', v: stale.length ? (stale.length + ' not confirmed lately') : (conf.length ? 'All confirmed' : 'Not recorded'), i: 'ph-fill ph-clock-countdown' });
-            return out.map(x => ({ label: x.l, value: x.v, icon: x.i }));
+            const colors = [
+              { bg: '#fdf2f8', border: '#fbcfe8', text: '#9d174d' }, // pink
+              { bg: '#eff6ff', border: '#bfdbfe', text: '#1e3a8a' }, // blue
+              { bg: '#ecfdf5', border: '#a7f3d0', text: '#064e3b' }, // emerald
+              { bg: '#fffbeb', border: '#fde68a', text: '#78350f' }, // amber
+              { bg: '#fef2f2', border: '#fecaca', text: '#7f1d1d' }, // red
+              { bg: '#f5f3ff', border: '#ddd6fe', text: '#4c1d95' }, // violet
+              { bg: '#f0fdfa', border: '#ccfbf1', text: '#134e4a' }, // teal
+              { bg: '#fff7ed', border: '#fed7aa', text: '#7c2d12' }  // orange
+            ];
+            return out.map((x, i) => {
+              const c = { bg: '#faf8ff', border: '#e7dff5', text: '#624a92' };
+              return { label: x.l, value: x.v, icon: x.i, bg: c.bg, border: c.border, text: c.text };
+            });
           })(),
           papers: (() => {
             const set = new Set(); props.forEach(pr => ((pr.ps || {}).docs || []).forEach(d => set.add(d)));
@@ -4568,14 +4698,15 @@ export class Component extends DCLogic {
             };
           }),
           isOverview: (s.svTab || 'overview') === 'overview', isProps: s.svTab === 'props',
-          tabs: [{ k: 'overview', l: 'Overview', i: 'ph-fill ph-identification-card', sub: 'Who he is and what he wants' }, { k: 'props', l: 'Properties', i: 'ph-fill ph-buildings', sub: props.length + (props.length === 1 ? ' property' : ' properties') + ' with you' }]
+          tabs: [{ k: 'overview', l: 'Overview', i: 'ph-fill ph-identification-card', sub: 'Contact & selling details' }, { k: 'props', l: 'Properties', i: 'ph-fill ph-buildings', sub: props.length + (props.length === 1 ? ' property' : ' properties') + ' with you' }]
             .map(t => {
               const on = (s.svTab || 'overview') === t.k; return {
                 label: t.l, icon: t.i, sub: t.sub, go: () => this.setState({ svTab: t.k }),
-                style: `display:flex;align-items:center;gap:11px;height:58px;padding:0 20px;border-radius:15px;flex:none;transition:all .16s;${on ? 'background:#4a2c99;color:#fff;box-shadow:0 14px 26px -14px rgba(50,26,110,.9)' : 'background:#fff;color:#4a2c99;box-shadow:inset 0 0 0 2px #d5c5f2'}`,
+                style: `display:flex;align-items:center;gap:11px;height:58px;padding:0 20px;border-radius:15px;flex:1;transition:all .16s;${on ? 'background:#4a2c99;color:#fff;box-shadow:0 14px 26px -14px rgba(50,26,110,.9)' : 'background:#fff;color:#4a2c99;box-shadow:inset 0 0 0 2px #d5c5f2'}`,
                 subStyle: `font-size:13px;font-weight:700;${on ? 'color:rgba(255,255,255,.82)' : 'color:#8a75c0'}`
               };
             }),
+          edit: () => { this.setState({ sellerView: null }); this.editSeller(sl.id); },
           close: () => this.setState({ sellerView: null, svTab: 'overview' })
         };
       })(),
@@ -4629,6 +4760,14 @@ export class Component extends DCLogic {
       },
       closeAddPlot: () => this.saveDraft(),
       pform: pf, onPForm: (e) => this.onPForm(e), pstep, pSteps, pIsEdit, pNotEdit: !pIsEdit,
+      /* The Earth search box must NOT go through onPForm. setState re-renders
+         the Desk from one HTML string, which destroys the input node; the next
+         syncEarthMap then binds a fresh Autocomplete and drops the listener on
+         the instance whose predictions the dealer is mid-click. The result was
+         that searching could never place a pin — only tap and drag worked.
+         Mutating directly is what the rest of the Earth step already does, and
+         for the same reason. bindEarthSearch writes earthQ back on selection. */
+      onEarthQ: (e) => { if (this.state.pform) this.state.pform.earthQ = e.target.value; },
       pTitle: pIsEdit ? 'Edit this property' : 'Add a property',
       pSub: { 1: 'What it is and where it is.', 2: 'Who is selling it — private to you.', 3: 'Photos, video and documents.', 4: 'Drop the pin on MAPCO Earth.' }[pstep],
       pS1: pstep === 1, pS2: pstep === 2, pS3: pstep === 3, pS4: pstep === 4, pNotS1: pstep > 1, pNotS4: pstep < 4,

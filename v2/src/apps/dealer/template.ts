@@ -1560,7 +1560,7 @@ export function renderApp(state: any) {
                       <div>
                         <div
                           style="font-size:12.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#86efac">
-                          Expected commission</div>
+                          Your total commission</div>
                         <div
                           style="font-family:'Newsreader',serif;font-weight:600;font-size:34px;line-height:1.05;color:#ffffff">
                           \${dd.commFmt}</div>
@@ -1642,7 +1642,7 @@ export function renderApp(state: any) {
                     \` : '' }
                   \` : '' }
 
-                  \${ dd.isMoney ? \`
+                  \${ dd.isMoney ? \`<div style="padding:16px 20px;margin-bottom:16px;border-radius:18px;background:#f2edff;color:#4a2c99;font-size:16px;line-height:1.5"><strong>Totals update automatically.</strong> Deal value and agreed commission are reused here. Record a payment once; received and pending amounts recalculate. Payments are not verified against a bank account.</div>
                     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px">
                       <div
                         style="border-radius:24px;background:#0a6634;background-image:linear-gradient(145deg,#17a05c,#075c32);padding:22px 24px 24px;color:#eafff2">
@@ -1661,6 +1661,7 @@ export function renderApp(state: any) {
                             </div>
                           \`).join('') }
                         </div>
+                        <div style="margin-top:20px"><div style="display:flex;justify-content:space-between;gap:12px;font-size:15px;font-weight:700;margin-bottom:9px"><span>\${dd.commissionReceived} received</span><span>\${dd.commissionProgress}%</span></div><div role="progressbar" aria-label="Commission received" aria-valuenow="\${dd.commissionProgress}" aria-valuemin="0" aria-valuemax="100" style="height:10px;border-radius:99px;background:#ffffff30;overflow:hidden"><div style="width:\${dd.commissionProgress}%;height:100%;background:#c3f7da;border-radius:99px"></div></div></div>
                         <div style="\${dd.commStateStyle}"><i class="\${dd.commStateIcon}"
                             style="font-size:18px"></i>\${dd.commState}</div>
                       </div>
@@ -1671,8 +1672,8 @@ export function renderApp(state: any) {
                             style="width:40px;height:40px;border-radius:13px;background:#1a5aa8;color:#fff;display:grid;place-items:center;flex:none"><i
                               class="ph-fill ph-currency-inr" style="font-size:20px"></i></span>
                           <div>
-                            <div style="font-size:18.5px;font-weight:800;color:#241f1c">Buyer to seller</div>
-                            <div style="font-size:14.5px;font-weight:700;color:#1a5aa8">This is their money, not yours
+                            <div style="font-size:18.5px;font-weight:800;color:#241f1c">The deal at a glance</div>
+                            <div style="font-size:14.5px;font-weight:700;color:#1a5aa8">Already filled from your deal
                             </div>
                           </div>
                         </div>
@@ -1692,7 +1693,7 @@ export function renderApp(state: any) {
                     <div
                       style="margin-top:16px;border-radius:24px;background:#fffdf7;box-shadow:0 0 0 1.5px #ece3d2;overflow:hidden">
 
-                      <div style="padding:16px 20px 20px;display:flex;flex-direction:column;gap:10px">
+                      <div style="padding:20px 20px 0;font-size:19px;font-weight:800;color:#4a2c99">Commission receipts</div><div style="padding:16px 20px 20px;display:flex;flex-direction:column;gap:10px">
                         \${ (dd.payRows || []).map(p => \`
                           <div
                             style="display:flex;align-items:center;gap:13px;padding:13px 16px;border-radius:15px;background:linear-gradient(135deg, #f4fbf7, #e6f7ee);box-shadow:inset 0 0 0 1.5px #c0e8d2">
@@ -1707,8 +1708,7 @@ export function renderApp(state: any) {
                         \`).join('') }
                         \${ dd.noPay ? \`
                           <div
-                            style="padding:26px 8px;text-align:center;font-size:16.5px;font-weight:700;color:#a89e8b">No
-                            money has moved yet on this deal.</div>
+                            style="padding:26px 8px;text-align:center;font-size:16.5px;font-weight:700;color:#a89e8b">No commission receipts recorded yet.</div>
                         \` : '' }
                       </div>
                     </div>
@@ -2170,14 +2170,13 @@ export function renderApp(state: any) {
 
                       <div style="border-radius:24px;background:#fffdf7;box-shadow:0 0 0 1.5px #ece3d2;overflow:hidden">
                         <div
-                          style="display:flex;align-items:center;gap:13px;padding:15px 22px;background:linear-gradient(135deg, #F43F5E 0%, #FB923C 100%);flex-wrap:wrap">
+                          style="display:flex;align-items:center;gap:13px;padding:15px 22px;background:#f2edff;flex-wrap:wrap">
                           <span
                             style="width:42px;height:42px;border-radius:13px;background:#a3541b;color:#fff;display:grid;place-items:center;flex:none"><i
                               class="ph-fill ph-user-focus" style="font-size:21px"></i></span>
                           <div style="flex:1;min-width:160px">
-                            <div style="font-size:20px;font-weight:800;color:#241f1c">What you know</div>
-                            <div style="font-size:15px;font-weight:700;color:#a3541b;margin-top:1px">Everything you
-                              wrote down from real conversations</div>
+                            <div style="font-size:20px;font-weight:800;color:#241f1c">Buying requirements</div>
+                            <div style="font-size:15px;font-weight:700;color:#a3541b;margin-top:1px">Budget, preferred areas and what matters to this client</div>
                           </div>
                           \${ cp.notEditing ? \`<button
                               onClick="\${__b(cp.startEdit)}"
@@ -2189,9 +2188,9 @@ export function renderApp(state: any) {
                         </div>
                         \${ cp.notEditing ? \`
                           <div style="padding:0">
-                            <div style="display:grid;grid-template-columns:1.15fr 1fr;gap:0;align-items:stretch">
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:0;align-items:stretch">
                               <div
-                                style="padding:26px 26px 24px;background:#241d0c;background-image:linear-gradient(140deg,#3a2f14,#1a1406)">
+                                style="padding:26px 26px 24px;background:#3b2069">
                                 <div
                                   style="font-size:12.5px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:#c9a94a">
                                   Their budget</div>
@@ -2208,7 +2207,7 @@ export function renderApp(state: any) {
                                 </div>
                               </div>
                               <div
-                                style="padding:22px 24px;background:#fff8e6;display:flex;flex-direction:column;gap:12px;justify-content:center">
+                                style="padding:22px 24px;background:#fff;display:flex;flex-direction:column;gap:12px;justify-content:center">
                                 \${ (cp.knowRows || []).map(k => \`
                                   <div>
                                     <div
@@ -3308,16 +3307,16 @@ export function renderApp(state: any) {
                                 style="font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#9a6a00">\${propDetail.typeLabel}</span>
                               \${ propDetail.isNegotiable ? \`
                                 <span
-                                  style="font-size:11px;font-weight:800;padding:2px 7px;border-radius:6px;background:rgba(255,255,255,0.25);color:#ffffff">Negotiable</span>
+                                  style="font-size:11px;font-weight:800;padding:2px 7px;border-radius:6px;background:#ece4fa;color:#3b2069">Negotiable</span>
                               \` : '' }
                               \${ propDetail.isFixedPrice ? \`
                                 <span
-                                  style="font-size:11px;font-weight:800;padding:2px 7px;border-radius:6px;background:rgba(255,255,255,0.25);color:#ffffff">Fixed
+                                  style="font-size:11px;font-weight:800;padding:2px 7px;border-radius:6px;background:#ece4fa;color:#3b2069">Fixed
                                   price</span>
                               \` : '' }
                             </div>
                             <div
-                              style="font-size:21px;font-weight:800;color:#ffffff;margin-top:3px;line-height:1.25">
+                              style="font-size:21px;font-weight:800;color:#3b2069;margin-top:3px;line-height:1.25">
                               \${propDetail.headline}</div>
                           </div>
                           <button onClick="\${__b(propDetail.editGo)}"
@@ -3350,10 +3349,10 @@ export function renderApp(state: any) {
                                 <i class="\${s.icon}" style="font-size:21px;color:#4f46e5;flex:none"></i>
                                 <div style="flex:1;min-width:0">
                                   <div
-                                    style="font-size:11px;font-weight:800;color:#6366f1;text-transform:uppercase;letter-spacing:.06em">
+                                    style="font-size:11px;font-weight:800;color:#4338ca;text-transform:uppercase;letter-spacing:.06em">
                                     \${s.label}</div>
                                   <div
-                                    style="font-size:17px;font-weight:800;color:#312e81;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                                    style="font-size:17px;font-weight:800;color:#111827;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
                                     \${s.value}</div>
                                 </div>
                               </div>
@@ -3363,7 +3362,7 @@ export function renderApp(state: any) {
                           <!-- Level 3: Grouped Property Details -->
                           <div
                             style="font-size:12.5px;font-weight:800;letter-spacing:.11em;text-transform:uppercase;color:#0369a1;margin-top:24px;margin-bottom:10px">
-                            Property Breakdown</div>
+                            All saved property details</div><p style="font-size:15px;color:#6b6156;margin:0 0 16px;line-height:1.5">Updated from Add Property. Edit once to keep this overview current.</p>
                           <div
                             style="display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px">
                             \${ (propDetail.detailGroups || []).map(g => \`
@@ -3376,9 +3375,9 @@ export function renderApp(state: any) {
                                     \${ (g.items || []).map(i => \`
                                       <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
                                         <span
-                                          style="font-size:15px;font-weight:700;color:#7a6f5e">\${i.label}</span>
+                                          style="font-size:15px;font-weight:700;color:#4b5563">\${i.label}</span>
                                         <span
-                                          style="font-size:15.5px;font-weight:800;color:#241f1c;text-align:right">\${i.value}</span>
+                                          style="font-size:15.5px;font-weight:800;color:#111827;text-align:right">\${i.value}</span>
                                       </div>
                                     \`).join('') }
                                   </div>
@@ -3966,7 +3965,7 @@ export function renderApp(state: any) {
                           style="padding:18px 20px;border-radius:20px;background:#fff;box-shadow:inset 0 0 0 1.5px #ddd0f5">
                           <div
                             style="font-size:13px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#6b52a8">
-                            Value on sale</div>
+                            Your listed value · on sale</div>
                           <div
                             style="font-family:'Newsreader',serif;font-weight:500;font-size:34px;line-height:1.1;color:#b8460f;margin-top:4px">
                             \${sellerView.valueLine}</div>
@@ -3989,19 +3988,20 @@ export function renderApp(state: any) {
                             style="width:40px;height:40px;border-radius:12px;background:#4a2c99;color:#fff;display:grid;place-items:center;flex:none"><i
                               class="ph-fill ph-identification-card" style="font-size:20px"></i></span>
                           <div style="flex:1;min-width:150px">
-                            <div style="font-size:19px;font-weight:800;color:#241f1c">Everything you know about him
+                            <div style="font-size:19px;font-weight:800;color:#241f1c">Seller details
                             </div>
                             <div style="font-size:15px;font-weight:700;color:#6b52a8;margin-top:1px">Never shown to any
                               client</div>
                           </div>
+                          <button onClick="\${__b(sellerView.edit)}" style="min-height:48px;padding:0 18px;border-radius:13px;background:#4a2c99;color:white;font-size:16px;font-weight:800">Edit seller</button>
                         </div>
                         <div
                           style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:11px;padding:16px 20px 20px">
                           \${ (sellerView.facts || []).map(f => \`
                             <div
-                              style="padding:15px 17px;border-radius:16px;background:#f6f2ff;box-shadow:inset 0 0 0 1.5px #ddd0f5">
+                              style="padding:15px 17px;border-radius:16px;background:\${f.bg || '#f6f2ff'};box-shadow:inset 0 0 0 1.5px \${f.border || '#ddd0f5'}">
                               <div
-                                style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#6b52a8">
+                                style="display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:\${f.text || '#6b52a8'}">
                                 <i class="\${f.icon}" style="font-size:15px"></i>\${f.label}</div>
                               <div style="font-size:19px;font-weight:800;color:#241f1c;margin-top:4px;text-wrap:pretty">
                                 \${f.value}</div>
@@ -4009,6 +4009,7 @@ export function renderApp(state: any) {
                           \`).join('') }
                         </div>
                       </div>
+                      \${ sellerView.hasNote ? \`<div style="padding:20px;margin-top:14px;border-radius:20px;background:#fff8e6;border:1px solid #ecdfbf"><strong style="font-size:17px;color:#624a25">Private seller note</strong><p style="font-size:17px;line-height:1.6;color:#30291d;margin:8px 0 0">\${sellerView.note}</p></div>\` : '' }
                     </div>
                   \` : '' }
 
@@ -4020,7 +4021,7 @@ export function renderApp(state: any) {
                           style="width:40px;height:40px;border-radius:12px;background:#4a2c99;color:#fff;display:grid;place-items:center;flex:none"><i
                             class="ph-fill ph-buildings" style="font-size:20px"></i></span>
                         <div style="flex:1;min-width:150px">
-                          <div style="font-size:19px;font-weight:800;color:#241f1c">His properties with you</div>
+                          <div style="font-size:19px;font-weight:800;color:#241f1c">Properties with you</div>
                           <div style="font-size:15px;font-weight:700;color:#6b52a8;margin-top:1px">\${sellerView.countLine}</div>
                         </div>
                       </div>
@@ -4610,7 +4611,7 @@ export function renderApp(state: any) {
                         <!-- Top Floating Controls -->
                         <div
                           style="position:absolute;top:0;left:0;right:0;z-index:4;display:flex;gap:10px;align-items:center;padding:14px 16px;pointer-events:none">
-                          <input id="dealer-earth-search" name="earthQ" value="\${pform.earthQ}" onInput="\${__b(onPForm)}"
+                          <input id="dealer-earth-search" name="earthQ" value="\${pform.earthQ}" onInput="\${__b(onEarthQ)}"
                             placeholder="Search spot — Sector 79, Mohali"
                             style="max-width:320px;height:38px;padding:0 14px;border-radius:10px;border:none;background:rgba(255,253,247,.96);font-size:14px;font-weight:700;color:#241f1c;outline:none;box-shadow:0 4px 14px rgba(0,0,0,.3);pointer-events:auto">
                           
@@ -4823,7 +4824,7 @@ export function renderApp(state: any) {
                               <div onClick="\${__b(lToggleMapcoAi)}" style="display:flex;align-items:center;gap:14px;cursor:pointer;padding:16px 20px;background:#ffffff;border-radius:16px;box-shadow:0 4px 12px rgba(6,47,66,0.04);transition:all .2s" style-hover="box-shadow:0 6px 16px rgba(6,47,66,0.08);transform:translateY(-1px)">
                                 <div style="flex:1">
                                   <div style="font-size:16px;font-weight:800;color:#062f42">MAPCO AI Insights</div>
-                                  <div style="font-size:14px;font-weight:600;color:#64748b;margin-top:2px">Include generated market analysis</div>
+                                  <div style="font-size:14px;font-weight:600;color:#64748b;margin-top:2px">Share nearby places and location insights</div>
                                 </div>
                                 <div style="width:46px;height:26px;border-radius:999px;background:\${lMapcoAi ? '#0e4d2f' : '#e2e8f0'};position:relative;transition:all .2s;flex:none">
                                   <div style="width:22px;height:22px;border-radius:50%;background:#fff;position:absolute;top:2px;left:\${lMapcoAi ? '22px' : '2px'};transition:all .2s;box-shadow:0 2px 4px rgba(0,0,0,.15)"></div>
@@ -4835,137 +4836,8 @@ export function renderApp(state: any) {
                           <div style="width:297px;height:600px;flex:none;position:relative;overflow:hidden;border-radius:36px;box-shadow:0 24px 60px -15px rgba(0,0,0,.25);background:#0f0a18;margin:auto">
                               <div style="width:396px;height:800px;transform:scale(0.75);transform-origin:top left;padding:12px;box-sizing:border-box">
                               <div data-scroll="" style="width:100%;height:100%;border-radius:36px;overflow:auto;background:#140d20">
-                                \${ mob ? \`
-                    <div style="position:relative;height:330px;flex:none">
-                      <div style="\${mob.heroStyle}"></div>
-                      <div
-                        style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,10,24,.62) 0%,rgba(15,10,24,.05) 38%,rgba(20,13,32,.96) 100%)">
-                      </div>
-                      <div
-                        style="position:absolute;top:16px;left:16px;right:16px;display:flex;align-items:center;gap:10px">
-                        <div
-                          style="width:38px;height:38px;border-radius:50%;background:#f8a800;color:#241d0c;display:grid;place-items:center;font-size:14px;font-weight:800;flex:none">
-                          \${mob.initials}</div>
-                        <div style="flex:1;min-width:0">
-                          <div style="font-size:14.5px;font-weight:800;color:#fff6e0">\${mob.biz}</div>
-                          <div style="font-size:11.5px;font-weight:700;color:#c9b6ef">Chosen for you by \${mob.dealer}
-                          </div>
-                        </div>
-                      </div>
-                      <div style="position:absolute;bottom:14px;left:16px;right:16px">
-                        <div style="display:flex;align-items:center;gap:7px">
-                          \${ (mob.dots || []).map(d => \`<span
-                              style="\${d.style}"></span>\`).join('') }
-                        </div>
-                        <div
-                          style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:10px">
-                          <div>
-                            <div style="font-size:11px;font-weight:800;letter-spacing:.14em;color:#f8a800">\${mob.kicker}</div>
-                            <div
-                              style="font-family:'Newsreader',serif;font-weight:500;font-size:27px;line-height:1.12;color:#fffdf7;margin-top:4px">
-                              \${mob.title}</div>
-                          </div>
-                          <span
-                            style="font-size:11.5px;font-weight:800;color:#fff6e0;background:rgba(255,255,255,.16);border-radius:999px;padding:6px 11px;flex:none">\${mob.shotLabel}</span>
-                        </div>
-                      </div>
-                      \${ mob.multi ? \`
-                        <div style="position:absolute;top:62px;left:16px;right:16px;display:flex;gap:6px;z-index:3">
-                          \${ (mob.pager || []).map(pg => \`<button
-                              onClick="\${__b(pg.go)}" style="\${pg.style}">\${pg.label}</button>\`).join('') }
-                        </div>
-                      \` : '' }
-                      <button onClick="\${__b(mob.prev)}"
-                        style="position:absolute;left:10px;top:150px;width:40px;height:40px;border-radius:50%;background:rgba(20,13,32,.6);color:#fff6e0;display:grid;place-items:center"><i
-                          class="ph-bold ph-caret-left" style="font-size:18px"></i></button>
-                      <button onClick="\${__b(mob.next)}"
-                        style="position:absolute;right:10px;top:150px;width:40px;height:40px;border-radius:50%;background:rgba(20,13,32,.6);color:#fff6e0;display:grid;place-items:center"><i
-                          class="ph-bold ph-caret-right" style="font-size:18px"></i></button>
-                    </div>
+                                <div id="dealer-builder-presentation" style="height:100%;overflow:hidden"></div>
 
-                    <div style="padding:4px 18px 26px;background:#140d20">
-                      <div
-                        style="display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:700;color:#c9b6ef">
-                        <i class="ph-fill ph-map-pin" style="font-size:17px;color:#f8a800"></i>\${mob.area}</div>
-
-                      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:14px">
-                        \${ (mob.facts || []).map(f => \`<span
-                            style="display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:800;color:#fff6e0;background:rgba(255,255,255,.09);border-radius:11px;padding:9px 13px"><i
-                              class="\${f.i}" style="font-size:15px;color:#f8a800"></i>\${f.l}</span>\`).join('') }
-                      </div>
-
-                      <div
-                        style="display:flex;align-items:center;gap:11px;background:linear-gradient(135deg,#f8a800,#f4881f);border-radius:16px;padding:15px 17px;margin-top:16px">
-                        <i class="ph-fill ph-tag" style="font-size:21px;color:#3a2410"></i>
-                        <span style="font-size:19px;font-weight:800;color:#241d0c">\${mob.priceLabel}</span>
-                      </div>
-
-                      \${ mob.audio ? \`
-                        <div
-                          style="border-radius:20px;padding:18px;margin-top:18px;background:linear-gradient(150deg,#6b3fd4,#3f1f9e);box-shadow:0 18px 40px -20px rgba(107,63,212,.9)">
-                          <div
-                            style="font-size:11.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#d8c8ff">
-                            A message from \${mob.dealer}</div>
-                          <div style="display:flex;align-items:center;gap:13px;margin-top:12px">
-                            <button
-                              style="width:56px;height:56px;border-radius:50%;background:#f8a800;color:#241d0c;display:grid;place-items:center;flex:none;animation:omGlow 2s ease-in-out infinite"><i
-                                class="ph-fill ph-play" style="font-size:22px"></i></button>
-                            <div style="flex:1;display:flex;align-items:center;gap:3px;height:38px">
-                              \${ (mob.wave || []).map(w => \`<span
-                                  style="\${w.style}"></span>\`).join('') }
-                            </div>
-                            <span style="font-size:14px;font-weight:800;color:#fff6e0;flex:none">\${mob.audioLen}</span>
-                          </div>
-                        </div>
-                      \` : '' }
-
-                      \${ mob.multi ? \`
-                        <div
-                          style="font-size:11.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#9d8bc7;margin-top:24px">
-                          Also shortlisted for you</div>
-                        <div style="display:flex;flex-direction:column;gap:10px;margin-top:11px">
-                          \${ (mob.others || []).map(o => \`
-                            <button onClick="\${__b(o.go)}" style="\${o.style}">
-                              <span style="\${o.thumbStyle}"></span>
-                              <span style="flex:1;min-width:0;text-align:left"><span
-                                  style="display:block;font-size:15.5px;font-weight:800;color:#fffdf7">\${o.title}</span><span style="display:block;font-size:12.5px;font-weight:700;color:#b9a8dd">\${o.loc}</span></span>
-                              <i class="ph-bold ph-caret-right" style="font-size:15px;color:#9d8bc7;flex:none"></i>
-                            </button>
-                          \`).join('') }
-                        </div>
-                      \` : '' }
-
-                      <div
-                        style="font-size:11.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#9d8bc7;margin-top:24px">
-                        Why this one</div>
-                      <div style="display:flex;flex-direction:column;gap:10px;margin-top:11px">
-                        \${ (mob.benefits || []).map(b => \`
-                          <div
-                            style="display:flex;align-items:flex-start;gap:10px;font-size:15px;color:#efe6ff;line-height:1.45">
-                            <i class="ph-fill ph-check-circle"
-                              style="font-size:19px;color:#5ee08f;flex:none;margin-top:1px"></i>\${b}</div>
-                        \`).join('') }
-                      </div>
-
-                      <div style="display:flex;flex-direction:column;gap:9px;margin-top:26px">
-                        <button
-                          style="display:flex;align-items:center;justify-content:center;gap:10px;height:60px;border-radius:16px;background:#5ee08f;color:#0d2c1a;font-size:18.5px;font-weight:800"><i
-                            class="ph-fill ph-phone" style="font-size:22px"></i>Call \${mob.dealerFirst}</button>
-                        <button
-                          style="display:flex;align-items:center;justify-content:center;gap:10px;height:54px;border-radius:14px;background:rgba(94,224,143,.16);color:#5ee08f;font-size:16.5px;font-weight:800"><i
-                            class="ph-fill ph-whatsapp-logo" style="font-size:20px"></i>WhatsApp</button>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
-                          <button
-                            style="display:flex;align-items:center;justify-content:center;gap:8px;height:52px;border-radius:13px;background:rgba(255,201,60,.18);color:#f8a800;font-size:15px;font-weight:800"><i
-                              class="ph-fill ph-calendar-check" style="font-size:18px"></i>Site visit</button>
-                          <button
-                            style="display:flex;align-items:center;justify-content:center;gap:8px;height:52px;border-radius:13px;background:rgba(255,255,255,.1);color:#efe6ff;font-size:15px;font-weight:800"><i
-                              class="ph-fill ph-chat-circle-text" style="font-size:18px"></i>Ask</button>
-                        </div>
-                      </div>
-                      <div style="text-align:center;font-size:11.5px;color:#8776a8;margin-top:20px;line-height:1.55">\${mob.watermark}<br>Please keep this page to yourself.</div>
-                    </div>
-                                \` : '' }
                               </div>
                             </div>
                           </div>
@@ -4975,6 +4847,7 @@ export function renderApp(state: any) {
 
                     <div
                       style="flex:none;display:flex;align-items:center;gap:11px;padding:16px 28px;background:#f0f9ff">
+                      <div role="status" style="font-size:15px;color:#a22b3c">\${lSendError}</div>
                       \${ lNotS1 ? \`<button onClick="\${__b(lStepBack)}"
                           style="height:56px;padding:0 20px;border-radius:15px;background:#fff;color:#0b5f7d;font-size:17px;font-weight:800;box-shadow:inset 0 0 0 1.5px #bae6fd">Back</button>\` : '' }
                       <div style="flex:1"></div>
@@ -5023,162 +4896,7 @@ export function renderApp(state: any) {
           \` : '' }
 
           \${ mobOpen ? \`
-            <div style="position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:24px">
-              <div onClick="\${__b(closeMob)}"
-                style="position:absolute;inset:0;background:#160c1e;animation:omVeil .2s ease both"></div>
-              <div
-                style="position:relative;display:flex;align-items:flex-start;gap:24px;">
-                <div
-                  style="width:396px;height:min(852px,92vh);border-radius:46px;background:#0f0a18;padding:12px;box-shadow:0 44px 100px -28px rgba(0,0,0,.8);flex:none">
-                  <div data-scroll=""
-                    style="width:100%;height:100%;border-radius:36px;overflow:auto;background:#140d20">
-
-                    <div style="position:relative;height:330px;flex:none">
-                      <div style="\${mob.heroStyle}"></div>
-                      <div
-                        style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(15,10,24,.62) 0%,rgba(15,10,24,.05) 38%,rgba(20,13,32,.96) 100%)">
-                      </div>
-                      <div
-                        style="position:absolute;top:16px;left:16px;right:16px;display:flex;align-items:center;gap:10px">
-                        <div
-                          style="width:38px;height:38px;border-radius:50%;background:#f8a800;color:#241d0c;display:grid;place-items:center;font-size:14px;font-weight:800;flex:none">
-                          \${mob.initials}</div>
-                        <div style="flex:1;min-width:0">
-                          <div style="font-size:14.5px;font-weight:800;color:#fff6e0">\${mob.biz}</div>
-                          <div style="font-size:11.5px;font-weight:700;color:#c9b6ef">Chosen for you by \${mob.dealer}
-                          </div>
-                        </div>
-                      </div>
-                      <div style="position:absolute;bottom:14px;left:16px;right:16px">
-                        <div style="display:flex;align-items:center;gap:7px">
-                          \${ (mob.dots || []).map(d => \`<span
-                              style="\${d.style}"></span>\`).join('') }
-                        </div>
-                        <div
-                          style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-top:10px">
-                          <div>
-                            <div style="font-size:11px;font-weight:800;letter-spacing:.14em;color:#f8a800">\${mob.kicker}</div>
-                            <div
-                              style="font-family:'Newsreader',serif;font-weight:500;font-size:27px;line-height:1.12;color:#fffdf7;margin-top:4px">
-                              \${mob.title}</div>
-                          </div>
-                          <span
-                            style="font-size:11.5px;font-weight:800;color:#fff6e0;background:rgba(255,255,255,.16);border-radius:999px;padding:6px 11px;flex:none">\${mob.shotLabel}</span>
-                        </div>
-                      </div>
-                      \${ mob.multi ? \`
-                        <div style="position:absolute;top:62px;left:16px;right:16px;display:flex;gap:6px;z-index:3">
-                          \${ (mob.pager || []).map(pg => \`<button
-                              onClick="\${__b(pg.go)}" style="\${pg.style}">\${pg.label}</button>\`).join('') }
-                        </div>
-                      \` : '' }
-                      <button onClick="\${__b(mob.prev)}"
-                        style="position:absolute;left:10px;top:150px;width:40px;height:40px;border-radius:50%;background:rgba(20,13,32,.6);color:#fff6e0;display:grid;place-items:center"><i
-                          class="ph-bold ph-caret-left" style="font-size:18px"></i></button>
-                      <button onClick="\${__b(mob.next)}"
-                        style="position:absolute;right:10px;top:150px;width:40px;height:40px;border-radius:50%;background:rgba(20,13,32,.6);color:#fff6e0;display:grid;place-items:center"><i
-                          class="ph-bold ph-caret-right" style="font-size:18px"></i></button>
-                    </div>
-
-                    <div style="padding:4px 18px 26px;background:#140d20">
-                      <div
-                        style="display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:700;color:#c9b6ef">
-                        <i class="ph-fill ph-map-pin" style="font-size:17px;color:#f8a800"></i>\${mob.area}</div>
-
-                      <div style="display:flex;flex-wrap:wrap;gap:7px;margin-top:14px">
-                        \${ (mob.facts || []).map(f => \`<span
-                            style="display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:800;color:#fff6e0;background:rgba(255,255,255,.09);border-radius:11px;padding:9px 13px"><i
-                              class="\${f.i}" style="font-size:15px;color:#f8a800"></i>\${f.l}</span>\`).join('') }
-                      </div>
-
-                      <div
-                        style="display:flex;align-items:center;gap:11px;background:linear-gradient(135deg,#f8a800,#f4881f);border-radius:16px;padding:15px 17px;margin-top:16px">
-                        <i class="ph-fill ph-tag" style="font-size:21px;color:#3a2410"></i>
-                        <span style="font-size:19px;font-weight:800;color:#241d0c">\${mob.priceLabel}</span>
-                      </div>
-
-                      \${ mob.audio ? \`
-                        <div
-                          style="border-radius:20px;padding:18px;margin-top:18px;background:linear-gradient(150deg,#6b3fd4,#3f1f9e);box-shadow:0 18px 40px -20px rgba(107,63,212,.9)">
-                          <div
-                            style="font-size:11.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#d8c8ff">
-                            A message from \${mob.dealer}</div>
-                          <div style="display:flex;align-items:center;gap:13px;margin-top:12px">
-                            <button
-                              style="width:56px;height:56px;border-radius:50%;background:#f8a800;color:#241d0c;display:grid;place-items:center;flex:none;animation:omGlow 2s ease-in-out infinite"><i
-                                class="ph-fill ph-play" style="font-size:22px"></i></button>
-                            <div style="flex:1;display:flex;align-items:center;gap:3px;height:38px">
-                              \${ (mob.wave || []).map(w => \`<span
-                                  style="\${w.style}"></span>\`).join('') }
-                            </div>
-                            <span style="font-size:14px;font-weight:800;color:#fff6e0;flex:none">\${mob.audioLen}</span>
-                          </div>
-                        </div>
-                      \` : '' }
-
-                      \${ mob.multi ? \`
-                        <div
-                          style="font-size:11.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#9d8bc7;margin-top:24px">
-                          Also shortlisted for you</div>
-                        <div style="display:flex;flex-direction:column;gap:10px;margin-top:11px">
-                          \${ (mob.others || []).map(o => \`
-                            <button onClick="\${__b(o.go)}" style="\${o.style}">
-                              <span style="\${o.thumbStyle}"></span>
-                              <span style="flex:1;min-width:0;text-align:left"><span
-                                  style="display:block;font-size:15.5px;font-weight:800;color:#fffdf7">\${o.title}</span><span style="display:block;font-size:12.5px;font-weight:700;color:#b9a8dd">\${o.loc}</span></span>
-                              <i class="ph-bold ph-caret-right" style="font-size:15px;color:#9d8bc7;flex:none"></i>
-                            </button>
-                          \`).join('') }
-                        </div>
-                      \` : '' }
-
-                      <div
-                        style="font-size:11.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#9d8bc7;margin-top:24px">
-                        Why this one</div>
-                      <div style="display:flex;flex-direction:column;gap:10px;margin-top:11px">
-                        \${ (mob.benefits || []).map(b => \`
-                          <div
-                            style="display:flex;align-items:flex-start;gap:10px;font-size:15px;color:#efe6ff;line-height:1.45">
-                            <i class="ph-fill ph-check-circle"
-                              style="font-size:19px;color:#5ee08f;flex:none;margin-top:1px"></i>\${b}</div>
-                        \`).join('') }
-                      </div>
-
-                      <div style="display:flex;flex-direction:column;gap:9px;margin-top:26px">
-                        <button
-                          style="display:flex;align-items:center;justify-content:center;gap:10px;height:60px;border-radius:16px;background:#5ee08f;color:#0d2c1a;font-size:18.5px;font-weight:800"><i
-                            class="ph-fill ph-phone" style="font-size:22px"></i>Call \${mob.dealerFirst}</button>
-                        <button
-                          style="display:flex;align-items:center;justify-content:center;gap:10px;height:54px;border-radius:14px;background:rgba(94,224,143,.16);color:#5ee08f;font-size:16.5px;font-weight:800"><i
-                            class="ph-fill ph-whatsapp-logo" style="font-size:20px"></i>WhatsApp</button>
-                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
-                          <button
-                            style="display:flex;align-items:center;justify-content:center;gap:8px;height:52px;border-radius:13px;background:rgba(255,201,60,.18);color:#f8a800;font-size:15px;font-weight:800"><i
-                              class="ph-fill ph-calendar-check" style="font-size:18px"></i>Site visit</button>
-                          <button
-                            style="display:flex;align-items:center;justify-content:center;gap:8px;height:52px;border-radius:13px;background:rgba(255,255,255,.1);color:#efe6ff;font-size:15px;font-weight:800"><i
-                              class="ph-fill ph-chat-circle-text" style="font-size:18px"></i>Ask</button>
-                        </div>
-                      </div>
-                      <div style="text-align:center;font-size:11.5px;color:#8776a8;margin-top:20px;line-height:1.55">\${mob.watermark}<br>Please keep this page to yourself.</div>
-                    </div>
-                  </div>
-                </div>
-                <div style="width:270px;flex:none;color:#efe6ff;padding-top:14px">
-                  <div style="font-size:11.5px;font-weight:800;letter-spacing:.13em;color:#c9b6ef">WHAT YOUR CLIENT SEES
-                  </div>
-                  <div style="font-family:'Newsreader',serif;font-weight:500;font-size:27px;margin-top:6px">On their
-                    phone</div>
-                  <div style="font-size:14.5px;line-height:1.6;color:#c9b6ef;margin-top:12px">Photos first, your voice
-                    next, then one big button to call you. Nothing about the seller, your commission or your notes.
-                  </div>
-                  <button onClick="\${__b(closeMob)}"
-                    style="display:flex;align-items:center;gap:9px;height:52px;padding:0 20px;border-radius:14px;background:rgba(255,255,255,.14);color:#fffdf7;font-size:16px;font-weight:800;margin-top:20px"
-                    style-hover="background:rgba(255,255,255,.24)"><i class="ph-bold ph-x"
-                      style="font-size:17px"></i>Close preview</button>
-                </div>
-              </div>
-            </div>
+<div style="position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:16px;background:#160c1ee8"><div role="dialog" aria-modal="true" aria-label="Client link preview" style="width:min(430px,100%);height:min(900px,95vh);display:flex;flex-direction:column;background:#f7f4ed;border-radius:26px;overflow:hidden;box-shadow:0 24px 80px #0007"><div style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:#4a2c99;color:white"><strong style="font-size:16px">Client link preview</strong><button onClick="\${__b(closeMob)}" aria-label="Close preview" style="height:44px;width:44px;border-radius:12px;background:#ffffff25;color:white;font-size:24px">×</button></div><div id="dealer-client-presentation" style="flex:1;min-height:0;overflow:hidden"></div></div></div>
           \` : '' }
 
           \${ priceEditOpen ? \`

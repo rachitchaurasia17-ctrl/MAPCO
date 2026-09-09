@@ -259,6 +259,16 @@ export function toDeskProperty(property: Property): Record<string, unknown> {
     highlights: [...(property.highlights ?? [])],
     videos: [...(property.videos ?? [])],
     video: (property.videos ?? []).length > 0,
+    /* The Desk calls .toUpperCase()/.split() on these directly. Anything saved
+       through toCanonicalProperty already has them as strings, but a seeded or
+       imported row can be missing one entirely — and an undefined here threw
+       inside renderVals(), which takes the WHOLE dashboard down rather than
+       just the one card. Defaulted for the same reason as the fields below. */
+    city: property.city ?? '',
+    area: property.area ?? '',
+    loc: property.loc ?? '',
+    sector: property.sector ?? '',
+    size: property.size ?? '',
     rate: property.rate ?? '',
     society: property.society ?? '',
     address: property.address ?? '',
@@ -376,7 +386,24 @@ export function toCanonicalProperty(
     ...(form.notes ? { privateNotes: String(form.notes) } : {}),
     ...(form.registry ? { registryRef: String(form.registry) } : {}),
     ...(form.approval ? { approvalRef: String(form.approval) } : {}),
-    ...(form.mapPlacement ? { mapPlacement: form.mapPlacement } : (form.sectorMapId ? { mapPlacement: { mapId: form.sectorMapId, x: (typeof form.sectorPinX === 'number' ? form.sectorPinX / 100 : 0.5), y: (typeof form.sectorPinY === 'number' ? form.sectorPinY / 100 : 0.5) } } : (existing?.mapPlacement ? { mapPlacement: existing.mapPlacement } : {}))),
+    /* A placement is only real if the dealer actually dropped the pin.
+       sectorMapId is auto-latched by a fuzzy name match on the typed area
+       (logic.ts setP), so defaulting x/y to 0.5 invented a pin at the dead
+       centre of a sheet nobody chose — and buyers were shown it on
+       precise-location links. Same fabrication the Earth block below refuses
+       to make for lat/lng; refused here too. No pin, no placement. */
+    ...(form.mapPlacement
+      ? { mapPlacement: form.mapPlacement }
+      : (form.sectorMapId
+        && typeof form.sectorPinX === 'number' && typeof form.sectorPinY === 'number'
+        ? { mapPlacement: {
+            mapId: form.sectorMapId,
+            // 4dp, matching what logic.ts mapClick() already writes, so the
+            // same pin has the same shape whichever path stored it.
+            x: +(form.sectorPinX / 100).toFixed(4),
+            y: +(form.sectorPinY / 100).toFixed(4),
+          } }
+        : (existing?.mapPlacement ? { mapPlacement: existing.mapPlacement } : {}))),
     ...(form.sectorMapId ? { sectorMapId: String(form.sectorMapId) } : (existing?.sectorMapId ? { sectorMapId: existing.sectorMapId } : {})),
     /* ── canonical Earth location ────────────────────────────────────
        ONE source of truth: a real WGS84 coordinate the dealer placed on

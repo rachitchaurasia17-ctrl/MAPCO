@@ -3,6 +3,7 @@
 // receive only the safe RPC snapshot and short-lived signed media URLs.
 
 import { toBuyerSafeIntelligence } from '../../../v2/src/packages/property-intelligence/buyer-safe.ts';
+import { isClientCoordinate } from '../../../v2/src/packages/data/client-location.ts';
 
 type JsonRecord = Record<string, unknown>;
 
@@ -114,6 +115,10 @@ Deno.serve(async (request: Request): Promise<Response> => {
       if (binding.masterplanId) property.masterplanId = String(binding.masterplanId);
       if (binding.sectorMapId) property.sectorMapId = String(binding.sectorMapId);
       if (binding.placement && typeof binding.placement === 'object') property.placement = binding.placement;
+      if (isClientCoordinate(binding.location)
+        && (link.visibility as JsonRecord | undefined)?.location === 'exact') {
+        property.location = { latitude: binding.location.latitude, longitude: binding.location.longitude };
+      }
     }
   }
 
@@ -143,7 +148,9 @@ Deno.serve(async (request: Request): Promise<Response> => {
   // removed from the PAYLOAD, because exact distances to several known
   // places trilaterate the property.
   try {
-    const intel = await rpc(`plotmap_client_link_intelligence`, { p_token: token }, SERVICE_KEY);
+    const intel = (link.visibility as JsonRecord | undefined)?.intelligence === false
+      ? { ok: false, data: null }
+      : await rpc(`plotmap_client_link_intelligence`, { p_token: token }, SERVICE_KEY);
     const envelope = intel.ok && intel.data && typeof intel.data === `object`
       ? intel.data as JsonRecord : {};
     if (envelope.ok === true && Array.isArray(envelope.properties)) {

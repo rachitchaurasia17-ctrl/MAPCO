@@ -16,6 +16,7 @@ import type {
 import {
   PROPERTIES, CLIENTS, DEALS, CLIENT_LINKS, DEMAND_SIGNALS, persistMock,
 } from './mock-adapter';
+import { clientLinkUrl } from './client-link-url';
 import {
   ok, err, activeScenario,
   type Scenario, type Result, type Page, type PageParams, type QueryOptions,
@@ -1246,7 +1247,7 @@ class MockClientLinkRepository implements ClientLinkRepository {
     persistMock();
     persistDeskMock();
     publishResourceInvalidation({ entity: 'client-link', id });
-    return ok({ id, token, url: `/client/?token=${token}`, expiresAt: '' });
+    return ok({ id, token, url: clientLinkUrl(token), expiresAt: '' });
   }
 
   async revoke(id: string, opts?: QueryOptions): Promise<Result<void>> {

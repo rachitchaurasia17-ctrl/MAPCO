@@ -1,3 +1,4 @@
+import { isClientCoordinate } from '../client-location';
 /* ═══════════════════════════════════════════════════════════════
    MAPCO V2 — Supabase adapter (implements DataAdapterV2)
    ---------------------------------------------------------------
@@ -31,6 +32,7 @@ import {
 } from '../contracts';
 import type { DealerPredictionSummary, PredictiveActionEvent } from '../../performance';
 import { buildEventMetadata } from '../telemetry';
+import { clientLinkUrl } from '../client-link-url';
 import { publishResourceInvalidation } from '../../performance';
 import {
   toBuyerSafeIntelligence,
@@ -1407,6 +1409,7 @@ class SupaClientLinks implements ClientLinkRepository {
         propertyIds: input.propertyIds,
         priceVisibility: input.priceVisibility,
         locationVisibility: input.locationVisibility,
+        includeIntelligence: input.includeIntelligence !== false,
         customPrices: input.customPrices ?? {},
         expiresInDays: input.expiresInDays,
         photoSelections: input.photoSelections,
@@ -1422,7 +1425,7 @@ class SupaClientLinks implements ClientLinkRepository {
         if (audio) await c.storage.from('client-link-audio').remove([audio.objectPath]);
         return err('unknown', 'Could not create the link');
       }
-      const created = { id: String(env.id ?? ''), token: env.token, url: env.url ?? `/client/?token=${env.token}`, expiresAt: env.expiresAt };
+      const created = { id: String(env.id ?? ''), token: env.token, url: clientLinkUrl(env.token, env.url), expiresAt: env.expiresAt };
       publishResourceInvalidation({ entity: 'client-link', id: created.id });
       return ok(created);
     } catch (e) { return toErr(e); }
@@ -1503,7 +1506,7 @@ function reasonToState(reason?: string): ClientLinkState {
 /** Map a resolved client-link snapshot (from the edge function OR the RPC) to a
  *  ClientLinkState. Both return the same snapshot shape. */
 export function snapshotToState(snap: Record<string, unknown>): ClientLinkState {
-  const vis = (snap.visibility as { price?: string; location?: string }) ?? {};
+  const vis = (snap.visibility as { price?: string; location?: string; intelligence?: boolean }) ?? {};
   const intelligenceVisibility: LocationVisibility =
     vis.location === 'exact' || vis.location === 'approx'
       || vis.location === 'area' || vis.location === 'hidden'
@@ -1518,6 +1521,7 @@ export function snapshotToState(snap: Record<string, unknown>): ClientLinkState 
   const rawProps = (snap.properties as Record<string, unknown>[]) ?? [];
   const rawMaps = Array.isArray(snap.maps) ? snap.maps as Record<string, unknown>[] : [];
   const payload: ClientSafePayload = {
+    intelligenceVisible: vis.intelligence !== false,
     dealerDisplayName: String(branding.brandName ?? 'Your dealer'),
     priceVisible, locationVisible,
     ...(branding.phone ? { dealerPhone: String(branding.phone) } : {}),
@@ -1541,7 +1545,7 @@ export function snapshotToState(snap: Record<string, unknown>): ClientLinkState 
       const hasValidPlacement = precise && Boolean(placementMapId)
         && Number.isFinite(placementX) && placementX >= 0 && placementX <= 1
         && Number.isFinite(placementY) && placementY >= 0 && placementY <= 1;
-      const rawIntelligence = p.intelligence;
+      const rawIntelligence = vis.intelligence === false ? undefined : p.intelligence;
       const intelligence = rawIntelligence && typeof rawIntelligence === 'object'
         && Array.isArray((rawIntelligence as { local?: unknown }).local)
         && Array.isArray((rawIntelligence as { city?: unknown }).city)
@@ -1566,6 +1570,7 @@ export function snapshotToState(snap: Record<string, unknown>): ClientLinkState 
         ...(precise && p.masterplanId ? { masterplanId: String(p.masterplanId) } : {}),
         ...(precise && p.sectorMapId ? { sectorMapId: String(p.sectorMapId) } : {}),
         ...(hasValidPlacement ? { placement: { mapId: placementMapId, x: placementX, y: placementY } } : {}),
+        ...(precise && isClientCoordinate(p.location) ? { location: { latitude: p.location.latitude, longitude: p.location.longitude } } : {}),
         ...(intelligence ? { intelligence } : {}),
       };
     }),
