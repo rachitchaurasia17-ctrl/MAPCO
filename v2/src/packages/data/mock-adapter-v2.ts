@@ -24,6 +24,7 @@ import {
   type PropertyRepository, type CustomerRepository, type DealRepository, type RecordSaleInput,
   type StartDealInput, type SetDealStageInput, type RecordDealPaymentInput, type UpdateDealInput,
   type SetDealPaperInput, type RelinkDealPropertyInput, type SetPropertyPaperInput,
+  type DealerIdentity,
   type SellerRepository, type SaveSellerInput, type AssignPropertySellerInput,
   type PropertyDocumentRepository, type UploadPropertyDocumentInput,
   type DemandRepository, type DemandRecord, type DemandDraft, type DemandMatch,
@@ -252,6 +253,11 @@ class MockAuthRepository implements AuthRepository {
       case 'role-mismatch': return ok({ kind: 'role-mismatch', need: 'owner' });
       default: return ok({ kind: 'active' });
     }
+  }
+
+  async getDealerIdentity(opts?: QueryOptions): Promise<Result<DealerIdentity>> {
+    const a = aborted<DealerIdentity>(opts); if (a) return a;
+    return ok({ dealerId: 'dealer-mock', brandName: 'Mock Estates', ownerName: 'Mock Dealer' });
   }
 }
 

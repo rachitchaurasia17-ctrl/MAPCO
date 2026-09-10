@@ -71,7 +71,31 @@ export class Component extends DCLogic {
   ];
   WANTS = ['Plot', 'Flat', 'Kothi', 'Villa', 'Commercial'];
   BANDS = [{ l: 'Under ₹1 Cr', max: 1e7 }, { l: '₹1–2 Cr', max: 2e7 }, { l: '₹2–3 Cr', max: 3e7 }, { l: '₹3 Cr & above', max: Infinity }];
-  ownerName = 'Rajinder Singh'; bizName = 'Rajinder Estates'; ownerInitials = 'RS';
+  /* The signed-in dealer's own identity, read from their dealer_settings row
+     by loadIdentity(). These start EMPTY on purpose: a placeholder person
+     here is shown to every dealer as their own name, and the same strings
+     are rendered into the client-link preview, so the dealer would be told
+     a buyer sees a business that is not theirs. A blank line until the read
+     resolves is honest; a wrong name is not. */
+  ownerName = ''; bizName = ''; ownerInitials = '';
+  identityError = '';
+  async loadIdentity() {
+    const result = await adapter.auth.getDealerIdentity();
+    if (!result.ok) {
+      // Nothing is invented on failure; the sidebar simply stays unnamed.
+      this.identityError = result.error.message || 'Your account could not be read.';
+      this.forceUpdate();
+      return;
+    }
+    const id = result.value;
+    /* owner_name is optional on the account. When it is absent the business
+       name stands alone rather than being repeated on both lines. */
+    this.ownerName = id.ownerName || id.brandName || '';
+    this.bizName = id.ownerName ? (id.brandName || '') : '';
+    this.ownerInitials = this.initialsOf(this.ownerName).toUpperCase();
+    this.identityError = '';
+    this.forceUpdate();
+  }
   blankWiz() { return { step: 1, clientId: '', useNewClient: false, ncName: '', ncPhone: '', propId: '', useManualProp: false, mpLoc: '', mpSize: '', name: '', value: '', comm: '', stage: 'negotiating', sellerName: '', sellerPhone: '', q1: '', q2: '' }; }
   plotPhoto(pr, i) {
     if (!pr) return '/assets/ph-plot-1.png';
@@ -85,6 +109,10 @@ export class Component extends DCLogic {
   /* Papers a deal actually holds: uploaded files plus the dealer's own ticks,
      both persisted. There is no stage-derived guess about which papers exist. */
   paperCount(d) { return ((d.docs || []).filter(x => x.have).length) + ((d.propDocs || []).length); }
+  /* Exactly what a buyer sees on a shared link: the server fills
+     dealerDisplayName from branding.brandName and falls back to
+     'Your dealer'. The dealer's own preview must not claim otherwise. */
+  buyerFacingName() { return this.bizName || this.ownerName || 'Your dealer'; }
   waLink(p) { return 'https://wa.me/' + String(p || '').replace(/[^0-9]/g, ''); }
 
   TODAY = new Date().getDate();
@@ -1449,6 +1477,7 @@ export class Component extends DCLogic {
     // those, instead of a query per property.
     Promise.all([deskStore.loadClients(), deskStore.loadSellers()])
       .then(() => deskStore.loadProperties());
+    void this.loadIdentity();
     void this.loadClientLinks();
     void this.loadDashboard();
     void this.loadDeals();
@@ -4038,7 +4067,7 @@ export class Component extends DCLogic {
       loc: (mobLink ? mobLink.loc : lf.loc) === 'exact' ? 'exact' : ((mobLink ? mobLink.loc : lf.loc) === 'hidden' ? 'hidden' : 'area'),
       price: ['shown', 'exact'].includes(mobLink ? mobLink.price : lf.price) ? 'shown' : 'hidden',
       audio: 'none',
-    }, this.properties, this.bizName || this.ownerName, { buyerName: mobName }) : null;
+    }, this.properties, this.buyerFacingName(), { buyerName: mobName }) : null;
     if (this._clientPreview) this._clientPreview.intelligenceVisible = mobLink ? mobLink.includeIntelligence !== false : lf.includeIntelligence === true;
     const mob = mobPr ? {
       title: mobPr.type + ' · ' + mobPr.size, kicker: (mobLink ? mobLink.loc : lf.loc) === 'exact' ? mobPr.loc.toUpperCase() : mobPr.city.toUpperCase(),
@@ -4048,8 +4077,9 @@ export class Component extends DCLogic {
       dots: [0, 1, 2, 3, 4, 5].map(i => ({ style: `height:4px;flex:1;border-radius:999px;background:${i === mobShot ? '#f8a800' : 'rgba(255,255,255,.28)'}` })),
       prev: () => this.setState({ propShot: (mobShot + 5) % 6 }), next: () => this.setState({ propShot: (mobShot + 1) % 6 }),
       priceLabel: (mobLink ? mobLink.price : lf.price) === 'exact' ? this.inr(mobPr.price) : ((mobLink ? mobLink.price : lf.price) === 'range' ? ('₹' + (Math.floor(mobPr.price / 1e7 * 10) / 10).toFixed(1) + ' – ₹' + (Math.ceil(mobPr.price / 1e7 * 10 + 4) / 10).toFixed(1) + ' Cr') : 'Ask me the price'),
-      dealer: this.ownerName, dealerFirst: this.ownerName.split(' ')[0], biz: this.bizName, initials: this.ownerInitials,
-      watermark: 'Shared privately by ' + this.bizName + ' for ' + mobName,
+      dealer: this.buyerFacingName(), dealerFirst: this.buyerFacingName().split(' ')[0],
+      biz: this.buyerFacingName(), initials: this.ownerInitials,
+      watermark: 'Shared privately by ' + this.buyerFacingName() + ' for ' + mobName,
       audio: mobLink ? mobLink.audio : (lf.audio === 'done'),
       audioLen: mobLink ? '0:48' : (Math.floor(lf.secs / 60) + ':' + String(lf.secs % 60).padStart(2, '0')),
       wave: Array.from({ length: 24 }, (_, i) => ({ style: `flex:1;height:${10 + Math.round(24 * Math.abs(Math.sin(i * 1.6)))}%;min-height:6px;border-radius:2px;background:${i < 10 ? '#f8a800' : 'rgba(255,255,255,.3)'}` })),
@@ -4113,7 +4143,7 @@ export class Component extends DCLogic {
 
     return {
       pageBgStyle,
-      navItems, ownerName: this.ownerName, ownerFirst: this.ownerName.split(' ')[0], ownerInitials: this.ownerInitials, bizName: this.bizName,
+      navItems, ownerName: this.ownerName, ownerFirst: (this.ownerName || '').split(' ')[0], ownerInitials: this.ownerInitials, bizName: this.bizName,
       greeting, dateStr, sectionName: sm.name, sectionIcon: sm.icon,
       invLiveGo: () => this.setState({ invView: 'live' }), invSoldGo: () => this.setState({ invView: 'sold' }), invHoldGo: () => this.setState({ invView: 'onhold' }),
       invMoneyToggle: () => this.setState({ invView: soldView ? 'live' : 'sold' }),
@@ -4416,8 +4446,8 @@ export class Component extends DCLogic {
           priceHidden: priceK === 'hidden',
           heroStyle: `position:absolute;inset:0;background-image:url('${this.plotPhoto(pr, chosen[0] || 0)}');background-size:cover;background-position:center`,
           shots: chosen.slice(0, 8).map(i => ({ imgStyle: `height:124px;background-image:url('${this.plotPhoto(pr, i)}');background-size:cover;background-position:center`, caption: this.SHOTCAP[i] })),
-          client, dealer: this.ownerName, biz: this.bizName, initials: this.ownerInitials,
-          watermark: 'Shared privately by ' + this.bizName + ' for ' + client,
+          client, dealer: this.buyerFacingName(), biz: this.buyerFacingName(), initials: this.ownerInitials,
+          watermark: 'Shared privately by ' + this.buyerFacingName() + ' for ' + client,
           audio: (sh ? sh.audio : sf.audio === 'done'), audioLen: sh ? '0:48' : (String(Math.floor(sf.secs / 60)) + ':' + String(sf.secs % 60).padStart(2, '0')),
           facts: [{ i: 'ph-fill ph-ruler', l: pr.size }, { i: 'ph-fill ph-compass', l: pr.facing + ' facing' }, { i: 'ph-fill ph-road-horizon', l: 'Wide approach road' }],
           benefits: ['Walking distance to the sector market', 'On a 200 ft main road', 'Corner plot with two open sides', 'Schools and hospital within 5 minutes']

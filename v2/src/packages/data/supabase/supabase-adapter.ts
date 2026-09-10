@@ -19,6 +19,7 @@ import {
   type PropertyRepository, type CustomerRepository, type DealRepository, type RecordSaleInput,
   type StartDealInput, type SetDealStageInput, type RecordDealPaymentInput, type UpdateDealInput,
   type SetDealPaperInput, type RelinkDealPropertyInput, type SetPropertyPaperInput,
+  type DealerIdentity,
   type SellerRepository, type SaveSellerInput, type AssignPropertySellerInput,
 
   type PropertyDocumentRepository, type UploadPropertyDocumentInput,
@@ -1752,6 +1753,36 @@ class SupaAuth implements AuthRepository {
       }
       return ok({ kind: 'active' });
     } catch { return ok({ kind: 'active' }); }
+  }
+
+  async getDealerIdentity(o?: QueryOptions): Promise<Result<DealerIdentity>> {
+    const a = aborted<DealerIdentity>(o); if (a) return a;
+    try {
+      const c = await client();
+      // RLS scopes dealer_settings to the caller's own dealer, so this
+      // returns exactly one row: theirs.
+      const { data, error } = await c.from('dealer_settings')
+        .select('dealer_id,brand_name,owner_name,owner_phone,primary_area').maybeSingle();
+      if (error) return toErr(error);
+      if (!data) return err('not_found', 'Your dealer account could not be read');
+      const d = data as {
+        dealer_id?: string; brand_name?: string | null; owner_name?: string | null;
+        owner_phone?: string | null; primary_area?: string | null;
+      };
+      // Blank columns stay absent rather than becoming empty strings, so the
+      // screen can tell 'not recorded' from 'recorded as nothing'.
+      const text = (v: string | null | undefined): string | undefined => {
+        const s = String(v ?? '').trim();
+        return s ? s : undefined;
+      };
+      return ok({
+        dealerId: String(d.dealer_id ?? ''),
+        ...(text(d.brand_name) ? { brandName: text(d.brand_name)! } : {}),
+        ...(text(d.owner_name) ? { ownerName: text(d.owner_name)! } : {}),
+        ...(text(d.owner_phone) ? { ownerPhone: text(d.owner_phone)! } : {}),
+        ...(text(d.primary_area) ? { primaryArea: text(d.primary_area)! } : {}),
+      });
+    } catch (e) { return toErr(e); }
   }
 }
 

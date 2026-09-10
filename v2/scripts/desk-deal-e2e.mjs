@@ -70,6 +70,10 @@ async function provisionDealer(tag) {
     dealer_id: dealerId, brand_name: `E2E ${tag}`, default_city: 'Mohali',
     subscription_status: 'active', account_status: 'active', expiry_date: expiry,
     storage_enabled: true,
+    // The dealer's own identity. The Desk sidebar and the link preview must
+    // render THIS, not a constant compiled into the screen.
+    owner_name: `E2E ${tag} Owner`, owner_phone: '+91900000000' + (tag === 'a' ? '1' : '2'),
+    primary_area: 'Mohali',
   });
   if (dsErr) throw new Error(`dealer_settings(${tag}): ${dsErr.message}`);
 
@@ -401,6 +405,16 @@ async function journey(A) {
   check('20n. The rejected edit changed nothing',
     Number(afterBad?.deal?.value) === 9200000, JSON.stringify(afterBad?.deal?.value));
 
+  /* 20o. Dealer identity comes from the dealer's own settings row. The Desk
+     sidebar and the client-link preview render it, so a wrong answer here
+     shows one dealer another dealer's business name. */
+  const { data: idRow, error: idErr } = await db.from('dealer_settings')
+    .select('dealer_id,brand_name,owner_name,owner_phone,primary_area').maybeSingle();
+  check('20o. A dealer reads their own identity',
+    !idErr && idRow?.dealer_id === A.dealerId
+    && idRow?.brand_name === 'E2E a' && idRow?.owner_name === 'E2E a Owner',
+    idErr?.message || JSON.stringify(idRow));
+
   /* 21. Registry / Closing. */
   const { data: toRegistry } = await db.rpc('plotmap_set_deal_stage', {
     p_payload: { dealId, stage: 'registry', registryDate: '2026-09-05' },
@@ -521,7 +535,7 @@ async function journey(A) {
     lost?.ok === true && lost?.deal?.stage === 'lost'
     && lost?.deal?.lostReason === 'Buyer chose another plot', lost?.reason);
 
-  return { ...ids, dealId, paperId, dealPaperId };
+  return { ...ids, dealId, paperId, dealPaperId, dealerIdA: A.dealerId };
 }
 
 /* ── adversarial second dealer ───────────────────────────────── */
@@ -552,6 +566,13 @@ async function isolation(B, owned) {
     p_payload: { dealId: owned.dealId, stage: 'lost', reason: 'hijack' },
   });
   check('ISO stage change RPC refuses another dealer', stage?.ok === false, stage?.reason);
+
+  const { data: idOther } = await db.from('dealer_settings')
+    .select('dealer_id,brand_name,owner_name').maybeSingle();
+  check('ISO dealer identity returns the caller, never the other dealer',
+    idOther?.dealer_id === B.dealerId && idOther?.brand_name === 'E2E b'
+    && idOther?.dealer_id !== owned.dealerIdA,
+    JSON.stringify(idOther));
 
   const { data: paperOther } = await db.rpc('plotmap_set_deal_paper', {
     p_payload: { dealId: owned.dealId, title: 'Agreement to Sell', have: true },

@@ -188,10 +188,29 @@ export type AccountState =
   | { readonly kind: 'access-denied' }
   | { readonly kind: 'role-mismatch'; readonly need: string };
 
+/**
+ * Who the signed-in dealer actually is. Read from their own
+ * dealer_settings row — never a constant in the screen, which would show
+ * every dealer somebody else's name and business.
+ *
+ * Absent fields stay absent rather than falling back to an invented
+ * person: the screen decides how to render an unnamed account.
+ */
+export interface DealerIdentity {
+  readonly dealerId: string;
+  /** Business/brand name, e.g. the name a buyer sees on a shared link. */
+  readonly brandName?: string;
+  readonly ownerName?: string;
+  readonly ownerPhone?: string;
+  readonly primaryArea?: string;
+}
+
 export interface AuthRepository {
   getActivationState(opts?: QueryOptions): Promise<Result<ActivationState>>;
   submitActivationCode(code: string, opts?: QueryOptions): Promise<Result<ActivationState>>;
   getAccountState(opts?: QueryOptions): Promise<Result<AccountState>>;
+  /** The signed-in dealer's own identity, for the screen to render. */
+  getDealerIdentity(opts?: QueryOptions): Promise<Result<DealerIdentity>>;
 }
 
 /* ───────────────────────────────────────────────────────────────
