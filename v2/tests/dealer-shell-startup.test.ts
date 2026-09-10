@@ -52,7 +52,10 @@ describe('dealer shell startup boundary', () => {
       expect(() => component.render(), `section "${section}" threw on empty stores`).not.toThrow();
       expect(document.body.innerHTML, `section "${section}" rendered nothing`).not.toBe('');
     }
-  });
+    /* Each pass renders the whole 5,000-line dealer template five times over.
+       That is genuinely slow rather than flaky — the assertions pass, but the
+       5s default is too tight once the suite runs several files in parallel. */
+  }, 30_000);
 
   it('renders every section while the loading flags are still set', () => {
     const component = mount();

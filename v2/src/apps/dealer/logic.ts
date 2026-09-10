@@ -239,7 +239,7 @@ export class Component extends DCLogic {
      boundary. No property fixture remains, so Supabase mode can only show
      the dealer's real inventory. */
   properties = deskStore.properties;
-  today = { sessions: 3, areas: 9, topArea: 'New Chandigarh' };
+
   /* Specifications used to be SYNTHESISED here at mount — a whole spec
      sheet invented per property from SEEDDET + dimsFromSize, so the rich
      Overview a dealer saw was generated, never entered. Canonical specs
@@ -1238,20 +1238,22 @@ export class Component extends DCLogic {
     D5: { start: 7 }, D6: { start: 2, token: 22, close: 6 }, D7: { start: 9 }, D8: { start: 12 }, D9: { start: 4 }
   };
   clientLinks = [];
-  shares = [
-    { id: 'S1', propId: 'ecocity', client: 'Simarjeet Kaur', created: '22 Jul', expires: '25 Jul', status: 'active', loc: 'area', price: 'hidden', audio: true, opened: '23 Jul, 9:12 pm', opens: 5, played: true, called: true, wa: false, visit: true },
-    { id: 'S2', propId: 'ecocity', client: 'Karan Gupta', created: '18 Jul', expires: '21 Jul', status: 'expired', loc: 'approx', price: 'range', audio: true, opened: '19 Jul, 1:40 pm', opens: 3, played: false, called: false, wa: true, visit: false },
-    { id: 'S3', propId: 'sec79', client: 'Harpreet Singh Gill', created: '24 Jul', expires: '27 Jul', status: 'active', loc: 'area', price: 'hidden', audio: false, opened: 'not opened yet', opens: 0, played: false, called: false, wa: false, visit: false },
-    { id: 'S4', propId: 'omx', client: 'Baldev Raj Jindal', created: '20 Jul', expires: '23 Jul', status: 'revoked', loc: 'exact', price: 'exact', audio: true, opened: '21 Jul, 11:05 am', opens: 1, played: true, called: true, wa: true, visit: false },
-  ];
-  streakDays = 5;
-  ACTIVITY = [
-    { t: '12 min ago', who: 'Simarjeet Kaur', what: 'opened Aerocity · 300 sq yd on your map', icon: 'ph-fill ph-map-pin-area', c: '#a8792a', bg: '#fff3d1' },
-    { t: '40 min ago', who: 'Karan Gupta', what: 'explored the Aerotropolis sector map', icon: 'ph-fill ph-map-trifold', c: '#6b3fd4', bg: '#efe8fb' },
-    { t: '1 hour ago', who: 'Harpreet Singh Gill', what: 'asked for photos of Sector 79', icon: 'ph-fill ph-images', c: '#186c3c', bg: '#e2f2e6' },
-    { t: '2 hours ago', who: 'Baldev Raj Jindal', what: 'spent 6 minutes on the Omaxe villas', icon: 'ph-fill ph-timer', c: '#c2185b', bg: '#ffe1e6' },
-    { t: 'Yesterday', who: 'Vikram Ahluwalia', what: 'moved to token stage after the meeting', icon: 'ph-fill ph-seal-check', c: '#c2622a', bg: '#ffe6cf' },
-  ];
+  /* The retired pre-repository "share" concept. A real share is a Client
+     Link and lives in `clientLinks`, loaded from the repository.
+
+     This array still held four fixture rows for buyers who do not exist
+     ('Simarjeet Kaur', 'Karan Gupta', ...) against properties that do not
+     exist ('ecocity', 'sec79', 'omx'), and eight rendered call sites counted
+     them as the signed-in dealer's own activity: two were status 'active',
+     so a dealer with one live link was shown LIVE CLIENT LINKS = 3, and the
+     fixture names surfaced in per-property analytics. Kept as an empty array
+     because those call sites legitimately union the two sources; the union
+     is now over real links only. */
+  shares = [];
+  /* The rendered "Recent activity" panel reads `lkFeed`, which is derived
+     from real client-link events and has its own empty state. The invented
+     feed that used to sit here fed a view-model key the template never
+     referenced, under a heading that reads "Only real, tracked activity". */
 
   inr(v) { v = Math.round(v); if (v >= 1e7) return '₹' + (+(v / 1e7).toFixed(2)) + ' Cr'; if (v >= 1e5) return '₹' + (+(v / 1e5).toFixed(2)) + ' L'; return '₹' + v.toLocaleString('en-IN'); }
   stageMeta(k) { return this.STAGES.find(s => s.key === k) || this.STAGES[0]; }
@@ -2092,6 +2094,12 @@ export class Component extends DCLogic {
       this.setState({ savingProp: false, propError: result.error }); return;
     }
     const saved = result.property;
+    /* Papers ticked in the wizard. toCanonicalProperty carries registryRef
+       and approvalRef but never `docs`, so before this the dealer could tick
+       papers, save, reopen the property and find them gone — accepted by the
+       form and silently dropped. They persist through the same property
+       paper checklist the Deal room writes to. */
+    const paperFailures = await this.syncPropertyPapers(saved.id, f.docs);
     // Only after the canonical record actually persisted. Latched inside the
     // telemetry: pNext re-saves on every step advance, and those are updates.
     addPropertyTelemetry.persisted({
@@ -2103,19 +2111,39 @@ export class Component extends DCLogic {
       photoCount: (saved.photos || []).length,
     });
     if (closeAfter === false) {
-      this.setState({ savingProp: false, pEditId: saved.id, pSaved: true, propError: '', propMissing: result.missing || [] });
+      this.setState({ savingProp: false, pEditId: saved.id, pSaved: true,
+        propError: this.paperError(paperFailures), propMissing: result.missing || [] });
       return;
     }
     addPropertyTelemetry.closed();
     this.setState({
       addPlotOpen: false, pstep: 1, pEditId: null, pSaved: false, section: 'properties',
       invView: 'live', plotCity: saved.city || 'Mohali', pform: this.blankP(),
-      savingProp: false, propError: '', propMissing: result.missing || [],
+      savingProp: false, propError: this.paperError(paperFailures), propMissing: result.missing || [],
       propDetail: saved.id, propShot: 0,
     });
   }
   /* Save as Draft. Incomplete records are allowed — a draft is a real
      persisted property, not a local placeholder. */
+  paperError(failed) {
+    if (!failed || !failed.length) return '';
+    return failed.length === 1
+      ? ('This paper could not be saved: ' + failed[0])
+      : ('These papers could not be saved: ' + failed.join(', '));
+  }
+  /* Persist the wizard's paper ticks onto the property. A paper that already
+     has an uploaded file is owned by that file and the command refuses it;
+     that refusal is expected and is not reported as a failure. */
+  async syncPropertyPapers(propertyId, docs) {
+    const titles = [...new Set((docs || [])
+      .map(d => String((d && (d.name || d.kind)) || '').trim()).filter(Boolean))];
+    const failed = [];
+    for (const title of titles) {
+      const result = await adapter.propertyDocuments.setMark({ propertyId, title, have: true });
+      if (!result.ok && result.error.code !== 'validation') failed.push(title);
+    }
+    return failed;
+  }
   async saveDraft() {
     const f = this.state.pform;
     if (!f.city && !f.area) {
@@ -2176,13 +2204,11 @@ export class Component extends DCLogic {
     this._rec = setInterval(() => { const s = this.state.sform; if (s.audio !== 'rec') { clearInterval(this._rec); return; } if (s.secs >= 120) { clearInterval(this._rec); this.setS({ audio: 'done' }); return; } this.setS({ secs: s.secs + 1 }); }, 1000);
   }
   dropAudio() { clearInterval(this._rec); this.setS({ audio: 'none', secs: 0 }); }
-  createShare() {
-    const f = this.state.sform; const pid = this.state.shareFor; const c = f.clientId ? this.clients.find(x => x.id === f.clientId) : null;
-    const name = c ? c.name : ((f.newName || '').trim() || 'New customer');
-    const id = 'S' + (this.shares.length + 1);
-    this.shares.unshift({ id, propId: pid, client: name, created: 'today', expires: this.EXPIRY.find(e => e.k === f.expiry).l + ' from now', status: 'active', loc: f.loc, price: f.price, audio: f.audio === 'done', opened: 'not opened yet', played: false, called: false, wa: false, visit: false });
-    this.setState({ shareDone: id });
-  }
+  /* createShare() was removed with the retired share concept: it pushed a
+     share into memory, reported success and persisted nothing. Sharing a
+     property goes through the Client Link builder (sendLink ->
+     adapter.clientLinks.create), which is the only path that reaches the
+     repository. Nothing rendered doCreateShare, so no control is lost. */
   onWiz(e) { this.setState({ wiz: { ...this.state.wiz, [e.target.name]: e.target.value } }); }
   setWiz(patch) { this.setState({ wiz: { ...this.state.wiz, ...patch } }); }
   pickWizClient(id) { const w = this.state.wiz; this.setWiz({ clientId: w.clientId === id ? '' : id, useNewClient: false }); }
@@ -4232,15 +4258,7 @@ export class Component extends DCLogic {
       isClients: s.section === 'clients', isAreas: s.section === 'areas',
       goDeals: () => this.go('deals'), goDemand: () => this.go('areas'), openAdd: () => this.setState({ addOpen: true, wiz: this.blankWiz() }),
       heroPipeline: m(pipeline), activeCount: active.length, heroComm: m(expComm), heroClosed: m(closedVal),
-      tSessions: n(this.today.sessions), tAreas: n(this.today.areas), tTopArea: this.today.topArea,
-      activity: this.ACTIVITY.map(a => ({
-        t: a.t, who: a.who, what: a.what, icon: a.icon,
-        rowStyle: 'display:flex;align-items:center;gap:14px;padding:13px 16px;border-radius:15px;background:' + a.bg,
-        iconStyle: 'width:40px;height:40px;border-radius:12px;flex:none;display:grid;place-items:center;background:#fffdf7;color:' + a.c
-      })),
       closedMonthText: (closed.length === 1 ? '1 deal closed this month' : closed.length + ' deals closed this month'),
-      streakText: this.streakDays + ' days in a row using MAPCO',
-      showText: this.today.sessions + ' buyers shown today',
       callList, wantSnapshot, hotCityName, hotCityLine, hotCityGo: () => this.setState({ section: 'properties', plotCity: hotCityGoKey, plotCityOpen: false }),
       celebrate: (() => {
         const c = s.celebrate; if (!c) return null;
@@ -4421,7 +4439,6 @@ export class Component extends DCLogic {
       recBtnStyle: `display:flex;align-items:center;justify-content:center;gap:10px;height:56px;padding:0 24px;border-radius:14px;font-size:16.5px;font-weight:800;${sf.audio === 'rec' ? 'background:#c2185b;color:#fff' : 'background:#f8a800;color:#241d0c'}`,
       recBtnIcon: sf.audio === 'rec' ? 'ph-fill ph-stop-circle' : 'ph-fill ph-microphone',
       recBtnLabel: sf.audio === 'rec' ? 'Stop recording' : 'Record your message',
-      shareDone: !!s.shareDone, shareNotDone: !s.shareDone, doCreateShare: () => this.createShare(),
       mobWave: Array.from({ length: 22 }, (_, i) => ({ style: `flex:1;height:${8 + Math.round(22 * Math.abs(Math.sin(i * 1.7)))}%;min-height:6px;border-radius:2px;background:${i < 9 ? '#6b3fd4' : 'rgba(107,63,212,.32)'}` })),
       shareClientName: (sf.clientId ? (this.clients.find(c => c.id === sf.clientId) || {}).name : ((sf.newName || '').trim())) || 'this customer',
       shareReady: !!(sf.clientId || (sf.newName || '').trim()),

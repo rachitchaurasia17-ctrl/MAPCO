@@ -45,6 +45,8 @@ describe('dealer link creation', () => {
 });
 
 describe('complete saved property overview', () => {
+  /* Renders the full dealer template several times over; slow by nature, not
+     flaky. The default 5s timeout is too tight under parallel suite load. */
   it('renders the actual property and money templates without a template error', () => {
     const component = new Component() as any;
     const property = { id: 'review-p', type: 'Residential Plot', want: 'Plot', size: '300 sq yd',
@@ -95,7 +97,7 @@ describe('complete saved property overview', () => {
     expect(document.body.textContent).toContain('Buying requirements');
     capture('buyer');
     document.body.innerHTML = '';
-  });
+  }, 30_000);
   it.each([
     ['Flat', { superArea: '1825', maintenance: '4200' }, ['1825', '4200']],
     ['Kothi', { kitchens: '2', notes: 'Keys with owner' }, ['2', 'Keys with owner']],

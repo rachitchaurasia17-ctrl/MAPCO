@@ -243,6 +243,20 @@ function derivePosition(specs: Record<string, unknown>, fallback: string): strin
 }
 
 /** Canonical Property → the flat object every Desk view-model reads. */
+/** Hand-ticked papers carried on the property record, if any. */
+function paperChecklistOf(property: Property): { title: string; markedOn: string }[] {
+  const raw = (property as unknown as { paperChecklist?: unknown }).paperChecklist;
+  if (!Array.isArray(raw)) return [];
+  const out: { title: string; markedOn: string }[] = [];
+  for (const entry of raw) {
+    if (!entry || typeof entry !== 'object') continue;
+    const row = entry as Record<string, unknown>;
+    const title = String(row.title ?? '').trim();
+    if (title) out.push({ title, markedOn: String(row.markedOn ?? '') });
+  }
+  return out;
+}
+
 export function toDeskProperty(property: Property): Record<string, unknown> {
   const lifecycle = propertyLifecycle(property);
   const specs = (property.specs ?? {}) as Record<string, unknown>;
@@ -300,7 +314,14 @@ export function toDeskProperty(property: Property): Record<string, unknown> {
     } : {}),
     // Filled in by the seller directory / document loads, not invented here.
     ps: null,
-    docs: [],
+    /* Papers the dealer ticked on this property. They ride on the record as
+       `paperChecklist` (written by plotmap_set_property_paper), which is the
+       same list the Deal room's property papers read. Uploaded files are a
+       separate concern and arrive through loadPropertyDocuments. */
+    docs: paperChecklistOf(property).map((mark, index) => ({
+      id: 'mark:' + mark.title, kind: mark.title, name: mark.title,
+      photos: [], img: index % 3, markedOn: mark.markedOn,
+    })),
   };
 }
 
