@@ -269,6 +269,12 @@ export function toDeskProperty(property: Property): Record<string, unknown> {
     loc: property.loc ?? '',
     sector: property.sector ?? '',
     size: property.size ?? '',
+    /* `type` belongs to that same list: the Desk calls pr.type.split(' ') and
+       pr.type.includes(...) in six places, so an imported row without one took
+       the whole screen down exactly as a missing `city` did. */
+    type: property.type ?? '',
+    want: property.want ?? '',
+    facing: property.facing ?? '',
     rate: property.rate ?? '',
     society: property.society ?? '',
     address: property.address ?? '',

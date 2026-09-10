@@ -1,108 +1,137 @@
 // @vitest-environment jsdom
+/*
+ * Dealer shell startup boundary.
+ *
+ * This suite used to drive src/apps/dealer/shell.ts — a multi-route shell with
+ * per-page render functions, a data-deal-count badge and data-section anchors.
+ * That router was replaced by a single mounted Component whose `section` is
+ * state, so initDealerShell and the eight page modules this file mocked no
+ * longer exist. Rewriting the old DOM assertions would test markup nobody
+ * agreed to.
+ *
+ * The invariant that DOES carry over is the one that mattered: the dealer
+ * screen must render every section while its repository data is still pending
+ * or empty, and must never take the whole app down because one field was
+ * absent. That is not hypothetical — an undefined `city` on a property row
+ * previously threw a ReferenceError out of the template and blanked the entire
+ * dashboard, because DCLogic rebuilds the whole DOM from one template call.
+ */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { Component } from '../src/apps/dealer/logic';
+import { renderApp } from '../src/apps/dealer/template';
+import { toDeskProperty } from '../src/apps/dealer/desk-store';
+import type { Property } from '../src/packages/data/types';
 
-const mocks = vi.hoisted(() => ({
-  getSession: vi.fn(),
-  listDeals: vi.fn(),
-  renderHome: vi.fn(),
-  renderDeals: vi.fn(),
-  renderProperties: vi.fn(),
-  renderCustomers: vi.fn(),
-  renderLinks: vi.fn(),
-}));
+const SECTIONS = ['areas', 'properties', 'clients', 'links', 'deals'];
 
-vi.mock('../src/packages/data/adapter', () => ({
-  activeDataMode: () => 'supabase',
-  adapter: { deals: { list: mocks.listDeals } },
-}));
-vi.mock('../src/packages/data/session', () => ({ getSession: mocks.getSession }));
-vi.mock('../src/packages/ui/fullscreen', () => ({ mountFullscreenButton: vi.fn() }));
-vi.mock('../src/packages/ui/back-button', () => ({ mountBackButton: vi.fn() }));
-vi.mock('../src/apps/dealer/pages/home', () => ({ renderHome: mocks.renderHome }));
-vi.mock('../src/apps/dealer/pages/deals', () => ({ renderDeals: mocks.renderDeals }));
-vi.mock('../src/apps/dealer/pages/properties', () => ({ renderProperties: mocks.renderProperties }));
-vi.mock('../src/apps/dealer/pages/customers', () => ({ renderCustomers: mocks.renderCustomers }));
-vi.mock('../src/apps/dealer/pages/links', () => ({ renderLinks: mocks.renderLinks }));
-vi.mock('../src/apps/dealer/pages/area-intelligence', () => ({ renderAreaIntelligence: vi.fn() }));
-vi.mock('../src/apps/dealer/pages/property-insights', () => ({ renderPropertyInsights: vi.fn() }));
-vi.mock('../src/apps/dealer/pages/demand', () => ({ renderDemand: vi.fn() }));
-
-import { initDealerShell } from '../src/apps/dealer/shell';
-
-interface Deferred<T> {
-  promise: Promise<T>;
-  resolve: (value: T) => void;
+function mount() {
+  const component = new Component() as any;
+  component.__templateFn = renderApp;
+  document.body.innerHTML = '<div id="app"></div>';
+  return component;
 }
 
-function deferred<T>(): Deferred<T> {
-  let resolve!: (value: T) => void;
-  const promise = new Promise<T>((done) => { resolve = done; });
-  return { promise, resolve };
-}
+beforeEach(() => {
+  // componentDidMount is not run here: these tests assert the screen renders
+  // BEFORE any repository load resolves, which is the pending case.
+  document.body.innerHTML = '';
+});
+afterEach(() => { document.body.innerHTML = ''; vi.restoreAllMocks(); });
 
 describe('dealer shell startup boundary', () => {
-  let sessionRequest: Deferred<{ email: string; userId: string } | null>;
-  let dealsRequest: Deferred<{
-    ok: true;
-    value: { items: Array<{ id: string }>; nextCursor: null; total: number };
-  }>;
+  it('renders every section with empty stores, before any load resolves', () => {
+    const component = mount();
+    component.properties = [];
+    component.clients = [];
+    component.sellers = [];
+    component.deals = [];
+    component.clientLinks = [];
 
-  beforeEach(() => {
-    vi.clearAllMocks();
-    sessionRequest = deferred();
-    dealsRequest = deferred();
-    mocks.getSession.mockImplementation(() => sessionRequest.promise);
-    mocks.listDeals.mockImplementation(() => dealsRequest.promise);
-    mocks.renderDeals.mockImplementation((host: HTMLElement) => {
-      host.innerHTML = '<p data-route-ready="deals">Deals route</p>';
-      return Promise.resolve();
-    });
-    mocks.renderHome.mockImplementation((host: HTMLElement) => {
-      host.innerHTML = '<p data-route-ready="home">Home route</p>';
-      return Promise.resolve();
-    });
+    for (const section of SECTIONS) {
+      component.state = { ...component.state, section };
+      expect(() => component.render(), `section "${section}" threw on empty stores`).not.toThrow();
+      expect(document.body.innerHTML, `section "${section}" rendered nothing`).not.toBe('');
+    }
   });
 
-  afterEach(() => {
-    document.body.innerHTML = '';
-    document.querySelector('#pm-styles')?.remove();
-    window.history.replaceState({}, '', '/');
+  it('renders every section while the loading flags are still set', () => {
+    const component = mount();
+    component.properties = []; component.clients = []; component.sellers = [];
+    component.deals = []; component.clientLinks = [];
+    component.state = { ...component.state, loadingDeals: true, loadingLinks: true };
+
+    for (const section of SECTIONS) {
+      component.state = { ...component.state, section };
+      expect(() => component.render(), `section "${section}" threw while loading`).not.toThrow();
+    }
   });
 
-  it('renders and navigates routes while session and completed-deal metadata are pending', async () => {
-    const host = document.createElement('div');
-    document.body.appendChild(host);
+  it('renders every section when a load has failed', () => {
+    const component = mount();
+    component.properties = []; component.clients = []; component.sellers = [];
+    component.deals = []; component.clientLinks = [];
+    component.state = {
+      ...component.state,
+      linkLoadError: 'Client links could not be loaded.',
+      dashboardError: 'Presentation activity could not be loaded.',
+      propError: 'Could not reach MAPCO.',
+    };
 
-    initDealerShell(host, 'deals');
+    for (const section of SECTIONS) {
+      component.state = { ...component.state, section };
+      expect(() => component.render(), `section "${section}" threw on a failed load`).not.toThrow();
+    }
+    component.state = { ...component.state, section: 'links' };
+    component.render();
+    expect(document.body.textContent).toContain('Client links could not be loaded.');
+  });
 
-    expect(host.querySelector('#pm-dash-shell')).not.toBeNull();
-    expect(host.querySelector('[data-route-ready="deals"]')).not.toBeNull();
-    expect(mocks.renderDeals).toHaveBeenCalledTimes(1);
-    expect(mocks.getSession).toHaveBeenCalledTimes(1);
-    expect(mocks.listDeals).toHaveBeenCalledWith({ limit: 50 }, undefined);
-    expect(host.querySelector<HTMLElement>('[data-deal-count]')?.hidden).toBe(true);
-    expect(host.querySelector('[data-dealer-account-name]')?.textContent).toBe('Signed-in dealer');
+  it('survives a property row that is missing every optional field', () => {
+    /* Built through the real mapper, so this is a row the repository can
+       actually hand over — an imported or legacy crm_records payload with
+       nothing but an id. The mapper defaults the fields the Desk calls
+       string methods on, precisely so a missing one degrades to a blank
+       card and never to a blank SCREEN: DCLogic rebuilds the whole DOM
+       from one template call, so one throw inside renderVals takes the
+       entire dashboard with it. */
+    const component = mount();
+    component.properties = [toDeskProperty({ id: 'bare' } as unknown as Property)];
+    component.clients = []; component.sellers = []; component.deals = []; component.clientLinks = [];
 
-    host.querySelector<HTMLAnchorElement>('a[data-section="areas"]')!.click();
+    for (const section of SECTIONS) {
+      component.state = { ...component.state, section };
+      expect(() => component.render(), `section "${section}" threw on a bare property`).not.toThrow();
+    }
+    expect(document.body.innerHTML).not.toBe('');
+  });
 
-    expect(host.querySelector('[data-route-ready="home"]')).not.toBeNull();
-    expect(mocks.renderHome).toHaveBeenCalledTimes(1);
+  it('survives a deal that carries no money, papers or history', () => {
+    const component = mount();
+    component.properties = []; component.clients = []; component.sellers = []; component.clientLinks = [];
+    component.deals = [{
+      id: 'bare-deal', clientId: 'c', propId: '', stage: 'negotiating',
+      value: 0, comm: 0, docs: [], propDocs: [], pay: [], hist: [], log: [],
+    }];
 
-    sessionRequest.resolve({ email: 'dealer@mapco.test', userId: 'dealer-1' });
-    dealsRequest.resolve({
-      ok: true,
-      value: {
-        items: [{ id: 'sale-1' }, { id: 'sale-2' }],
-        nextCursor: null,
-        total: 2,
-      },
-    });
+    for (const section of SECTIONS) {
+      component.state = { ...component.state, section };
+      expect(() => component.render(), `section "${section}" threw on a bare deal`).not.toThrow();
+    }
+  });
 
-    await vi.waitFor(() => {
-      expect(host.querySelector('[data-dealer-account-name]')?.textContent).toBe('dealer@mapco.test');
-      const badge = host.querySelector<HTMLElement>('[data-deal-count]');
-      expect(badge?.hidden).toBe(false);
-      expect(badge?.textContent).toBe('2');
-    });
+  it('keeps the navigation reachable from every section', () => {
+    const component = mount();
+    component.properties = []; component.clients = []; component.sellers = [];
+    component.deals = []; component.clientLinks = [];
+
+    for (const section of SECTIONS) {
+      component.state = { ...component.state, section };
+      component.render();
+      // Every nav destination stays rendered, so no section is a dead end.
+      for (const nav of component.NAV) {
+        expect(document.body.textContent, `"${nav.label}" missing from section "${section}"`)
+          .toContain(nav.label);
+      }
+    }
   });
 });

@@ -26,7 +26,18 @@ describe('Customers async boundary', () => {
     vi.spyOn(adapter.customers, 'list').mockResolvedValue(err('network', 'offline') as never);
     await deskStore.loadClients();
     expect(deskStore.clientsStatus.state).toBe('error');
-    expect((deskStore.clientsStatus as { error: string }).error).toContain('could not be loaded');
+    // A transport failure is named as one, so the dealer is not told there are
+    // no clients when the truth is that the list never arrived.
+    expect((deskStore.clientsStatus as { error: string }).error)
+      .toBe('Could not reach MAPCO. Check your connection and try again.');
+  });
+
+  it('names an ended session instead of reporting an empty contact book', async () => {
+    vi.spyOn(adapter.customers, 'list').mockResolvedValue(err('unauthorized', 'no session') as never);
+    await deskStore.loadClients();
+    expect(deskStore.clientsStatus.state).toBe('error');
+    expect((deskStore.clientsStatus as { error: string }).error)
+      .toBe('Your session has ended. Sign in again to continue.');
   });
 
   it('reaches a ready state with the customers the repository actually returned', async () => {
