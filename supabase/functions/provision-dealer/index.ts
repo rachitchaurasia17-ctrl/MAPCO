@@ -6,6 +6,7 @@
 // SECURITY DEFINER RPCs and the final dealer/profile/passcode/code write is
 // transactional inside Postgres.
 
+import { parseFounderContext } from './founder-context.ts';
 type JsonRecord = Record<string, unknown>;
 
 class ProvisioningError extends Error {
@@ -39,6 +40,7 @@ const encoder = new TextEncoder();
 const publicMessages: Record<string, string> = {
   PLATFORM_ADMIN_REQUIRED: 'Active platform-admin access is required.',
   INVALID_REQUEST: 'Review the dealer details and try again.',
+  INVALID_FOUNDER_CONTEXT: 'Record the acquisition source, pitch and trial protocol.',
   INVALID_IDEMPOTENCY_KEY: 'This provisioning request is invalid. Refresh and try again.',
   INVALID_REQUEST_FINGERPRINT: 'This provisioning request is invalid. Refresh and try again.',
   INVALID_DEALER_ID: 'Use a unique lowercase dealer slug.',
@@ -120,6 +122,15 @@ function cleanText(value: unknown): string {
 }
 
 function normalizeInput(body: JsonRecord, idempotencyHeader: string): JsonRecord {
+  let founderContext;
+  try { founderContext=parseFounderContext(body.founderContext); }
+  catch { throw new ProvisioningError('INVALID_FOUNDER_CONTEXT'); }
+  if(founderContext) {
+    const created=Date.now();
+    body={...body,accountStatus:'active',subscriptionStatus:'trial',deviceLimit:4,
+      trialStart:new Date(created).toISOString(),trialEnd:new Date(created+7*86400000).toISOString(),
+      activationExpiresAt:new Date(created+86400000).toISOString()};
+  }
   const dealerId = cleanText(body.dealerId).toLowerCase();
   const businessName = cleanText(body.businessName);
   const ownerName = cleanText(body.ownerName);
@@ -206,6 +217,7 @@ function normalizeInput(body: JsonRecord, idempotencyHeader: string): JsonRecord
     activationExpiresAt: new Date(activationMs).toISOString(),
     passcode,
     idempotencyKey,
+    ...(founderContext ? { founderContext } : {}),
   };
 }
 
@@ -396,6 +408,10 @@ function streamResponse(
           throw new ProvisioningError('PROVISIONING_IN_PROGRESS', 409, true);
         }
 
+        if(input.founderContext) await callerRpc('plotmap_founder_set_provisioning_context', {
+          p_attempt_id:attemptId,p_context:input.founderContext,
+        },token);
+
         send({ type: 'stage', stage: 'creating_login' });
         const existing = await authUserByEmail(String(input.loginEmail));
         if (existing && existing.id) {
@@ -550,10 +566,11 @@ Deno.serve(async (request: Request): Promise<Response> => {
       loginEmail: input.loginEmail,
       accountStatus: input.accountStatus,
       subscriptionStatus: input.subscriptionStatus,
-      trialStart: input.trialStart,
-      trialEnd: input.trialEnd,
+      trialStart: input.founderContext ? null : input.trialStart,
+      trialEnd: input.founderContext ? null : input.trialEnd,
       deviceLimit: input.deviceLimit,
-      activationExpiresAt: input.activationExpiresAt,
+      activationExpiresAt: input.founderContext ? null : input.activationExpiresAt,
+      founderContext:input.founderContext,
     }));
 
     return streamResponse(origin, token, input, fingerprint);

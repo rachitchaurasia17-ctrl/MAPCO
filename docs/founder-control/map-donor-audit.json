@@ -1,0 +1,1328 @@
+{
+  "summary": {
+    "donorCommit": "b89424538d5e1b287f85ebad74ccefd22f57ed87",
+    "legacyMaps": 85,
+    "currentMaps": 113,
+    "legacyAssets": 146,
+    "alreadyPresent": 78,
+    "candidates": 68,
+    "missing": 0,
+    "candidateBytes": 188787240
+  },
+  "assets": [
+    {
+      "mapId": "masterplan-aerocity-mohali-masterplan",
+      "title": "Aerocity and Mohali Masterplan",
+      "url": "/maps/aerocity%20and%20mohali%20masterplan.png",
+      "bytes": 2531885,
+      "sha256": "fe28c4d8a82181a6e085f08ed9ae674760e7373adf3b23b52c2fb98593b50029",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "masterplan-aerocity-mohali-masterplan",
+      "title": "Aerocity and Mohali Masterplan",
+      "url": "/normal%20maps/aerocity%20masterplan.jpg",
+      "bytes": 398570,
+      "sha256": "dbbda4ce3019a54d5f44bdfbbe54b3d34eff7489885e9c3f0fae29598b8c6c56",
+      "currentId": "aerocity-masterplan",
+      "status": "already-present"
+    },
+    {
+      "mapId": "masterplan-chandigarh-masterplan",
+      "title": "Chandigarh Masterplan",
+      "url": "/normal%20maps/chandigarh%20masterplan.jpg",
+      "bytes": 243457,
+      "sha256": "d8176349b8d9b4bc74b1776207b68e9ed93d8d805123ec82670ec688ef6c30ae",
+      "currentId": "chandigarh-masterplan",
+      "status": "already-present"
+    },
+    {
+      "mapId": "masterplan-derabassi-masterplan",
+      "title": "Derabassi Masterplan",
+      "url": "/normal%20maps/derabassi%20masterplan.jpg",
+      "bytes": 170937,
+      "sha256": "83aee7d18233470272bf8bcebae00271bee0f266ca3144c2ba1ab0ce6f001fa8",
+      "currentId": "derabassi-masterplan",
+      "status": "already-present"
+    },
+    {
+      "mapId": "masterplan-kharar-masterplan",
+      "title": "Kharar Masterplan",
+      "url": "/normal%20maps/kharar%20masterplan.jpg",
+      "bytes": 215409,
+      "sha256": "e836e368008eb58c172f0866c2053b04163e3e11cf21a0a70a1b87f7542e91a0",
+      "currentId": "kharar-masterplan",
+      "status": "already-present"
+    },
+    {
+      "mapId": "masterplan-mohali-masterplan",
+      "title": "Mohali Masterplan",
+      "url": "/maps/mohali%20masterplan.png",
+      "bytes": 2814497,
+      "sha256": "a5c0354d77d9ddc9121ea9c58935a48ece32b991a646636371a4bbf3c6cbb0eb",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "masterplan-mohali-masterplan",
+      "title": "Mohali Masterplan",
+      "url": "/normal%20maps/mohali%20masterplan.jpg",
+      "bytes": 382434,
+      "sha256": "43aa72c202a01bada6041f9981a14e6aa49ba770b3089b2dd2537d78d6a00d75",
+      "currentId": "mohali-masterplan",
+      "status": "already-present"
+    },
+    {
+      "mapId": "masterplan-mullanpur-masterplan",
+      "title": "Mullanpur Masterplan",
+      "url": "/normal%20maps/mullanpur%20masterplan.jpg",
+      "bytes": 167798,
+      "sha256": "7b44297f013c9bd0ee31ffb0d9e87a2c0a3699b43b29870cfb78a2e860c06b3f",
+      "currentId": "mullanpur-masterplan",
+      "status": "already-present"
+    },
+    {
+      "mapId": "masterplan-new-chandigarh-masterplan",
+      "title": "New Chandigarh Masterplan",
+      "url": "/maps/new%20chandigarh%20masterplan.png",
+      "bytes": 2317726,
+      "sha256": "95aa5290a5bac8840f3659037b5edb4f6938778997f92e65d5567fa166a9c096",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "masterplan-new-chandigarh-masterplan",
+      "title": "New Chandigarh Masterplan",
+      "url": "/normal%20maps/new%20chandigarh%20masterplan.png",
+      "bytes": 2407053,
+      "sha256": "de092b4d2c42ee7b6143bb8af6227fa050ec2bda5448db7946be146272fc9d1b",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "masterplan-panchkula-masterplan",
+      "title": "Panchkula Masterplan",
+      "url": "/normal%20maps/panchulka%20masterplan.jpg",
+      "bytes": 255635,
+      "sha256": "aad09c79480e24930acfc87e05d6c36f03a21446a77aadc07df4a21a62ec1890",
+      "currentId": "panchulka-masterplan",
+      "status": "already-present"
+    },
+    {
+      "mapId": "masterplan-zirakpur-masterplan",
+      "title": "Zirakpur Masterplan",
+      "url": "/maps/zirakpur%20masterplan.png",
+      "bytes": 2207997,
+      "sha256": "1ddbf1843cea5cd0b4005d61458a1bc32a7f37ddece546653f4d29e0666e58f4",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "masterplan-zirakpur-masterplan",
+      "title": "Zirakpur Masterplan",
+      "url": "/normal%20maps/zirakpur%20masterplan.png",
+      "bytes": 2257716,
+      "sha256": "b672caef80e61438c5c08c02e1b571b421cb33766ae635195b58df6cda16418b",
+      "currentId": "zirakpur-masterplan",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-aerocity-mohali",
+      "title": "Aerocity Mohali",
+      "url": "/maps/aerocity%20mohali.png",
+      "bytes": 2975584,
+      "sha256": "cfb1dcd57f28e0b4246ab70f89e72ecb9614f33c9d7efe580cb5238876955740",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-aerocity-mohali",
+      "title": "Aerocity Mohali",
+      "url": "/normal%20maps/gamada%20aerocity%20mohali.jpg",
+      "bytes": 232638,
+      "sha256": "f8e1ba608c4c7ac326d9781ef003643271681d1b82ca0975d89095c295f78f8e",
+      "currentId": "gamada-aerocity-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-eco-city-1-new-chandigarh",
+      "title": "Eco City 1 New Chandigarh",
+      "url": "/maps/eco%20city%201%20new%20chd.png",
+      "bytes": 2740992,
+      "sha256": "a8e2f48b875df71611c92a5fa30a2dd672e6ec0458155f021c2499d65dd81b59",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-eco-city-1-new-chandigarh",
+      "title": "Eco City 1 New Chandigarh",
+      "url": "/normal%20maps/eco%20city%201.jpg",
+      "bytes": 229371,
+      "sha256": "09fb3dbfe5f692c8029ee67ee8c69e496f42921bca6b6fb3271b03efd6af052b",
+      "currentId": "eco-city-1",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-eco-city-phase-2-new-chandigarh",
+      "title": "Eco City Phase 2 New Chandigarh",
+      "url": "/maps/ecocity%20phase%202%20new%20chandigarh.png",
+      "bytes": 2789750,
+      "sha256": "caada20a685020d5365364a72568eca5346ae5d4e003af76af96ad21b149671d",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-eco-city-phase-2-new-chandigarh",
+      "title": "Eco City Phase 2 New Chandigarh",
+      "url": "/normal%20maps/ecocity%20mohali.jpg",
+      "bytes": 226438,
+      "sha256": "84f2068871efe7c6d54b10fd87c29fd8897f8fb2fccb52d88d04d9105c4a4dad",
+      "currentId": "ecocity-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-gillco-valley",
+      "title": "Gillco Valley",
+      "url": "/maps/gillco%20valley.png",
+      "bytes": 2461404,
+      "sha256": "706e784b2dbfc121c5ec60c91e711119ed7516270a50dfca34898b8a8a76b286",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-gillco-valley",
+      "title": "Gillco Valley",
+      "url": "/normal%20maps/gillco.jpg",
+      "bytes": 139881,
+      "sha256": "f5f0aec8edb535cc6aece18a06563b71df9e724259767a030072ef7a9491ae16",
+      "currentId": "gillco",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-industrial-area-phase-1",
+      "title": "Industrial Area Phase 1",
+      "url": "/maps/industrial%20area%20phase%201.png",
+      "bytes": 3112224,
+      "sha256": "c19f10e5d8df39e63577722b374a364b22b919d42ecdea3b966af80dec221eb3",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-industrial-area-phase-1",
+      "title": "Industrial Area Phase 1",
+      "url": "/normal%20maps/industrial%20area%20phase%201.jpg",
+      "bytes": 195902,
+      "sha256": "eb15af71a927a736bf674858523e884f239fe6edd839751ef46f82286e3d7723",
+      "currentId": "industrial-area-phase-1",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-industrial-area-phase-1-2",
+      "title": "Industrial Area Phase 1",
+      "url": "/maps/layout%20plan%20of%20industrial%20area%20phase%201.png",
+      "bytes": 2523290,
+      "sha256": "eae78fe8895ef86a2d98069ab243d570909c7b18d014b7b0945913c027df5719",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-industrial-area-phase-1-2",
+      "title": "Industrial Area Phase 1",
+      "url": "/normal%20maps/industrial%20area%20phase%201%20chd.jpg",
+      "bytes": 221488,
+      "sha256": "b5a624831f09dd2e050c0e8735bcede4031603c6055dced973b12065524d9804",
+      "currentId": "industrial-area-phase-1-chd",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-industrial-area-phase-2-3",
+      "title": "Industrial Area Phase 2 and 3",
+      "url": "/maps/industrial%20area%20phase2%20and%203.png",
+      "bytes": 3014408,
+      "sha256": "eff54b208c4ef78744dd8e5ce202d953e1b76ebac0a5d11dcfc16951894a355b",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-industrial-area-phase-2-3",
+      "title": "Industrial Area Phase 2 and 3",
+      "url": "/normal%20maps/industrial%20area%20phase%202%20and%203.jpg",
+      "bytes": 176275,
+      "sha256": "ed474b6ba81d31ef5db97bde8c4b214a36c960c344d7e10cd87a2a5e228b1996",
+      "currentId": "industrial-area-phase-2-and-3",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-industrial-area-phase-7-mohali",
+      "title": "Industrial Area Phase 7 Mohali",
+      "url": "/maps/industrial%20area%20phase%207%20mohalo.png",
+      "bytes": 2572784,
+      "sha256": "994936a1a45e6f5a8a24f9f564ab854d43f9cb5a4f6e9da70297ea25e377751b",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-industrial-area-phase-7-mohali",
+      "title": "Industrial Area Phase 7 Mohali",
+      "url": "/normal%20maps/phase%207%20mohali.jpg",
+      "bytes": 175819,
+      "sha256": "7f6a00fd8f878db405f62f28b27df599a30e4862c48ee17038c786226ec67c09",
+      "currentId": "phase-7-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-industrial-area-phase-9",
+      "title": "Industrial Area Phase 9",
+      "url": "/maps/industrial%20area%20phase%209.png",
+      "bytes": 2767596,
+      "sha256": "fe330d0255823873fbc07bf89504bf2c3220834c9ca3381b3a0e4c6b1023144f",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-industrial-area-phase-9",
+      "title": "Industrial Area Phase 9",
+      "url": "/normal%20maps/industrial%20area%20phase%209%20mohali.jpg",
+      "bytes": 205258,
+      "sha256": "9abcea5b8aa4f93d85f6c42007f0c149a95217c90e4c28bd5d479215b4c047a3",
+      "currentId": "industrial-area-phase-9-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-industrial-area-phase-8",
+      "title": "Industrial Focal Point Phase 8",
+      "url": "/normal%20maps/industrial%20focal%20point%20phase%208.jpg",
+      "bytes": 170822,
+      "sha256": "995d04b43858d4ae91fa3e7434546f73b5622216e160366d2ed7513efa2fe8b7",
+      "currentId": "industrial-focal-point-phase-8",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-ireo-mohali",
+      "title": "Ireo Mohali",
+      "url": "/normal%20maps/ireo%20mohali.png",
+      "bytes": 9405801,
+      "sha256": "fdee14177ec497000798fd27ab9e49e029d3538f5c534abc7a9dc4329950c143",
+      "currentId": "ireo-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-janta-township-sector-90-91",
+      "title": "Janta Township Sector 90 91",
+      "url": "/maps/janta%20township%20sector%2090-91.png",
+      "bytes": 2921678,
+      "sha256": "f46bb777e5547c3b9b7313844025c3cb79dcc8673b985d095a7572129a0d826f",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-janta-township-sector-90-91",
+      "title": "Janta Township Sector 90 91",
+      "url": "/normal%20maps/janta%20township%20sector%2090-91%20mohali.jpg",
+      "bytes": 191520,
+      "sha256": "9db74b4d4d1098cada951671dff280c5392b53cfc03f7ebacbe0bda40728a26f",
+      "currentId": "janta-township-sector-90-91-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-jlpl-sector-82",
+      "title": "Jlpl Sector 82",
+      "url": "/normal%20maps/jlpl%20sector%2082.png",
+      "bytes": 12361871,
+      "sha256": "28183ba79147ad0ea0b8fa0a8265e9483f178ef731be38c66920b5446359e736",
+      "currentId": "jlpl-sector-82",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-jlpl-sector-94",
+      "title": "Jlpl Sector 94",
+      "url": "/normal%20maps/jlpl%20sector%2094.png",
+      "bytes": 12162443,
+      "sha256": "1ab34c77dc7b3d627bcd589653f20ed4b295053aa501ebedb1ad03a8b71f58d4",
+      "currentId": "jlpl-sector-94",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-jlpl-sector-94-mohali",
+      "title": "Jlpl Sector 94 Mohali",
+      "url": "/normal%20maps/jlpl%20sector%2094%20mohali.jpg",
+      "bytes": 1920575,
+      "sha256": "874bd7bfd42c6daa55938cffb563d722d98a31875639b27856e91fdff5efdf6f",
+      "currentId": "jlpl-sector-94-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-mohali-phase-8",
+      "title": "Mohali Phase 8",
+      "url": "/maps/mohali%20phase%208.png",
+      "bytes": 2532886,
+      "sha256": "4431e9534e944bd8f52af911b2405e5c995d1517eda5d62e2aa3d06978dffccb",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-panchkula-extension",
+      "title": "Panchkula Extension",
+      "url": "/normal%20maps/panchulka%20extenstion.jpg",
+      "bytes": 171962,
+      "sha256": "ae8bfe5c1ff242f0197304cf906c920ee2bfe2f8216c651afea9e418bd88f2c3",
+      "currentId": "panchulka-extenstion",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-pearls-city-sec-100-mohali",
+      "title": "Pearls City Sec 100 Mohali",
+      "url": "/normal%20maps/pearls%20city%20sec%20100%20mohali.jpg",
+      "bytes": 183614,
+      "sha256": "bfaf8e97e8d5d3192e2cf0e4c87a3dd65f58a1ba6f4e343f74371e971538780c",
+      "currentId": "pearls-city-sec-100-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-phase-5-mohali",
+      "title": "Phase 5 Mohali",
+      "url": "/maps/phase%205%20mohali.png",
+      "bytes": 2403511,
+      "sha256": "6c88d59f2e55ae5059619598de73bdb3cdaefab768351bc8d8e9ff3c040b35d9",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-phase-5-mohali",
+      "title": "Phase 5 Mohali",
+      "url": "/normal%20maps/phase%205%20mohali.jpg",
+      "bytes": 165226,
+      "sha256": "347efddd97cdc0b5c7538ceea5ab2122da6ed3e0309295c22c9606c5ddbb5107",
+      "currentId": "phase-5-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-phase-8-b-mohali",
+      "title": "Phase 8 B Mohali",
+      "url": "/maps/phase%208-b%20mohali.png",
+      "bytes": 2581170,
+      "sha256": "7e54c911e04d558235e4abfb12cbbdc2817e7971ccdc6accdd1140ef441fb314",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-phase-8-b-mohali",
+      "title": "Phase 8 B Mohali",
+      "url": "/normal%20maps/phase%20%208-b.jpg",
+      "bytes": 123725,
+      "sha256": "2b19e5ea6420f1771a6ea254ee55e6367d53e149998ec3da0876f1bb4f6ae079",
+      "currentId": "phase-8-b",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-10-chandigarh",
+      "title": "Sector 10 Chd",
+      "url": "/maps/sector%2010chd.png",
+      "bytes": 2941905,
+      "sha256": "ee4efe63dae026192b8ea3740eddded14ca456e69405ee7a5516cea2a803535d",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-15-chandigarh",
+      "title": "Sector 15 Chandigarh",
+      "url": "/maps/sector%2015%20chd.png",
+      "bytes": 3157068,
+      "sha256": "7539a0e9376048396e2d29a341481cb1ef95a4317471ca3ebaf67d44de14a862",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-16",
+      "title": "Sector 16",
+      "url": "/maps/sector%2016.png",
+      "bytes": 2931793,
+      "sha256": "e59e23e060d4b8d7341f4908d7d6158178b75879a56c2faf6d35615c74b3ef03",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-16",
+      "title": "Sector 16",
+      "url": "/normal%20maps/sector%2016%20chd.png",
+      "bytes": 1998323,
+      "sha256": "ce03e96d5ffb71dced019a58813ffec247d9d886aecd94bc4db7c224a263144f",
+      "currentId": "sector-16-chd",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-17-chandigarh",
+      "title": "Sector 17 Chandigarh",
+      "url": "/maps/sector%2017%20chd.png",
+      "bytes": 2858663,
+      "sha256": "5696dd22e2bf1adcb1a02075b12de7a933996f2c2fdae803e2125c9af7392495",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-17-chandigarh",
+      "title": "Sector 17 Chandigarh",
+      "url": "/normal%20maps/sector%2017%20chd.png",
+      "bytes": 1757262,
+      "sha256": "ffda95aff1b54a53842452049268955ab5521a8df02b0f783d40f956dc01e2d3",
+      "currentId": "sector-17-chd",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-19-c-chandigarh",
+      "title": "Sector 19 C Chandigarh",
+      "url": "/maps/sector%2019c%20chd.png",
+      "bytes": 2980833,
+      "sha256": "07acc0eb3ff1e4781fa794fa34c7ece1958070f9643f9bbc785dc7ab017cfbcd",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-2-chandigarh",
+      "title": "Sector 2 Chandigarh",
+      "url": "/maps/sector-2%20chd.png",
+      "bytes": 2815757,
+      "sha256": "42c4338afff112072087cfce088b2fe77c28ddee4134ef0c2ffc52e35a03bb92",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-2-chandigarh",
+      "title": "Sector 2 Chandigarh",
+      "url": "/normal%20maps/sector%202%20chd.png",
+      "bytes": 2196502,
+      "sha256": "ee03bfe259321260977151122f49332492c920f2eef59148494c1403c335bfe0",
+      "currentId": "sector-2-chd",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-21-chandigarh",
+      "title": "Sector 21 Chandigarh",
+      "url": "/maps/sector%2021%20chd.png",
+      "bytes": 2939876,
+      "sha256": "8701b8545c1f203c0b7e96425fbde6e26c30a849df2d6132076335418f4a820a",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-21-chandigarh",
+      "title": "Sector 21 Chandigarh",
+      "url": "/normal%20maps/sector%2021%20chd.png",
+      "bytes": 1930326,
+      "sha256": "2327072a1078b24d34feb75411a6cd8c790296db993fa6fbb1498e0f3bd9244a",
+      "currentId": "sector-21-chd",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-28-chandigarh",
+      "title": "Sector 28 Chandigarh",
+      "url": "/maps/sector%2028%20chd.png",
+      "bytes": 2912873,
+      "sha256": "9d0aa2e736e420ecdcb632e038ec902c0e0814ef9eaa24453fad34ae154e6a6a",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-28-chandigarh",
+      "title": "Sector 28 Chandigarh",
+      "url": "/normal%20maps/sector%2028%20chd.png",
+      "bytes": 816171,
+      "sha256": "d3c2013cec5ebd904851202a4205c443067d9d293d00549f65abe9c3dbbb04c6",
+      "currentId": "sector-28-chd",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-3-chandigarh",
+      "title": "Sector 3 Chandigarh",
+      "url": "/maps/sector-3%20chd.png",
+      "bytes": 3059582,
+      "sha256": "3894bbda27f207695ed6e344b1bbba8f87f285e4f702e0c57fda9ea375d29154",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-3-chandigarh",
+      "title": "Sector 3 Chandigarh",
+      "url": "/normal%20maps/sector%203%20chd.png",
+      "bytes": 1536907,
+      "sha256": "443e0bf4867f6a0d4e4cdabe0ccf47952af7f5a5c340b50d1a03b1a2b26f0393",
+      "currentId": "sector-3-chd",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-30-chandigarh",
+      "title": "Sector 30 Chandigarh",
+      "url": "/maps/sector%2030%20chd.png",
+      "bytes": 2921305,
+      "sha256": "a694310b4acb94d10f9ac78bb898af2e337794e594a981733ad6509320373477",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-30-chandigarh",
+      "title": "Sector 30 Chandigarh",
+      "url": "/normal%20maps/sector%2030%20chd.jpg",
+      "bytes": 173520,
+      "sha256": "bb080384efdac81d9aab271385b14feb4f38a6baf78aa8f168ddf85b2f943034",
+      "currentId": "sector-30-chd",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-32-chandigarh",
+      "title": "Sector 32 Chandigarh",
+      "url": "/maps/sector%2032%20chd.png",
+      "bytes": 2470122,
+      "sha256": "506cc1a203b1c3f99c7b72986d80f8b850b5f367e20126fbf0a0bdabeb0347d5",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-32-chandigarh-2",
+      "title": "Sector 32 Chandigarh",
+      "url": "/normal%20maps/secter%2032%20chd.jpg",
+      "bytes": 190304,
+      "sha256": "b0ea55f7276052f78213d37f8b3cc4152d5cc8a7ab810d70a783418f0c1cf360",
+      "currentId": "sector-32-chandigarh",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-32-chandigarh-3",
+      "title": "Sector 32 Chandigarh",
+      "url": "/normal%20maps/sector%2032%20chandigarh.jpg",
+      "bytes": 190304,
+      "sha256": "b0ea55f7276052f78213d37f8b3cc4152d5cc8a7ab810d70a783418f0c1cf360",
+      "currentId": "sector-32-chandigarh",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-34-chandigarh",
+      "title": "Sector 34 Chandigarh",
+      "url": "/maps/sector%2034%20chd.png",
+      "bytes": 2731676,
+      "sha256": "a2c42df4b3eecc09b5f071a8b73085c92bf33d026ca0a1ff9e333cf139467dc6",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-34-chandigarh",
+      "title": "Sector 34 Chandigarh",
+      "url": "/normal%20maps/sctor%2034%20chd.jpg",
+      "bytes": 172766,
+      "sha256": "60043a22a3d5fcfa9568be0d66794311452b59832a000d625b1600884ecc8868",
+      "currentId": "sctor-34-chd",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-36-chandigarh",
+      "title": "Sector 36 Chandigarh",
+      "url": "/maps/sector%2036%20chd.png",
+      "bytes": 2651214,
+      "sha256": "d6b0341c836f9be703d67be03422ed23c0c1f7cde444eb057e3d4c63f54b7b67",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-36-chandigarh",
+      "title": "Sector 36 Chandigarh",
+      "url": "/normal%20maps/sector%2036%20chd.jpg",
+      "bytes": 210782,
+      "sha256": "8213319af929632ef9eb952bf46e5c77eb37e2152dad19fdc1fc8e1f864f6c04",
+      "currentId": "sector-36-chd",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-37-chandigarh",
+      "title": "Sector 37 Chandigarh",
+      "url": "/maps/sector%2037%20chd.png",
+      "bytes": 2687712,
+      "sha256": "0ad0a1dd6d962d8860220414c09125c5e820f5fdc896056b41171d0ea211f467",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-37-chandigarh",
+      "title": "Sector 37 Chandigarh",
+      "url": "/normal%20maps/sector%2037%20chd.jpg",
+      "bytes": 231505,
+      "sha256": "8bf4f8159e01345832bed1805ab844a1ef250ecc7a2b58581717e57e0b774210",
+      "currentId": "sector-37-chd",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-39-chandigarh",
+      "title": "Sector 39 Chandigarh",
+      "url": "/maps/sector%2039%20chandigarh.png",
+      "bytes": 2676634,
+      "sha256": "880d797ad83df030d5009dcbdc17bd9652e4f075dd1bbbc85672de6e406e02e7",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-39-chandigarh",
+      "title": "Sector 39 Chandigarh",
+      "url": "/normal%20maps/sector%2039%20chd.jpg",
+      "bytes": 134821,
+      "sha256": "a9cce140848a7cae94fa043b1ee6d7d272ef24c25812dac2f6cfd1114493e004",
+      "currentId": "sector-39-chd",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-4-chandigarh",
+      "title": "Sector 4 Chandigarh",
+      "url": "/maps/sector%204%20chd.png",
+      "bytes": 3017246,
+      "sha256": "a3afa50d88cef9465ca4a01ea71eb336d93468e159c2771cef3edf9e7c617ee2",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-40-chandigarh",
+      "title": "Sector 40 Chandigarh",
+      "url": "/maps/sector%2040%20chd.png",
+      "bytes": 2744368,
+      "sha256": "7df7a27f177a8da59a559ab7a2310fce2f2331a7b3aed0d8a2cc7ed2d05360ad",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-40-chandigarh",
+      "title": "Sector 40 Chandigarh",
+      "url": "/normal%20maps/sector%2040%20chd.jpg",
+      "bytes": 234351,
+      "sha256": "85a67d36c39930c57fccf73e31c1d6dbb2b6d100e63550cf9203f13b1b4ec91b",
+      "currentId": "sector-40-chd",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-41-chandigarh",
+      "title": "Sector 41 Chandigarh",
+      "url": "/maps/sector%2041%20chd.png",
+      "bytes": 2497476,
+      "sha256": "4f302b1007b4c08c1650f3252822915555e92725cf3e061ea6caf7cba62f3562",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-41-chandigarh",
+      "title": "Sector 41 Chandigarh",
+      "url": "/normal%20maps/sector%2041%20chd.jpg",
+      "bytes": 138196,
+      "sha256": "db504665fd06dda2b557fc3457984ea4de86f8b201edebf3343a96af55ec54c2",
+      "currentId": "sector-41-chd",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-43-chandigarh",
+      "title": "Sector 43 Chandigarh",
+      "url": "/maps/sector%2043%20chd.png",
+      "bytes": 2976101,
+      "sha256": "a9baacfa2ac122a65db0cb9ac377fb4e71b8884a9698d6bc996e81afcdc39d13",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-43-chandigarh",
+      "title": "Sector 43 Chandigarh",
+      "url": "/normal%20maps/sector%2043%20chd.jpg",
+      "bytes": 201521,
+      "sha256": "c4fb0b9b89946cab6f999a3aff7cdf6579b61aa04b09c44eb297422a7b049075",
+      "currentId": "sector-43-chd",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-45-chandigarh",
+      "title": "Sector 45 Chandigarh",
+      "url": "/maps/SECTOR%2045%20chd.png",
+      "bytes": 2772087,
+      "sha256": "83ed1ac38b4a762092c8f096663c15bb1b0b103db8d9ad8acc5af35dbe9d1717",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-45-chandigarh",
+      "title": "Sector 45 Chandigarh",
+      "url": "/normal%20maps/sector%2045%20chd.jpg",
+      "bytes": 199331,
+      "sha256": "6404ba0e8c1be9b2c74b5674a0cbf9ae4f12ef4ad73840c904bc87e2c9e468b0",
+      "currentId": "sector-45-chd",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-46-chandigarh",
+      "title": "Sector 46 Chandigarh",
+      "url": "/maps/sector%2046%20chd.png",
+      "bytes": 2731194,
+      "sha256": "ec81b4459d5142eb14f9433be38acf9b4e3b8046fd64665ec77263dfe801bd50",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-46-chandigarh",
+      "title": "Sector 46 Chandigarh",
+      "url": "/normal%20maps/sector%2046%20chd.jpg",
+      "bytes": 234132,
+      "sha256": "89d7b638796c947f8cfd26eb1d038989223a902dad1ae2cadac4415388085596",
+      "currentId": "sector-46-chd",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-50-chandigarh",
+      "title": "Sector 50 Chandigarh",
+      "url": "/maps/sector%2050%20chd.png",
+      "bytes": 2745468,
+      "sha256": "958f762cda2816a3bc6959089629c9011a72e76708d4e892e27bd6e9f022b71d",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-50-chandigarh",
+      "title": "Sector 50 Chandigarh",
+      "url": "/normal%20maps/sector%2050%20chd.jpg",
+      "bytes": 147386,
+      "sha256": "2c8b874613d96fcdafc712ec279269ebf081602b67040b895f9748e4948245bf",
+      "currentId": "sector-50-chd",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-52-chandigarh",
+      "title": "Sector 52 Chandigarh",
+      "url": "/maps/sector%2052%20chd.png",
+      "bytes": 3066158,
+      "sha256": "8c0452f492089180a369a1b20db5dbe0d110257a6cd8ea1791ce430ecd274bfc",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-52-chandigarh",
+      "title": "Sector 52 Chandigarh",
+      "url": "/normal%20maps/sector%2052%20chd.jpg",
+      "bytes": 194589,
+      "sha256": "1bced9c6d30131fd8c1e3e1618d8ae740b5c275b483352ccc6d49b95fed8dc7c",
+      "currentId": "sector-52-chd",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-53-mohali",
+      "title": "Sector 53 Mohali",
+      "url": "/maps/sector%2053%20mohali.png",
+      "bytes": 2804687,
+      "sha256": "2f367a869f9dbd75be88267c9ce08fba8463b96281a125c64c400a789d02630b",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-53-mohali",
+      "title": "Sector 53 Mohali",
+      "url": "/normal%20maps/sector%2053%20mohali.png",
+      "bytes": 1742951,
+      "sha256": "4ff4f1dcb9be21c1cce388c054a346409f94ca383fa81f52c8605da015883bf0",
+      "currentId": "sector-53-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-54-mohali",
+      "title": "Sector 54 Mohali",
+      "url": "/maps/sector%2054%20mohali.png",
+      "bytes": 2625958,
+      "sha256": "147d2fc95adb854e414f277479858a1f21770e3bf89b5fc82a6e6918b13d639b",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-54-mohali",
+      "title": "Sector 54 Mohali",
+      "url": "/normal%20maps/sector%2054%20mohali.png",
+      "bytes": 1702665,
+      "sha256": "abe9f9634356d413d49d50cbb374be769a5a297e940f635cf6416ba66649bda7",
+      "currentId": "sector-54-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-55-mohali",
+      "title": "Sector 55 Mohali",
+      "url": "/maps/sector%2055%20mohali.png",
+      "bytes": 2927934,
+      "sha256": "ac7e69d5d41faa4f9765a383dd46952e900d6f5bb30ea706fcf14e64f0c03b5f",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-55-mohali",
+      "title": "Sector 55 Mohali",
+      "url": "/normal%20maps/sector%2055%20mohali.png",
+      "bytes": 1734737,
+      "sha256": "391d6a8f6aeb36eae11949d063b43a8102bb7f8c82f17ac36c2dda21760456d9",
+      "currentId": "sector-55-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-56-mohali",
+      "title": "Sector 56 Mohali",
+      "url": "/maps/sector%2056%20mohali.png",
+      "bytes": 2936522,
+      "sha256": "3e88b7011cb024aacfdf03c9aa243849aaed912a3f9f376fb5be7a96601d05c5",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-56-mohali",
+      "title": "Sector 56 Mohali",
+      "url": "/normal%20maps/sector%2056%20mohali.png",
+      "bytes": 1688248,
+      "sha256": "e2e9d102175876ad4255684c23be6a3427a723609427b69002af63879949de3a",
+      "currentId": "sector-56-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-59-mohali",
+      "title": "Sector 59 Mohali",
+      "url": "/normal%20maps/sector%2059%20mohali.jpg",
+      "bytes": 287340,
+      "sha256": "d91fb16aec5132bd9c9838d930ccb4f0884dd6a3d990fb5923c942f88299cb6f",
+      "currentId": "sector-59-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-60-mohali",
+      "title": "Sector 60 Mohali",
+      "url": "/maps/sector%2060%20mohali.png",
+      "bytes": 2809737,
+      "sha256": "5674abf256d313cc0c23ed84ca1cf922378c3cc5e1ed65dc8d50eea096064d10",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-60-mohali",
+      "title": "Sector 60 Mohali",
+      "url": "/normal%20maps/sector%2060%20mohali.png",
+      "bytes": 2053630,
+      "sha256": "6063dce4bc9fe0ee1a88b376017c06b2d0cd005c49556516ca00dc39ef8f1842",
+      "currentId": "sector-60-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-61-mohali",
+      "title": "Sector 61 Mohali",
+      "url": "/maps/sector%2061%20mohali.png",
+      "bytes": 2710655,
+      "sha256": "a46a5883a320b8b1597c4a810ea8edfca35eba09d198ff41dd724706eb45c140",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-61-mohali",
+      "title": "Sector 61 Mohali",
+      "url": "/normal%20maps/sector%2061%20mohali.jpg",
+      "bytes": 226306,
+      "sha256": "6139db34ae19bfbdae5df2717448fc871b136b6d04c91ee01fd96d3c15cd940e",
+      "currentId": "sector-61-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-62-mohali",
+      "title": "Sector 62 Mohali",
+      "url": "/maps/sector%2062%20mohali.png",
+      "bytes": 3025021,
+      "sha256": "601d7052cd248cd00caa11194f63fb303d46a6d53cc603d6701d1e6a8c01845a",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-62-mohali",
+      "title": "Sector 62 Mohali",
+      "url": "/normal%20maps/sector%2062%20mohali.jpg",
+      "bytes": 113494,
+      "sha256": "4a6a655520f5b9b2a8f6380a2f6f58869737f59d1cb9e9f010b1150f1059562a",
+      "currentId": "sector-62-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-63-mohali",
+      "title": "Sector 63 Mohali",
+      "url": "/maps/sector%2063%20mohali.png",
+      "bytes": 2806028,
+      "sha256": "6712541c5b5158d9da25fe6823cdfde1bb1433150949e1453275e3e4314f7118",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-63-mohali",
+      "title": "Sector 63 Mohali",
+      "url": "/normal%20maps/sector%2063%20mohalli.jpg",
+      "bytes": 202407,
+      "sha256": "12d3bf06bba6f56614712c2b581fdb24a189285bd7dc42a75ecf08f46d7286e7",
+      "currentId": "sector-63-mohalli",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-64-mohali",
+      "title": "Sector 64 Mohali",
+      "url": "/maps/sector%2064%20mohali.png",
+      "bytes": 2845049,
+      "sha256": "eaf5b82d429f295aac3d9f55443220620db901fd3f231ba02a72daead1943d40",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-64-mohali",
+      "title": "Sector 64 Mohali",
+      "url": "/normal%20maps/sector%2064%20mohali.jpg",
+      "bytes": 243856,
+      "sha256": "ecbbf1cc900f1dc4dc251aa03756f2368292fa8cf062fc1d6d928752e68141ff",
+      "currentId": "sector-64-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-65-mohali",
+      "title": "Sector 65 Mohali",
+      "url": "/maps/sector%2065%20mohali.png",
+      "bytes": 2806482,
+      "sha256": "4d3d58ac0e89b769e460fb9aafc8a8c866bf430435c87f64e83a204d2277b7bd",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-65-mohali",
+      "title": "Sector 65 Mohali",
+      "url": "/normal%20maps/sector%2065%20mohali.jpg",
+      "bytes": 243701,
+      "sha256": "dc70ca6eb89fe03a85624bece2739581d2d3518cb7e400bd802a95f9b1c5d5af",
+      "currentId": "sector-65-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-66-mohali",
+      "title": "Sector 66 Mohali",
+      "url": "/maps/sector%2066%20mohali.png",
+      "bytes": 2837572,
+      "sha256": "3afd94b292dcca3350bdb57bb55cadd78a674cf0a3d7786789ca0a6d1223b23c",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-66-mohali",
+      "title": "Sector 66 Mohali",
+      "url": "/normal%20maps/sector%2066%20mohali.jpg",
+      "bytes": 160982,
+      "sha256": "61a5c62f717b81b6487a04ca03556c4d16e3bebf0144ff2cf31aabeb0320e812",
+      "currentId": "sector-66-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-67-mohali",
+      "title": "Sector 67 Mohali",
+      "url": "/normal%20maps/sector%2067%20mohli.jpg",
+      "bytes": 150832,
+      "sha256": "1948571bb2633826e7bede3b0d92661620a6fa3a90309359faf15878754277f4",
+      "currentId": "sector-67-mohli",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-68-mohali",
+      "title": "Sector 68 Mohali",
+      "url": "/maps/sector%2068%20mohali.png",
+      "bytes": 2822208,
+      "sha256": "9be82868999f35fa60f0fcc4e8e7a39e451cd0832ebd71d0cce08520f7090e0b",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-68-mohali",
+      "title": "Sector 68 Mohali",
+      "url": "/normal%20maps/sector%2068%20mohali.jpg",
+      "bytes": 196844,
+      "sha256": "5b5659499f3d2955c27441cac5f7c8ba78d3023b8996902140496b6a3340e7c2",
+      "currentId": "sector-68-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-69-mohali",
+      "title": "Sector 69 Mohali",
+      "url": "/maps/sector%2069%20mohali.png",
+      "bytes": 2917632,
+      "sha256": "7e068f943811374b0e77051553e557d872d97b0301ac7d733dad5b7843f67f26",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-69-mohali",
+      "title": "Sector 69 Mohali",
+      "url": "/normal%20maps/sector%2069%20mohali.jpg",
+      "bytes": 228747,
+      "sha256": "46db47d58b9aa0971324760e2e4dc4dcd75b0d6d41634ae68ce773437ba7b8d2",
+      "currentId": "sector-69-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-70-mohali",
+      "title": "Sector 70 Mohali",
+      "url": "/maps/sector%2070%20mohali.png",
+      "bytes": 2830956,
+      "sha256": "213911b397e15ff5113c78b267bdb9811cbaa47da14ef700a47a482d160cbd73",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-70-mohali",
+      "title": "Sector 70 Mohali",
+      "url": "/normal%20maps/sector%2070%20mohali.jpg",
+      "bytes": 193917,
+      "sha256": "3e9a86d89f596624bc47699d6021faafa7eb8a361c9171cd643d50f1a7a15e59",
+      "currentId": "sector-70-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-71-mohali",
+      "title": "Sector 71 Mohali",
+      "url": "/maps/sector%2071%20mohali.png",
+      "bytes": 2864519,
+      "sha256": "929d05b65f1f824fef1260b6bfc85237a0f98f7a336a61ff31da037f55fd0ad7",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-71-mohali",
+      "title": "Sector 71 Mohali",
+      "url": "/normal%20maps/sector%2071%20mohali.jpg",
+      "bytes": 240881,
+      "sha256": "433087d3f449ce30dc39bdae2753c447fcca577a5145ffdff1e7bab6736ee02f",
+      "currentId": "sector-71-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-77-mohali",
+      "title": "Sector 77 Mohali",
+      "url": "/maps/sector%2077%20mohali.png",
+      "bytes": 2915327,
+      "sha256": "8f4132ea40f9ed9c76b8c7e8448412b0027b606107da1890117f3f0fddeb528f",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-77-mohali",
+      "title": "Sector 77 Mohali",
+      "url": "/normal%20maps/sector%2077%20mohali.jpg",
+      "bytes": 222903,
+      "sha256": "ee866f73101cb08042053d19de556510fe43664b71e06326595014b1d3fb4667",
+      "currentId": "sector-77-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-78-mohali",
+      "title": "Sector 78 Mohali",
+      "url": "/maps/sector%2078%20mohali.png",
+      "bytes": 2503629,
+      "sha256": "af46bfda0c0e5061e9b1d99a4f500712495982a43c91db10a0443a4d4fc0a11d",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-78-mohali",
+      "title": "Sector 78 Mohali",
+      "url": "/normal%20maps/sector%2078%20mohali.jpg",
+      "bytes": 219882,
+      "sha256": "2c578c5f95f7d075f1dc601eb45c3c449a904c2f38c86eb49ec5335dcfd4cba0",
+      "currentId": "sector-78-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-79-mohali",
+      "title": "Sector 79 Mohali",
+      "url": "/maps/sector%2079%20mohali.png",
+      "bytes": 2849704,
+      "sha256": "46c8292720a7bad662781966f7ef413546f24c144444e1c2a5e4679e8ae2deaa",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-79-mohali",
+      "title": "Sector 79 Mohali",
+      "url": "/normal%20maps/sector%2079%20mohali.jpg",
+      "bytes": 251128,
+      "sha256": "47d3959ed0a7809a18fd2b5e89782848f84c00566dc9ed1e7386a77e8c788f8a",
+      "currentId": "sector-79-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-8-chandigarh",
+      "title": "Sector 8 Chandigarh",
+      "url": "/maps/sector%208%20chd.png",
+      "bytes": 2940002,
+      "sha256": "a8fbaefbee732fc71eda0b22b0009bc62be38d16645278fea817f583f8bbe8ea",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-8-chandigarh",
+      "title": "Sector 8 Chandigarh",
+      "url": "/normal%20maps/sector%208%20chd.png",
+      "bytes": 2187587,
+      "sha256": "b375e004c0e2db7934eb969ba001b450b7fbe144e8a17276378499a712bf8d36",
+      "currentId": "sector-8-chd",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-80-mohali",
+      "title": "Sector 80 Mohali",
+      "url": "/maps/sector%2080%20mohali.png",
+      "bytes": 2900348,
+      "sha256": "e085ea82abb9b7df11b1e6e0804d12c2f062a56cf6db0d13ac1ab776b5d71b10",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-80-mohali",
+      "title": "Sector 80 Mohali",
+      "url": "/normal%20maps/sector%2080%20mohali.jpg",
+      "bytes": 223972,
+      "sha256": "0d4b61295e80495bf415c4bf8f303f689c60d5b111af5f3cd287818c7017e714",
+      "currentId": "sector-80-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-sector-83-mohali",
+      "title": "Sector 83 Mohali",
+      "url": "/maps/sector%2083%20mohali.png",
+      "bytes": 3038613,
+      "sha256": "670ddb73273b1d35ffe291c2789046595b2f600d46e410adeba9547c004575ac",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-sector-83-mohali",
+      "title": "Sector 83 Mohali",
+      "url": "/normal%20maps/sector%2083.png",
+      "bytes": 2157266,
+      "sha256": "31fb50fd67fb48762eb19a8574aa5989bc5adb4b52103292c6731bae29f676a6",
+      "currentId": "sector-83",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-shivalik-city",
+      "title": "Shivalik City",
+      "url": "/maps/shivalik%20city.png",
+      "bytes": 2963030,
+      "sha256": "595ad69371bb28b8bf70f1e3498f61b8147a474867a4b6dc05cd1822109d21c8",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-shivalik-city",
+      "title": "Shivalik City",
+      "url": "/normal%20maps/shivalik%20city.jpg",
+      "bytes": 175866,
+      "sha256": "b48d8303c362eccbbed57f0833304c5c7b72a14330c2d9335d6f64771b27edb8",
+      "currentId": "shivalik-city",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-shopping-centre-phase-1-mohali",
+      "title": "Shopping Centre Phase 1 Mohali",
+      "url": "/maps/shopping%20centre%20phase%201%20mohali.png",
+      "bytes": 2553337,
+      "sha256": "6d0172caca9e196c4825642cfec0d27041c747b5322e25a81805cc5eb395e7f5",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-shopping-centre-phase-1-mohali",
+      "title": "Shopping Centre Phase 1 Mohali",
+      "url": "/normal%20maps/shopping%20centre%20phase%201.jpg",
+      "bytes": 114668,
+      "sha256": "ee570ddea1b6f2b0a6809da280036aede9d5b732d03d7d298a2df0fdf47e13f8",
+      "currentId": "shopping-centre-phase-1",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-shopping-centre-phase-10",
+      "title": "Shopping Centre Phase 10",
+      "url": "/maps/shopping%20centre%20phase%2010.png",
+      "bytes": 2699786,
+      "sha256": "072457e546f897a0ebe1744db733089f178042d3b52817c9a49c07b60719a2fc",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-shopping-centre-phase-10",
+      "title": "Shopping Centre Phase 10",
+      "url": "/normal%20maps/shopping%20centre%2010%20phase.jpg",
+      "bytes": 151946,
+      "sha256": "bef337e598138384542db5429da4f94cedade9f621074f30552f34f548314f29",
+      "currentId": "shopping-centre-10-phase",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-shopping-centre-phase-2-mohali",
+      "title": "Shopping Centre Phase 2 Mohali",
+      "url": "/maps/shopping%20centre%20phase%202%20mohali.png",
+      "bytes": 2775522,
+      "sha256": "6032fdbf01be00260ee230a344cd2052a63d3adb1c99bd6ef409ec6088715350",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-shopping-centre-phase-2-mohali",
+      "title": "Shopping Centre Phase 2 Mohali",
+      "url": "/normal%20maps/shopping%20centre%20phase%202%20mohali.jpg",
+      "bytes": 134776,
+      "sha256": "b79efe60db0b447c7b17962cc2e224a0b7b334516b09fbc7657f66ac8acd541e",
+      "currentId": "shopping-centre-phase-2-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-shopping-centre-phase-5",
+      "title": "Shopping Centre Phase 5",
+      "url": "/maps/shopping%20centre%20phase%205.png",
+      "bytes": 2785094,
+      "sha256": "3efff64d8646bc1743f20171e11268b367b9928bba0d6cb9cdeba3c0dd5199ec",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-shopping-centre-phase-5",
+      "title": "Shopping Centre Phase 5",
+      "url": "/normal%20maps/shopping%20centre%20phase%205%20mohali.jpg",
+      "bytes": 145968,
+      "sha256": "2ca47f29904a82b41c35f0b47343c59abd561883565c63364a8d2050cc9e51b0",
+      "currentId": "shopping-centre-phase-5-mohali",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-shopping-centre-phase-7",
+      "title": "Shopping Centre Phase 7",
+      "url": "/maps/shopping%20centre%20phase%207.png",
+      "bytes": 2328342,
+      "sha256": "5533726d4b97a2e4cdbe05d2093dca32232d14311e436def5b56516cdbf4a12c",
+      "currentId": null,
+      "status": "candidate"
+    },
+    {
+      "mapId": "sector-shopping-centre-phase-7",
+      "title": "Shopping Centre Phase 7",
+      "url": "/normal%20maps/shopping%20centre%207%20phase.jpg",
+      "bytes": 109628,
+      "sha256": "31383ea53fb00f62491a277664fbc5112b0f034c1773f34ea43bcccc1a7ae993",
+      "currentId": "shopping-centre-7-phase",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-uniworld-city-sector-97-106-109",
+      "title": "Uniworld City Sector 97 106 109",
+      "url": "/normal%20maps/uniworld%20city%20sector%2097%20106%20109.jpg",
+      "bytes": 235156,
+      "sha256": "75226bd7a48c36132be407bc547d9df8ef3c86fc1551102edee13d0c7197838e",
+      "currentId": "uniworld-city-sector-97-106-109",
+      "status": "already-present"
+    },
+    {
+      "mapId": "sector-wave-estate-sector-85-mohali",
+      "title": "Wave Estate Sector 85 Mohali",
+      "url": "/normal%20maps/wave%20estate%20sector%2085%20mohali.png",
+      "bytes": 13312014,
+      "sha256": "36d7a914bd4a5aafb87c33c5b1abc10dabe94f51686d5c49258aea669f89616d",
+      "currentId": "wave-estate-sector-85-mohali",
+      "status": "already-present"
+    }
+  ]
+}

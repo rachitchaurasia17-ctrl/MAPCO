@@ -1,0 +1,10 @@
+import { describe, expect, it } from 'vitest';
+import { parseProvisioningResponse } from '../src/apps/developer/provisioning';
+import { parseFounderContext } from '../../supabase/functions/provision-dealer/founder-context';
+describe('founder provisioning contract',()=>{
+  it('requires acquisition provenance rather than inventing it',()=>{expect(parseFounderContext(undefined)).toBeNull();expect(()=>parseFounderContext({pitchVersion:'v1'})).toThrow('INVALID_FOUNDER_CONTEXT');expect(parseFounderContext({acquisitionSource:'referral',pitchVersion:'September pitch',protocolVersion:'seven-day',buildVersion:'abc1234'})).toEqual({acquisitionSource:'referral',pitchVersion:'September pitch',protocolVersion:'seven-day',buildVersion:'abc1234'});});
+  it('ignores stages and removes the returned legacy password',()=>{const body=JSON.stringify({type:'stage',stage:'creating_account'})+'\n'+JSON.stringify({type:'result',result:{dealerId:'dealer-a',completed:true,credentialsAvailable:true,activationCode:'01234567',passcode:'must-not-retain'}});const result=parseProvisioningResponse(body,'dealer-a');expect(result.activationCode).toBe('01234567');expect(result).not.toHaveProperty('passcode');});
+  it('does not invent completion on an interrupted stream',()=>{expect(()=>parseProvisioningResponse('{"type":"stage"}\n','dealer-a')).toThrow('No completion');expect(()=>parseProvisioningResponse('{','dealer-a')).toThrow('interrupted');});
+  it('reports a completed retry without promising recoverable credentials',()=>{expect(parseProvisioningResponse(JSON.stringify({type:'error',code:'COMPLETED_CREDENTIALS_UNAVAILABLE'}),'dealer-a')).toEqual({dealerId:'dealer-a',completed:true,credentialsAvailable:false});});
+  it('refuses a result for another dealer and propagates intentional errors',()=>{expect(()=>parseProvisioningResponse(JSON.stringify({type:'result',result:{dealerId:'dealer-b',completed:true}}),'dealer-a')).toThrow('unexpected result');expect(()=>parseProvisioningResponse(JSON.stringify({type:'error',message:'Email already exists'}),'dealer-a')).toThrow('Email already exists');});
+});

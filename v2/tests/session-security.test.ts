@@ -51,7 +51,9 @@ function makeClient(user: { id: string; email?: string } | null = null) {
         return { data: { subscription: { unsubscribe } } };
       }),
     },
-    rpc: vi.fn().mockResolvedValue({ data: false, error: null }),
+    rpc: vi.fn().mockImplementation((name: string) => Promise.resolve({
+      data: name === 'plotmap_dealer_access_status' ? { status: 'approved' } : false, error: null,
+    })),
     emitAuthChange(event: string) { authChange?.(event); },
     unsubscribe,
   };
@@ -97,9 +99,11 @@ describe('protected session boundary', () => {
   it('clears known private state without deleting Supabase auth storage', () => {
     localStorage.setItem('mapco.earth.apiMeter.v1', '[]');
     localStorage.setItem('sb-project-auth-token', 'session-owned-by-supabase');
+    localStorage.setItem('plotmap_device_token_v1', 'a'.repeat(64));
     clearPrivateBrowserState();
     expect(localStorage.getItem('mapco.earth.apiMeter.v1')).toBeNull();
     expect(localStorage.getItem('sb-project-auth-token')).toBe('session-owned-by-supabase');
+    expect(localStorage.getItem('plotmap_device_token_v1')).toBe('a'.repeat(64));
   });
 
   it('fails closed when browser storage contains a counterfeit token', async () => {

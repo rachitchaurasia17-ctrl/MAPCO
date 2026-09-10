@@ -1,0 +1,2321 @@
+{
+  "canonicalMaps": 113,
+  "donorRegisteredMaps": 85,
+  "scannedImages": 330,
+  "byteIdenticalImages": 113,
+  "unmatchedImages": 217,
+  "uniqueUnmatchedImages": 200,
+  "unregisteredUnmatchedImages": 149,
+  "rows": [
+    {
+      "source": "maps/aerocity and mohali masterplan.png",
+      "bytes": 2531885,
+      "sha256": "fe28c4d8a82181a6e085f08ed9ae674760e7373adf3b23b52c2fb98593b50029",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/aerocity mohali.png",
+      "bytes": 2975584,
+      "sha256": "cfb1dcd57f28e0b4246ab70f89e72ecb9614f33c9d7efe580cb5238876955740",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/eco city 1 new chd.png",
+      "bytes": 2740992,
+      "sha256": "a8e2f48b875df71611c92a5fa30a2dd672e6ec0458155f021c2499d65dd81b59",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/ecocity phase 2 new chandigarh.png",
+      "bytes": 2789750,
+      "sha256": "caada20a685020d5365364a72568eca5346ae5d4e003af76af96ad21b149671d",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/enhanced/panchkula-sector-20.png",
+      "bytes": 5777646,
+      "sha256": "f0d09a7ab271785e12992a07ee3579f0862a0a9763b1206b38678df28bcf2dad",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/enhanced/panchkula-sector-21.png",
+      "bytes": 8890271,
+      "sha256": "d0a697778dc9cd2c66d9658425b33b156dd67c3e2a8b15f0ea6c3d90ff153df3",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/enhanced/panchkula-sector-25.png",
+      "bytes": 7186520,
+      "sha256": "4e7dd0cdb2b5cfe0dfba2435f7298554bfbaa6b2c24c77ad983eaa6eb2847e3b",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/enhanced/panchkula-sector-7.png",
+      "bytes": 7614155,
+      "sha256": "e21904429ded9032c298484974ba3f8f2a97bb770acba55d8dd122d4b589afd7",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/enhanced/panchkula-sector-8.png",
+      "bytes": 7001604,
+      "sha256": "a6ac9340f1608379b6dfb0dfa2699fe50479ed8bda8a990481100881a32a1e4c",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/gillco valley.png",
+      "bytes": 2461404,
+      "sha256": "706e784b2dbfc121c5ec60c91e711119ed7516270a50dfca34898b8a8a76b286",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/industrial area phase 1.png",
+      "bytes": 3112224,
+      "sha256": "c19f10e5d8df39e63577722b374a364b22b919d42ecdea3b966af80dec221eb3",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/industrial area phase 7 mohalo.png",
+      "bytes": 2572784,
+      "sha256": "994936a1a45e6f5a8a24f9f564ab854d43f9cb5a4f6e9da70297ea25e377751b",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/industrial area phase 9.png",
+      "bytes": 2767596,
+      "sha256": "fe330d0255823873fbc07bf89504bf2c3220834c9ca3381b3a0e4c6b1023144f",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/industrial area phase2 and 3.png",
+      "bytes": 3014408,
+      "sha256": "eff54b208c4ef78744dd8e5ce202d953e1b76ebac0a5d11dcfc16951894a355b",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/janta township sector 90-91.png",
+      "bytes": 2921678,
+      "sha256": "f46bb777e5547c3b9b7313844025c3cb79dcc8673b985d095a7572129a0d826f",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/layout plan of industrial area phase 1.png",
+      "bytes": 2523290,
+      "sha256": "eae78fe8895ef86a2d98069ab243d570909c7b18d014b7b0945913c027df5719",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/mohali masterplan.png",
+      "bytes": 2814497,
+      "sha256": "a5c0354d77d9ddc9121ea9c58935a48ece32b991a646636371a4bbf3c6cbb0eb",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/mohali phase 8.png",
+      "bytes": 2532886,
+      "sha256": "4431e9534e944bd8f52af911b2405e5c995d1517eda5d62e2aa3d06978dffccb",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/new chandigarh masterplan.png",
+      "bytes": 2317726,
+      "sha256": "95aa5290a5bac8840f3659037b5edb4f6938778997f92e65d5567fa166a9c096",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/phase 5 mohali.png",
+      "bytes": 2403511,
+      "sha256": "6c88d59f2e55ae5059619598de73bdb3cdaefab768351bc8d8e9ff3c040b35d9",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/phase 8-b mohali.png",
+      "bytes": 2581170,
+      "sha256": "7e54c911e04d558235e4abfb12cbbdc2817e7971ccdc6accdd1140ef441fb314",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 10chd.png",
+      "bytes": 2941905,
+      "sha256": "ee4efe63dae026192b8ea3740eddded14ca456e69405ee7a5516cea2a803535d",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 15 chd.png",
+      "bytes": 3157068,
+      "sha256": "7539a0e9376048396e2d29a341481cb1ef95a4317471ca3ebaf67d44de14a862",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 16.png",
+      "bytes": 2931793,
+      "sha256": "e59e23e060d4b8d7341f4908d7d6158178b75879a56c2faf6d35615c74b3ef03",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 17 chd.png",
+      "bytes": 2858663,
+      "sha256": "5696dd22e2bf1adcb1a02075b12de7a933996f2c2fdae803e2125c9af7392495",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 19c chd.png",
+      "bytes": 2980833,
+      "sha256": "07acc0eb3ff1e4781fa794fa34c7ece1958070f9643f9bbc785dc7ab017cfbcd",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 21 chd.png",
+      "bytes": 2939876,
+      "sha256": "8701b8545c1f203c0b7e96425fbde6e26c30a849df2d6132076335418f4a820a",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 28 chd.png",
+      "bytes": 2912873,
+      "sha256": "9d0aa2e736e420ecdcb632e038ec902c0e0814ef9eaa24453fad34ae154e6a6a",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 30 chd.png",
+      "bytes": 2921305,
+      "sha256": "a694310b4acb94d10f9ac78bb898af2e337794e594a981733ad6509320373477",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 32 chd.png",
+      "bytes": 2470122,
+      "sha256": "506cc1a203b1c3f99c7b72986d80f8b850b5f367e20126fbf0a0bdabeb0347d5",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 34 chd.png",
+      "bytes": 2731676,
+      "sha256": "a2c42df4b3eecc09b5f071a8b73085c92bf33d026ca0a1ff9e333cf139467dc6",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 36 chd.png",
+      "bytes": 2651214,
+      "sha256": "d6b0341c836f9be703d67be03422ed23c0c1f7cde444eb057e3d4c63f54b7b67",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 37 chd.png",
+      "bytes": 2687712,
+      "sha256": "0ad0a1dd6d962d8860220414c09125c5e820f5fdc896056b41171d0ea211f467",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 39 chandigarh.png",
+      "bytes": 2676634,
+      "sha256": "880d797ad83df030d5009dcbdc17bd9652e4f075dd1bbbc85672de6e406e02e7",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 4 chd.png",
+      "bytes": 3017246,
+      "sha256": "a3afa50d88cef9465ca4a01ea71eb336d93468e159c2771cef3edf9e7c617ee2",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 40 chd.png",
+      "bytes": 2744368,
+      "sha256": "7df7a27f177a8da59a559ab7a2310fce2f2331a7b3aed0d8a2cc7ed2d05360ad",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 41 chd.png",
+      "bytes": 2497476,
+      "sha256": "4f302b1007b4c08c1650f3252822915555e92725cf3e061ea6caf7cba62f3562",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 43 chd.png",
+      "bytes": 2976101,
+      "sha256": "a9baacfa2ac122a65db0cb9ac377fb4e71b8884a9698d6bc996e81afcdc39d13",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/SECTOR 45 chd.png",
+      "bytes": 2772087,
+      "sha256": "83ed1ac38b4a762092c8f096663c15bb1b0b103db8d9ad8acc5af35dbe9d1717",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 46 chd.png",
+      "bytes": 2731194,
+      "sha256": "ec81b4459d5142eb14f9433be38acf9b4e3b8046fd64665ec77263dfe801bd50",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 50 chd.png",
+      "bytes": 2745468,
+      "sha256": "958f762cda2816a3bc6959089629c9011a72e76708d4e892e27bd6e9f022b71d",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 52 chd.png",
+      "bytes": 3066158,
+      "sha256": "8c0452f492089180a369a1b20db5dbe0d110257a6cd8ea1791ce430ecd274bfc",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 53 mohali.png",
+      "bytes": 2804687,
+      "sha256": "2f367a869f9dbd75be88267c9ce08fba8463b96281a125c64c400a789d02630b",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 54 mohali.png",
+      "bytes": 2625958,
+      "sha256": "147d2fc95adb854e414f277479858a1f21770e3bf89b5fc82a6e6918b13d639b",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 55 mohali.png",
+      "bytes": 2927934,
+      "sha256": "ac7e69d5d41faa4f9765a383dd46952e900d6f5bb30ea706fcf14e64f0c03b5f",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 56 mohali.png",
+      "bytes": 2936522,
+      "sha256": "3e88b7011cb024aacfdf03c9aa243849aaed912a3f9f376fb5be7a96601d05c5",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 60 mohali.png",
+      "bytes": 2809737,
+      "sha256": "5674abf256d313cc0c23ed84ca1cf922378c3cc5e1ed65dc8d50eea096064d10",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 61 mohali.png",
+      "bytes": 2710655,
+      "sha256": "a46a5883a320b8b1597c4a810ea8edfca35eba09d198ff41dd724706eb45c140",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 62 mohali.png",
+      "bytes": 3025021,
+      "sha256": "601d7052cd248cd00caa11194f63fb303d46a6d53cc603d6701d1e6a8c01845a",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 63 mohali.png",
+      "bytes": 2806028,
+      "sha256": "6712541c5b5158d9da25fe6823cdfde1bb1433150949e1453275e3e4314f7118",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 64 mohali.png",
+      "bytes": 2845049,
+      "sha256": "eaf5b82d429f295aac3d9f55443220620db901fd3f231ba02a72daead1943d40",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 65 mohali.png",
+      "bytes": 2806482,
+      "sha256": "4d3d58ac0e89b769e460fb9aafc8a8c866bf430435c87f64e83a204d2277b7bd",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 66 mohali.png",
+      "bytes": 2837572,
+      "sha256": "3afd94b292dcca3350bdb57bb55cadd78a674cf0a3d7786789ca0a6d1223b23c",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 68 mohali.png",
+      "bytes": 2822208,
+      "sha256": "9be82868999f35fa60f0fcc4e8e7a39e451cd0832ebd71d0cce08520f7090e0b",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 69 mohali.png",
+      "bytes": 2917632,
+      "sha256": "7e068f943811374b0e77051553e557d872d97b0301ac7d733dad5b7843f67f26",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 70 mohali.png",
+      "bytes": 2830956,
+      "sha256": "213911b397e15ff5113c78b267bdb9811cbaa47da14ef700a47a482d160cbd73",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 71 mohali.png",
+      "bytes": 2864519,
+      "sha256": "929d05b65f1f824fef1260b6bfc85237a0f98f7a336a61ff31da037f55fd0ad7",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 77 mohali.png",
+      "bytes": 2915327,
+      "sha256": "8f4132ea40f9ed9c76b8c7e8448412b0027b606107da1890117f3f0fddeb528f",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 78 mohali.png",
+      "bytes": 2503629,
+      "sha256": "af46bfda0c0e5061e9b1d99a4f500712495982a43c91db10a0443a4d4fc0a11d",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 79 mohali.png",
+      "bytes": 2849704,
+      "sha256": "46c8292720a7bad662781966f7ef413546f24c144444e1c2a5e4679e8ae2deaa",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 8 chd.png",
+      "bytes": 2940002,
+      "sha256": "a8fbaefbee732fc71eda0b22b0009bc62be38d16645278fea817f583f8bbe8ea",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 80 mohali.png",
+      "bytes": 2900348,
+      "sha256": "e085ea82abb9b7df11b1e6e0804d12c2f062a56cf6db0d13ac1ab776b5d71b10",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector 83 mohali.png",
+      "bytes": 3038613,
+      "sha256": "670ddb73273b1d35ffe291c2789046595b2f600d46e410adeba9547c004575ac",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector-2 chd.png",
+      "bytes": 2815757,
+      "sha256": "42c4338afff112072087cfce088b2fe77c28ddee4134ef0c2ffc52e35a03bb92",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/sector-3 chd.png",
+      "bytes": 3059582,
+      "sha256": "3894bbda27f207695ed6e344b1bbba8f87f285e4f702e0c57fda9ea375d29154",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/shivalik city.png",
+      "bytes": 2963030,
+      "sha256": "595ad69371bb28b8bf70f1e3498f61b8147a474867a4b6dc05cd1822109d21c8",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/shopping centre phase 1 mohali.png",
+      "bytes": 2553337,
+      "sha256": "6d0172caca9e196c4825642cfec0d27041c747b5322e25a81805cc5eb395e7f5",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/shopping centre phase 10.png",
+      "bytes": 2699786,
+      "sha256": "072457e546f897a0ebe1744db733089f178042d3b52817c9a49c07b60719a2fc",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/shopping centre phase 2 mohali.png",
+      "bytes": 2775522,
+      "sha256": "6032fdbf01be00260ee230a344cd2052a63d3adb1c99bd6ef409ec6088715350",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/shopping centre phase 5.png",
+      "bytes": 2785094,
+      "sha256": "3efff64d8646bc1743f20171e11268b367b9928bba0d6cb9cdeba3c0dd5199ec",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/shopping centre phase 7.png",
+      "bytes": 2328342,
+      "sha256": "5533726d4b97a2e4cdbe05d2093dca32232d14311e436def5b56516cdbf4a12c",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "maps/zirakpur masterplan.png",
+      "bytes": 2207997,
+      "sha256": "1ddbf1843cea5cd0b4005d61458a1bc32a7f37ddece546653f4d29e0666e58f4",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "normal maps/aerocity masterplan.jpg",
+      "bytes": 398570,
+      "sha256": "dbbda4ce3019a54d5f44bdfbbe54b3d34eff7489885e9c3f0fae29598b8c6c56",
+      "registered": true,
+      "canonicalId": "aerocity-masterplan"
+    },
+    {
+      "source": "normal maps/chandigarh masterplan.jpg",
+      "bytes": 243457,
+      "sha256": "d8176349b8d9b4bc74b1776207b68e9ed93d8d805123ec82670ec688ef6c30ae",
+      "registered": true,
+      "canonicalId": "chandigarh-masterplan"
+    },
+    {
+      "source": "normal maps/derabassi masterplan.jpg",
+      "bytes": 170937,
+      "sha256": "83aee7d18233470272bf8bcebae00271bee0f266ca3144c2ba1ab0ce6f001fa8",
+      "registered": true,
+      "canonicalId": "derabassi-masterplan"
+    },
+    {
+      "source": "normal maps/eco city 1.jpg",
+      "bytes": 229371,
+      "sha256": "09fb3dbfe5f692c8029ee67ee8c69e496f42921bca6b6fb3271b03efd6af052b",
+      "registered": true,
+      "canonicalId": "eco-city-1"
+    },
+    {
+      "source": "normal maps/ecocity mohali.jpg",
+      "bytes": 226438,
+      "sha256": "84f2068871efe7c6d54b10fd87c29fd8897f8fb2fccb52d88d04d9105c4a4dad",
+      "registered": true,
+      "canonicalId": "ecocity-mohali"
+    },
+    {
+      "source": "normal maps/gamada aerocity mohali.jpg",
+      "bytes": 232638,
+      "sha256": "f8e1ba608c4c7ac326d9781ef003643271681d1b82ca0975d89095c295f78f8e",
+      "registered": true,
+      "canonicalId": "gamada-aerocity-mohali"
+    },
+    {
+      "source": "normal maps/gillco.jpg",
+      "bytes": 139881,
+      "sha256": "f5f0aec8edb535cc6aece18a06563b71df9e724259767a030072ef7a9491ae16",
+      "registered": true,
+      "canonicalId": "gillco"
+    },
+    {
+      "source": "normal maps/industrial area phase 1 chd.jpg",
+      "bytes": 221488,
+      "sha256": "b5a624831f09dd2e050c0e8735bcede4031603c6055dced973b12065524d9804",
+      "registered": true,
+      "canonicalId": "industrial-area-phase-1-chd"
+    },
+    {
+      "source": "normal maps/industrial area phase 1.jpg",
+      "bytes": 195902,
+      "sha256": "eb15af71a927a736bf674858523e884f239fe6edd839751ef46f82286e3d7723",
+      "registered": true,
+      "canonicalId": "industrial-area-phase-1"
+    },
+    {
+      "source": "normal maps/industrial area phase 2 and 3.jpg",
+      "bytes": 176275,
+      "sha256": "ed474b6ba81d31ef5db97bde8c4b214a36c960c344d7e10cd87a2a5e228b1996",
+      "registered": true,
+      "canonicalId": "industrial-area-phase-2-and-3"
+    },
+    {
+      "source": "normal maps/industrial area phase 9 mohali.jpg",
+      "bytes": 205258,
+      "sha256": "9abcea5b8aa4f93d85f6c42007f0c149a95217c90e4c28bd5d479215b4c047a3",
+      "registered": true,
+      "canonicalId": "industrial-area-phase-9-mohali"
+    },
+    {
+      "source": "normal maps/industrial focal point phase 8.jpg",
+      "bytes": 170822,
+      "sha256": "995d04b43858d4ae91fa3e7434546f73b5622216e160366d2ed7513efa2fe8b7",
+      "registered": true,
+      "canonicalId": "industrial-focal-point-phase-8"
+    },
+    {
+      "source": "normal maps/ireo mohali.png",
+      "bytes": 9405801,
+      "sha256": "fdee14177ec497000798fd27ab9e49e029d3538f5c534abc7a9dc4329950c143",
+      "registered": true,
+      "canonicalId": "ireo-mohali"
+    },
+    {
+      "source": "normal maps/janta township sector 90-91 mohali.jpg",
+      "bytes": 191520,
+      "sha256": "9db74b4d4d1098cada951671dff280c5392b53cfc03f7ebacbe0bda40728a26f",
+      "registered": true,
+      "canonicalId": "janta-township-sector-90-91-mohali"
+    },
+    {
+      "source": "normal maps/jlpl sector 82.png",
+      "bytes": 12361871,
+      "sha256": "28183ba79147ad0ea0b8fa0a8265e9483f178ef731be38c66920b5446359e736",
+      "registered": true,
+      "canonicalId": "jlpl-sector-82"
+    },
+    {
+      "source": "normal maps/jlpl sector 94 mohali.jpg",
+      "bytes": 1920575,
+      "sha256": "874bd7bfd42c6daa55938cffb563d722d98a31875639b27856e91fdff5efdf6f",
+      "registered": true,
+      "canonicalId": "jlpl-sector-94-mohali"
+    },
+    {
+      "source": "normal maps/jlpl sector 94.png",
+      "bytes": 12162443,
+      "sha256": "1ab34c77dc7b3d627bcd589653f20ed4b295053aa501ebedb1ad03a8b71f58d4",
+      "registered": true,
+      "canonicalId": "jlpl-sector-94"
+    },
+    {
+      "source": "normal maps/kharar masterplan.jpg",
+      "bytes": 215409,
+      "sha256": "e836e368008eb58c172f0866c2053b04163e3e11cf21a0a70a1b87f7542e91a0",
+      "registered": true,
+      "canonicalId": "kharar-masterplan"
+    },
+    {
+      "source": "normal maps/mohali masterplan.jpg",
+      "bytes": 382434,
+      "sha256": "43aa72c202a01bada6041f9981a14e6aa49ba770b3089b2dd2537d78d6a00d75",
+      "registered": true,
+      "canonicalId": "mohali-masterplan"
+    },
+    {
+      "source": "normal maps/mullanpur masterplan.jpg",
+      "bytes": 167798,
+      "sha256": "7b44297f013c9bd0ee31ffb0d9e87a2c0a3699b43b29870cfb78a2e860c06b3f",
+      "registered": true,
+      "canonicalId": "mullanpur-masterplan"
+    },
+    {
+      "source": "normal maps/new chandigarh masterplan.png",
+      "bytes": 2407053,
+      "sha256": "de092b4d2c42ee7b6143bb8af6227fa050ec2bda5448db7946be146272fc9d1b",
+      "registered": true,
+      "canonicalId": null
+    },
+    {
+      "source": "normal maps/panchulka extenstion.jpg",
+      "bytes": 171962,
+      "sha256": "ae8bfe5c1ff242f0197304cf906c920ee2bfe2f8216c651afea9e418bd88f2c3",
+      "registered": true,
+      "canonicalId": "panchulka-extenstion"
+    },
+    {
+      "source": "normal maps/panchulka masterplan.jpg",
+      "bytes": 255635,
+      "sha256": "aad09c79480e24930acfc87e05d6c36f03a21446a77aadc07df4a21a62ec1890",
+      "registered": true,
+      "canonicalId": "panchulka-masterplan"
+    },
+    {
+      "source": "normal maps/pearls city sec 100 mohali.jpg",
+      "bytes": 183614,
+      "sha256": "bfaf8e97e8d5d3192e2cf0e4c87a3dd65f58a1ba6f4e343f74371e971538780c",
+      "registered": true,
+      "canonicalId": "pearls-city-sec-100-mohali"
+    },
+    {
+      "source": "normal maps/phase  8-b.jpg",
+      "bytes": 123725,
+      "sha256": "2b19e5ea6420f1771a6ea254ee55e6367d53e149998ec3da0876f1bb4f6ae079",
+      "registered": true,
+      "canonicalId": "phase-8-b"
+    },
+    {
+      "source": "normal maps/phase 5 mohali.jpg",
+      "bytes": 165226,
+      "sha256": "347efddd97cdc0b5c7538ceea5ab2122da6ed3e0309295c22c9606c5ddbb5107",
+      "registered": true,
+      "canonicalId": "phase-5-mohali"
+    },
+    {
+      "source": "normal maps/phase 7 mohali.jpg",
+      "bytes": 175819,
+      "sha256": "7f6a00fd8f878db405f62f28b27df599a30e4862c48ee17038c786226ec67c09",
+      "registered": true,
+      "canonicalId": "phase-7-mohali"
+    },
+    {
+      "source": "normal maps/sctor 34 chd.jpg",
+      "bytes": 172766,
+      "sha256": "60043a22a3d5fcfa9568be0d66794311452b59832a000d625b1600884ecc8868",
+      "registered": true,
+      "canonicalId": "sctor-34-chd"
+    },
+    {
+      "source": "normal maps/secter 32 chd.jpg",
+      "bytes": 190304,
+      "sha256": "b0ea55f7276052f78213d37f8b3cc4152d5cc8a7ab810d70a783418f0c1cf360",
+      "registered": true,
+      "canonicalId": "sector-32-chandigarh"
+    },
+    {
+      "source": "normal maps/sector 16 chd.png",
+      "bytes": 1998323,
+      "sha256": "ce03e96d5ffb71dced019a58813ffec247d9d886aecd94bc4db7c224a263144f",
+      "registered": true,
+      "canonicalId": "sector-16-chd"
+    },
+    {
+      "source": "normal maps/sector 17 chd.png",
+      "bytes": 1757262,
+      "sha256": "ffda95aff1b54a53842452049268955ab5521a8df02b0f783d40f956dc01e2d3",
+      "registered": true,
+      "canonicalId": "sector-17-chd"
+    },
+    {
+      "source": "normal maps/sector 2 chd.png",
+      "bytes": 2196502,
+      "sha256": "ee03bfe259321260977151122f49332492c920f2eef59148494c1403c335bfe0",
+      "registered": true,
+      "canonicalId": "sector-2-chd"
+    },
+    {
+      "source": "normal maps/sector 21 chd.png",
+      "bytes": 1930326,
+      "sha256": "2327072a1078b24d34feb75411a6cd8c790296db993fa6fbb1498e0f3bd9244a",
+      "registered": true,
+      "canonicalId": "sector-21-chd"
+    },
+    {
+      "source": "normal maps/sector 28 chd.png",
+      "bytes": 816171,
+      "sha256": "d3c2013cec5ebd904851202a4205c443067d9d293d00549f65abe9c3dbbb04c6",
+      "registered": true,
+      "canonicalId": "sector-28-chd"
+    },
+    {
+      "source": "normal maps/sector 3 chd.png",
+      "bytes": 1536907,
+      "sha256": "443e0bf4867f6a0d4e4cdabe0ccf47952af7f5a5c340b50d1a03b1a2b26f0393",
+      "registered": true,
+      "canonicalId": "sector-3-chd"
+    },
+    {
+      "source": "normal maps/sector 30 chd.jpg",
+      "bytes": 173520,
+      "sha256": "bb080384efdac81d9aab271385b14feb4f38a6baf78aa8f168ddf85b2f943034",
+      "registered": true,
+      "canonicalId": "sector-30-chd"
+    },
+    {
+      "source": "normal maps/sector 32 chandigarh.jpg",
+      "bytes": 190304,
+      "sha256": "b0ea55f7276052f78213d37f8b3cc4152d5cc8a7ab810d70a783418f0c1cf360",
+      "registered": true,
+      "canonicalId": "sector-32-chandigarh"
+    },
+    {
+      "source": "normal maps/sector 36 chd.jpg",
+      "bytes": 210782,
+      "sha256": "8213319af929632ef9eb952bf46e5c77eb37e2152dad19fdc1fc8e1f864f6c04",
+      "registered": true,
+      "canonicalId": "sector-36-chd"
+    },
+    {
+      "source": "normal maps/sector 37 chd.jpg",
+      "bytes": 231505,
+      "sha256": "8bf4f8159e01345832bed1805ab844a1ef250ecc7a2b58581717e57e0b774210",
+      "registered": true,
+      "canonicalId": "sector-37-chd"
+    },
+    {
+      "source": "normal maps/sector 39 chd.jpg",
+      "bytes": 134821,
+      "sha256": "a9cce140848a7cae94fa043b1ee6d7d272ef24c25812dac2f6cfd1114493e004",
+      "registered": true,
+      "canonicalId": "sector-39-chd"
+    },
+    {
+      "source": "normal maps/sector 40 chd.jpg",
+      "bytes": 234351,
+      "sha256": "85a67d36c39930c57fccf73e31c1d6dbb2b6d100e63550cf9203f13b1b4ec91b",
+      "registered": true,
+      "canonicalId": "sector-40-chd"
+    },
+    {
+      "source": "normal maps/sector 41 chd.jpg",
+      "bytes": 138196,
+      "sha256": "db504665fd06dda2b557fc3457984ea4de86f8b201edebf3343a96af55ec54c2",
+      "registered": true,
+      "canonicalId": "sector-41-chd"
+    },
+    {
+      "source": "normal maps/sector 43 chd.jpg",
+      "bytes": 201521,
+      "sha256": "c4fb0b9b89946cab6f999a3aff7cdf6579b61aa04b09c44eb297422a7b049075",
+      "registered": true,
+      "canonicalId": "sector-43-chd"
+    },
+    {
+      "source": "normal maps/sector 45 chd.jpg",
+      "bytes": 199331,
+      "sha256": "6404ba0e8c1be9b2c74b5674a0cbf9ae4f12ef4ad73840c904bc87e2c9e468b0",
+      "registered": true,
+      "canonicalId": "sector-45-chd"
+    },
+    {
+      "source": "normal maps/sector 46 chd.jpg",
+      "bytes": 234132,
+      "sha256": "89d7b638796c947f8cfd26eb1d038989223a902dad1ae2cadac4415388085596",
+      "registered": true,
+      "canonicalId": "sector-46-chd"
+    },
+    {
+      "source": "normal maps/sector 50 chd.jpg",
+      "bytes": 147386,
+      "sha256": "2c8b874613d96fcdafc712ec279269ebf081602b67040b895f9748e4948245bf",
+      "registered": true,
+      "canonicalId": "sector-50-chd"
+    },
+    {
+      "source": "normal maps/sector 52 chd.jpg",
+      "bytes": 194589,
+      "sha256": "1bced9c6d30131fd8c1e3e1618d8ae740b5c275b483352ccc6d49b95fed8dc7c",
+      "registered": true,
+      "canonicalId": "sector-52-chd"
+    },
+    {
+      "source": "normal maps/sector 53 mohali.png",
+      "bytes": 1742951,
+      "sha256": "4ff4f1dcb9be21c1cce388c054a346409f94ca383fa81f52c8605da015883bf0",
+      "registered": true,
+      "canonicalId": "sector-53-mohali"
+    },
+    {
+      "source": "normal maps/sector 54 mohali.png",
+      "bytes": 1702665,
+      "sha256": "abe9f9634356d413d49d50cbb374be769a5a297e940f635cf6416ba66649bda7",
+      "registered": true,
+      "canonicalId": "sector-54-mohali"
+    },
+    {
+      "source": "normal maps/sector 55 mohali.png",
+      "bytes": 1734737,
+      "sha256": "391d6a8f6aeb36eae11949d063b43a8102bb7f8c82f17ac36c2dda21760456d9",
+      "registered": true,
+      "canonicalId": "sector-55-mohali"
+    },
+    {
+      "source": "normal maps/sector 56 mohali.png",
+      "bytes": 1688248,
+      "sha256": "e2e9d102175876ad4255684c23be6a3427a723609427b69002af63879949de3a",
+      "registered": true,
+      "canonicalId": "sector-56-mohali"
+    },
+    {
+      "source": "normal maps/sector 59 mohali.jpg",
+      "bytes": 287340,
+      "sha256": "d91fb16aec5132bd9c9838d930ccb4f0884dd6a3d990fb5923c942f88299cb6f",
+      "registered": true,
+      "canonicalId": "sector-59-mohali"
+    },
+    {
+      "source": "normal maps/sector 60 mohali.png",
+      "bytes": 2053630,
+      "sha256": "6063dce4bc9fe0ee1a88b376017c06b2d0cd005c49556516ca00dc39ef8f1842",
+      "registered": true,
+      "canonicalId": "sector-60-mohali"
+    },
+    {
+      "source": "normal maps/sector 61 mohali.jpg",
+      "bytes": 226306,
+      "sha256": "6139db34ae19bfbdae5df2717448fc871b136b6d04c91ee01fd96d3c15cd940e",
+      "registered": true,
+      "canonicalId": "sector-61-mohali"
+    },
+    {
+      "source": "normal maps/sector 62 mohali.jpg",
+      "bytes": 113494,
+      "sha256": "4a6a655520f5b9b2a8f6380a2f6f58869737f59d1cb9e9f010b1150f1059562a",
+      "registered": true,
+      "canonicalId": "sector-62-mohali"
+    },
+    {
+      "source": "normal maps/sector 63 mohalli.jpg",
+      "bytes": 202407,
+      "sha256": "12d3bf06bba6f56614712c2b581fdb24a189285bd7dc42a75ecf08f46d7286e7",
+      "registered": true,
+      "canonicalId": "sector-63-mohalli"
+    },
+    {
+      "source": "normal maps/sector 64 mohali.jpg",
+      "bytes": 243856,
+      "sha256": "ecbbf1cc900f1dc4dc251aa03756f2368292fa8cf062fc1d6d928752e68141ff",
+      "registered": true,
+      "canonicalId": "sector-64-mohali"
+    },
+    {
+      "source": "normal maps/sector 65 mohali.jpg",
+      "bytes": 243701,
+      "sha256": "dc70ca6eb89fe03a85624bece2739581d2d3518cb7e400bd802a95f9b1c5d5af",
+      "registered": true,
+      "canonicalId": "sector-65-mohali"
+    },
+    {
+      "source": "normal maps/sector 66 mohali.jpg",
+      "bytes": 160982,
+      "sha256": "61a5c62f717b81b6487a04ca03556c4d16e3bebf0144ff2cf31aabeb0320e812",
+      "registered": true,
+      "canonicalId": "sector-66-mohali"
+    },
+    {
+      "source": "normal maps/sector 67 mohli.jpg",
+      "bytes": 150832,
+      "sha256": "1948571bb2633826e7bede3b0d92661620a6fa3a90309359faf15878754277f4",
+      "registered": true,
+      "canonicalId": "sector-67-mohli"
+    },
+    {
+      "source": "normal maps/sector 68 mohali.jpg",
+      "bytes": 196844,
+      "sha256": "5b5659499f3d2955c27441cac5f7c8ba78d3023b8996902140496b6a3340e7c2",
+      "registered": true,
+      "canonicalId": "sector-68-mohali"
+    },
+    {
+      "source": "normal maps/sector 69 mohali.jpg",
+      "bytes": 228747,
+      "sha256": "46db47d58b9aa0971324760e2e4dc4dcd75b0d6d41634ae68ce773437ba7b8d2",
+      "registered": true,
+      "canonicalId": "sector-69-mohali"
+    },
+    {
+      "source": "normal maps/sector 70 mohali.jpg",
+      "bytes": 193917,
+      "sha256": "3e9a86d89f596624bc47699d6021faafa7eb8a361c9171cd643d50f1a7a15e59",
+      "registered": true,
+      "canonicalId": "sector-70-mohali"
+    },
+    {
+      "source": "normal maps/sector 71 mohali.jpg",
+      "bytes": 240881,
+      "sha256": "433087d3f449ce30dc39bdae2753c447fcca577a5145ffdff1e7bab6736ee02f",
+      "registered": true,
+      "canonicalId": "sector-71-mohali"
+    },
+    {
+      "source": "normal maps/sector 77 mohali.jpg",
+      "bytes": 222903,
+      "sha256": "ee866f73101cb08042053d19de556510fe43664b71e06326595014b1d3fb4667",
+      "registered": true,
+      "canonicalId": "sector-77-mohali"
+    },
+    {
+      "source": "normal maps/sector 78 mohali.jpg",
+      "bytes": 219882,
+      "sha256": "2c578c5f95f7d075f1dc601eb45c3c449a904c2f38c86eb49ec5335dcfd4cba0",
+      "registered": true,
+      "canonicalId": "sector-78-mohali"
+    },
+    {
+      "source": "normal maps/sector 79 mohali.jpg",
+      "bytes": 251128,
+      "sha256": "47d3959ed0a7809a18fd2b5e89782848f84c00566dc9ed1e7386a77e8c788f8a",
+      "registered": true,
+      "canonicalId": "sector-79-mohali"
+    },
+    {
+      "source": "normal maps/sector 8 chd.png",
+      "bytes": 2187587,
+      "sha256": "b375e004c0e2db7934eb969ba001b450b7fbe144e8a17276378499a712bf8d36",
+      "registered": true,
+      "canonicalId": "sector-8-chd"
+    },
+    {
+      "source": "normal maps/sector 80 mohali.jpg",
+      "bytes": 223972,
+      "sha256": "0d4b61295e80495bf415c4bf8f303f689c60d5b111af5f3cd287818c7017e714",
+      "registered": true,
+      "canonicalId": "sector-80-mohali"
+    },
+    {
+      "source": "normal maps/sector 83.png",
+      "bytes": 2157266,
+      "sha256": "31fb50fd67fb48762eb19a8574aa5989bc5adb4b52103292c6731bae29f676a6",
+      "registered": true,
+      "canonicalId": "sector-83"
+    },
+    {
+      "source": "normal maps/shivalik city.jpg",
+      "bytes": 175866,
+      "sha256": "b48d8303c362eccbbed57f0833304c5c7b72a14330c2d9335d6f64771b27edb8",
+      "registered": true,
+      "canonicalId": "shivalik-city"
+    },
+    {
+      "source": "normal maps/shopping centre 10 phase.jpg",
+      "bytes": 151946,
+      "sha256": "bef337e598138384542db5429da4f94cedade9f621074f30552f34f548314f29",
+      "registered": true,
+      "canonicalId": "shopping-centre-10-phase"
+    },
+    {
+      "source": "normal maps/shopping centre 7 phase.jpg",
+      "bytes": 109628,
+      "sha256": "31383ea53fb00f62491a277664fbc5112b0f034c1773f34ea43bcccc1a7ae993",
+      "registered": true,
+      "canonicalId": "shopping-centre-7-phase"
+    },
+    {
+      "source": "normal maps/shopping centre phase 1.jpg",
+      "bytes": 114668,
+      "sha256": "ee570ddea1b6f2b0a6809da280036aede9d5b732d03d7d298a2df0fdf47e13f8",
+      "registered": true,
+      "canonicalId": "shopping-centre-phase-1"
+    },
+    {
+      "source": "normal maps/shopping centre phase 2 mohali.jpg",
+      "bytes": 134776,
+      "sha256": "b79efe60db0b447c7b17962cc2e224a0b7b334516b09fbc7657f66ac8acd541e",
+      "registered": true,
+      "canonicalId": "shopping-centre-phase-2-mohali"
+    },
+    {
+      "source": "normal maps/shopping centre phase 5 mohali.jpg",
+      "bytes": 145968,
+      "sha256": "2ca47f29904a82b41c35f0b47343c59abd561883565c63364a8d2050cc9e51b0",
+      "registered": true,
+      "canonicalId": "shopping-centre-phase-5-mohali"
+    },
+    {
+      "source": "normal maps/uniworld city sector 97 106 109.jpg",
+      "bytes": 235156,
+      "sha256": "75226bd7a48c36132be407bc547d9df8ef3c86fc1551102edee13d0c7197838e",
+      "registered": true,
+      "canonicalId": "uniworld-city-sector-97-106-109"
+    },
+    {
+      "source": "normal maps/wave estate sector 85 mohali.png",
+      "bytes": 13312014,
+      "sha256": "36d7a914bd4a5aafb87c33c5b1abc10dabe94f51686d5c49258aea669f89616d",
+      "registered": true,
+      "canonicalId": "wave-estate-sector-85-mohali"
+    },
+    {
+      "source": "normal maps/zirakpur masterplan.png",
+      "bytes": 2257716,
+      "sha256": "b672caef80e61438c5c08c02e1b571b421cb33766ae635195b58df6cda16418b",
+      "registered": true,
+      "canonicalId": "zirakpur-masterplan"
+    },
+    {
+      "source": "mohali/70.jpg",
+      "bytes": 2048455,
+      "sha256": "6b44e7c394abf7d029b1bedc43f7ed2d838cf496ad6e02f13e37fa05e96aaf44",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/aerocity-block-a.jpg",
+      "bytes": 197251,
+      "sha256": "62088056568988ab32be876bf2f44d17950daec59b7b741eae272f929140fb01",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/aerocity-block-b.jpg",
+      "bytes": 189676,
+      "sha256": "2967045df0e14e76fd0223bfb4e164cc5687fa5e5ccad71531fd5c338c76b8ca",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/aerocity-block-g.jpg",
+      "bytes": 158868,
+      "sha256": "44a4dfb42d2e22618e7e2af813c65316b48eb349038a3e97b1471a284804c2e8",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/aerocity-block-i.jpg",
+      "bytes": 163929,
+      "sha256": "5dcb582e9a34c5c64f6490040008a419e91b97839f4920507fa4002cad03a65f",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/aerocity-block-j.jpg",
+      "bytes": 159198,
+      "sha256": "da263a53b237768dbb6e8266deb15c65c43d8cb18c63239a5b5c8f027ab7c8fe",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/Aerocity-C.jpg",
+      "bytes": 203160,
+      "sha256": "3cd8f329327f438a2c09afeb5845acc1d4ce9b47bc4a2b082d9d3ba49237524c",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/Aerocity-D.jpg",
+      "bytes": 161286,
+      "sha256": "428d9c22f735050a02ffdec1bd4e24ff7db860e96ec6ee6b096d52f87dd3a522",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/Aerocity-E.jpg",
+      "bytes": 161387,
+      "sha256": "c85ba24f7839fc1c821e131ec854fb156452d5b765e96183ab1d6012bc1c05d2",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/Aerocity-F.jpg",
+      "bytes": 187500,
+      "sha256": "382886520306d7d68526390940652afef90bd1d26c70f9008882d3230739cb9f",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/aerocity-mohali-1.jpg",
+      "bytes": 1574740,
+      "sha256": "07ad3987613b2ee8abea1785399050a35ac3ebeccca31ee33dcb17d22fd6aa40",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/aerocity-mohali.jpg",
+      "bytes": 1844729,
+      "sha256": "b4bb727fb3ec5e27528d76ee71a415e6de96c717e9c029b626b4d9868a373f8f",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/aero_city_map.webp",
+      "bytes": 208822,
+      "sha256": "344efcd5382b8212bb0540d9eb40330a0267ae060cc2034bee74271d5877b232",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/ansal-sector-116-1.jpg",
+      "bytes": 1568592,
+      "sha256": "b8b340bcc070976d7ba46866b6084a901d954689a3e35e50109495319e25a86b",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/ansal-sector-116.jpg",
+      "bytes": 875751,
+      "sha256": "b98221a6d9ce49d2f5398a7f841a73872c216f74ffdc19af63bd5c64a1d7d9c3",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/emaar-mgf-sector-108.jpg",
+      "bytes": 1778812,
+      "sha256": "ae61194adb81d6e012dfffa023ccf435e245ab61ef47a0b525e3d83835d13d93",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/emaar-mgf-sector-109.jpg",
+      "bytes": 2085204,
+      "sha256": "23a989f95a5fffcac3b1bf802a7f2dd78bb066dacf77c58683662179bbe54591",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/emaar-mgf-sector-99-104-105-106-108-109-1.jpg",
+      "bytes": 1761333,
+      "sha256": "c7d4cd31839b3420fbd18e79c993020077a7009bf9f672ae666ddbbd710d06b4",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/emaar-mgf-sector-99-104-105-106-108-109.jpg",
+      "bytes": 1908463,
+      "sha256": "2f0b84fa2e736d181f7028ee6ddb4eb17ea145ab7b7aedc56faf91c68d3f740e",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/ggp-sector-115.jpg",
+      "bytes": 1635448,
+      "sha256": "4a63f96a0bf586b6e7e756c61448901d1971855a452c1a4f3de7038d9411871f",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/gillco-valley-sector-127.jpg",
+      "bytes": 1294056,
+      "sha256": "274d5d908ed96d4aadcc8959ff441cf5350ac5a40d4bbd0ffe529f1cc4b75b3e",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/gulmohar-city-sector-125.jpg",
+      "bytes": 1738934,
+      "sha256": "8ac3dc46d8fb74bc9ee6f738001ff70ac3cf4fa138a33f2643697d3568ae4f24",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/gulmohar-sector-116.jpg",
+      "bytes": 1302709,
+      "sha256": "9fa61298ed7df146d137569f5fe1a5522f90d6d49312a8003d0022751e5117d2",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/highway-city.jpg",
+      "bytes": 1531643,
+      "sha256": "7800e38ab80dc4a9d7571f3c07822b3332a91e2843e6ef76ad72430d011f8a10",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/hpso-developers-sector-122-1.jpg",
+      "bytes": 1844729,
+      "sha256": "b4bb727fb3ec5e27528d76ee71a415e6de96c717e9c029b626b4d9868a373f8f",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/industrial-area-phase-2-3.jpg",
+      "bytes": 1678013,
+      "sha256": "d78bbbd2d9c77967e4da47a4509a1a32f24785518ebd48198cca29b292187eb6",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/industrial-area-phase-7.jpg",
+      "bytes": 1292877,
+      "sha256": "0c91a28fa9e6406fc787031c658aa122fd402df7845c2395cb2373c491538381",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/industrial-area-phase-i.jpg",
+      "bytes": 1465101,
+      "sha256": "91b269730e75d86299e5455968becd1c53fb5a5e0a93ef35b995a1b0aef03531",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/industrial-area-phase-ix.jpg",
+      "bytes": 1845949,
+      "sha256": "ae7e67d6dc4d2f99cbbb4e7916e91cff55c5687f1966600975e22f15ba3589b4",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/industrial-area-phase-vi.jpg",
+      "bytes": 1020546,
+      "sha256": "6f46ba0184d538295a5ce18323a4400f9b082d9daccbe3349776c037c3573226",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/industrial-focal-point-phase-v.jpg",
+      "bytes": 1464570,
+      "sha256": "253930446328ece49d3eb09f43afeb289daaaedb2eadab026b6304442cc900aa",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/industrial-focal-point-phase-viii.jpg",
+      "bytes": 1779237,
+      "sha256": "f12cc54e789e8c3a0235a49b9fc84d418286cb1ba5d907955be947efdba11798",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/industrial-growth.jpg",
+      "bytes": 1562096,
+      "sha256": "026dd333dde3a29e9396b2c1472722a609bd560a8eaefb8b6f3f65f11e9da4ec",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/ireo-mohali-sector-98.jpg",
+      "bytes": 1494324,
+      "sha256": "5d10a4af5ff4bfb8a80c458aff5b4b6ff5d03573a1a42bb679b874bb54fd186a",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/janta-township-90-91.jpg",
+      "bytes": 1389802,
+      "sha256": "59b3dcf91e53f733b83e907ce22e4bcc251311c3f302a7e65d31757fd1b2d678",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/jlpl-sector-82-mohali.jpg",
+      "bytes": 1504078,
+      "sha256": "b9f5a4226506c8f4ed22192eab906432be9d1cc8170ff8eb10e7ad7e2759f826",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/jlpl-sector-94.jpg",
+      "bytes": 1920575,
+      "sha256": "874bd7bfd42c6daa55938cffb563d722d98a31875639b27856e91fdff5efdf6f",
+      "registered": false,
+      "canonicalId": "jlpl-sector-94-mohali"
+    },
+    {
+      "source": "mohali/jtpl-city-sector-115.jpg",
+      "bytes": 1962388,
+      "sha256": "a1832df284bdaa27a6e7bd84012f9446922a572ade8fe66cb3931792a40037d5",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/masterplan.jpg",
+      "bytes": 1520084,
+      "sha256": "26ca81c4dc4d67cf70d622db5cca2f23f661c6ed1ff34f18523dab0183a6e9c7",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/ndustrial-area-phase-viii-b.jpg",
+      "bytes": 892338,
+      "sha256": "649a527a210b95a7738fb161987545f2c73ce05b7e2e63b867fe697a19f7f6f7",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/pearls-city-sector-100-1.jpg",
+      "bytes": 2037570,
+      "sha256": "a96f45d4fc62d807a996d3353360a9a9295db809346e527e4325f69a4c9a6278",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/pearls-city-sector-100-2.jpg",
+      "bytes": 1879423,
+      "sha256": "55d359ab570f33eb77e59777c842e130fff47e754bfbdc0b650c0ca1e4a84632",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/pearls-city-sector-100.jpg",
+      "bytes": 2015458,
+      "sha256": "906896b776f41b9a9939f77341824f1ec7307f4cfc1375bb381faa99c6a62bbe",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/pearls-city-sector-104.jpg",
+      "bytes": 1920403,
+      "sha256": "4de711bf3cc3a5f0da8b9b0addf77edddaae1522c3420027b4c75b3a5255690a",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/rkm-sector-112.jpg",
+      "bytes": 1061359,
+      "sha256": "14cdf23f7234d91d89cf4c24232ed70639dfe800debf5442074f1f3da4c3667e",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/sector-53-mohali.jpg",
+      "bytes": 1196093,
+      "sha256": "a5ed8cc41290069c945905c67546e8dd89820c1928a9a9d72b7ceaf39f4eeb03",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/sector-54-mohali.jpg",
+      "bytes": 2012948,
+      "sha256": "468de65267a1cf7cc0a973961a173c29fd77c96655a1dcadc99017275e1a33b7",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/sector-55-mohali.jpg",
+      "bytes": 2056911,
+      "sha256": "7be52a74a171f1f709cc57075ad6682e6f44ab339b0877e130e7f5ba34d8dc4b",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/sector-56-mohali.jpg",
+      "bytes": 1969350,
+      "sha256": "8a7bed69760fe970a4ad89dc47f6e2827213dc826a2cc953d8ac2b8b52cfdc32",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/sector-59-mohali.jpg",
+      "bytes": 2331996,
+      "sha256": "a4813032831eb2c762a2f0e191c499a99a29d3f097856397fd6ba1894f032850",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/sector-60-mohali.jpg",
+      "bytes": 2065227,
+      "sha256": "107fd96b4924761f0bb4ab6f1ca209727bd49611186c42981f9409a64152d4ca",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/sector-61-mohali.jpg",
+      "bytes": 2470399,
+      "sha256": "8b0588bfcd76f57b1903deb859a2e39d7aabf67c23c64b4d5042229f819dd161",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/sector-62-mohali.jpg",
+      "bytes": 1220720,
+      "sha256": "76b9e88669b3acb5142a6db57a090bec19b681f6b2ce5d5f813f8668bad5ef6e",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/sector-63-mohali.jpg",
+      "bytes": 1324677,
+      "sha256": "7dd083350309c215e3f3ab7aeab8549e0c39d2664495202ae4329112128ce026",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/sector-64-mohali.jpg",
+      "bytes": 2027873,
+      "sha256": "b0877d539ab2e803c9bf958231dfec64a96adc90b0091512c456398ee552a56e",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/sector-65-mohali.jpg",
+      "bytes": 1948327,
+      "sha256": "792e4e5f278ae39b63e20c68bc8b3de007e913d5baa29340ee237df090ba922e",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/sector-66-mohali.jpg",
+      "bytes": 2005046,
+      "sha256": "041e04eea9a6ee58f5be59005487468a15051961a8488257cabcacfd586c78a1",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/sector-67-mohali.jpg",
+      "bytes": 1905290,
+      "sha256": "b1e5d664dfeb44c64c3ef9771d886df8ca9f45e9f745604658bed54e176c7e62",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/sector-68-mohali.jpg",
+      "bytes": 977991,
+      "sha256": "b1929988ffc1d34fb3f03f26899e9f0eb0a0ee55ac67394b78ea17039dd55ef0",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/sector-69-mohali.jpg",
+      "bytes": 1557140,
+      "sha256": "6ebacd3c99c784e2bd1e6cb9499aa4e8d14a79997751e5cf6cdaec845d4133a1",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/sector-70-mohali.jpg",
+      "bytes": 2048455,
+      "sha256": "6b44e7c394abf7d029b1bedc43f7ed2d838cf496ad6e02f13e37fa05e96aaf44",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/sector-71-mohali.jpg",
+      "bytes": 2311562,
+      "sha256": "363a17c65dd5f1f6d245ed0065775efec4e5e4ab1e9458f4ac7bae80538ece50",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/sector-77-mohali.jpg",
+      "bytes": 2010008,
+      "sha256": "a95b26b305248ed31e13e9c0e66bb53b70b8b6a6d1f8a12355f9eb7750b76cc3",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/sector-78-mohali.jpg",
+      "bytes": 2100632,
+      "sha256": "19d44c1d7474b6c26635af03ee5d1ba3e0e20be5b8c4e2b4d5ae062adfe29c97",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/sector-79-mohali.jpg",
+      "bytes": 1816969,
+      "sha256": "8fe466ae1868c2116fcae395980de79860de82770743626bd5db7aba80e01dfd",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/sector-80-mohali.jpg",
+      "bytes": 2191965,
+      "sha256": "2540f09c8e54d32a28371e175163d767fa69c0d69eca5012294a73191bd79adb",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/shiva-enclave.jpg",
+      "bytes": 1338654,
+      "sha256": "acaa6e15d036720b56a5d0ef7b2269ed8c6b3e2d8f1b0c05e91d128e3381f320",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/shivalik-avenue-sector-125.jpg",
+      "bytes": 1347688,
+      "sha256": "290df7f48202a512c699ae298daac482700d22699e8feb154422f8d62f9b70bd",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/shivalik-city-sector-127-1.jpg",
+      "bytes": 1936432,
+      "sha256": "5ab79cb96ed3bad5e68e9176b9ceda2198caf4fb9a4cbda5b5fbc86216fed397",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/shivalik-city-sector-127.jpg",
+      "bytes": 1402607,
+      "sha256": "a5c7cb68b66199372daf33887476f18563c34e11cf95906d284beae725c1b461",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/sky-rock-city-sector-111-112.jpg",
+      "bytes": 1877614,
+      "sha256": "69e2b3180ed023212e71d29043e113450cd27d3eb332397305a612f4bd73d478",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/tdi-city-sector-110-111.jpg",
+      "bytes": 1632431,
+      "sha256": "870d3ffafe8524776635f8eba814ba1c39fb9865fcdab3b0c57b2f94e56a0667",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/tdi-city-sector-117.jpg",
+      "bytes": 1163987,
+      "sha256": "68ca1e8fa0940c3c21c1b37daa8b04d4ae0291eb8b7e6f1cf17a535197949556",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/uniworld-city-sector-97-106-107.jpg",
+      "bytes": 1378958,
+      "sha256": "eda990f380d3446fed121481709bb3e535a9601a9a47f58b84d3346034eec0cd",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "mohali/wave-estate-sector-85.jpg",
+      "bytes": 2047734,
+      "sha256": "dbccf01ca910a5d197cc91c2f06fdff629341d7025ded3be69b4e2aa9f6fe90c",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/10.jpg",
+      "bytes": 1221177,
+      "sha256": "608c1aa469326b81f07423024c767373083fcfd148c29d5641dc47e7fa613e1b",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/11.jpg",
+      "bytes": 1352090,
+      "sha256": "3aa285ead5c57ec520ffa06ca2568dace44eeacac24cabc4b55a9f0e4bf03170",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/15.jpg",
+      "bytes": 1352090,
+      "sha256": "3aa285ead5c57ec520ffa06ca2568dace44eeacac24cabc4b55a9f0e4bf03170",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/16.jpg",
+      "bytes": 1721991,
+      "sha256": "294b8f2c83cf30a19956aaf7b1fbcf803d89bc8385dc6b5321a86a24807ce0b6",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/17.jpg",
+      "bytes": 1571051,
+      "sha256": "9c4de29f0124e90783a60ca0ac5ea3ef9ea989beeeadea786f938b1ed356fbed",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/18 - Copy.jpg",
+      "bytes": 1434986,
+      "sha256": "0a7d202952fb5286cf5b64b48acbb253bf3fbc28838d415765da2f266caf5ca3",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/18.jpg",
+      "bytes": 1434986,
+      "sha256": "0a7d202952fb5286cf5b64b48acbb253bf3fbc28838d415765da2f266caf5ca3",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/19 '.jpg",
+      "bytes": 1600089,
+      "sha256": "9d29315b8a89e2382e578a80eaa5ee39fe16670eebdc432af8441b2db06d2d2b",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/19.jpg",
+      "bytes": 1600089,
+      "sha256": "9d29315b8a89e2382e578a80eaa5ee39fe16670eebdc432af8441b2db06d2d2b",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/2.jpg",
+      "bytes": 1161774,
+      "sha256": "980f7aece57a6c9624e8f0fc8954c3f29819bc4ba40b1f4b1a9d5d3283f3c944",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/20.jpg",
+      "bytes": 1600089,
+      "sha256": "9d29315b8a89e2382e578a80eaa5ee39fe16670eebdc432af8441b2db06d2d2b",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/21.jpg",
+      "bytes": 1588069,
+      "sha256": "633fb9ed84305a500982382ff43fe974f7fc041f76ca9e17252ac0926a830a2b",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/22.jpg",
+      "bytes": 1588069,
+      "sha256": "633fb9ed84305a500982382ff43fe974f7fc041f76ca9e17252ac0926a830a2b",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/23.jpg",
+      "bytes": 1549069,
+      "sha256": "b8b320c69b0b06a2aa83bf6c1b48a03fbcdb311b864ae59b1262b80b2c3b5b97",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/24.jpg",
+      "bytes": 1328334,
+      "sha256": "1ae0b2087cd9b82a12c02913f58413eaf305ef9a8bf160af0a923c7933aabb5a",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/26.jpg",
+      "bytes": 1246749,
+      "sha256": "fd0eafdf701c38f0ea1e67a0a13d7fcc69376dd8cb6f15501d355e2fb867348f",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/27.jpg",
+      "bytes": 1534405,
+      "sha256": "20d039848ba2de79d20b5f2d3cdac33be811a417919df090fcc3e47acbc020f4",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/28.jpg",
+      "bytes": 1534405,
+      "sha256": "20d039848ba2de79d20b5f2d3cdac33be811a417919df090fcc3e47acbc020f4",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/29.jpg",
+      "bytes": 1320814,
+      "sha256": "c67819e5ef9aa7b14f13f3f66f4def09d151b3a6323f9bd51db6549e8a7bc047",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/3.jpg",
+      "bytes": 1160067,
+      "sha256": "3ce01c3cd06772b11005d36c5d6fa5621774380d3973bf39c5636218f33392de",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/30.jpg",
+      "bytes": 1160296,
+      "sha256": "3a23feb038db2fe33c6a12d060c01b9f328d2fbf24793f043721bdb66792dd68",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/31.jpg",
+      "bytes": 1160296,
+      "sha256": "3a23feb038db2fe33c6a12d060c01b9f328d2fbf24793f043721bdb66792dd68",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/32.jpg",
+      "bytes": 1429811,
+      "sha256": "650858ea49818afe9128d80ffd929767c3b212bc603d77bebed00256e3b4500e",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/33.jpg",
+      "bytes": 1332586,
+      "sha256": "24156c4c0c64922b015592f4453374696bc3797e61937303980fee2e24d74b85",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/34.jpg",
+      "bytes": 1298894,
+      "sha256": "e405766fe01bc58a9b5c0c4616fd9e880e3f3379ab0772cc46b53b8493cc7b6f",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/35.jpg",
+      "bytes": 1298894,
+      "sha256": "e405766fe01bc58a9b5c0c4616fd9e880e3f3379ab0772cc46b53b8493cc7b6f",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/36.jpg",
+      "bytes": 1313652,
+      "sha256": "90f5ec28523a2de0d35f6dd40d29eaed1faecc3bbe49cc33349eacfefc450ad8",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/37.jpg",
+      "bytes": 1500525,
+      "sha256": "58fdd392d310818c9aaf2bf6cee616fa9ad86fdbf8b7bfa6e23062d6cc4b8ea2",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/38.jpg",
+      "bytes": 1500525,
+      "sha256": "58fdd392d310818c9aaf2bf6cee616fa9ad86fdbf8b7bfa6e23062d6cc4b8ea2",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/39.jpg",
+      "bytes": 1008059,
+      "sha256": "c813e02442cf13e202a51f0249d8b65c65c00af68dc5e82e9a49e2a3dab03595",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/4.jpg",
+      "bytes": 1293354,
+      "sha256": "80497a1f9a28052e3ea3e4e5530c680cca888c1af10d2afe873d2b259a58d219",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/40.jpg",
+      "bytes": 1406463,
+      "sha256": "842fbcc2765dc495655d68d416916fa51ca5970fb5a646eae2dd3f250842c439",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/41.jpg",
+      "bytes": 1406463,
+      "sha256": "842fbcc2765dc495655d68d416916fa51ca5970fb5a646eae2dd3f250842c439",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/42.jpg",
+      "bytes": 1199004,
+      "sha256": "3da3c6becf98eecaf26963249727e09214e328d179ff71a0c6688aba9cfd29e2",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/43.jpg",
+      "bytes": 1343067,
+      "sha256": "29e3b82c125ac84b37e5d645f07f11826c5ce039be71817a1b39f4a3578ae007",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/44.jpg",
+      "bytes": 1287769,
+      "sha256": "01f1a3ce580a968116b35fe036ca6a24c6231a38a8d07f04784f8f8671ed24c4",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/45.jpg",
+      "bytes": 1399640,
+      "sha256": "a73291b988b5f7c34991ce2770d96738336d00c4bf37dfb0979fc8092356dc4c",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/46.jpg",
+      "bytes": 1451825,
+      "sha256": "5e0513ad04efdc060eae2905c4db5192453357e9eccf093ea64c9238203c33cc",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/47.jpg",
+      "bytes": 1451825,
+      "sha256": "5e0513ad04efdc060eae2905c4db5192453357e9eccf093ea64c9238203c33cc",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/48.jpg",
+      "bytes": 1224750,
+      "sha256": "0ec662533f801a68c81ae456162477a60355d870c44bcd7dea1bf202df72c49f",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/49.jpg",
+      "bytes": 1224750,
+      "sha256": "0ec662533f801a68c81ae456162477a60355d870c44bcd7dea1bf202df72c49f",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/50.jpg",
+      "bytes": 1054143,
+      "sha256": "0f582a667ea0cf7385e33f6a969950fe89cafbc54f315d94bc91961c24cf5e7d",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/51.jpg",
+      "bytes": 1054143,
+      "sha256": "0f582a667ea0cf7385e33f6a969950fe89cafbc54f315d94bc91961c24cf5e7d",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/52.jpg",
+      "bytes": 1235287,
+      "sha256": "efad68ba424de38d916eaeeaa883e99e59fbdd1ab095b6157306cb029b1e8691",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/8.jpg",
+      "bytes": 1599819,
+      "sha256": "b269f7da052af27745846c84ad8752452bc79d9590831fd80d49c69747f2950b",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/9.jpg",
+      "bytes": 1599819,
+      "sha256": "b269f7da052af27745846c84ad8752452bc79d9590831fd80d49c69747f2950b",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/PH-1 (1).jpg",
+      "bytes": 1352235,
+      "sha256": "d0e83069df91adc91c6c439142e984dae15bb6ce8c51f50dabe881c9c7fbdf76",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new chandigarh/PH-1.jpg",
+      "bytes": 1352235,
+      "sha256": "d0e83069df91adc91c6c439142e984dae15bb6ce8c51f50dabe881c9c7fbdf76",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "panchulka/amravti.jpg",
+      "bytes": 1703897,
+      "sha256": "67d9d07d7d750aac79dbc7e00ee8986edccb0d57bb3d2a61baf7effeaa97cb24",
+      "registered": false,
+      "canonicalId": "amravti"
+    },
+    {
+      "source": "panchulka/scctor 10 p.jpg",
+      "bytes": 1899318,
+      "sha256": "995d588c83cbee943a5429fdce3e00be30093551f5cd0e8d7130bed2b4a4e42f",
+      "registered": false,
+      "canonicalId": "scctor-10-p"
+    },
+    {
+      "source": "panchulka/scctor 11 p.jpg",
+      "bytes": 1788618,
+      "sha256": "e52ecc51317378de7cc1a1817d9a199e5c8e1ddf9870f2ff09ad51f6e0f181b2",
+      "registered": false,
+      "canonicalId": "scctor-11-p"
+    },
+    {
+      "source": "panchulka/scctor p 12.jpg",
+      "bytes": 1848196,
+      "sha256": "0396b8a0cac29b63a72c5de25032994ea26dd6558a8475d952cd1dcf4d786482",
+      "registered": false,
+      "canonicalId": "scctor-p-12"
+    },
+    {
+      "source": "panchulka/scctor p 12a.jpg",
+      "bytes": 1819672,
+      "sha256": "4b4df29818fa445ab29c2d0eee42c55a04d154bf2abb4499127e1a8bc53bf1ba",
+      "registered": false,
+      "canonicalId": "scctor-p-12a"
+    },
+    {
+      "source": "panchulka/scctor p14.jpg",
+      "bytes": 1296227,
+      "sha256": "ff408c8098f62b7d313f06cd5fc290c76e2b85773bcfe139f6b1daa14dacb944",
+      "registered": false,
+      "canonicalId": "scctor-p14"
+    },
+    {
+      "source": "panchulka/scctor p15.jpg",
+      "bytes": 2091722,
+      "sha256": "b271827d88d4a72cfde4b2914dbf52646bd9e4ac28a8482464e0862e6561d496",
+      "registered": false,
+      "canonicalId": "scctor-p15"
+    },
+    {
+      "source": "panchulka/scctor p16.jpg",
+      "bytes": 1623491,
+      "sha256": "c8e98b62f236f3daf4b9108b9f88be907ecfa622b094517fa0c64a427024b8ff",
+      "registered": false,
+      "canonicalId": "scctor-p16"
+    },
+    {
+      "source": "panchulka/scctor p17.jpg",
+      "bytes": 1535849,
+      "sha256": "e1a90524eeb0406bf503ce2ed46b26fd9944ceea60b9cbca838fba3ee9601238",
+      "registered": false,
+      "canonicalId": "scctor-p17"
+    },
+    {
+      "source": "panchulka/sector 25 p.jpg",
+      "bytes": 1987508,
+      "sha256": "ac6c4bd095c207190f35b3be550ca9ce78c1ef29ac054d15c8a808b6bd41ed29",
+      "registered": false,
+      "canonicalId": "sector-25-p"
+    },
+    {
+      "source": "panchulka/sector 26.jpg",
+      "bytes": 1595956,
+      "sha256": "1f263bdf1ea87bd3be7ddb65a25ce6959e27f72e9557e1a9048f5577488ba77b",
+      "registered": false,
+      "canonicalId": "sector-26"
+    },
+    {
+      "source": "panchulka/sector 3 p.jpg",
+      "bytes": 1217332,
+      "sha256": "8c729377ac8cafaef7a66a56f3a01731c86de8a837ede50459a39cb92e82572d",
+      "registered": false,
+      "canonicalId": "sector-3-p"
+    },
+    {
+      "source": "panchulka/sector 4 p.jpg",
+      "bytes": 1824077,
+      "sha256": "8a687fd774566d8f0a681014eb3ee847afc06003d7776e6eb66a06422896028a",
+      "registered": false,
+      "canonicalId": "sector-4-p"
+    },
+    {
+      "source": "panchulka/sector 5 p.jpg",
+      "bytes": 1996803,
+      "sha256": "c017a47e146a37f069020d6e8d3f7a61bbcbd217748d99471d037b3af51e4cca",
+      "registered": false,
+      "canonicalId": "sector-5-p"
+    },
+    {
+      "source": "panchulka/sector 6 p.jpg",
+      "bytes": 1679030,
+      "sha256": "497e85d8a6f174f8a1092edb371313370931d34ebc8c958d42a8de8f279b4f38",
+      "registered": false,
+      "canonicalId": "sector-6-p"
+    },
+    {
+      "source": "panchulka/sector 7 p.jpg",
+      "bytes": 1782972,
+      "sha256": "9e4730ecc89c231799ce53c1763472bc3d0c44aa34abf8f3f83e64fe548825bb",
+      "registered": false,
+      "canonicalId": "sector-7-p"
+    },
+    {
+      "source": "panchulka/sector 8 p.jpg",
+      "bytes": 1687401,
+      "sha256": "c61ee1e45688288c21b9fc3038324b35c6e6c50526230a310de4eaa6c7b70429",
+      "registered": false,
+      "canonicalId": "sector-p-8"
+    },
+    {
+      "source": "panchulka/sector p 18.jpg",
+      "bytes": 1209070,
+      "sha256": "ffe821225a2efccf942927b30db1ccef8f054acfe72ed2bbfe15d4f2674a02e1",
+      "registered": false,
+      "canonicalId": "sector-p-18"
+    },
+    {
+      "source": "panchulka/sector p 19.jpg",
+      "bytes": 1715041,
+      "sha256": "981b19caf6dce63c4672e23d91b60f427a1034dc3f5e71f92c607d233fd99b83",
+      "registered": false,
+      "canonicalId": "sector-p-19"
+    },
+    {
+      "source": "panchulka/sector p 2 mansa devi.jpg",
+      "bytes": 1659735,
+      "sha256": "1e2d2c3b6135cf4ea15d667ea7c7f405132ce1112a528627c3a0dc45aae51bb4",
+      "registered": false,
+      "canonicalId": "sector-p-2-mansa-devi"
+    },
+    {
+      "source": "panchulka/sector p 21.jpg",
+      "bytes": 2213972,
+      "sha256": "e3ea7bf749ec66006da6ace33a7dbb65114dfe970600decb32d3a7a8effb78e5",
+      "registered": false,
+      "canonicalId": "sector-p-21"
+    },
+    {
+      "source": "panchulka/sector p 23.jpg",
+      "bytes": 1643793,
+      "sha256": "6823c99ac543d43f789d392229de9c9d6c85a9aaefe3548d419b1d5707bbb9c9",
+      "registered": false,
+      "canonicalId": "sector-p-23"
+    },
+    {
+      "source": "panchulka/sector p 24.jpg",
+      "bytes": 1326028,
+      "sha256": "45c72317f501d4fec54ebeaa81ff861b9683387ffac44c49ccb15d7038a8669f",
+      "registered": false,
+      "canonicalId": "sector-p-24"
+    },
+    {
+      "source": "panchulka/sector p 27.jpg",
+      "bytes": 1738311,
+      "sha256": "bbd5d9da1db79115a328cdb2e7ff1aeff7658545888b737da908f3f8279dcbdd",
+      "registered": false,
+      "canonicalId": "sector-p-27"
+    },
+    {
+      "source": "panchulka/sector p 28.jpg",
+      "bytes": 2682544,
+      "sha256": "b80c60b628a3d99b77b142a80c52eadb05a20b986b795eb295fa33b5975d79f4",
+      "registered": false,
+      "canonicalId": "sector-p-28"
+    },
+    {
+      "source": "panchulka/sector p 31.jpg",
+      "bytes": 1406275,
+      "sha256": "6b90b109de3d445bea268c0f3d9f9cda28062dec30eff2140ede52df4542567e",
+      "registered": false,
+      "canonicalId": "sector-p-31"
+    },
+    {
+      "source": "panchulka/sector p 4 mansa devi.jpg",
+      "bytes": 1610135,
+      "sha256": "a1d818fe4f7900579c7f8009e3a3238507955348e7806fe92aeaf415cb6d1627",
+      "registered": false,
+      "canonicalId": "sector-p-4-mansa-devi"
+    },
+    {
+      "source": "panchulka/sector p 5 mansa devi.jpg",
+      "bytes": 1289770,
+      "sha256": "8a3f9261849db09b94bdc74a4181885e556607aa4f36689663d4b59b986a5f8c",
+      "registered": false,
+      "canonicalId": "sector-p-5-mansa-devi"
+    },
+    {
+      "source": "panchulka/sector p 6 mansa devi.jpg",
+      "bytes": 1309110,
+      "sha256": "46d97297a8b967804606ada21f94b3fd6013da67ef631f38d858b2f47b9910d4",
+      "registered": false,
+      "canonicalId": "sector-p-6-mansa-devi"
+    },
+    {
+      "source": "panchulka/sector p 8.jpg",
+      "bytes": 1687401,
+      "sha256": "c61ee1e45688288c21b9fc3038324b35c6e6c50526230a310de4eaa6c7b70429",
+      "registered": false,
+      "canonicalId": "sector-p-8"
+    },
+    {
+      "source": "panchulka/sector p 9.jpg",
+      "bytes": 1681530,
+      "sha256": "2c041d46ad626c0ee4530d8cd5e2d388671a0fd4e7a14af3aeaa95b323ce567e",
+      "registered": false,
+      "canonicalId": "sector-p-9"
+    },
+    {
+      "source": "panchulka/sector p20.jpg",
+      "bytes": 1504831,
+      "sha256": "b65497a4096b031ae755ea2a8760e31c7492053f20b394f18ce9199dc5ce107e",
+      "registered": false,
+      "canonicalId": "sector-p20"
+    },
+    {
+      "source": "panchulka/sector1 p.jpg",
+      "bytes": 1061226,
+      "sha256": "43c6eb5c5cb7177ecadc4e7bb46a7649ac12847f521721aad26e5bbb6ef77ff3",
+      "registered": false,
+      "canonicalId": "sector1-p"
+    },
+    {
+      "source": "panchulka/sector2 p.jpg",
+      "bytes": 1883965,
+      "sha256": "76373766da53c0113795cf4c7b6749bc88c1fb096d1e81d6148bb2051e3005b4",
+      "registered": false,
+      "canonicalId": "sector2-p"
+    },
+    {
+      "source": "new_map_files/image 1.png",
+      "bytes": 1624332,
+      "sha256": "b83c429e1e6e4ca690899836ae49db792573703227299a9310b16a8ebadba088",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new_map_files/Vector 1.png",
+      "bytes": 4311,
+      "sha256": "7477b6df9e10b00b434d590189495e4851d89b5e21567db9278e8efdc09d90ac",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new_map_files/Vector 10.png",
+      "bytes": 3742,
+      "sha256": "276db6d25082317dc5ebfa76d45774ae0ebaded84ebf3434e946d950efffc878",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new_map_files/Vector 11.png",
+      "bytes": 4192,
+      "sha256": "2237bec40fc78e7c3c477c534b284d0caae7ececd2ef7c95390a09d5e0cad248",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new_map_files/Vector 12.png",
+      "bytes": 4019,
+      "sha256": "53ede4a1321439ae0cdf77af11634c8d35a735e746a18159a8071eca7bf47a21",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new_map_files/Vector 13.png",
+      "bytes": 3051,
+      "sha256": "bdf6335263cfe981e47e98e0d83872f4dd999f6d2fdcc30090f3eb7d8467ee0d",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new_map_files/Vector 14.png",
+      "bytes": 2650,
+      "sha256": "1bd11e3b514641af9ae52e78a57d836ac27db589991e687360907f8c18f739ce",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new_map_files/Vector 15.png",
+      "bytes": 3649,
+      "sha256": "cc0ef1005fac9c4b82826768a31e2bd0b846cc4c8bec24b6e4fd3facb98e2083",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new_map_files/Vector 16.png",
+      "bytes": 1770,
+      "sha256": "bbcfc19130e1f1eca872e4fac810d823ed7c2b345451cf3e79d817dea6e6bc2d",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new_map_files/Vector 17.png",
+      "bytes": 1581,
+      "sha256": "fc97cd63f5b60d1eda7f7ad6227d1a53f86ca5d24a17f7f3fd34c4134c0a7f2a",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new_map_files/Vector 18.png",
+      "bytes": 1426,
+      "sha256": "77901d278139fb439f10e1e6c19eea7b7a2646de7e9687bb43f075674983d2d0",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new_map_files/Vector 19.png",
+      "bytes": 2239,
+      "sha256": "89065e72d727c0b5c12b61577c70b7732ad708cb4b9f4261f4a1dafcf56da18a",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new_map_files/Vector 2.png",
+      "bytes": 2922,
+      "sha256": "f06450717ea4b2198583d4ecf2b5f198ebd919629586fda223d47d88f653a773",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new_map_files/Vector 20.png",
+      "bytes": 1666,
+      "sha256": "bc5fa376055106d7fcd7b5f0f8abd1ce60ba9b8b65bbf9f75aa6f9b15e9a5a58",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new_map_files/Vector 21.png",
+      "bytes": 4335,
+      "sha256": "d80fab386688e3c88bc33e273590b0b146e77f6d2bac5d9cfada3d140021d806",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new_map_files/Vector 3.png",
+      "bytes": 1309,
+      "sha256": "05f7f4175bb635ed30ca03bde81cd2830f83b96da385a916f802cb6bec32525c",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new_map_files/Vector 4.png",
+      "bytes": 5414,
+      "sha256": "853e642c1db4682136d93030c7877e0216b1a80f28fc167822a06000acc1b432",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new_map_files/Vector 5.png",
+      "bytes": 4198,
+      "sha256": "d2898f139ec85c6c5db2997ecbab79725377f58a630a68fc79b0e215603d0864",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new_map_files/Vector 6.png",
+      "bytes": 774,
+      "sha256": "ab9f8c1eabcabfea5901e7bef41de1d6c856b4327fd9feb7cf8ce0c520eae1d1",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new_map_files/Vector 7.png",
+      "bytes": 613,
+      "sha256": "0a362f5d5f7f65e63e2a9d1d29649d948a705b868e165c04a62b5901cf0f6783",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new_map_files/Vector 8.png",
+      "bytes": 3584,
+      "sha256": "1ef2ac0f9494da829d9c8f01dd1474aa431aeb93670ade8f27fab06de34fa165",
+      "registered": false,
+      "canonicalId": null
+    },
+    {
+      "source": "new_map_files/Vector 9.png",
+      "bytes": 2337,
+      "sha256": "2ff3459df4bc2ad85a05ba5f4445ceddc3aa4b52069c4681db1c442ac6c7caa7",
+      "registered": false,
+      "canonicalId": null
+    }
+  ]
+}

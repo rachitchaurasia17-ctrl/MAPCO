@@ -4,6 +4,8 @@
 import type { CanonicalMap } from './registry-types.ts';
 
 export const MAP_REGISTRY: readonly CanonicalMap[] = [
+  {"id":"aerocity-block-c-reference","name":"Aerocity Block C Reference","kind":"PROJECT_MAP","city":"Aerocity","project":"aerocity","image":"/maps/aerocity-block-c-reference.jpg","dimensions":{"width":1296,"height":900},"active":true},
+  {"id":"aerocity-blocks-a-and-c-reference","name":"Aerocity Blocks A And C Reference","kind":"PROJECT_MAP","city":"Aerocity","project":"aerocity","image":"/maps/aerocity-blocks-a-and-c-reference.jpg","dimensions":{"width":1296,"height":900},"active":true},
   {"id":"aerocity-masterplan","name":"Aerocity Masterplan","kind":"MASTERPLAN","city":"Aerocity","image":"/maps/aerocity-masterplan.jpg","dimensions":{"width":1535,"height":1024},"active":true},
   {"id":"chandigarh-masterplan","name":"Chandigarh Masterplan","kind":"MASTERPLAN","city":"Chandigarh","image":"/maps/chandigarh-masterplan.jpg","dimensions":{"width":1253,"height":984},"active":true},
   {"id":"derabassi-masterplan","name":"Derabassi Masterplan","kind":"MASTERPLAN","city":"Derabassi","image":"/maps/derabassi-masterplan.jpg","dimensions":{"width":1349,"height":1083},"active":true},

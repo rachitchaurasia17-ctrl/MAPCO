@@ -10,6 +10,7 @@
 import { getSupabase } from './supabase/client';
 import { activeDataMode } from './adapter';
 import { publishResourceInvalidation } from '../performance';
+import { enforceDealerAccess } from './device-access';
 
 export interface DealerSession { email: string; userId: string; }
 
@@ -158,8 +159,12 @@ export async function requireSession(mount: HTMLElement, onReady: () => void | P
   // If another tab signs out, immediately put this protected surface back
   // behind the gate. Database RLS remains the final authorization boundary.
   const c = await getSupabase();
+  let stopped = false;
+  let stopAccess: (() => void) | undefined;
   const subscription = c?.auth.onAuthStateChange((event) => {
     if (event === 'SIGNED_OUT') {
+      stopped = true;
+      stopAccess?.();
       clearPrivateBrowserState();
       renderLogin(mount, onReady);
     }
@@ -167,5 +172,6 @@ export async function requireSession(mount: HTMLElement, onReady: () => void | P
   if (subscription) {
     window.addEventListener('pagehide', () => subscription.unsubscribe(), { once: true });
   }
-  await onReady();
+  stopAccess = await enforceDealerAccess(async () => { if (!stopped) await onReady(); }, signOut);
+  if (stopped) stopAccess();
 }

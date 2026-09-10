@@ -1,0 +1,10 @@
+// @vitest-environment jsdom
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { DEVICE_TOKEN_KEY, deviceAwareFetch, readDeviceToken, requireDeviceToken } from '../src/packages/data/device-identity';
+beforeEach(()=>localStorage.clear());
+describe('persistent device installation proof',()=>{
+  it('creates a cryptographic token once and reuses legacy approval identity',()=>{const token=requireDeviceToken();expect(token).toMatch(/^[a-f0-9]{64}$/);expect(requireDeviceToken()).toBe(token);expect(readDeviceToken()).toBe(token);});
+  it('rejects malformed stored tokens and reports denied persistence',()=>{localStorage.setItem(DEVICE_TOKEN_KEY,'bad');expect(readDeviceToken()).toBeNull();const spy=vi.spyOn(Storage.prototype,'setItem').mockImplementation(()=>{throw new Error('denied');});expect(()=>requireDeviceToken()).toThrow('Allow browser storage');spy.mockRestore();});
+  it('adds proof only to configured data/storage requests and preserves auth headers',async()=>{const token=requireDeviceToken();const request=vi.fn().mockResolvedValue(new Response('{}'));const send=deviceAwareFetch('https://example.supabase.co',request);await send('https://example.supabase.co/rest/v1/properties',{headers:{Authorization:'Bearer test'}});const headers=request.mock.calls[0][1].headers as Headers;expect(headers.get('x-mapco-device-token')).toBe(token);expect(headers.get('Authorization')).toBe('Bearer test');for(const url of ['https://other.example/rest/v1/properties','https://example.supabase.co/auth/v1/user','https://example.supabase.co/functions/v1/foo']){await send(url);expect(request.mock.lastCall![1]).toBeUndefined();}});
+  it('does not generate an identity when public buyers load data',async()=>{const request=vi.fn().mockResolvedValue(new Response('{}'));await deviceAwareFetch('https://example.supabase.co',request)('https://example.supabase.co/rest/v1/rpc/plotmap_resolve_client_link');expect(readDeviceToken()).toBeNull();expect(request.mock.lastCall![1]).toBeUndefined();});
+});

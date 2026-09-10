@@ -1,7 +1,33 @@
 {
   "version": 1,
-  "count": 113,
+  "count": 115,
   "maps": [
+    {
+      "id": "aerocity-block-c-reference",
+      "name": "Aerocity Block C Reference",
+      "kind": "PROJECT_MAP",
+      "city": "Aerocity",
+      "project": "aerocity",
+      "image": "/maps/aerocity-block-c-reference.jpg",
+      "dimensions": {
+        "width": 1296,
+        "height": 900
+      },
+      "active": true
+    },
+    {
+      "id": "aerocity-blocks-a-and-c-reference",
+      "name": "Aerocity Blocks A And C Reference",
+      "kind": "PROJECT_MAP",
+      "city": "Aerocity",
+      "project": "aerocity",
+      "image": "/maps/aerocity-blocks-a-and-c-reference.jpg",
+      "dimensions": {
+        "width": 1296,
+        "height": 900
+      },
+      "active": true
+    },
     {
       "id": "aerocity-masterplan",
       "name": "Aerocity Masterplan",

@@ -91,6 +91,10 @@ function cityOf(text) {
  * never classified on a hunch.
  */
 const OVERRIDES = {
+  // Donor PlotMap scans, visually checked. Separate reference IDs preserve
+  // existing pins; these are neither georeferenced Earth tiles nor overlays.
+  'aerocity blocks a and c reference': { kind: 'PROJECT_MAP', city: 'Aerocity', project: 'aerocity', why: 'legacy scan visibly labels blocks A and C; retained as a separate reference sheet' },
+  'aerocity block c reference': { kind: 'PROJECT_MAP', city: 'Aerocity', project: 'aerocity', why: 'legacy Aerocity-C sheet; partial block reference, not a masterplan' },
   // GMADA is the development authority; this is the Aerocity master plan.
   'gamada aerocity mohali': { kind: 'MASTERPLAN', city: 'Aerocity', why: 'GMADA Aerocity master plan' },
   // "normal" distinguishes the plain sheet from the 3D rendering.

@@ -8,6 +8,7 @@
    *.supabase.co URL. The service-role key lives ONLY in edge runtimes.
    ═══════════════════════════════════════════════════════════════ */
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { deviceAwareFetch } from '../device-identity';
 
 export interface SupabaseEnv {
   readonly url: string;
@@ -61,7 +62,7 @@ export async function getSupabase(): Promise<SupabaseClient | null> {
         auth: {
           persistSession: true, autoRefreshToken: true, detectSessionInUrl: false,
         },
-        global: { headers: { 'x-mapco-client': 'v2-web' } },
+        global: { headers: { 'x-mapco-client': 'v2-web' }, fetch: deviceAwareFetch(env.url) },
       }),
     );
   }
