@@ -1,19 +1,24 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest';
+import { afterEach } from 'vitest';
+import { adapter } from '../src/packages/data/adapter';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { SingleFlight } from '../src/packages/security/single-flight';
 import { commitEarthLocationFlow, saveEarthLocationOnce } from '../src/apps/earth/main';
-import { createClientLinkRevoker } from '../src/apps/dealer/pages/links';
+import { Component } from '../src/apps/dealer/logic';
 import { err, ok, type Result } from '../src/packages/data/contracts';
 import type { ClientLink } from '../src/packages/data/types';
 
 const sharedModals = readFileSync(resolve(__dirname, '../src/packages/ui/shared-modals.ts'), 'utf8');
-const propertiesPage = readFileSync(resolve(__dirname, '../src/apps/dealer/pages/properties.ts'), 'utf8');
-const dealsPage = readFileSync(resolve(__dirname, '../src/apps/dealer/pages/deals.ts'), 'utf8');
-const marketingPage = readFileSync(resolve(__dirname, '../src/apps/marketing/main.ts'), 'utf8');
+// The marketing app was split main/logic/template; the publish guard lives
+// in the logic module now.
+const marketingPage = readFileSync(resolve(__dirname, '../src/apps/marketing/logic.ts'), 'utf8');
 const aiConsole = readFileSync(resolve(__dirname, '../src/apps/ai-console/main.ts'), 'utf8');
-const linksPage = readFileSync(resolve(__dirname, '../src/apps/dealer/pages/links.ts'), 'utf8');
+/* src/apps/dealer/pages/{properties,deals,links}.ts were consolidated into
+   one dealer screen module. The rapid-interaction rule did not change, so
+   the guards are asserted against the module that holds them now. */
+const dealerScreen = readFileSync(resolve(__dirname, '../src/apps/dealer/logic.ts'), 'utf8');
 
 interface Deferred<T> { promise: Promise<T>; resolve: (value: T) => void; reject: (error: Error) => void }
 function deferred<T>(): Deferred<T> {
@@ -30,17 +35,26 @@ const clientLink = (id: string): ClientLink => ({
   events: { opens: 0, played: 0, called: 0, wa: 0, visit: 0 }, lastOpen: 'Never',
 });
 
+afterEach(() => vi.restoreAllMocks());
+
 describe('Phase 1 rapid-interaction boundary', () => {
   it('keeps important save, delete, publish, deal, decision, and revoke actions guarded', () => {
     expect(sharedModals).toContain('if (this.saving) return');
     expect(sharedModals).toContain('if (!this.form.name.trim() || this.saving) return');
-    expect(propertiesPage).toContain('if (busyId) return');
-    expect(propertiesPage).toContain('if (busyId || !window.confirm');
-    expect(dealsPage).toContain('if (recording) return');
-    expect(marketingPage).toContain("if (state.phase !== 'ready') return");
+    expect(marketingPage).toContain("if (this.state.phase !== 'ready') return");
     expect(aiConsole).toContain('decisionFlights.run(`decision:${id}`');
-    expect(linksPage).toContain('createClientLinkRevoker');
-    expect(linksPage).toContain('revokeFlights.revoke(id)');
+    // One SingleFlight boundary now covers every dealer mutation.
+    expect(dealerScreen).toContain('_flights = new SingleFlight()');
+    for (const key of [
+      "this.write('revoke:' + id", "this.write('delete:' + id",
+      "this.write('lifecycle:' + id", "this.write('price:' + id",
+      "this.write('archive:' + id",
+    ]) expect(dealerScreen).toContain(key);
+    // Deal writes keep their own in-flight latches.
+    expect(dealerScreen).toContain('if (this._savingDeal) return false');
+    expect(dealerScreen).toContain('if (this._recordingDealPayment) return false');
+    expect(dealerScreen).toContain('if (this._startingDeal) return');
+    expect(dealerScreen).toContain('if (this.state.savingSold) return');
   });
 
   it('starts only one write when the same control is clicked repeatedly on a slow network', async () => {
@@ -148,72 +162,60 @@ describe('Phase 1 rapid-interaction boundary', () => {
     expect(failed).not.toHaveBeenCalled();
   });
 
-  it('keeps a successfully revoked target stopped when authoritative refresh fails', async () => {
-    const original = clientLink('link-a');
-    let links = [original];
-    let errorMessage = '';
-    const pending: boolean[] = [];
+  it('starts one revoke per link however fast the control is clicked', async () => {
+    const c = new Component() as any;
+    c.clientLinks = [{ id: 'link-a', status: 'active' }, { id: 'link-b', status: 'active' }];
     const request = deferred<Result<void>>();
-    const revoke = vi.fn(() => request.promise);
-    const refresh = vi.fn(async () => err('network', 'Could not refresh links'));
-    const controller = createClientLinkRevoker({
-      getLinks: () => links,
-      setLinks: (next) => { links = next; },
-      revoke,
-      refresh,
-      setError: (message) => { errorMessage = message; },
-      setPending: (_id, value) => pending.push(value),
-    });
+    const revoke = vi.spyOn(adapter.clientLinks, 'revoke')
+      .mockImplementation(((id: string) => (id === 'link-a' ? request.promise : Promise.resolve(ok(undefined)))) as never);
+    vi.spyOn(c, 'loadClientLinks').mockResolvedValue(undefined);
 
-    const first = controller.revoke('link-a');
-    const repeated = await controller.revoke('link-a');
-    expect(repeated).toEqual({ started: false });
+    const first = c.revokeLink('link-a');
+    await c.revokeLink('link-a');
     expect(revoke).toHaveBeenCalledTimes(1);
-    expect(links[0]?.status).toBe('revoked');
-    expect(pending).toEqual([true]);
+    // A different link is never blocked by the one in flight.
+    await c.revokeLink('link-b');
+    expect(revoke).toHaveBeenCalledTimes(2);
 
     request.resolve(ok(undefined));
-    await expect(first).resolves.toEqual({ started: true, value: false });
-    expect(refresh).toHaveBeenCalledTimes(1);
-    expect(links[0]?.status).toBe('revoked');
-    expect(errorMessage).toContain('link was stopped');
-    expect(errorMessage).toContain('could not be refreshed');
-    expect(errorMessage).not.toContain('Nothing was changed');
-    expect(pending).toEqual([true, false]);
-    expect(controller.isActive('link-a')).toBe(false);
+    await first;
+    expect(c.writing('revoke:link-a')).toBe(false);
   });
 
-  it('preserves another pending revoke and rolls back only the failed target', async () => {
-    const a = clientLink('link-a');
-    const b = clientLink('link-b');
-    let links = [a, b];
-    let errorMessage = '';
-    const requests = new Map([
-      ['link-a', deferred<Result<void>>()],
-      ['link-b', deferred<Result<void>>()],
-    ]);
-    const controller = createClientLinkRevoker({
-      getLinks: () => links,
-      setLinks: (next) => { links = next; },
-      revoke: (id) => requests.get(id)!.promise,
-      // Simulate an A refresh that is stale for the still-pending B revoke.
-      refresh: async () => ok([{ ...a, status: 'revoked' }, b]),
-      setError: (message) => { errorMessage = message; },
-    });
+  it('keeps a successfully revoked link stopped when the authoritative refresh fails', async () => {
+    const c = new Component() as any;
+    c.clientLinks = [{ id: 'link-a', status: 'active' }];
+    vi.spyOn(adapter.clientLinks, 'revoke').mockResolvedValue(ok(undefined) as never);
+    // The refresh fails, so the list keeps whatever it already held.
+    vi.spyOn(adapter.clientLinks, 'list').mockResolvedValue(err('network', 'Could not refresh links') as never);
+    await c.revokeLink('link-a');
+    expect(c.clientLinks[0].status).toBe('revoked');
+    expect(c.state.linkLoadError).toBeTruthy();
+  });
 
-    const revokeA = controller.revoke('link-a');
-    const revokeB = controller.revoke('link-b');
-    expect(links.map((link) => link.status)).toEqual(['revoked', 'revoked']);
+  it('leaves a link active and says so when the revoke itself fails', async () => {
+    const c = new Component() as any;
+    c.clientLinks = [{ id: 'link-a', status: 'active' }];
+    vi.spyOn(adapter.clientLinks, 'revoke').mockResolvedValue(err('network', 'no') as never);
+    const alert = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    const load = vi.spyOn(c, 'loadClientLinks').mockResolvedValue(undefined);
+    await c.revokeLink('link-a');
+    expect(c.clientLinks[0].status).toBe('active');
+    expect(load).not.toHaveBeenCalled();
+    expect(alert).toHaveBeenCalled();
+  });
 
-    requests.get('link-a')!.resolve(ok(undefined));
-    await expect(revokeA).resolves.toEqual({ started: true, value: true });
-    expect(links.find((link) => link.id === 'link-b')?.status).toBe('revoked');
-
-    requests.get('link-b')!.resolve(err('network', 'B revoke failed'));
-    await expect(revokeB).resolves.toEqual({ started: true, value: false });
-    expect(links.find((link) => link.id === 'link-a')?.status).toBe('revoked');
-    expect(links.find((link) => link.id === 'link-b')?.status).toBe('active');
-    expect(errorMessage).toContain('B revoke failed');
-    expect(errorMessage).toContain('Nothing was changed');
+  it('releases the key after a failure so a deliberate retry proceeds', async () => {
+    const c = new Component() as any;
+    c.clientLinks = [{ id: 'link-a', status: 'active' }];
+    const revoke = vi.spyOn(adapter.clientLinks, 'revoke')
+      .mockResolvedValueOnce(err('network', 'no') as never)
+      .mockResolvedValueOnce(ok(undefined) as never);
+    vi.spyOn(window, 'alert').mockImplementation(() => {});
+    vi.spyOn(c, 'loadClientLinks').mockResolvedValue(undefined);
+    await c.revokeLink('link-a');
+    await c.revokeLink('link-a');
+    expect(revoke).toHaveBeenCalledTimes(2);
+    expect(c.clientLinks[0].status).toBe('revoked');
   });
 });

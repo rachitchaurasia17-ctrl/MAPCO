@@ -23,7 +23,7 @@ import type {
   PropertyDocumentVisibility, PropertyDocumentSafety,
   LinkStatus,
   PipelineDeal, DealCommission, DealNextAction, DealStageTransition,
-  DealPayment, DealPaymentKind, DealWorkspace,
+  DealPayment, DealPaymentKind, DealPaperMark, DealWorkspace,
 } from './types';
 
 /* ───────────────────────────────────────────────────────────────
@@ -259,11 +259,24 @@ export interface UploadPropertyDocumentInput {
 }
 
 /** Documents remain private records even when the property becomes sold. */
+export interface SetPropertyPaperInput {
+  propertyId: string;
+  /** The paper's name as the Papers checklist shows it. */
+  title: string;
+  /** false clears the mark; a paper with an uploaded file cannot be cleared. */
+  have: boolean;
+}
+
 export interface PropertyDocumentRepository {
   listForProperty(propertyId: string, opts?: QueryOptions): Promise<Result<readonly PropertyDocument[]>>;
   get(id: string, opts?: QueryOptions): Promise<Result<PropertyDocument>>;
   upload(input: UploadPropertyDocumentInput, file: File, opts?: QueryOptions): Promise<Result<PropertyDocument>>;
   remove(id: string, opts?: QueryOptions): Promise<Result<void>>;
+  /**
+   * Tick or clear a paper the dealer holds but has not uploaded. A paper with
+   * a real uploaded file is owned by that file and cannot be marked here.
+   */
+  setMark(input: SetPropertyPaperInput, opts?: QueryOptions): Promise<Result<readonly DealPaperMark[]>>;
 }
 
 /**
@@ -325,6 +338,19 @@ export interface RecordDealPaymentInput {
   note?: string;
 }
 
+export interface SetDealPaperInput {
+  dealId: string;
+  /** The paper's name as the Papers checklist shows it. */
+  title: string;
+  /** false clears the mark; a paper with an uploaded file cannot be cleared. */
+  have: boolean;
+}
+
+export interface RelinkDealPropertyInput {
+  dealId: string;
+  propertyId: string;
+}
+
 export interface UpdateDealInput {
   dealId: string;
   name?: string;
@@ -363,6 +389,14 @@ export interface DealRepository {
   setStage(input: SetDealStageInput, opts?: QueryOptions): Promise<Result<PipelineDeal>>;
   /** Append a token or commission receipt to the deal's money ledger. */
   recordPayment(input: RecordDealPaymentInput, opts?: QueryOptions): Promise<Result<DealPayment>>;
+  /**
+   * Mark or clear a paper on the deal's checklist. This is the checklist, not
+   * the file vault: a paper with a real uploaded document is owned by that
+   * document and cannot be marked or cleared here.
+   */
+  setPaper(input: SetDealPaperInput, opts?: QueryOptions): Promise<Result<readonly DealPaperMark[]>>;
+  /** Point an open deal at a different saved property, seller included. */
+  relinkProperty(input: RelinkDealPropertyInput, opts?: QueryOptions): Promise<Result<PipelineDeal>>;
   /** Everything the Deal room renders, in one dealer-private round trip. */
   workspace(dealId: string, opts?: QueryOptions): Promise<Result<DealWorkspace>>;
 }

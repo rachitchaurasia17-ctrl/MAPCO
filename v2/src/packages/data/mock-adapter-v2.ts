@@ -10,7 +10,7 @@
 import type {
   Property, PropertyLocationInput, Client, Deal, ClientLink, MapData, DemandSignal,
   Seller, PropertySeller, SellerWithProperties, SellerDirectoryEntry, SellerWorkspace, PropertyDocument,
-  PipelineDeal, DealPayment, DealPaymentKind, DealStageEvent, DealPaper,
+  PipelineDeal, DealPayment, DealPaymentKind, DealStageEvent, DealPaper, DealPaperMark,
   DealWorkspace, CommissionSide,
 } from './types';
 import {
@@ -23,6 +23,7 @@ import {
   type AuthRepository, type ActivationState, type AccountState,
   type PropertyRepository, type CustomerRepository, type DealRepository, type RecordSaleInput,
   type StartDealInput, type SetDealStageInput, type RecordDealPaymentInput, type UpdateDealInput,
+  type SetDealPaperInput, type RelinkDealPropertyInput, type SetPropertyPaperInput,
   type SellerRepository, type SaveSellerInput, type AssignPropertySellerInput,
   type PropertyDocumentRepository, type UploadPropertyDocumentInput,
   type DemandRepository, type DemandRecord, type DemandDraft, type DemandMatch,
@@ -131,6 +132,9 @@ const PIPELINE_DEALS: PipelineDeal[] = [];
 const DEAL_STAGE_EVENTS: (DealStageEvent & { dealId: string })[] = [];
 const DEAL_PAYMENTS: (DealPayment & { dealId: string })[] = [];
 const DEAL_PAPERS: (DealPaper & { dealId: string })[] = [];
+/** Papers ticked by hand. No file behind them, so they are kept apart. */
+const DEAL_PAPER_MARKS: (DealPaperMark & { dealId: string })[] = [];
+const PROPERTY_PAPER_MARKS: (DealPaperMark & { propertyId: string })[] = [];
 let mockSequence = 0;
 const mockId = (prefix: string): string => `${prefix}-${Date.now()}-${++mockSequence}`;
 
@@ -523,6 +527,21 @@ class MockPropertyDocumentRepository implements PropertyDocumentRepository {
     MOCK_PROPERTY_DOCUMENTS.unshift(document);
     return ok({ ...document });
   }
+  async setMark(input: SetPropertyPaperInput, opts?: QueryOptions): Promise<Result<readonly DealPaperMark[]>> {
+    const a = aborted<readonly DealPaperMark[]>(opts); if (a) return a;
+    const title = input.title.trim();
+    if (!title) return err('validation', 'Enter a paper name');
+    if (!PROPERTIES.some((p) => p.id === input.propertyId)) return err('not_found', 'That property is no longer available');
+    if (MOCK_PROPERTY_DOCUMENTS.some((d) => d.propertyId === input.propertyId && d.title.toLowerCase() === title.toLowerCase()))
+      return err('validation', 'That paper already has an uploaded file');
+    for (let i = PROPERTY_PAPER_MARKS.length - 1; i >= 0; i -= 1) {
+      const row = PROPERTY_PAPER_MARKS[i]!;
+      if (row.propertyId === input.propertyId && row.title.toLowerCase() === title.toLowerCase()) PROPERTY_PAPER_MARKS.splice(i, 1);
+    }
+    if (input.have) PROPERTY_PAPER_MARKS.push({ propertyId: input.propertyId, title, markedOn: new Date().toISOString().slice(0, 10) });
+    persistMock(); persistDeskMock();
+    return ok(PROPERTY_PAPER_MARKS.filter((m) => m.propertyId === input.propertyId).map(({ propertyId: _p, ...rest }) => rest));
+  }
   async remove(id: string, opts?: QueryOptions): Promise<Result<void>> {
     const a = aborted<void>(opts); if (a) return a;
     const index = MOCK_PROPERTY_DOCUMENTS.findIndex((row) => row.id === id);
@@ -748,6 +767,52 @@ class MockDealRepository implements DealRepository {
     return ok(deal);
   }
 
+  async setPaper(input: SetDealPaperInput, opts?: QueryOptions): Promise<Result<readonly DealPaperMark[]>> {
+    const a = aborted<readonly DealPaperMark[]>(opts); if (a) return a;
+    const title = input.title.trim();
+    if (!title) return err('validation', 'Enter a paper name');
+    const known = PIPELINE_DEALS.some((d) => d.id === input.dealId) || DEALS.some((d) => String(d.id) === input.dealId);
+    if (!known) return err('not_found', 'That deal is no longer available');
+    if (DEAL_PAPERS.some((d) => d.dealId === input.dealId && d.title.toLowerCase() === title.toLowerCase()))
+      return err('validation', 'That paper already has an uploaded file');
+    for (let i = DEAL_PAPER_MARKS.length - 1; i >= 0; i -= 1) {
+      const row = DEAL_PAPER_MARKS[i]!;
+      if (row.dealId === input.dealId && row.title.toLowerCase() === title.toLowerCase()) DEAL_PAPER_MARKS.splice(i, 1);
+    }
+    if (input.have) DEAL_PAPER_MARKS.push({ dealId: input.dealId, title, markedOn: new Date().toISOString().slice(0, 10) });
+    persistMock(); persistDeskMock();
+    return ok(DEAL_PAPER_MARKS.filter((m) => m.dealId === input.dealId).map(({ dealId: _d, ...rest }) => rest));
+  }
+
+  async relinkProperty(input: RelinkDealPropertyInput, opts?: QueryOptions): Promise<Result<PipelineDeal>> {
+    const a = aborted<PipelineDeal>(opts); if (a) return a;
+    const deal = PIPELINE_DEALS.find((d) => d.id === input.dealId);
+    if (!deal) return err('not_found', 'That deal is no longer available');
+    if (deal.stage === 'closed' || deal.stage === 'lost') return err('validation', 'Reopen the deal before changing its property');
+    const property = PROPERTIES.find((p) => p.id === input.propertyId);
+    if (!property) return err('not_found', 'That property is no longer available');
+    if (property.lifecycle === 'sold') return err('validation', 'That property is already sold');
+    if (PIPELINE_DEALS.some((d) => d.id !== deal.id && d.propertyId === input.propertyId
+      && d.buyerId === deal.buyerId && d.stage !== 'closed' && d.stage !== 'lost'))
+      return err('validation', 'This buyer already has an open deal on that property');
+    // Re-derived from the property exactly the way start() derives it.
+    const relationship = MOCK_PROPERTY_SELLERS.find((row) => row.propertyId === property.id && row.isPrimary);
+    const primarySeller = MOCK_SELLERS.find((seller) => seller.id === relationship?.sellerId);
+    deal.propertyId = property.id;
+    deal.prop = `${property.area} ${property.type.toLowerCase().includes('plot') ? 'plot' : 'site'}`;
+    deal.propSub = `${property.size} · ${property.facing}`;
+    deal.city = property.city; deal.sector = property.sector || property.loc;
+    if (primarySeller) {
+      deal.sellerId = primarySeller.id; deal.seller = primarySeller.name;
+      deal.sellerPhone = primarySeller.primaryPhone;
+    } else {
+      delete deal.sellerId; delete deal.seller; delete deal.sellerPhone;
+    }
+    DEAL_STAGE_EVENTS.push({ dealId: deal.id, stage: deal.stage, occurredAt: new Date().toISOString(), note: 'Deal linked to a different property' });
+    persistMock(); persistDeskMock();
+    return ok(deal);
+  }
+
   async recordPayment(input: RecordDealPaymentInput, opts?: QueryOptions): Promise<Result<DealPayment>> {
     const a = aborted<DealPayment>(opts); if (a) return a;
     if (!(input.amount > 0)) return err('validation', 'Enter an amount');
@@ -822,8 +887,11 @@ class MockDealRepository implements DealRepository {
         fullySettled: expected > 0 && received >= expected,
       },
       dealPapers: DEAL_PAPERS.filter((d) => d.dealId === deal!.id).map(({ dealId: _d, ...rest }) => rest),
+      paperChecklist: DEAL_PAPER_MARKS.filter((d) => d.dealId === deal!.id).map(({ dealId: _d, ...rest }) => rest),
       // Referenced from the canonical property — never copied into the deal.
       propertyPapers: MOCK_PROPERTY_DOCUMENTS.filter((d) => d.propertyId === deal!.propertyId),
+      propertyPaperChecklist: PROPERTY_PAPER_MARKS.filter((d) => d.propertyId === deal!.propertyId)
+        .map(({ propertyId: _p, ...rest }) => rest),
     });
   }
 }

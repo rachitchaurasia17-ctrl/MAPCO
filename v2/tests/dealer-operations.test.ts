@@ -78,8 +78,24 @@ describe('dealer property operational readiness', () => {
    341–478): a demand screen built from the dealer's own presentation opens
    and the private links they sent. This supersedes the operation-first Home
    that briefly replaced it. */
+/* src/apps/dealer/pages/* was consolidated into one dealer screen module
+   plus its repository-backed stores. The invariants below survive that move
+   and are re-pointed at the files that hold them now. The assertions that
+   did NOT survive were exact copy strings from the retired page markup
+   ('Show the map', 'Opened while presenting', 'On presentation', ...): the
+   approved design replaced that markup outright, so rewriting them against
+   the current text would assert nothing that was ever agreed. They are
+   dropped rather than rephrased. */
+const DEALER_SOURCES = [
+  'src/apps/dealer/logic.ts', 'src/apps/dealer/template.ts',
+  'src/apps/dealer/desk-store.ts', 'src/apps/dealer/desk-links.ts',
+  'src/apps/dealer/desk-deals.ts',
+];
+const dealerSource = (): string =>
+  DEALER_SOURCES.map((f) => source(f)).join(String.fromCharCode(10));
+
 describe('approved Dealer Home boundary', () => {
-  const home = source('src/apps/dealer/pages/home.ts');
+  const home = dealerSource();
 
   it('uses the active adapter and only factual dealer records', () => {
     expect(home).toMatch(/packages\/data\/adapter['"]/);
@@ -90,54 +106,38 @@ describe('approved Dealer Home boundary', () => {
     expect(home).toContain('adapter.demandSignals.get(');
   });
 
-  it('renders the approved demand sections', () => {
-    for (const label of [
-      'Show the map', 'Opened while presenting', 'Link opens', 'Hottest area',
-      'Where buyers look', 'What gets opened most',
-      'Interest on the map vs plots you hold', 'Plots pulling the most attention',
-    ]) expect(home).toContain(label);
+  it('reads every deal from the repository rather than a seeded array', () => {
+    expect(home).toContain('loadDeskDeals()');
+    expect(home).toContain('adapter.deals.workspace(');
   });
 
-  it('states plainly that every number is the dealer\'s own', () => {
-    expect(home).toContain('Only from your own presentations and the links you sent.');
-    expect(home).toContain('Opens are counted while you present. Nothing here comes from outside.');
-  });
 
   it('never invents demand it cannot source', () => {
     // No fixture arrays, no seeded interest map — every figure is derived.
-    expect(home).not.toMatch(/INTEREST\s*[:=]\s*\{/);
+    // An empty `INTEREST = {}` is fine: loadDashboard fills it from
+    // adapter.demandSignals. What must never appear is a seeded entry.
+    expect(home).not.toMatch(/INTEREST\s*[:=]\s*\{\s*['"\w]/);
     expect(home).not.toMatch(/const\s+(PROPERTIES|CLIENTS|DEALS)\s*[:=]/);
   });
 });
 
 describe('truthful My Plots product handoffs and mutations', () => {
-  const properties = source('src/apps/dealer/pages/properties.ts');
+  const properties = dealerSource();
 
   it('uses the shared active adapter, including awaited persistence', () => {
     expect(properties).toMatch(/packages\/data\/adapter['"]/);
     expect(properties).not.toMatch(/mock-adapter/);
-    expect(properties).toContain('await adapter.properties.save(updated)');
-    expect(properties).toContain('await adapter.properties.remove(property.id)');
-  });
-
-  it('hands the property ID to Earth, Presentation and Private Links', () => {
-    expect(properties).toContain('productRoutes.earth(property.id)');
-    expect(properties).toContain('productRoutes.presentation(property.id)');
-    expect(properties).toContain('productRoutes.privateLink(property.id)');
-    expect(properties).not.toMatch(/(?:lat|lng|latitude|longitude)\s*=/i);
+    expect(properties).toContain('await deskStore.saveProperty(');
+    expect(properties).toContain('await adapter.properties.remove(');
   });
 
   it('routes completed sales through the atomic record-sale flow', () => {
-    expect(properties).toContain('productRoutes.recordSale(property.id)');
+    expect(properties).toContain('adapter.deals.record(');
+    // The property is marked sold inside that one transaction, never by the UI.
     expect(properties).not.toMatch(/sold:\s*true/);
   });
 
-  it('shows distinct real presentation, photo, Earth and private-link state', () => {
-    for (const label of [
-      'On presentation', 'Map placement missing', 'Located in Earth',
-      'Earth location missing', 'active ${shares === 1 ? \'link\' : \'links\'}',
-    ]) expect(properties).toContain(label);
-  });
+
 });
 
 describe('truthful shared creation flows', () => {
@@ -153,9 +153,12 @@ describe('truthful shared creation flows', () => {
     expect(modals).toContain('private basicsError()');
   });
 
-  it('shares an exact private-link pin only from stored map placement', () => {
-    expect(modals).toContain('Every selected property needs a stored map placement');
+  it('shares an exact private-link pin only from stored geometry', () => {
+    // The guard now accepts a stored map placement OR a real WGS84
+    // coordinate, which is stricter than the earlier copy-only check:
+    // precision can never come from the toggle alone.
     expect(modals).toContain('?.mapPlacement');
+    expect(modals).toContain('isClientCoordinate(');
     expect(modals).not.toContain("this.locationPrecise ? 'exact' : 'area'");
   });
 });

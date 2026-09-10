@@ -1,68 +1,67 @@
 // @vitest-environment jsdom
+/*
+ * Customers async boundary and real relationships.
+ *
+ * This suite used to drive src/apps/dealer/pages/customers.ts, a route that was
+ * consolidated into the single dealer screen. Its DOM and copy ('Loading
+ * customers', the /admin/*.html links) went with it and are not rewritten
+ * against markup nobody agreed to. What survives is the boundary:
+ *   - a failed customer load surfaces an error and never reads as "no clients",
+ *   - a partial customer keeps its blanks blank instead of inventing a
+ *     requirement, a budget or an activity date,
+ *   - only real purchases and real links attach to a client.
+ */
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { adapter, ok } from '../src/packages/data/adapter';
-import { renderCustomers } from '../src/apps/dealer/pages/customers';
+import { adapter, ok, err } from '../src/packages/data/adapter';
+import { deskStore, budgetLabel } from '../src/apps/dealer/desk-store';
 import { normalizeCompletedDeal } from '../src/packages/data/deal-normalization';
-import type { Client, ClientLink } from '../src/packages/data/types';
+import type { Client } from '../src/packages/data/types';
 
 const page = <T>(items: T[]) => ok({ items, nextCursor: null, total: items.length });
 
-describe('Customers page async boundary and real relationships', () => {
-  afterEach(() => {
-    document.body.innerHTML = '';
-    window.history.replaceState({}, '', '/');
-    vi.restoreAllMocks();
+afterEach(() => vi.restoreAllMocks());
+
+describe('Customers async boundary', () => {
+  it('reports a failed customer load rather than showing an empty contact book', async () => {
+    vi.spyOn(adapter.customers, 'list').mockResolvedValue(err('network', 'offline') as never);
+    await deskStore.loadClients();
+    expect(deskStore.clientsStatus.state).toBe('error');
+    expect((deskStore.clientsStatus as { error: string }).error).toContain('could not be loaded');
   });
 
-  it('shows loading and a useful error when the primary customer request fails', async () => {
-    let rejectCustomers!: (reason: unknown) => void;
-    vi.spyOn(adapter.customers, 'list').mockImplementation(() => new Promise((_resolve, reject) => { rejectCustomers = reject; }));
-    vi.spyOn(adapter.deals, 'list').mockResolvedValue(page([]));
-    vi.spyOn(adapter.properties, 'list').mockResolvedValue(page([]));
-    vi.spyOn(adapter.clientLinks, 'list').mockResolvedValue(page([]));
-    const host = document.createElement('div');
-    document.body.appendChild(host);
+  it('reaches a ready state with the customers the repository actually returned', async () => {
+    const customer = { id: 'customer-partial', name: 'Legacy Buyer', phone: '', city: '' } as unknown as Client;
+    vi.spyOn(adapter.customers, 'list').mockResolvedValue(page([customer]) as never);
+    await deskStore.loadClients();
+    expect(deskStore.clientsStatus.state).toBe('ready');
+    expect(deskStore.clients.map((c) => c.id)).toContain('customer-partial');
+  });
+});
 
-    const rendering = renderCustomers(host);
-    expect(host.textContent).toContain('Loading customers');
-    rejectCustomers(new Error('offline'));
-    await rendering;
-    expect(host.querySelector('[role="alert"]')?.textContent).toContain('Customers could not be loaded');
-    expect(host.innerHTML).not.toBe('');
+describe('partial customers keep their blanks blank', () => {
+  it('never invents a budget for a client who has none', () => {
+    expect(budgetLabel(undefined, undefined)).toBe('');
+    expect(budgetLabel(0, 0)).toBe('');
   });
 
-  it('renders partial customer rows and connects only real purchases and private links', async () => {
-    const customer = { id: 'customer-partial', name: 'Legacy Buyer', phone: '', city: '', interest: [] } as unknown as Client;
+  it('labels a mixed-unit range without reading lakhs as crores', () => {
+    // 80 lakh – 1.5 crore. Dropping the lower unit here printed "₹80–1.5 Cr".
+    expect(budgetLabel(8_000_000, 15_000_000)).toBe('₹80 L–1.5 Cr');
+    // Same unit on both ends, so the lower one is safe to drop.
+    expect(budgetLabel(12_000_000, 18_000_000)).toBe('₹1.2–1.8 Cr');
+  });
+
+  it('connects only purchases that were really recorded', () => {
     const sale = normalizeCompletedDeal('sale-1', {
-      stage: 'closed', propId: 'property-sold', prop: 'Sold property', buyerId: customer.id,
-      buyer: customer.name, soldPrice: 8_000_000, saleDate: '2026-06-10', commission: 0,
-      commissionReceived: false, paymentReceived: 8_000_000, documents: [],
-    })!;
-    const link: ClientLink = {
-      id: 'link-1', clientId: customer.id, clientName: customer.name,
-      props: ['property-live'], propNames: ['Live property'], expiry: '7d',
-      loc: 'area', price: 'hidden', audio: 'none', audioSecs: 0, status: 'active',
-      events: { opens: 2, played: 0, called: 0, wa: 0, visit: 0 }, lastOpen: '12 Aug',
-    };
-    vi.spyOn(adapter.customers, 'list').mockResolvedValue(page([customer]));
-    vi.spyOn(adapter.deals, 'list').mockResolvedValue(page([sale]));
-    vi.spyOn(adapter.properties, 'list').mockResolvedValue(page([]));
-    vi.spyOn(adapter.clientLinks, 'list').mockResolvedValue(page([link]));
-    window.history.replaceState({}, '', '/admin/clients.html?customer=customer-partial');
-    const host = document.createElement('div');
-    document.body.appendChild(host);
-
-    await renderCustomers(host);
-    expect(host.textContent).toContain('Legacy Buyer');
-    expect(host.textContent).toContain('Requirement not recorded');
-    expect(host.textContent).toContain('Budget not recorded');
-    expect(host.querySelector('[role="dialog"]')).not.toBeNull();
-    expect(host.textContent).toContain('Completed purchases');
-    expect(host.textContent).toContain('Sold property');
-    expect(host.textContent).toContain('2 opens');
-    expect(host.querySelector<HTMLAnchorElement>('a[href="/admin/deals.html?deal=sale-1"]')).not.toBeNull();
-    expect(host.textContent).not.toContain('New this week');
-    expect(host.textContent).not.toContain('Last active');
-    expect(host.innerHTML).not.toBe('');
+      stage: 'closed', propId: 'property-sold', prop: 'Sold property',
+      buyerId: 'customer-partial', buyer: 'Legacy Buyer',
+      soldPrice: 8_000_000, saleDate: '2026-06-10', paymentReceived: 8_000_000,
+    });
+    expect(sale).not.toBeNull();
+    expect(sale!.buyerId).toBe('customer-partial');
+    expect(sale!.fieldPresence.soldPrice).toBe(true);
+    expect(sale!.fieldPresence.soldDate).toBe(true);
+    // Commission was never entered, so the screen must not print one.
+    expect(sale!.fieldPresence.commission).toBe(false);
   });
 });

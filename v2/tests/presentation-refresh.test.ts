@@ -51,6 +51,17 @@ describe('complete saved property overview', () => {
       city: 'Mohali', area: 'Sector 79', loc: 'Sector 79, Mohali', price: 5400000, status: 'available',
       photos: [], docs: [], highlights: [], specs: { frontage: '30', depth: '90', notes: 'Saved property note' } };
     component.properties = [property];
+    // Deals are repository-loaded now, so this test supplies its own rather
+    // than depending on whichever suite raced a load in first.
+    component.deals = [{
+      id: 'review-d', name: 'Sample · Sector 79 plot', client: 'Sample Buyer', clientId: 'review-c',
+      prop: 'Residential Plot · 300 sq yd', propSub: 'Sector 79, Mohali', area: 'Mohali',
+      propId: property.id, value: 5400000, comm: 81000, token: 200000, stage: 'token',
+      created: '6 Aug', createdDay: 6, cB: 1, cS: 0.5,
+      pay: [{ k: 'token', amt: 200000, d: '20 Aug', note: 'Cash' }],
+      hist: [{ s: 'negotiating', d: '6 Aug' }, { s: 'token', d: '20 Aug' }],
+      docs: [], log: [], seller: { name: 'Sample Seller', phone: '+919000000000' },
+    }];
     component.state = { ...component.state, section: 'properties', propDetail: property.id, pdTab: 'overview' };
     component.__templateFn = renderApp;
     document.body.innerHTML = '<div id="app"></div>';

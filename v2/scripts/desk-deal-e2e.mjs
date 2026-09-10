@@ -315,6 +315,92 @@ async function journey(A) {
   check('20b. Deal paper stays deal-owned and separate',
     (ws2?.dealPapers ?? []).length === 1 && (ws2?.propertyPapers ?? []).length === 1);
 
+  /* 20c-f. Paper CHECKLIST: papers the dealer holds but has not uploaded.
+     They must persist, dedupe by title, clear again, and refuse to shadow a
+     paper that already has a real uploaded file. */
+  const { data: mark1 } = await db.rpc('plotmap_set_deal_paper', {
+    p_payload: { dealId, title: 'Agreement to Sell', have: true },
+  });
+  check('20c. A ticked deal paper persists', mark1?.ok === true
+    && (mark1.paperChecklist ?? []).some((m) => m.title === 'Agreement to Sell'), mark1?.reason);
+
+  const { data: mark2 } = await db.rpc('plotmap_set_deal_paper', {
+    p_payload: { dealId, title: 'Agreement to Sell', have: true },
+  });
+  check('20d. Ticking the same paper twice does not duplicate it',
+    (mark2?.paperChecklist ?? []).filter((m) => m.title === 'Agreement to Sell').length === 1);
+
+  const { data: markUploaded } = await db.rpc('plotmap_set_deal_paper', {
+    p_payload: { dealId, title: 'token receipt', have: true },
+  });
+  check('20e. A paper with an uploaded file cannot be ticked by hand',
+    markUploaded?.ok === false, markUploaded?.reason);
+
+  const { data: propMark } = await db.rpc('plotmap_set_property_paper', {
+    p_payload: { propertyId: ids.property, title: 'Mutation', have: true },
+  });
+  check('20f. A ticked property paper persists onto the property',
+    propMark?.ok === true && (propMark.paperChecklist ?? []).some((m) => m.title === 'Mutation'),
+    propMark?.reason);
+
+  const { data: wsMarks } = await db.rpc('plotmap_deal_workspace', { p_deal_id: dealId });
+  check('20g. The Deal room reads both checklists in one round trip',
+    (wsMarks?.deal?.paperChecklist ?? []).length === 1
+    && (wsMarks?.property?.payload?.paperChecklist ?? []).length === 1);
+
+  const { data: cleared } = await db.rpc('plotmap_set_deal_paper', {
+    p_payload: { dealId, title: 'Agreement to Sell', have: false },
+  });
+  check('20h. Clearing a ticked paper removes it', cleared?.ok === true
+    && (cleared.paperChecklist ?? []).length === 0, cleared?.reason);
+
+  /* 20i-k. Relink: an open deal can be pointed at a different saved property,
+     and the denormalized fields follow the canonical record. */
+  const altProperty = rid('prop-alt');
+  const { error: altErr } = await db.from('crm_records').insert({
+    id: altProperty, dealer_id: A.dealerId, entity_type: 'properties', deleted: false,
+    payload: {
+      id: altProperty, type: 'Residential Plot', want: 'Plot', city: 'Mohali',
+      area: 'E2E Second Enclave', loc: 'E2E Second Enclave, Mohali', sector: '82',
+      size: '250 sq yd', facing: 'North', position: 'Park facing', approvals: ['GMADA'],
+      landmarks: [], price: 7500000, photos: [], published: false, sold: false,
+      lifecycle: 'draft', views: 0,
+    },
+  });
+  check('20i-pre. A second property exists to relink onto', !altErr, altErr?.message);
+  const { data: relinked } = await db.rpc('plotmap_relink_deal_property', {
+    p_payload: { dealId, propertyId: altProperty },
+  });
+  check('20i. An open deal relinks to another saved property',
+    relinked?.ok === true && relinked?.deal?.propertyId === altProperty, relinked?.reason);
+  check('20j. Relinking re-derives the property fields from the record',
+    relinked?.deal?.sector === '82' && /250 sq yd/.test(relinked?.deal?.propSub ?? ''),
+    JSON.stringify({ sector: relinked?.deal?.sector, propSub: relinked?.deal?.propSub }));
+
+  const { data: relinkBack } = await db.rpc('plotmap_relink_deal_property', {
+    p_payload: { dealId, propertyId: ids.property },
+  });
+  check('20k. The deal relinks back to its original property', relinkBack?.ok === true, relinkBack?.reason);
+
+  /* 20l-n. Edit: name, value and follow-up persist through one command. */
+  const { data: edited } = await db.rpc('plotmap_update_deal_details', {
+    p_payload: { dealId, name: 'Sector 79 plot for Recorded buyer', value: 9200000,
+      nextAction: { kind: 'Call buyer', note: 'Confirm registry slot', dueOn: '2026-09-12' } },
+  });
+  check('20l. A deal edit persists name, value and follow-up',
+    edited?.ok === true && edited?.deal?.name === 'Sector 79 plot for Recorded buyer'
+    && Number(edited?.deal?.value) === 9200000
+    && edited?.deal?.nextAction?.kind === 'Call buyer', edited?.reason);
+
+  const { data: badValue } = await db.rpc('plotmap_update_deal_details', {
+    p_payload: { dealId, value: 0 },
+  });
+  check('20m. A non-positive deal value is refused', badValue?.ok === false, badValue?.reason);
+
+  const { data: afterBad } = await db.rpc('plotmap_deal_workspace', { p_deal_id: dealId });
+  check('20n. The rejected edit changed nothing',
+    Number(afterBad?.deal?.value) === 9200000, JSON.stringify(afterBad?.deal?.value));
+
   /* 21. Registry / Closing. */
   const { data: toRegistry } = await db.rpc('plotmap_set_deal_stage', {
     p_payload: { dealId, stage: 'registry', registryDate: '2026-09-05' },
@@ -466,6 +552,26 @@ async function isolation(B, owned) {
     p_payload: { dealId: owned.dealId, stage: 'lost', reason: 'hijack' },
   });
   check('ISO stage change RPC refuses another dealer', stage?.ok === false, stage?.reason);
+
+  const { data: paperOther } = await db.rpc('plotmap_set_deal_paper', {
+    p_payload: { dealId: owned.dealId, title: 'Agreement to Sell', have: true },
+  });
+  check('ISO deal-paper RPC refuses another dealer', paperOther?.ok === false, paperOther?.reason);
+
+  const { data: propPaperOther } = await db.rpc('plotmap_set_property_paper', {
+    p_payload: { propertyId: owned.property, title: 'Mutation', have: true },
+  });
+  check('ISO property-paper RPC refuses another dealer', propPaperOther?.ok === false, propPaperOther?.reason);
+
+  const { data: relinkOther } = await db.rpc('plotmap_relink_deal_property', {
+    p_payload: { dealId: owned.dealId, propertyId: owned.property },
+  });
+  check('ISO relink RPC refuses another dealer', relinkOther?.ok === false, relinkOther?.reason);
+
+  const { data: editOther } = await db.rpc('plotmap_update_deal_details', {
+    p_payload: { dealId: owned.dealId, value: 1 },
+  });
+  check('ISO deal-edit RPC refuses another dealer', editOther?.ok === false, editOther?.reason);
 
   const { data: pay } = await db.rpc('plotmap_record_deal_payment', {
     p_payload: { dealId: owned.dealId, kind: 'token', amount: 1 },

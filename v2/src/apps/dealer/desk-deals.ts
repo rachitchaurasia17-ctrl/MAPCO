@@ -23,9 +23,27 @@ export function deskDeal(workspace: DealWorkspace) {
     pay: workspace.payments.map(p => ({ id: p.id, k: paymentKinds[p.kind], amt: p.amount,
       d: p.receivedOn, note: p.note || '' })),
     hist: workspace.stageHistory.map(e => ({ s: e.stage, d: date(e.occurredAt) })),
-    log: workspace.stageHistory.map(e => ({ d: date(e.occurredAt),
+    // `iso` carries the real timestamp so "no update for N days" can be counted
+    // against the calendar rather than parsed back out of a display string.
+    log: workspace.stageHistory.map(e => ({ d: date(e.occurredAt), iso: e.occurredAt,
       t: e.note || `Stage changed to ${e.stage}`, i: 'ph-fill ph-flag-banner', c: '#1a5aa8' })),
-    docs: workspace.dealPapers.map(p => ({ id: p.id, n: p.title, have: true, d: date(p.createdAt) })),
+    // Uploaded papers first; then the hand-ticked checklist, minus any title an
+    // uploaded file already covers. Both are persisted — neither is invented here.
+    docs: [
+      ...workspace.dealPapers.map(p => ({ id: p.id, n: p.title, have: true, uploaded: true, d: date(p.createdAt) })),
+      ...workspace.paperChecklist
+        .filter(m => !workspace.dealPapers.some(p => p.title.toLowerCase() === m.title.toLowerCase()))
+        .map(m => ({ id: 'mark:' + m.title, n: m.title, have: true, uploaded: false, d: date(m.markedOn) })),
+    ],
+    // The property's papers, referenced from the same round trip rather than
+    // read from the inventory row (which only carries files once a property
+    // detail screen has loaded them).
+    propDocs: [
+      ...workspace.propertyPapers.map(p => ({ id: p.id, n: p.title, uploaded: true, d: date(p.createdAt) })),
+      ...workspace.propertyPaperChecklist
+        .filter(m => !workspace.propertyPapers.some(p => p.title.toLowerCase() === m.title.toLowerCase()))
+        .map(m => ({ id: 'mark:' + m.title, n: m.title, uploaded: false, d: date(m.markedOn) })),
+    ],
     seller: { name: workspace.seller?.name || d.seller || '',
       phone: workspace.seller?.primaryPhone || d.sellerPhone || '' },
     money: m,

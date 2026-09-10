@@ -7,6 +7,7 @@ import { MAP_REGISTRY as CANONICAL_SECTOR_MAPS } from '../../packages/maps/secto
 import { loadGoogleMaps, importMapsLibrary, GOOGLE_MAPS_MAP_ID } from '../../packages/maps/google-loader';
 import { productRoutes } from '../../packages/ui/product-routes';
 import { adapter } from '../../packages/data/adapter';
+import { SingleFlight } from '../../packages/security/single-flight';
 import { AddPropertyTelemetry } from './add-property-telemetry';
 import { previewPayloadFromLink, renderClientLinkView } from '../../packages/ui/client-link-view';
 
@@ -81,37 +82,9 @@ export class Component extends DCLogic {
   }
   propIcon(p) { const t = (p || '').toLowerCase(); if (t.includes('villa')) return 'ph-fill ph-house'; if (t.includes('kothi')) return 'ph-fill ph-house-line'; if (t.includes('flat') || t.includes('floor')) return 'ph-fill ph-buildings'; if (t.includes('commercial') || t.includes('sco') || t.includes('booth')) return 'ph-fill ph-storefront'; return 'ph-fill ph-map-pin-area'; }
 
-  PAPERS = ['Jamabandi / fard', 'Mutation — intkaal', 'No-dues NOC', 'Approved site map', 'Sale agreement', 'Registry deed'];
-  DOCDATES = ['24 Jul', '29 Jul', '2 Aug', '6 Aug', '9 Aug', '12 Aug'];
-  docExtra = {};
-  papersFor(d) {
-    const n = { enquiry: 1, negotiating: 2, token: 3, registry: 5, closed: 6, lost: 2 }[d.stage] || 1;
-    return this.PAPERS.map((p, i) => ({ name: p, have: i < n }));
-  }
-  docsFor(d) {
-    const out = this.papersFor(d).filter(p => p.have).map((p, i) => ({ name: p.name, type: i % 2 ? 'photo' : 'pdf', when: this.DOCDATES[i] || '—' }));
-    if (d.token) out.push({ name: 'Token receipt · ' + this.inr(d.token), type: 'receipt', when: '6 Aug' });
-    if (d.stage === 'closed') out.push({ name: 'Registry payment receipt', type: 'receipt', when: '12 Aug' });
-    return out.concat(this.docExtra[d.id] || []);
-  }
-  timelineFor(d) {
-    const order = ['enquiry', 'negotiating', 'token', 'registry', 'closed'];
-    const upto = d.stage === 'lost' ? 1 : Math.max(0, order.indexOf(d.stage));
-    const when = ['24 Jul', '29 Jul', '3 Aug', '8 Aug', '12 Aug'];
-    const first = d.client.split(' ')[0];
-    const ev = [{ icon: 'ph-fill ph-phone-call', label: 'Called ' + first, detail: 'First talk about ' + d.propSub, when: '22 Jul', bg: '#d9f5e3', fg: '#0b8f45' }];
-    for (let i = 0; i <= upto; i++) {
-      const m = this.stageMeta(order[i]);
-      ev.push({ icon: 'ph-fill ph-flag', label: 'Moved to ' + m.label, detail: i === 0 ? 'Added to your deal book' : 'Stage updated by you', when: when[i], bg: '#f3eeff', fg: '#7d5cc6' });
-    }
-    const papers = this.papersFor(d).filter(p => p.have);
-    if (papers.length > 1) ev.push({ icon: 'ph-fill ph-files', label: 'Papers received', detail: papers.slice(-2).map(p => p.name).join(' · '), when: '8 Aug', bg: '#fff3d1', fg: '#a8792a' });
-    if (d.token) ev.push({ icon: 'ph-fill ph-coins', label: 'Money received', detail: this.inr(d.token) + ' token from ' + first, when: '3 Aug', bg: '#d9f5e3', fg: '#0b8f45' });
-    if (d.stage === 'lost') ev.push({ icon: 'ph-fill ph-x-circle', label: 'Deal lost', detail: 'Buyer went with another dealer', when: '11 Aug', bg: '#ffe4ea', fg: '#c2185b' });
-    else if (d.stage === 'closed') ev.push({ icon: 'ph-fill ph-seal-check', label: 'Registry done', detail: 'Full payment received, keys handed over', when: '12 Aug', bg: '#d9f5e3', fg: '#0b8f45' });
-    else ev.push({ icon: 'ph-fill ph-note', label: 'You noted', detail: 'Follow up with ' + first + ' this week', when: '12 Aug', bg: '#f4ecdd', fg: '#a8792a' });
-    return ev.reverse();
-  }
+  /* Papers a deal actually holds: uploaded files plus the dealer's own ticks,
+     both persisted. There is no stage-derived guess about which papers exist. */
+  paperCount(d) { return ((d.docs || []).filter(x => x.have).length) + ((d.propDocs || []).length); }
   waLink(p) { return 'https://wa.me/' + String(p || '').replace(/[^0-9]/g, ''); }
 
   TODAY = new Date().getDate();
@@ -137,6 +110,16 @@ export class Component extends DCLogic {
   };
   PREFOPTS = ['Corner', 'Park facing', 'East facing', 'North facing', 'Wide road', 'Ready for registry', 'Gated society', 'Ready to move', 'Main road', 'Near school'];
   STAGEOPTS = ['Just looking', 'Actively searching', 'Site visits', 'Negotiating'];
+  /* One concurrency boundary for every mutation this screen starts. A
+     second click on the same record while its write is in the air is
+     ignored; a different record is unaffected; the key is released even
+     when the write fails, so a deliberate retry still works. */
+  _flights = new SingleFlight();
+  async write(key, run) {
+    const outcome = await this._flights.run(key, run);
+    return outcome.started ? outcome.value : undefined;
+  }
+  writing(key) { return this._flights.isActive(key); }
   initContacts() {
     if (this._cx) return; this._cx = true;
     for (const c of this.clients) {
@@ -1257,9 +1240,29 @@ export class Component extends DCLogic {
   NEXTKINDS = ['Call buyer', 'Call seller', 'Meet buyer', 'Meet seller', 'Site visit', 'Collect token', 'Collect document', 'Confirm price', 'Registry', 'Payment follow-up', 'Commission follow-up', 'Custom'];
   NEXTICON = { 'Call buyer': 'ph-fill ph-phone', 'Call seller': 'ph-fill ph-phone-outgoing', 'Meet buyer': 'ph-fill ph-users-three', 'Meet seller': 'ph-fill ph-handshake', 'Site visit': 'ph-fill ph-footprints', 'Collect token': 'ph-fill ph-hand-coins', 'Collect document': 'ph-fill ph-file-arrow-down', 'Confirm price': 'ph-fill ph-tag', 'Registry': 'ph-fill ph-stamp', 'Payment follow-up': 'ph-fill ph-currency-inr', 'Commission follow-up': 'ph-fill ph-coins', 'Custom': 'ph-fill ph-note-pencil' };
   REQDOCS = { negotiating: [], token: ['Token receipt'], registry: ['Token receipt', 'Agreement to Sell'], closed: ['Token receipt', 'Agreement to Sell', 'Final registry copy'] };
-  dayLabel(n) {
-    if (!n) return ''; if (n === this.TODAY) return 'Today'; if (n === this.TODAY + 1) return 'Tomorrow'; if (n === this.TODAY - 1) return 'Yesterday';
-    return n < this.TODAY ? ((this.TODAY - n) + ' days ago') : (n + ' Aug');
+  /* Real calendar arithmetic. The Desk shows day-of-month pills, but every
+     comparison and label uses the actual date the repository returned, so a
+     follow-up due next month is not read as overdue and never prints the
+     wrong month name. `n` is only a fallback for a day with no stored date. */
+  daysUntil(iso, n) {
+    const now = new Date();
+    const midnight = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+    const on = iso ? new Date(String(iso).slice(0, 10) + 'T12:00:00')
+      : (n ? new Date(now.getFullYear(), now.getMonth(), Number(n), 12) : null);
+    if (!on || Number.isNaN(on.getTime())) return null;
+    return Math.round((midnight(on) - midnight(now)) / 86400000);
+  }
+  dayLabel(n, iso) {
+    const days = this.daysUntil(iso, n);
+    if (days === null) return '';
+    if (days === 0) return 'Today';
+    if (days === 1) return 'Tomorrow';
+    if (days === -1) return 'Yesterday';
+    if (days < 0) return (-days) + ' days ago';
+    const now = new Date();
+    const on = iso ? new Date(String(iso).slice(0, 10) + 'T12:00:00')
+      : new Date(now.getFullYear(), now.getMonth(), Number(n), 12);
+    return on.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
   }
   dealMoney(d) {
     if (d.money) {
@@ -1284,21 +1287,23 @@ export class Component extends DCLogic {
   }
   dealFlags(d) {
     if (d.stage === 'lost') return [];
-    const out = [], M = this.dealMoney(d), T = this.TODAY;
+    const out = [], M = this.dealMoney(d);
     const nx = d.next;
-    if (nx && nx.day < T) out.push({ t: 'Next action overdue — ' + nx.k.toLowerCase(), i: 'ph-fill ph-warning-circle', c: '#b02a37', b: '#ffdfe2', pri: 1 });
-    else if (nx && nx.day === T) out.push({ t: 'Due today — ' + nx.k.toLowerCase(), i: 'ph-fill ph-bell-ringing', c: '#c0490c', b: '#ffe3cf', pri: 2 });
-    if (d.registryDay && d.stage !== 'closed' && d.registryDay - T <= 5 && d.registryDay >= T)
-      out.push({ t: 'Registry ' + (d.registryDay === T ? 'today' : d.registryDay === T + 1 ? 'tomorrow' : 'on ' + d.registryDay + ' Aug'), i: 'ph-fill ph-stamp', c: '#5b32c4', b: '#e7defc', pri: 1 });
+    const nxDays = nx ? this.daysUntil(nx.dueOn, nx.day) : null;
+    if (nxDays !== null && nxDays < 0) out.push({ t: 'Next action overdue — ' + nx.k.toLowerCase(), i: 'ph-fill ph-warning-circle', c: '#b02a37', b: '#ffdfe2', pri: 1 });
+    else if (nxDays === 0) out.push({ t: 'Due today — ' + nx.k.toLowerCase(), i: 'ph-fill ph-bell-ringing', c: '#c0490c', b: '#ffe3cf', pri: 2 });
+    const regDays = this.daysUntil(d.registryDate, d.registryDay);
+    if (regDays !== null && d.stage !== 'closed' && regDays >= 0 && regDays <= 5)
+      out.push({ t: 'Registry ' + (regDays === 0 ? 'today' : regDays === 1 ? 'tomorrow' : 'on ' + this.dayLabel(d.registryDay, d.registryDate)), i: 'ph-fill ph-stamp', c: '#5b32c4', b: '#e7defc', pri: 1 });
     if (d.stage === 'token' && M.token === 0) out.push({ t: 'Token still to collect', i: 'ph-fill ph-hand-coins', c: '#a8600c', b: '#ffe9a8', pri: 2 });
     if (d.stage === 'closed' && M.due > 0) out.push({ t: this.inr(M.due) + ' commission still unpaid', i: 'ph-fill ph-coins', c: '#0a6634', b: '#d3f2e0', pri: 1 });
     const pr0 = d.propId ? this.properties.find(p => p.id === d.propId) : null;
     if (pr0 && pr0.ps && pr0.ps.availConfirmed === false) out.push({ t: 'Seller confirmation pending', i: 'ph-fill ph-user-focus', c: '#4a2c99', b: '#e7defc', pri: 3, wait: 1 });
-    const dayOf = (str) => { const v = String(str || ''); if (/today/i.test(v)) return T; const m = v.match(/(\d+)/); return m ? parseInt(m[1]) : 0; };
-    const lastTouch = (d.log && d.log.length) ? dayOf(d.log[0].d) : 0;
-    const nextLive = nx && nx.day >= T;
-    if (lastTouch && !nextLive && T - lastTouch >= 6 && d.stage !== 'closed')
-      out.push({ t: 'No update for ' + (T - lastTouch) + ' days', i: 'ph-fill ph-hourglass', c: '#8a7f6e', b: '#f0ece4', pri: 4, wait: 1 });
+    // Measured from the stage event's real timestamp, not a day-of-month.
+    const sinceTouch = (d.log && d.log.length) ? this.daysUntil(d.log[0].iso) : null;
+    const nextLive = nxDays !== null && nxDays >= 0;
+    if (sinceTouch !== null && sinceTouch < 0 && !nextLive && -sinceTouch >= 6 && d.stage !== 'closed')
+      out.push({ t: 'No update for ' + (-sinceTouch) + ' days', i: 'ph-fill ph-hourglass', c: '#8a7f6e', b: '#f0ece4', pri: 4, wait: 1 });
     const req = this.REQDOCS[d.stage] || []; const have = (d.docs || []).filter(x => x.have).map(x => x.n);
     const miss = req.filter(r => !have.includes(r));
     if (miss.length) out.push({ t: miss.length === 1 ? (miss[0] + ' missing') : (miss.length + ' deal papers missing'), i: 'ph-fill ph-file-x', c: '#8a3ffc', b: '#ede4ff', pri: 3, wait: 1 });
@@ -1311,19 +1316,27 @@ export class Component extends DCLogic {
   }
   propBooked(pid) { return this.deals.find(d => d.propId === pid && (d.stage === 'token' || d.stage === 'registry')); }
   dealDocs(d) {
-    const pr = d.propId ? this.properties.find(p => p.id === d.propId) : null;
-    const prop = (pr && pr.docs ? pr.docs : []).map(x => ({ name: x.name || x.kind, kind: 'property', have: true }));
+    // Both lists come from the deal workspace, so a paper only appears here
+    // when a file was uploaded or the dealer ticked it. Nothing is assumed.
+    const prop = (d.propDocs || []).map(x => ({ name: x.n, kind: 'property', have: true, when: x.d || '', uploaded: !!x.uploaded }));
     const req = this.REQDOCS[d.stage] || [];
-    const own = (d.docs || []).map(x => ({ name: x.n, kind: 'deal', have: !!x.have, when: x.d || '', required: req.includes(x.n) }));
-    req.forEach(r => { if (!own.some(o => o.name === r)) own.push({ name: r, kind: 'deal', have: false, required: true }); });
+    const own = (d.docs || []).map(x => ({ name: x.n, kind: 'deal', have: !!x.have, when: x.d || '', uploaded: !!x.uploaded, required: req.includes(x.n) }));
+    req.forEach(r => { if (!own.some(o => o.name === r)) own.push({ name: r, kind: 'deal', have: false, uploaded: false, required: true }); });
     return { prop, own };
   }
   async dealNext(id, patch) {
     const d = this.deals.find(x => x.id === id); if (!d) return;
     const next = { ...(d.next || {}), ...patch };
     if (!next.k) { window.alert('Choose the follow-up action first.'); return; }
+    /* A day pill supplies a day number relative to today, which dealDayDate
+       turns into a real date. When only the action changed, the stored due
+       date is reused verbatim: re-deriving it from `day` (a day-of-month)
+       would silently drag a date in a later month back into this one. */
+    const dueOn = Object.prototype.hasOwnProperty.call(patch, 'day')
+      ? this.dealDayDate(patch.day)
+      : ((d.next && d.next.dueOn) || '');
     await this.updateDeal({ dealId: id, nextAction: { kind: next.k, note: next.note || '',
-      ...(next.day ? { dueOn: this.dealDayDate(next.day) } : {}) } });
+      ...(dueOn ? { dueOn } : {}) } });
   }
   dealDayDate(day) {
     const now = new Date();
@@ -1371,21 +1384,32 @@ export class Component extends DCLogic {
       return true;
     } finally { this._recordingDealPayment = false; }
   }
-  dealDocToggle(id, name) {
-    const d = this.deals.find(x => x.id === id); if (!d) return;
-    d.docs = d.docs || []; const f = d.docs.find(x => x.n === name);
-    if (f) { f.have = !f.have; f.d = f.have ? (this.TODAY + ' Aug') : ''; }
-    else d.docs.push({ n: name, have: true, d: this.TODAY + ' Aug' });
-    (d.log = d.log || []).unshift({ d: 'Today', t: name + ((f && !f.have) ? ' removed' : ' marked received'), i: 'ph-fill ph-file-text', c: '#4a2c99' });
-    this.forceUpdate();
+  async dealDocToggle(id, name) {
+    const d = this.deals.find(x => x.id === id); if (!d) return false;
+    if (this._savingDealPaper) return false;
+    const held = (d.docs || []).some(x => x.n === name && x.have);
+    this._savingDealPaper = true;
+    try {
+      const result = await adapter.deals.setPaper({ dealId: id, title: name, have: !held });
+      if (!result.ok) { window.alert(result.error.message || 'The paper could not be saved.'); return false; }
+      await this.loadDeals();
+      return true;
+    } finally { this._savingDealPaper = false; }
   }
   openUpdate(id) {
     const d = this.deals.find(x => x.id === id); if (!d) return;
+    /* The day pickers count from today, so a stored date is seeded as an offset
+       rather than its raw day-of-month. dealDayDate normalises the overflow, so
+       a date in a later month round-trips instead of jumping back. */
+    const nextOff = d.next ? this.daysUntil(d.next.dueOn, d.next.day) : null;
+    const nextDayField = nextOff === null ? this.TODAY + 1 : this.TODAY + nextOff;
+    const regOff = this.daysUntil(d.registryDate, d.registryDay);
+    const regDayField = regOff === null ? 0 : this.TODAY + regOff;
     this.setState({
       upFor: id, upDraft: {
         stage: d.stage, price: (d.value / 1e7).toFixed(2),
-        token: '', tokenDay: this.TODAY, regDay: d.registryDay || 0,
-        nextK: (d.next && d.next.k) || 'Call buyer', nextDay: (d.next && d.next.day) || this.TODAY + 1, note: (d.next && d.next.note) || ''
+        token: '', tokenDay: this.TODAY, regDay: regDayField,
+        nextK: (d.next && d.next.k) || 'Call buyer', nextDay: nextDayField, note: (d.next && d.next.note) || ''
       }
     });
   }
@@ -1836,26 +1860,43 @@ export class Component extends DCLogic {
     finally { this.setState({ sendingLink: false }); }
   }
   async revokeLink(id) {
-    const result = await adapter.clientLinks.revoke(id);
-    if (!result.ok) { window.alert('This link could not be stopped. Please retry.'); return; }
-    await this.loadClientLinks();
+    await this.write('revoke:' + id, async () => {
+      const result = await adapter.clientLinks.revoke(id);
+      if (!result.ok) { window.alert('This link could not be stopped. Please retry.'); return; }
+      /* The server accepted the revoke, so record it here BEFORE the
+         authoritative refresh. If that refresh fails the list keeps its
+         previous contents, and without this the buyer's link would read
+         as live again even though it is stopped. */
+      const row = this.clientLinks.find(l => l.id === id);
+      if (row) row.status = 'revoked';
+      this.forceUpdate();
+      await this.loadClientLinks();
+    });
   }
   deleteLink(id) {
     window.alert('Link history cannot be permanently deleted. Stop the link to prevent further access.');
   }
   async savePrice() {
-    const saved = await deskStore.updatePropertyPrice(this.state.priceEdit, Math.round(Number(this.state.priceVal) * 1e7));
-    if (!saved) { window.alert(deskStore.lastWriteError); return; }
-    this.setState({ priceEdit: null, priceVal: '' });
+    const id = this.state.priceEdit;
+    await this.write('price:' + id, async () => {
+      const saved = await deskStore.updatePropertyPrice(id, Math.round(Number(this.state.priceVal) * 1e7));
+      if (!saved) { window.alert(deskStore.lastWriteError); return; }
+      this.setState({ priceEdit: null, priceVal: '' });
+    });
   }
   async publish(id) {
-    const saved = await deskStore.restoreProperty(id);
-    if (!saved) window.alert(deskStore.lastWriteError);
+    await this.write('lifecycle:' + id, async () => {
+      const saved = await deskStore.restoreProperty(id);
+      if (!saved) window.alert(deskStore.lastWriteError);
+    });
   }
   async doUnpublish() {
-    const saved = await deskStore.archiveProperty(this.state.unpubFor, this.state.unpubReason || '');
-    if (!saved) { window.alert(deskStore.lastWriteError); return; }
-    this.setState({ unpubFor: null, unpubReason: '' });
+    const id = this.state.unpubFor;
+    await this.write('lifecycle:' + id, async () => {
+      const saved = await deskStore.archiveProperty(id, this.state.unpubReason || '');
+      if (!saved) { window.alert(deskStore.lastWriteError); return; }
+      this.setState({ unpubFor: null, unpubReason: '' });
+    });
   }
   openSold(id) {
     const pr = this.properties.find(x => x.id === id); if (!pr) return;
@@ -1907,7 +1948,7 @@ export class Component extends DCLogic {
   /* The sale command needs a real ISO date; the picker gives a loose value. */
   isoSaleDate(value) {
     const raw = String(value || '').trim();
-    if (/^d{4}-d{2}-d{2}$/.test(raw)) return raw;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
     const parsed = raw ? Date.parse(raw) : NaN;
     const when = Number.isNaN(parsed) ? new Date() : new Date(parsed);
     return when.toISOString().slice(0, 10);
@@ -1922,14 +1963,11 @@ export class Component extends DCLogic {
       this.setState({ delPlot: false, propError: 'A sold property keeps its deal and buyer history. Take it off the market instead of deleting it.' });
       return;
     }
-    const result = await deskStore.deleteProperty(id);
-    if (!result) { this.setState({ delPlot: false, propError: deskStore.lastWriteError }); return; }
-    this.setState({ propDetail: null, delPlot: false, propError: '' });
-  }
-  deleteClient(id) {
-    const c = this.clients.find(x => x.id === id); this.clients = this.clients.filter(x => x.id !== id);
-    if (c) this.clientLinks = this.clientLinks.filter(l => l.client !== c.name);
-    this.setState({ selectedClient: null, delClient: false });
+    await this.write('delete:' + id, async () => {
+      const result = await deskStore.deleteProperty(id);
+      if (!result) { this.setState({ delPlot: false, propError: deskStore.lastWriteError }); return; }
+      this.setState({ propDetail: null, delPlot: false, propError: '' });
+    });
   }
   setP(o) {
     if (o.config) { const b = String(o.config).match(/^(\d+)/); if (b) o.beds = b[1]; }
@@ -2089,14 +2127,18 @@ export class Component extends DCLogic {
   /* Off market. Non-destructive: media, papers, seller relationship and
      any completed deal all survive. */
   async archiveProp(id) {
-    const done = await deskStore.archiveProperty(id);
-    if (!done) { window.alert(deskStore.lastWriteError); return; }
-    this.setState({ propDetail: null, cardMenu: null, delPlot: false, propError: done ? '' : deskStore.lastWriteError });
+    await this.write('lifecycle:' + id, async () => {
+      const done = await deskStore.archiveProperty(id);
+      if (!done) { window.alert(deskStore.lastWriteError); return; }
+      this.setState({ propDetail: null, cardMenu: null, delPlot: false, propError: '' });
+    });
   }
   async restoreProp(id) {
-    const done = await deskStore.restoreProperty(id);
-    if (!done) { window.alert(deskStore.lastWriteError); return; }
-    this.setState({ cardMenu: null, propError: done ? '' : deskStore.lastWriteError });
+    await this.write('lifecycle:' + id, async () => {
+      const done = await deskStore.restoreProperty(id);
+      if (!done) { window.alert(deskStore.lastWriteError); return; }
+      this.setState({ cardMenu: null, propError: '' });
+    });
   }
   blankShare() { return { clientId: '', newName: '', newPhone: '', expiry: '3d', loc: 'area', price: 'hidden', photos: [0, 1, 2, 3], audio: 'none', secs: 0 }; }
   recToggle() {
@@ -2120,10 +2162,32 @@ export class Component extends DCLogic {
   wizBack() { const w = this.state.wiz; if (w.step <= 1) return; this.setWiz({ step: w.step - 1 }); }
   toggleCPlot(id) { const cur = this.state.cform.plots || []; const next = cur.includes(id) ? cur.filter(x => x !== id) : [...cur, id]; this.setState({ cform: { ...this.state.cform, plots: next } }); }
   onCFormInput(e) { this.setState({ cform: { ...this.state.cform, [e.target.name]: e.target.value } }); }
-  setDealName(id, v) { const d = this.deals.find(x => x.id === id); if (d) { d.name = v; this.forceUpdate(); } }
-  deleteDeal(id) { this.deals = this.deals.filter(d => d.id !== id); this.setState({ selectedDeal: null, delArm: false }); }
-  linkProp(id, propId) { const d = this.deals.find(x => x.id === id); if (d) { const pr = this.properties.find(p => p.id === propId); d.propId = propId; if (pr) { d.propSub = pr.loc; } } this.setState({ linkFor: null }); this.forceUpdate(); }
-  unlinkProp(id) { const d = this.deals.find(x => x.id === id); if (d) { d.propId = ''; } this.forceUpdate(); }
+  /* A property paper the dealer holds but has not uploaded. It saves onto the
+     property, so every future deal on it sees the same list. */
+  async propDocToggle(propId, name) {
+    if (!propId) { window.alert('Link a saved property before adding its papers.'); return false; }
+    if (this._savingPropPaper) return false;
+    const d = this.deals.find(x => x.propId === propId);
+    const held = ((d && d.propDocs) || []).some(x => x.n === name);
+    this._savingPropPaper = true;
+    try {
+      const result = await adapter.propertyDocuments.setMark({ propertyId: propId, title: name, have: !held });
+      if (!result.ok) { window.alert(result.error.message || 'The paper could not be saved.'); return false; }
+      await this.loadDeals();
+      return true;
+    } finally { this._savingPropPaper = false; }
+  }
+  async linkProp(id, propId) {
+    if (this._relinkingDeal) return false;
+    this._relinkingDeal = true;
+    try {
+      const result = await adapter.deals.relinkProperty({ dealId: id, propertyId: propId });
+      if (!result.ok) { window.alert(result.error.message || 'The property could not be linked.'); return false; }
+      await this.loadDeals();
+      this.setState({ linkFor: null });
+      return true;
+    } finally { this._relinkingDeal = false; }
+  }
   async submitAdd() {
     if (this._startingDeal) return;
     const w = this.state.wiz;
@@ -2234,22 +2298,28 @@ export class Component extends DCLogic {
   async addNote() {
     const v = (this.state.noteDraft || '').trim(); if (!v) return;
     const id = this.state.selectedClient; if (!id) return;
-    const ok = await deskStore.addClientNote(id, v);
-    this.setState({ noteDraft: ok ? '' : this.state.noteDraft, clientError: ok ? '' : deskStore.lastWriteError });
+    await this.write('note:' + id, async () => {
+      const ok = await deskStore.addClientNote(id, v);
+      this.setState({ noteDraft: ok ? '' : this.state.noteDraft, clientError: ok ? '' : deskStore.lastWriteError });
+    });
   }
   async toggleLike(cid, pid) {
     const c = this.clients.find(x => x.id === cid); if (!c) return;
-    const arr = (c.interest || []).slice(); const i = arr.indexOf(pid);
-    if (i >= 0) arr.splice(i, 1); else arr.push(pid);
-    const saved = await deskStore.setClientInterest(cid, arr);
-    this.setState({ clientError: saved ? '' : deskStore.lastWriteError });
+    await this.write('interest:' + cid + ':' + pid, async () => {
+      const arr = (c.interest || []).slice(); const i = arr.indexOf(pid);
+      if (i >= 0) arr.splice(i, 1); else arr.push(pid);
+      const saved = await deskStore.setClientInterest(cid, arr);
+      this.setState({ clientError: saved ? '' : deskStore.lastWriteError });
+    });
   }
   /* Archiving is non-destructive — links, deals and purchases survive. */
   async archiveClient(id) {
-    const done = await deskStore.archiveClient(id);
-    if (!done) { this.setState({ arch: null, clientError: deskStore.lastWriteError }); return; }
-    deskStore.closeClientWorkspace();
-    this.setState({ selectedClient: null, arch: null, clientError: '' });
+    await this.write('archive:' + id, async () => {
+      const done = await deskStore.archiveClient(id);
+      if (!done) { this.setState({ arch: null, clientError: deskStore.lastWriteError }); return; }
+      deskStore.closeClientWorkspace();
+      this.setState({ selectedClient: null, arch: null, clientError: '' });
+    });
   }
   setSF2(o) { this.setState({ sf2: { ...this.state.sf2, ...o } }); }
   onSF2(e) { this.setSF2({ [e.target.name]: e.target.value }); }
@@ -2284,10 +2354,12 @@ export class Component extends DCLogic {
      live inventory, so sold history is never orphaned. */
   async archiveSeller(id) {
     this.setState({ sellerError: '' });
-    const done = await deskStore.archiveSeller(id, true);
-    if (!done) { this.setState({ arch: null, sellerError: deskStore.lastWriteError }); return; }
-    deskStore.closeSellerWorkspace();
-    this.setState({ sellerView: null, arch: null });
+    await this.write('archive:' + id, async () => {
+      const done = await deskStore.archiveSeller(id, true);
+      if (!done) { this.setState({ arch: null, sellerError: deskStore.lastWriteError }); return; }
+      deskStore.closeSellerWorkspace();
+      this.setState({ sellerView: null, arch: null });
+    });
   }
   dealListVM(d) {
     const m = this.stageMeta(d.stage);
@@ -2593,7 +2665,8 @@ export class Component extends DCLogic {
     const commExp = dActiveAll.reduce((a, d) => a + this.dealMoney(d).expected, 0);
     const commGotAll = this.deals.reduce((a, d) => a + this.dealMoney(d).got, 0);
     const commDueAll = this.deals.filter(d => d.stage !== 'lost').reduce((a, d) => a + this.dealMoney(d).due, 0);
-    const dueToday = dActiveAll.filter(d => d.next && d.next.day <= DTODAY).length;
+    const dueIn = (d) => (d.next ? this.daysUntil(d.next.dueOn, d.next.day) : null);
+    const dueToday = dActiveAll.filter(d => { const v = dueIn(d); return v !== null && v <= 0; }).length;
 
     const sellerNameOf = (d) => {
       const pr = d.propId ? this.properties.find(p => p.id === d.propId) : null;
@@ -2649,11 +2722,11 @@ export class Component extends DCLogic {
       };
     };
 
-    const doRows = dActiveAll.filter(d => d.next && d.next.day <= DTODAY)
-      .sort((a, b) => a.next.day - b.next.day)
+    const doRows = dActiveAll.filter(d => { const v = dueIn(d); return v !== null && v <= 0; })
+      .sort((a, b) => dueIn(a) - dueIn(b))
       .map(d => {
-        const late = d.next.day < DTODAY;
-        return mkRow(d, d.next.k, this.NEXTICON[d.next.k] || 'ph-fill ph-note-pencil', late ? '#b02a37' : '#c0490c', late ? '#ffdfe2' : '#ffe3cf', this.dayLabel(d.next.day), late, '');
+        const late = dueIn(d) < 0;
+        return mkRow(d, d.next.k, this.NEXTICON[d.next.k] || 'ph-fill ph-note-pencil', late ? '#b02a37' : '#c0490c', late ? '#ffdfe2' : '#ffe3cf', this.dayLabel(d.next.day, d.next.dueOn), late, '');
       });
 
     const waitRows = [];
@@ -2714,6 +2787,7 @@ export class Component extends DCLogic {
       const cl = this.clients.find(c => c.id === d.clientId) || {};
       const fl = this.dealFlags(d), top = fl[0];
       const nx = d.next;
+      const nxDue = nx ? this.daysUntil(nx.dueOn, nx.day) : null;
       const palette = [
         { bg: '#e7defc', border: '#ddd0f5' },
         { bg: '#ffe9a8', border: '#f6e3ab' },
@@ -2735,8 +2809,8 @@ export class Component extends DCLogic {
         priceFmt: this.inr(d.value), commFmt: this.inr(M.expected),
         hasDue: M.due > 0, dueFmt: this.inr(M.due),
         nextLabel: nx ? nx.k : 'Set a next action', nextIcon: nx ? (this.NEXTICON[nx.k] || 'ph-fill ph-note-pencil') : 'ph-fill ph-plus-circle',
-        nextWhen: nx ? this.dayLabel(nx.day) : '',
-        nextWhenStyle: 'display:inline-flex;align-items:center;height:30px;padding:0 10px;border-radius:9px;font-size:14px;font-weight:800;' + (nx && nx.day < DTODAY ? 'background:#ffdfe2;color:#b02a37' : nx && nx.day === DTODAY ? 'background:#f8a800;color:#241d0c' : 'background:#f3ece0;color:#7a6f60'),
+        nextWhen: nx ? this.dayLabel(nx.day, nx.dueOn) : '',
+        nextWhenStyle: 'display:inline-flex;align-items:center;height:30px;padding:0 10px;border-radius:9px;font-size:14px;font-weight:800;' + (nxDue !== null && nxDue < 0 ? 'background:#ffdfe2;color:#b02a37' : nxDue === 0 ? 'background:#f8a800;color:#241d0c' : 'background:#f3ece0;color:#7a6f60'),
         openBuyer: () => { if (cl.id) { deskStore.loadClientWorkspace(cl.id); this.setState({ section: 'clients', contactMode: 'clients', selectedClient: cl.id, cpTab: 'overview' }); } },
         openProp: () => { if (S.pr) this.setState({ section: 'properties', propDetail: S.pr.id, propShot: 0, propTab: 'gallery' }); },
         openSeller: () => { if (S.sr) { deskStore.loadSellerWorkspace(S.sr.id); this.setState({ section: 'clients', contactMode: 'sellers', sellerView: S.sr.id, svTab: 'overview' }); } },
@@ -2865,20 +2939,16 @@ export class Component extends DCLogic {
         const stIdx = this.DSORDER.indexOf(d.stage === 'enquiry' ? 'negotiating' : d.stage);
         const nextStage = stIdx >= 0 && stIdx < 3 ? this.DSORDER[stIdx + 1] : null;
         const nx = d.next;
+        const ddDue = nx ? this.daysUntil(nx.dueOn, nx.day) : null;
         const lk = this.clientLinks.find(l => l.clientId === d.clientId && (l.props || []).includes(d.propId));
         const lkEv = lk ? (lk.events || []).filter(e => e.p === d.propId || !e.p).slice(0, 4) : [];
         const EVM = { view: { t: 'Opened this property', i: 'ph-fill ph-eye', c: '#1a5aa8', b: '#dbeafe' }, open: { t: 'Opened your link', i: 'ph-fill ph-paper-plane-tilt', c: '#4a2c99', b: '#e7defc' }, earth: { t: 'Opened MAPCO Earth', i: 'ph-fill ph-globe-hemisphere-east', c: '#0a6634', b: '#d3f2e0' }, photos: { t: 'Looked at the photos', i: 'ph-fill ph-images', c: '#a3541b', b: '#fff0d6' }, visit: { t: 'Asked for a site visit', i: 'ph-fill ph-footprints', c: '#b02a37', b: '#ffdfe2' }, wa: { t: 'Tapped WhatsApp', i: 'ph-fill ph-whatsapp-logo', c: '#0a6634', b: '#d3f2e0' }, call: { t: 'Tapped call', i: 'ph-fill ph-phone', c: '#0a6634', b: '#d3f2e0' }, voice: { t: 'Played your voice note', i: 'ph-fill ph-microphone', c: '#5b32c4', b: '#e7defc' } };
 
-        const propDocItems = (docs.prop.length > 0 ? docs.prop : [
-          { name: 'Title Deed / Registry Copy', kind: 'Registry' },
-          { name: 'Fard / Jamabandi Record', kind: 'Fard' },
-          { name: 'GMADA / MC Site Plan', kind: 'Site Plan' },
-          { name: 'NOC / Tax Clearance Certificate', kind: 'NOC' }
-        ]).map(x => ({
+        const propDocItems = docs.prop.map(x => ({
           name: x.name,
-          sub: 'Verified · Property Record',
-          date: 'Recorded on file',
-          badge: 'Verified',
+          sub: x.uploaded ? 'File on the property record' : 'Marked as held by you',
+          date: x.when ? ((x.uploaded ? 'Uploaded ' : 'Marked ') + x.when) : '',
+          badge: x.uploaded ? 'On file' : 'Marked',
           badgeStyle: 'display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:800;border-radius:6px;padding:2px 7px;background:#dbeafe;color:#1e40af;box-shadow:0 0 0 1px #93c5fd;',
           cardStyle: 'display:flex;flex-direction:column;border-radius:18px;overflow:hidden;border:2px solid #3b82f6;background:#ffffff;box-shadow:0 8px 20px -8px rgba(59,130,246,.35);cursor:pointer;text-align:left;transition:transform .15s;',
           bannerStyle: 'display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:linear-gradient(135deg, #eff6ff, #dbeafe);border-top:1.5px solid #bfdbfe;',
@@ -2887,21 +2957,21 @@ export class Component extends DCLogic {
             viewDoc: {
               name: x.name,
               category: 'Property Paper',
-              type: 'Official Land & Property Record',
-              date: 'August 2026',
-              verified: true,
+              type: x.uploaded ? 'File uploaded to the property record' : 'Marked as held — no file uploaded',
+              date: x.when || '',
+              verified: x.uploaded,
               property: d.prop + ' · ' + d.propSub,
               dealName: d.client + ' — ' + d.name,
-              seal: 'MAPCO TITLE VERIFIED · SUB-REGISTRAR'
+              seal: x.uploaded ? 'FILE ON THE PROPERTY RECORD' : 'MARKED AS HELD — NO FILE UPLOADED'
             }
           })
         }));
 
         const dealDocItems = docs.own.map(x => ({
           name: x.name,
-          sub: x.have ? ('Received ' + (x.when || '21 Aug')) : (x.required ? 'Needed at this stage' : 'Not taken yet'),
-          date: x.have ? 'Verified on deal' : 'Pending',
-          badge: x.have ? 'Verified' : (x.required ? 'Required' : 'Optional'),
+          sub: x.have ? (x.uploaded ? 'File on this deal' : 'Marked as held by you') : (x.required ? 'Needed at this stage' : 'Not taken yet'),
+          date: x.have ? ((x.when ? ((x.uploaded ? 'Uploaded ' : 'Marked ') + x.when) : (x.uploaded ? 'On file' : 'Marked'))) : 'Pending',
+          badge: x.have ? (x.uploaded ? 'On file' : 'Marked') : (x.required ? 'Required' : 'Optional'),
           badgeStyle: 'display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:800;border-radius:6px;padding:2px 7px;' + (x.have ? 'background:#dcfce7;color:#15803d;box-shadow:0 0 0 1px #86efac;' : (x.required ? 'background:#fee2e2;color:#b91c1c;box-shadow:0 0 0 1px #fca5a5;' : 'background:#fef3c7;color:#b45309;box-shadow:0 0 0 1px #fde68a;')),
           cardStyle: 'display:flex;flex-direction:column;border-radius:18px;overflow:hidden;border:2px solid ' + (x.have ? '#10b981' : (x.required ? '#ef4444' : '#f59e0b')) + ';background:#ffffff;box-shadow:0 8px 20px -8px ' + (x.have ? 'rgba(16,185,129,.35)' : 'rgba(239,68,68,.3)') + ';cursor:pointer;text-align:left;transition:transform .15s;',
           bannerStyle: 'display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:' + (x.have ? 'linear-gradient(135deg, #f0fdf4, #dcfce7)' : (x.required ? 'linear-gradient(135deg, #fef2f2, #fee2e2)' : 'linear-gradient(135deg, #fffbeb, #fef3c7)')) + ';border-top:1.5px solid ' + (x.have ? '#bbf7d0' : (x.required ? '#fca5a5' : '#fde68a')) + ';',
@@ -2911,11 +2981,13 @@ export class Component extends DCLogic {
               name: x.name,
               category: 'Deal Paper',
               type: 'Transaction Legal Instrument',
-              date: x.have ? (x.when || '21 Aug') : 'Pending Execution',
-              verified: x.have,
+              date: x.have ? (x.when || '') : '',
+              verified: x.have && x.uploaded,
               property: d.prop + ' · ' + d.propSub,
               dealName: d.client + ' — ' + d.name,
-              seal: x.have ? 'EXECUTED & NOTARIZED · MAPCO DEAL ROOM' : 'DRAFT READY FOR SIGNATURE'
+              seal: x.have
+                ? (x.uploaded ? 'FILE ON THIS DEAL' : 'MARKED AS HELD — NO FILE UPLOADED')
+                : 'NOT TAKEN YET'
             }
           })
         }));
@@ -2984,15 +3056,15 @@ export class Component extends DCLogic {
 
           nextLabel: nx ? nx.k : 'Nothing planned yet', nextNote: nx ? (nx.note || 'No note') : 'Pick what you will do next so it shows on your morning list.',
           nextIcon: nx ? (this.NEXTICON[nx.k] || 'ph-fill ph-note-pencil') : 'ph-fill ph-plus-circle',
-          nextWhen: nx ? this.dayLabel(nx.day) : '—',
-          nextWhenStyle: 'display:inline-flex;align-items:center;height:34px;padding:0 13px;border-radius:11px;font-size:14.5px;font-weight:800;flex:none;' + (nx && nx.day < DTODAY ? 'background:#ffdfe2;color:#b02a37' : nx && nx.day === DTODAY ? 'background:#f8a800;color:#241d0c' : 'background:rgba(255,255,255,.14);color:#f4e5c4'),
+          nextWhen: nx ? this.dayLabel(nx.day, nx.dueOn) : '—',
+          nextWhenStyle: 'display:inline-flex;align-items:center;height:34px;padding:0 13px;border-radius:11px;font-size:14.5px;font-weight:800;flex:none;' + (ddDue !== null && ddDue < 0 ? 'background:#ffdfe2;color:#b02a37' : ddDue === 0 ? 'background:#f8a800;color:#241d0c' : 'background:rgba(255,255,255,.14);color:#f4e5c4'),
           nextOpts: ['Call buyer', 'Call seller', 'Site visit', 'Collect token', 'Collect document', 'Registry', 'Commission follow-up'].map(k => ({
             label: k, icon: this.NEXTICON[k], go: () => this.dealNext(d.id, { k }),
             style: 'display:flex;align-items:center;gap:7px;height:42px;padding:0 14px;border-radius:12px;font-size:15px;font-weight:800;white-space:nowrap;' + ((nx && nx.k === k) ? 'background:#f8a800;color:#241d0c' : 'background:rgba(255,255,255,.12);color:#f4e5c4')
           })),
           nextDays: [{ l: 'Today', v: DTODAY }, { l: 'Tomorrow', v: DTODAY + 1 }, { l: 'In 3 days', v: DTODAY + 3 }, { l: 'Next week', v: DTODAY + 7 }].map(o => ({
             label: o.l, go: () => this.dealNext(d.id, { day: o.v }),
-            style: 'height:40px;padding:0 14px;border-radius:12px;font-size:14.5px;font-weight:800;white-space:nowrap;' + ((nx && nx.day === o.v) ? 'background:#f8c200;color:#241d0c' : 'background:rgba(255,255,255,.1);color:#c9b48a')
+            style: 'height:40px;padding:0 14px;border-radius:12px;font-size:14.5px;font-weight:800;white-space:nowrap;' + ((ddDue !== null && DTODAY + ddDue === o.v) ? 'background:#f8c200;color:#241d0c' : 'background:rgba(255,255,255,.1);color:#c9b48a')
           })),
 
           hasFlags: fl.length > 0, flags: fl.map(f => ({ text: f.t, icon: f.i, style: dFlagPill(f) })),
@@ -3078,7 +3150,7 @@ export class Component extends DCLogic {
             }],
 
           propDocs: propDocItems,
-          noPropDocs: false,
+          noPropDocs: propDocItems.length === 0,
           dealDocs: dealDocItems,
           hasViewDoc: !!s.viewDoc,
           viewDoc: s.viewDoc,
@@ -3095,14 +3167,11 @@ export class Component extends DCLogic {
             : ['Token receipt', 'Agreement to Sell', 'Payment proof', 'Final registry copy', 'Commission receipt', 'Buyer ID proof', 'Seller ID proof'])
             .map(nm => ({
               label: nm, icon: 'ph-fill ph-file-plus',
-              go: () => {
-                if (s.docPick === 'prop') {
-                  if (pr) {
-                    pr.docs = pr.docs || []; if (!pr.docs.some(x => (x.name || x.kind) === nm)) pr.docs.push({ name: nm, kind: nm });
-                    (d.log = d.log || []).unshift({ d: 'Today', t: nm + ' added to the property papers', i: 'ph-fill ph-file-text', c: '#1a5aa8' });
-                  } this.setState({ docPick: null });
-                }
-                else { this.dealDocToggle(d.id, nm); this.setState({ docPick: null }); }
+              go: async () => {
+                const saved = s.docPick === 'prop'
+                  ? await this.propDocToggle(d.propId, nm)
+                  : await this.dealDocToggle(d.id, nm);
+                if (saved) this.setState({ docPick: null });
               },
               style: 'display:flex;align-items:center;gap:8px;height:48px;padding:0 16px;border-radius:13px;' + (s.docPick === 'prop' ? 'background:#e1ecfb;color:#1a5aa8' : 'background:#ede4ff;color:#5b32c4') + ';font-size:16px;font-weight:800;white-space:nowrap'
             })),
@@ -3328,7 +3397,7 @@ export class Component extends DCLogic {
         vm.hasChips = (c.viewed || []).length > 0;
         const iv = (c.interest || []).map(pid => this.properties.find(pr => pr.id === pid)).filter(Boolean).map(pr => ({ title: pr.type + ' · ' + pr.size, loc: pr.loc, priceFmt: this.inr(pr.price) }));
         vm.interest = iv; vm.hasInterest = iv.length > 0;
-        const dl = this.deals.filter(d => d.client === c.name).map(d => { const mt = this.stageMeta(d.stage); return { name: d.name || d.prop, propSub: d.propSub, valueFmt: this.inr(d.value), commFmt: d.comm ? this.inr(d.comm) : '—', docText: this.docsFor(d).length + ' papers', stageLabel: mt.label, pill: `display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;font-size:13px;font-weight:700;background:${mt.bg};color:${mt.color}`, dot: `width:7px;height:7px;border-radius:50%;background:${mt.color}`, open: () => this.setState({ selectedClient: null, selectedDeal: d.id, dealEdit: false, section: 'deals', delArm: false }) }; });
+        const dl = this.deals.filter(d => d.clientId === c.id).map(d => { const mt = this.stageMeta(d.stage); const np = this.paperCount(d); return { name: d.name || d.prop, propSub: d.propSub, valueFmt: this.inr(d.value), commFmt: d.comm ? this.inr(d.comm) : '—', docText: np === 1 ? '1 paper' : (np + ' papers'), stageLabel: mt.label, pill: `display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;font-size:13px;font-weight:700;background:${mt.bg};color:${mt.color}`, dot: `width:7px;height:7px;border-radius:50%;background:${mt.color}`, open: () => this.setState({ selectedClient: null, selectedDeal: d.id, dealEdit: false, section: 'deals', delArm: false }) }; });
         vm.deals = dl; vm.hasDeals = dl.length > 0; vm.noDeals = dl.length === 0;
         vm.dealValue = this.inr(this.deals.filter(d => d.client === c.name).reduce((a, d) => a + d.value, 0));
         vm.wa = this.waLink(c.phone);
@@ -3375,7 +3444,10 @@ export class Component extends DCLogic {
             send: () => this.setState({ selectedClient: null, linkBuild: 'new', lstep: 3, lSearchQ: '', lSearchQ2: '', lform: { ...this.blankL(), plots: [pr.id], clientId: c.id } })
           }));
         vm.matches = mtch; vm.hasMatches = mtch.length > 0; vm.noMatches = mtch.length === 0; vm.matchCount = mtch.length + ' from your list';
-        vm.delArm = s.delClient; vm.delIdle = !s.delClient; vm.arm = () => this.setState({ delClient: true }); vm.disarm = () => this.setState({ delClient: false }); vm.doDelete = () => this.deleteClient(c.id);
+        /* No client delete: the repository has no customer removal, because a
+           client carries links, deals and purchase history. Archiving is the
+           product's non-destructive equivalent and is wired below. The unused
+           delete view-model keys were removed with the handler. */
         clientDetail = vm;
       }
     }

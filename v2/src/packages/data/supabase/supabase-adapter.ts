@@ -18,6 +18,7 @@ import {
   type AuthRepository, type ActivationState, type AccountState,
   type PropertyRepository, type CustomerRepository, type DealRepository, type RecordSaleInput,
   type StartDealInput, type SetDealStageInput, type RecordDealPaymentInput, type UpdateDealInput,
+  type SetDealPaperInput, type RelinkDealPropertyInput, type SetPropertyPaperInput,
   type SellerRepository, type SaveSellerInput, type AssignPropertySellerInput,
 
   type PropertyDocumentRepository, type UploadPropertyDocumentInput,
@@ -60,6 +61,7 @@ import type {
   PipelineDeal,
   DealPayment,
   DealPaymentKind,
+  DealPaperMark,
   DealWorkspace,
 } from '../types';
 import {
@@ -571,6 +573,22 @@ class SupaPropertyDocuments implements PropertyDocumentRepository {
       return ok(mapPropertyDocument(data as PropertyDocumentRow));
     } catch (error) { return toErr(error); }
   }
+  async setMark(input: SetPropertyPaperInput, o?: QueryOptions): Promise<Result<readonly DealPaperMark[]>> {
+    const a = aborted<readonly DealPaperMark[]>(o); if (a) return a;
+    try {
+      const c = await client();
+      const { data, error } = await c.rpc('plotmap_set_property_paper', {
+        p_payload: { propertyId: input.propertyId, title: input.title, have: input.have },
+      });
+      if (error) return toErr(error);
+      const env = (data ?? {}) as { ok?: boolean; reason?: string; paperChecklist?: unknown };
+      if (env.ok !== true) {
+        if (env.reason === 'not_found') return err('not_found', 'That property is no longer available');
+        return err('validation', env.reason ?? 'The paper could not be saved');
+      }
+      return ok(readPaperChecklist(env.paperChecklist));
+    } catch (e) { return toErr(e); }
+  }
   async remove(id: string, o?: QueryOptions): Promise<Result<void>> {
     const a = aborted<void>(o); if (a) return a;
     const existing = await this.get(id, o); if (!existing.ok) return existing;
@@ -795,6 +813,43 @@ class SupaDeals implements DealRepository {
     } catch (e) { return toErr(e); }
   }
 
+  async setPaper(input: SetDealPaperInput, o?: QueryOptions): Promise<Result<readonly DealPaperMark[]>> {
+    const a = aborted<readonly DealPaperMark[]>(o); if (a) return a;
+    try {
+      const c = await client();
+      const { data, error } = await c.rpc('plotmap_set_deal_paper', {
+        p_payload: { dealId: input.dealId, title: input.title, have: input.have },
+      });
+      if (error) return toErr(error);
+      const env = (data ?? {}) as { ok?: boolean; reason?: string; paperChecklist?: unknown };
+      if (env.ok !== true) {
+        if (env.reason === 'not_found') return err('not_found', 'That deal is no longer available');
+        return err('validation', env.reason ?? 'The paper could not be saved');
+      }
+      return ok(readPaperChecklist(env.paperChecklist));
+    } catch (e) { return toErr(e); }
+  }
+
+  async relinkProperty(input: RelinkDealPropertyInput, o?: QueryOptions): Promise<Result<PipelineDeal>> {
+    const a = aborted<PipelineDeal>(o); if (a) return a;
+    try {
+      const c = await client();
+      const { data, error } = await c.rpc('plotmap_relink_deal_property', {
+        p_payload: { dealId: input.dealId, propertyId: input.propertyId },
+      });
+      if (error) return toErr(error);
+      const env = (data ?? {}) as { ok?: boolean; reason?: string; deal?: Record<string, unknown> };
+      if (env.ok !== true || !env.deal) {
+        if (env.reason === 'not_found') return err('not_found', 'That deal is no longer available');
+        return err('validation', env.reason ?? 'The property could not be linked');
+      }
+      const deal = normalizePipelineDeal(String(env.deal.id ?? input.dealId), env.deal);
+      if (!deal) return err('unknown', 'Deal response was invalid');
+      publishResourceInvalidation({ entity: 'inventory', id: input.propertyId });
+      return ok(deal);
+    } catch (e) { return toErr(e); }
+  }
+
   async workspace(dealId: string, o?: QueryOptions): Promise<Result<DealWorkspace>> {
     const a = aborted<DealWorkspace>(o); if (a) return a;
     try {
@@ -810,6 +865,23 @@ class SupaDeals implements DealRepository {
       return readDealWorkspace(dealId, env);
     } catch (e) { return toErr(e); }
   }
+}
+
+/**
+ * Ticked papers as stored on the deal payload. Anything without a usable
+ * title is dropped rather than rendered as a blank paper.
+ */
+function readPaperChecklist(value: unknown): readonly DealPaperMark[] {
+  if (!Array.isArray(value)) return [];
+  const marks: DealPaperMark[] = [];
+  for (const entry of value) {
+    if (!entry || typeof entry !== 'object') continue;
+    const row = entry as Record<string, unknown>;
+    const title = String(row.title ?? '').trim();
+    if (!title) continue;
+    marks.push({ title, markedOn: String(row.markedOn ?? '') });
+  }
+  return marks;
 }
 
 /** Shape the deal-workspace RPC envelope into the contract type. */
@@ -857,12 +929,15 @@ function readDealWorkspace(dealId: string, env: Record<string, unknown>): Result
       received: num('received'), due: num('due'),
       fullySettled: money.fullySettled === true,
     },
+    paperChecklist: readPaperChecklist((env.deal as Record<string, unknown> | undefined)?.paperChecklist),
     dealPapers: list(env.dealPapers).map((d) => ({
       id: String(d.id ?? ''), title: String(d.title ?? ''), type: String(d.type ?? 'other'),
       bucket: String(d.bucket ?? 'deal-documents'), path: String(d.path ?? ''),
       mimeType: String(d.mimeType ?? ''), sizeBytes: Number(d.sizeBytes ?? 0),
       ...(d.createdAt ? { createdAt: String(d.createdAt) } : {}),
     })),
+    propertyPaperChecklist: readPaperChecklist(
+      ((env.property as Record<string, unknown> | undefined)?.payload as Record<string, unknown> | undefined)?.paperChecklist),
     propertyPapers: list(env.propertyPapers).map((d) => ({
       id: String(d.id ?? ''),
       propertyId: deal.propertyId,

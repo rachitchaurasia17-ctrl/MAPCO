@@ -468,6 +468,17 @@ export interface DealPaper {
   createdAt?: string;
 }
 
+/**
+ * A paper the dealer has ticked on the deal's checklist. Distinct from
+ * DealPaper: a mark records that the dealer holds the paper, with no file
+ * behind it. A paper that has a real uploaded file is a DealPaper instead.
+ */
+export interface DealPaperMark {
+  title: string;
+  /** ISO yyyy-mm-dd, set by the database when the paper was ticked. */
+  markedOn: string;
+}
+
 /** The seller context a deal inherits through its canonical property. */
 export interface DealSellerContext {
   id: string;
@@ -495,7 +506,11 @@ export interface DealWorkspace {
   payments: readonly DealPayment[];
   money: DealMoney;
   dealPapers: readonly DealPaper[];
+  /** Papers ticked by hand; they carry no file, so they are kept apart. */
+  paperChecklist: readonly DealPaperMark[];
   propertyPapers: readonly PropertyDocument[];
+  /** The property's own hand-ticked papers, referenced the same way. */
+  propertyPaperChecklist: readonly DealPaperMark[];
 }
 
 export interface ClientLink {

@@ -10,6 +10,7 @@ const workspace: DealWorkspace = {
   money: { value: 8000000, token: 100000, expectedBuyer: 0, expectedSeller: 0,
     expected: 0, receivedBuyer: 0, receivedSeller: 0, received: 0, due: 0, fullySettled: false },
   payments: [], stageHistory: [], dealPapers: [], propertyPapers: [],
+  paperChecklist: [], propertyPaperChecklist: [],
 };
 
 afterEach(() => vi.restoreAllMocks());
@@ -19,6 +20,7 @@ describe('canonical Desk deals', () => {
     expect(mapped.pay).toEqual([]);
     expect(mapped.hist).toEqual([]);
     expect(mapped.docs).toEqual([]);
+    expect(mapped.propDocs).toEqual([]);
     expect(mapped.log).toEqual([]);
     expect(mapped.created).toBe('');
     expect(mapped.comm).toBe(0);
