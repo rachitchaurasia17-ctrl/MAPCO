@@ -563,7 +563,11 @@ export function toDeskClient(client: Client): Record<string, unknown> {
     prefs: [...(r.preferences ?? [])],
     stage: r.stage ?? '',
     // Desk renders `notes` as {t,x}; canonical stores {at,text}.
-    notes: (client.notes ?? []).map((n) => ({ t: n.at, x: n.text })),
+    /* `at` is a stored ISO timestamp. It used to be handed to the screen
+       unchanged, so a dealer read their own note stamped
+       '2026-09-10T22:05:51.656Z'. confirmedLabel is the same wording the
+       rest of the Desk already uses for 'when did this happen'. */
+    notes: (client.notes ?? []).map((n) => ({ t: confirmedLabel(n.at) || n.at, x: n.text })),
     budget: budgetLabel(r.budgetMin, r.budgetMax) || client.budget || '',
     budgetMax: client.budgetMax || r.budgetMax || 0,
     plots: [...(client.purchased ?? [])],

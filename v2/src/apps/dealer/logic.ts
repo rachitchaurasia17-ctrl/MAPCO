@@ -5263,7 +5263,14 @@ export class Component extends DCLogic {
           .filter(c => !q || ((c.name + ' ' + c.phone + ' ' + c.city + ' ' + (c.business || '') + ' ' + (c.types || []).join(' ') + ' ' + (c.areas || []).join(' ') + ' ' + (c.budget || '')).toLowerCase().includes(q)))
           .map((c, idx) => {
             const theme = CARD_THEMES[idx % CARD_THEMES.length];
-            const biz = c.business || (this.CLIX[c.id] ? this.CLIX[c.id].business : '') || (c.city ? c.city + ' Business' : 'Business Owner');
+            /* The client's own business when they have one, otherwise their
+               city. This used to fall back to `city + ' Business'` (or
+               'Business Owner'), which put an invented firm name on a real
+               person's card — a client with no business recorded was shown
+               as owning "Mohali Business". The CLIX fixture lookup went with
+               it; it is keyed by retired demo ids and never matches a real
+               client. */
+            const biz = c.business || c.city || '';
             const bgt = (c.budget && c.budget !== '—' && c.budget !== 'Not noted') ? c.budget : (c.bFrom || c.bTo ? ((c.bFrom >= 1 ? c.bFrom + ' Cr' : Math.round((c.bFrom || 0) * 100) + ' L') + (c.bTo ? (' – ' + (c.bTo >= 1 ? c.bTo + ' Cr' : Math.round((c.bTo || 0) * 100) + ' L')) : '')) : 'Budget on request');
             return {
               id: c.id, name: c.name, initials: this.initialsOf(c.name), phone: c.phone, tel: this.tel(c.phone), wa: this.waLink(c.phone),
