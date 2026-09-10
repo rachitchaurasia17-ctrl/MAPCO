@@ -20,13 +20,34 @@
    ═══════════════════════════════════════════════════════════════ */
 
 import { createClient } from '@supabase/supabase-js';
+import { randomBytes } from 'node:crypto';
 
 const URL = process.env.SUPABASE_URL;
 const ANON = process.env.SUPABASE_ANON_KEY;
 const SERVICE = process.env.SUPABASE_SERVICE_KEY;
+/* Device approval is a founder action and nothing else can perform it:
+   plotmap_founder_create_device_code requires plotmap_is_platform_admin(),
+   and platform admin is pinned to one verified identity. So the harness
+   signs in as the founder to approve its throwaway dealers' devices,
+   exactly as a real approval happens. There is no test-only backdoor and
+   the gate is not weakened; without these the run stops immediately rather
+   than reporting dozens of confusing PT403 failures. */
+const FOUNDER_EMAIL = process.env.MAPCO_FOUNDER_EMAIL;
+const FOUNDER_PASSWORD = process.env.MAPCO_FOUNDER_PASSWORD;
 
 if (!URL || !ANON || !SERVICE) {
   console.error('Need SUPABASE_URL, SUPABASE_ANON_KEY and SUPABASE_SERVICE_KEY.');
+  process.exit(2);
+}
+if (!FOUNDER_EMAIL || !FOUNDER_PASSWORD) {
+  console.error([
+    'Need MAPCO_FOUNDER_EMAIL and MAPCO_FOUNDER_PASSWORD.',
+    '',
+    'Every authenticated request now passes through the device gate',
+    '(pgrst.db_pre_request -> plotmap_check_dealer_request). A session that is',
+    'not bound to an approved device is refused with PT403, so this harness',
+    'must have its devices approved by the founder before it can test anything.',
+  ].join('\n'));
   process.exit(2);
 }
 if (!/lswzrkvdwirhvggtvuch/.test(URL)) {
@@ -35,6 +56,49 @@ if (!/lswzrkvdwirhvggtvuch/.test(URL)) {
 }
 
 const admin = createClient(URL, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
+const founder = createClient(URL, ANON, { auth: { persistSession: false, autoRefreshToken: false } });
+let founderReady = false;
+
+/** Sign the founder in once; every dealer's device approval goes through them. */
+async function signInFounder() {
+  if (founderReady) return;
+  const { error } = await founder.auth.signInWithPassword({
+    email: FOUNDER_EMAIL, password: FOUNDER_PASSWORD,
+  });
+  if (error) throw new Error(`founder sign-in: ${error.message}`);
+  const { data: isAdmin, error: adminErr } = await founder.rpc('plotmap_is_platform_admin');
+  if (adminErr) throw new Error(`founder check: ${adminErr.message}`);
+  if (isAdmin !== true) throw new Error('That account is not a platform admin; it cannot approve devices.');
+  founderReady = true;
+}
+
+/**
+ * Put one dealer session behind an approved device, the real way:
+ * the founder issues a single-use activation code, the dealer redeems it,
+ * and the dealer's own session binds itself to the approved device.
+ */
+async function approveDeviceFor(dealerId, session, tag) {
+  await signInFounder();
+  const { data: code, error: codeErr } = await founder.rpc(
+    'plotmap_founder_create_device_code', { p_dealer_id: dealerId });
+  if (codeErr) throw new Error(`device code(${tag}): ${codeErr.message}`);
+
+  const deviceToken = randomBytes(32).toString('hex');
+  const { data: activated, error: actErr } = await session.rpc('plotmap_activate_device', {
+    p_access_code: String(code.code), p_device_token: deviceToken,
+    p_device_label: `e2e-${tag}`, p_browser_info: 'desk-deal-e2e',
+  });
+  if (actErr) throw new Error(`activate(${tag}): ${actErr.message}`);
+  const status = Array.isArray(activated) ? activated[0]?.status : activated?.status;
+  if (status !== 'approved') throw new Error(`activate(${tag}): ${status}`);
+
+  // Binds THIS session to the approved device, exactly as the browser gate does.
+  const { data: access, error: gateErr } = await session.rpc(
+    'plotmap_dealer_access_status', { p_device_token: deviceToken });
+  if (gateErr) throw new Error(`gate(${tag}): ${gateErr.message}`);
+  if (access?.status !== 'approved') throw new Error(`gate(${tag}): ${JSON.stringify(access)}`);
+  return deviceToken;
+}
 
 const stamp = Date.now();
 const results = [];
@@ -86,7 +150,9 @@ async function provisionDealer(tag) {
   const { error: signInErr } = await session.auth.signInWithPassword({ email, password });
   if (signInErr) throw new Error(`signIn(${tag}): ${signInErr.message}`);
 
-  const record = { tag, dealerId, email, password, userId, session };
+  const deviceToken = await approveDeviceFor(dealerId, session, tag);
+
+  const record = { tag, dealerId, email, password, userId, session, deviceToken };
   dealers.push(record);
   return record;
 }

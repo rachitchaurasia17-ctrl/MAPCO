@@ -25,11 +25,12 @@ import { adapter, activeDataMode } from '../../packages/data/adapter';
 import type {
   SellerDirectoryEntry, SellerWorkspace, SellerType, SellerRelationship,
   SellerAvailability, Property, PropertySeller, PropertyLifecycle,
-  Client, ClientRequirements,
+  Client, ClientRequirements, PropertyPhotoStorageRef,
 } from '../../packages/data/types';
 import type { RepoError, RepoErrorCode } from '../../packages/data/contracts';
 import { normalizePropertySpecs } from '../../packages/data/property-specs';
 import { propertyLifecycle } from '../../packages/data/property-lifecycle';
+import { normalizePropertyPhotoStorage } from '../../packages/data/property-photos';
 
 export type LoadState = 'idle' | 'loading' | 'ready' | 'error';
 
@@ -257,6 +258,32 @@ function paperChecklistOf(property: Property): { title: string; markedOn: string
   return out;
 }
 
+/**
+ * The property-photo refs a form draft describes, in the dealer's chosen
+ * order with the cover first — the Photos step says "the first one is what
+ * buyers see", so the order is the promise.
+ *
+ * Returns undefined when the draft carries no photo model at all, so a
+ * partial save (a step advance that never touched Photos) leaves whatever
+ * the record already had untouched.
+ */
+function formPhotoStorage(
+  form: PropertyFormDraft,
+  existing?: Property,
+): PropertyPhotoStorageRef[] | undefined {
+  const keys = form.photos;
+  if (!Array.isArray(keys)) return undefined;
+  const refs = normalizePropertyPhotoStorage(form.photoStorage, undefined);
+  if (!refs.length && !keys.length) return existing?.photoStorage?.length ? [] : undefined;
+  const byPath = new Map(refs.map((ref) => [ref.path, ref]));
+  const cover = typeof form.cover === 'string' ? form.cover : '';
+  const ordered = keys.filter((key): key is string => typeof key === 'string');
+  const withCoverFirst = cover && ordered.includes(cover)
+    ? [cover, ...ordered.filter((key) => key !== cover)]
+    : ordered;
+  return withCoverFirst.flatMap((key) => { const ref = byPath.get(key); return ref ? [ref] : []; });
+}
+
 export function toDeskProperty(property: Property): Record<string, unknown> {
   const lifecycle = propertyLifecycle(property);
   const specs = (property.specs ?? {}) as Record<string, unknown>;
@@ -318,6 +345,7 @@ export function toDeskProperty(property: Property): Record<string, unknown> {
        `paperChecklist` (written by plotmap_set_property_paper), which is the
        same list the Deal room's property papers read. Uploaded files are a
        separate concern and arrive through loadPropertyDocuments. */
+    photoStorage: [...(property.photoStorage ?? [])],
     docs: paperChecklistOf(property).map((mark, index) => ({
       id: 'mark:' + mark.title, kind: mark.title, name: mark.title,
       photos: [], img: index % 3, markedOn: mark.markedOn,
@@ -400,7 +428,13 @@ export function toCanonicalProperty(
     approvals: existing?.approvals ?? [],
     landmarks: existing?.landmarks ?? [],
     price: Number.isFinite(priceCrore) ? Math.round(priceCrore * 1e7) : (existing?.price ?? 0),
+    /* Uploaded photos are canonical as `photoStorage` object refs; `photos`
+       carries display URLs at runtime and persistentPropertyPayload keeps
+       only genuinely external ones. The form owns the order and which is
+       the cover, so the refs are rebuilt from it rather than merged: a photo
+       the dealer removed must not survive in the record. */
     photos: existing?.photos ?? [],
+    ...(formPhotoStorage(form, existing) ? { photoStorage: formPhotoStorage(form, existing)! } : {}),
     views: existing?.views ?? 0,
     published: existing?.published ?? false,
     sold: existing?.sold ?? false,

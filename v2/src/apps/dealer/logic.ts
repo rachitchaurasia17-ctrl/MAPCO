@@ -7,6 +7,7 @@ import { MAP_REGISTRY as CANONICAL_SECTOR_MAPS } from '../../packages/maps/secto
 import { loadGoogleMaps, importMapsLibrary, GOOGLE_MAPS_MAP_ID } from '../../packages/maps/google-loader';
 import { productRoutes } from '../../packages/ui/product-routes';
 import { adapter } from '../../packages/data/adapter';
+import { PROPERTY_PHOTO_TYPES } from '../../packages/data/property-photos';
 import { SingleFlight } from '../../packages/security/single-flight';
 import { AddPropertyTelemetry } from './add-property-telemetry';
 import { previewPayloadFromLink, renderClientLinkView } from '../../packages/ui/client-link-view';
@@ -32,7 +33,7 @@ export class Component extends DCLogic {
     nsform: { name: '', phone: '', phone2: '', business: '', kind: 'Individual', city: '', note: '' },
     soldForm: { price: '', buyerId: '', buyerName: '', buyerPhone: '', comm: '', date: '', buyerNew: false, buyerQ: '' },
     pform: {
-      city: '', area: '', society: '', address: '', type: 'Residential Plot', size: '', unit: 'sq yd', carpet: '', rate: '', pooja: false, store: false, servant: false, lift: false, powerBackup: false, cornerShop: false, shutters: '', washrooms: '', facing: 'East', road: '', plotNo: '', showPlotNo: true, corner: false, parkFacing: false, tenure: 'Freehold', beds: '3', baths: '2', floor: '', totalFloors: '', balconies: '1', parking: '1', furnishing: 'Unfurnished', age: 'New', possession: 'Ready to move', frontage: '', use: '', mainRoad: false, avail: 'available', price: '', photos: [0, 1, 2], cover: 0, video: false, docs: [], highlights: [], customHl: '', registry: '', approval: '', notes: '', earth: false, earthQ: '', sector: '',
+      city: '', area: '', society: '', address: '', type: 'Residential Plot', size: '', unit: 'sq yd', carpet: '', rate: '', pooja: false, store: false, servant: false, lift: false, powerBackup: false, cornerShop: false, shutters: '', washrooms: '', facing: 'East', road: '', plotNo: '', showPlotNo: true, corner: false, parkFacing: false, tenure: 'Freehold', beds: '3', baths: '2', floor: '', totalFloors: '', balconies: '1', parking: '1', furnishing: 'Unfurnished', age: 'New', possession: 'Ready to move', frontage: '', use: '', mainRoad: false, avail: 'available', price: '', photos: [], cover: '', photoUrls: {}, photoStorage: [], video: false, docs: [], highlights: [], customHl: '', registry: '', approval: '', notes: '', earth: false, earthQ: '', sector: '',
       sellerId: '', askPrice: '', relation: 'Owner', availConfirmed: true, lastConfirmed: 'Today', visitNote: '', sellerPropNote: '', sellerDocs: []
     },
     lstep: 1, linkCopied: false, priceEdit: null, priceVal: '', unpubFor: null, unpubReason: '', soldFor: null, delPlot: false, delClient: false,
@@ -99,6 +100,12 @@ export class Component extends DCLogic {
   blankWiz() { return { step: 1, clientId: '', useNewClient: false, ncName: '', ncPhone: '', propId: '', useManualProp: false, mpLoc: '', mpSize: '', name: '', value: '', comm: '', stage: 'negotiating', sellerName: '', sellerPhone: '', q1: '', q2: '' }; }
   plotPhoto(pr, i) {
     if (!pr) return '/assets/ph-plot-1.png';
+    /* A real photo whenever the property has one. `photos` carries display
+       URLs the repository already signed for the private objects, in the
+       dealer's own order, so index 0 is the cover. The stock illustration
+       below is only for a property with no photo yet. */
+    const real = (pr.photos || [])[i || 0];
+    if (typeof real === 'string' && real) return real;
     const want = pr.want || (pr.type && pr.type.includes('Plot') ? 'Plot' : pr.type && pr.type.includes('Commercial') ? 'Commercial' : pr.type && (pr.type.includes('Villa') || pr.type.includes('Kothi')) ? 'Villa' : 'Plot');
     const kind = (want === 'Plot') ? 'plot' : (want === 'Commercial' ? 'landmark' : (want === 'Villa' || want === 'Kothi' ? 'project' : 'landmark'));
     const v = (((pr.id || 'P1').length + (i || 0)) % 3) + 1;
@@ -1098,7 +1105,16 @@ export class Component extends DCLogic {
         pooja: !!pr.pooja, store: !!pr.store, servant: !!pr.servant, lift: !!pr.lift, powerBackup: !!pr.powerBackup,
         washrooms: pr.washrooms || '', shutters: pr.shutters || '', rate: pr.rate || '',
         price: pr.price ? String(pr.price / 1e7) : '',
-        photos: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].slice(0, Math.max(n, pr.photoCount || 0)), cover: 0, video: !!pr.video,
+        /* Real refs and the URLs the repository signed for them, in the
+           stored order. Previously this invented one placeholder slot per
+           photoCount, so opening a property to edit replaced its photos
+           with stock tiles. */
+        photos: (pr.photoStorage || []).map(ref => ref.path),
+        photoStorage: [...(pr.photoStorage || [])],
+        photoUrls: Object.fromEntries((pr.photoStorage || [])
+          .map((ref, idx) => [ref.path, (pr.photos || [])[idx] || ''])),
+        cover: (pr.photoStorage || [])[0] ? pr.photoStorage[0].path : '',
+        video: !!pr.video,
         videos: (pr.videos || []).slice(), docs: (pr.docs || []).map(d => ({ ...d, id: d.id || ('DC' + Math.random().toString(36).slice(2, 8)), photos: d.photos || [0] })),
         highlights: (pr.highlights || []).slice(), customHl: '',
         registry: pr.registry || '', approval: pr.approval || '', notes: pr.notes || '',
@@ -1121,7 +1137,7 @@ export class Component extends DCLogic {
   }
   blankP() {
     return {
-      city: '', area: '', society: '', address: '', type: 'Residential Plot', size: '', unit: 'sq yd', carpet: '', rate: '', pooja: false, store: false, servant: false, lift: false, powerBackup: false, cornerShop: false, shutters: '', washrooms: '', facing: 'East', road: '', plotNo: '', showPlotNo: true, corner: false, parkFacing: false, tenure: 'Freehold', beds: '3', baths: '2', floor: '', totalFloors: '', balconies: '1', parking: '1', furnishing: 'Unfurnished', age: 'New', possession: 'Ready to move', frontage: '', use: '', mainRoad: false, avail: 'available', price: '', photos: [], cover: 0, video: false, videos: [], docs: [], highlights: [], customHl: '', registry: '', approval: '', notes: '', earth: false, earthQ: '', sector: '',
+      city: '', area: '', society: '', address: '', type: 'Residential Plot', size: '', unit: 'sq yd', carpet: '', rate: '', pooja: false, store: false, servant: false, lift: false, powerBackup: false, cornerShop: false, shutters: '', washrooms: '', facing: 'East', road: '', plotNo: '', showPlotNo: true, corner: false, parkFacing: false, tenure: 'Freehold', beds: '3', baths: '2', floor: '', totalFloors: '', balconies: '1', parking: '1', furnishing: 'Unfurnished', age: 'New', possession: 'Ready to move', frontage: '', use: '', mainRoad: false, avail: 'available', price: '', photos: [], cover: '', photoUrls: {}, photoStorage: [], video: false, videos: [], docs: [], highlights: [], customHl: '', registry: '', approval: '', notes: '', earth: false, earthQ: '', sector: '',
       sellerId: '', askPrice: '', relation: 'Owner', availConfirmed: true, lastConfirmed: 'Today', visitNote: '', sellerPropNote: '', sellerDocs: []
     };
   }
@@ -1171,7 +1187,76 @@ export class Component extends DCLogic {
       const ph = (d.photos || []).slice(); ph.splice(i, 1); return { ...d, photos: ph };
     }); this.setP({ docs: cur });
   }
-  addPhotoSlot() { const cur = (this.state.pform.photos || []); this.setP({ photos: [...cur, cur.length ? Math.max(...cur) + 1 : 0] }); }
+  /* Add photo. This used to push an integer into pform.photos, which drew a
+     stock placeholder tile and uploaded nothing: the dealer believed the
+     property had photos and every buyer link had none.
+
+     The photo model is keyed by the canonical storage PATH, which is unique
+     per object, so the existing value-based reorder/remove/cover handlers
+     keep working unchanged. pform.photoUrls maps that key to something the
+     browser can draw right now; only the refs are ever persisted. */
+  addPhotoSlot() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = PROPERTY_PHOTO_TYPES.join(',');
+    input.multiple = true;
+    input.style.display = 'none';
+    document.body.appendChild(input);
+    input.addEventListener('change', () => {
+      const files = [...(input.files || [])];
+      input.remove();
+      if (files.length) void this.uploadPhotos(files);
+    }, { once: true });
+    input.click();
+  }
+
+  async uploadPhotos(files) {
+    if (this._uploadingPhotos) return;
+    /* An upload needs a saved property to belong to. Steps 1-2 already save,
+       so by the Photos step there is normally an id; if the dealer somehow
+       arrives without one, save the draft first rather than failing. */
+    let propertyId = this.state.pEditId;
+    if (!propertyId) {
+      await this.savePlot(false);
+      propertyId = this.state.pEditId;
+      /* savePlot will not create a record without at least a city or an
+         area, so say what is missing. Returning quietly here would look
+         exactly like a successful upload that produced no photo. */
+      if (!propertyId) {
+        this.setState({ propError: 'Add the city and area first, then add photos.' });
+        return;
+      }
+    }
+    this._uploadingPhotos = true;
+    this.setState({ photoBusy: true, propError: '' });
+    const failures = [];
+    try {
+      for (const file of files) {
+        const local = this.state.pform;
+        if ((local.photos || []).length >= 12) { failures.push('A property can hold 12 photos.'); break; }
+        const result = await adapter.media.uploadPropertyPhoto(propertyId, file);
+        if (!result.ok) { failures.push(result.error.message || (file.name + ' could not be uploaded.')); continue; }
+        const ref = result.value;
+        const f = this.state.pform;
+        const photos = [...(f.photos || []), ref.path];
+        this.setP({
+          photos,
+          photoStorage: [...(f.photoStorage || []), ref],
+          // Drawn immediately; never persisted — persistentPropertyPayload
+          // strips blob URLs and the record keeps the ref instead.
+          photoUrls: { ...(f.photoUrls || {}), [ref.path]: URL.createObjectURL(file) },
+          cover: f.cover && photos.includes(f.cover) ? f.cover : ref.path,
+        });
+      }
+    } finally {
+      this._uploadingPhotos = false;
+      this.setState({ photoBusy: false });
+    }
+    // A failed upload is reported; it never leaves a tile behind as if it worked.
+    if (failures.length) { this.setState({ propError: failures[0] }); return; }
+    // Persist the association straight away so a refresh keeps the photo.
+    await this.savePlot(false);
+  }
   addVideoSlot() { const cur = (this.state.pform.videos || []); this.setP({ videos: [...cur, cur.length] }); }
   removeVideo(i) { const cur = (this.state.pform.videos || []).slice(); cur.splice(i, 1); this.setP({ videos: cur }); }
   findMatchingSectorMap(city, sectorOrArea) {
@@ -1217,10 +1302,32 @@ export class Component extends DCLogic {
     const v = (this.state.pform.customHl || '').trim(); if (!v) return; const cur = this.state.pform.highlights || [];
     if (!cur.includes(v)) this.setP({ highlights: [...cur, v], customHl: '' }); else this.setP({ customHl: '' });
   }
-  togglePhoto(i) {
+  togglePhoto(key) {
     const f = this.state.pform; const cur = f.photos || [];
-    if (cur.includes(i)) { const next = cur.filter(x => x !== i); this.setP({ photos: next, cover: next.includes(f.cover) ? f.cover : (next[0] !== undefined ? next[0] : 0) }); }
-    else this.setP({ photos: [...cur, i] });
+    if (!cur.includes(key)) { this.setP({ photos: [...cur, key] }); return; }
+    const next = cur.filter(x => x !== key);
+    const urls = { ...(f.photoUrls || {}) };
+    const stale = urls[key];
+    if (stale && stale.startsWith('blob:')) URL.revokeObjectURL(stale);
+    delete urls[key];
+    this.setP({
+      photos: next,
+      photoStorage: (f.photoStorage || []).filter(ref => ref.path !== key),
+      photoUrls: urls,
+      cover: next.includes(f.cover) ? f.cover : (next[0] !== undefined ? next[0] : ''),
+    });
+    /* Drop the record's reference first, then try to release the object. The
+       order matters: an orphaned object is harmless, a reference to a deleted
+       object renders as a broken photo.
+
+       The release is best-effort and currently fails on MAPCO-DEV: the
+       permissive storage.objects policy 'marketing creative delete unbound'
+       reads public.marketing_creatives, which `authenticated` holds no grant
+       on, so Postgres refuses every dealer DELETE on storage.objects with
+       'permission denied for table marketing_creatives'. The dealer-facing
+       result is still correct — the photo leaves the property and every
+       buyer link — so this is storage litter, not a broken control. */
+    void this.savePlot(false).then(() => adapter.media.removePropertyPhotos([key]));
   }
   movePhoto(i, dir) {
     const cur = (this.state.pform.photos || []).slice(); const at = cur.indexOf(i); const to = at + dir;
@@ -2112,19 +2219,33 @@ export class Component extends DCLogic {
     });
     if (closeAfter === false) {
       this.setState({ savingProp: false, pEditId: saved.id, pSaved: true,
-        propError: this.paperError(paperFailures), propMissing: result.missing || [] });
+        propError: this.paperError(paperFailures) || this.draftNotice(result.missing),
+        propMissing: result.missing || [] });
       return;
     }
     addPropertyTelemetry.closed();
     this.setState({
       addPlotOpen: false, pstep: 1, pEditId: null, pSaved: false, section: 'properties',
       invView: 'live', plotCity: saved.city || 'Mohali', pform: this.blankP(),
-      savingProp: false, propError: this.paperError(paperFailures), propMissing: result.missing || [],
+      savingProp: false, propError: this.paperError(paperFailures) || this.draftNotice(result.missing),
+      propMissing: result.missing || [],
       propDetail: saved.id, propShot: 0,
     });
   }
   /* Save as Draft. Incomplete records are allowed — a draft is a real
      persisted property, not a local placeholder. */
+  /* What the dealer is told when a save could not put the property on sale.
+     The record really did persist as a draft, so saying nothing left them
+     believing it was live: it was counted under On sale, valued as active
+     inventory, and could not actually be shared with anyone. `missing` is
+     the canonical readiness list the write path already returns. */
+  draftNotice(missing) {
+    const fields = (missing || []).filter(Boolean);
+    if (!fields.length) return '';
+    const list = fields.length === 1 ? fields[0]
+      : fields.slice(0, -1).join(', ') + ' and ' + fields[fields.length - 1];
+    return 'Saved as a draft. Add the ' + list + ' to put it on sale.';
+  }
   paperError(failed) {
     if (!failed || !failed.length) return '';
     return failed.length === 1
@@ -3332,10 +3453,16 @@ export class Component extends DCLogic {
     const allSold = this.properties.filter(pr => pr.status === 'sold'), allHold = this.properties.filter(pr => pr.status === 'onhold'), allLive = this.properties.filter(pr => pr.status !== 'sold' && pr.status !== 'onhold');
     const soldPool = pool.filter(pr => pr.status === 'sold'), holdPool = pool.filter(pr => pr.status === 'onhold'), livePoolAll = pool.filter(pr => pr.status !== 'sold' && pr.status !== 'onhold');
     const stateOf = (pr) => this.readinessOf(pr).state;
+    /* A property that persisted as lifecycle 'draft' is not on sale: it is not
+       client-visible and cannot be shared. It stays in the list so the dealer
+       can finish it — the Filters sheet already has a Draft chip — but it must
+       not be counted as on sale or valued as active inventory. `allLive` is
+       left alone because those same filter chips count drafts on purpose. */
+    const onSaleLive = livePoolAll.filter(pr => stateOf(pr) !== 'draft');
     const livePool = s.fState === 'all' ? livePoolAll : livePoolAll.filter(pr => stateOf(pr) === s.fState);
     const soldValue = soldPool.reduce((a, pr) => a + pr.price, 0);
     const soldEarn = Math.round(soldValue * 0.015);
-    const portfolio = soldView ? soldValue : (holdView ? holdPool.reduce((a, pr) => a + pr.price, 0) : livePoolAll.reduce((a, pr) => a + pr.price, 0));
+    const portfolio = soldView ? soldValue : (holdView ? holdPool.reduce((a, pr) => a + pr.price, 0) : onSaleLive.reduce((a, pr) => a + pr.price, 0));
     const readyCount = soldView ? soldPool.length : (holdView ? holdPool.length : livePoolAll.filter(pr => stateOf(pr) === 'ready').length);
     const liveLinkCount = this.clientLinks.filter(l => l.status === 'active').length + this.shares.filter(x => x.status === 'active').length;
     const needCount = liveLinkCount;
@@ -3968,13 +4095,15 @@ export class Component extends DCLogic {
       };
     });
     const pkind = pg === 'plot' ? 'plot' : pg === 'comm' ? 'landmark' : 'project';
-    const pPhotoSlots = (pf.photos || []).map(i => {
-      const isCover = pf.cover === i;
+    const pPhotoSlots = (pf.photos || []).map(key => {
+      const isCover = pf.cover === key;
+      // The real uploaded image, not a stock tile keyed off the slot number.
+      const src = (pf.photoUrls || {})[key] || '';
       return {
         isCover, notCover: !isCover,
-        style: `position:relative;height:150px;border-radius:16px;overflow:hidden;background-image:url('/assets/ph-${pkind}-${(i % 3) + 1}.png');background-size:cover;background-position:center;box-shadow:0 0 0 ${isCover ? '4px #e8681c' : '2px #e6d6b4'}`,
-        remove: () => this.togglePhoto(i), setCover: () => this.setP({ cover: i }),
-        left: () => this.movePhoto(i, -1), right: () => this.movePhoto(i, 1)
+        style: `position:relative;height:150px;border-radius:16px;overflow:hidden;background-image:url('${src}');background-size:cover;background-position:center;background-color:#f0ece4;box-shadow:0 0 0 ${isCover ? '4px #e8681c' : '2px #e6d6b4'}`,
+        remove: () => this.togglePhoto(key), setCover: () => this.setP({ cover: key }),
+        left: () => this.movePhoto(key, -1), right: () => this.movePhoto(key, 1)
       };
     });
     const pPhotoCount = (pf.photos || []).length;
@@ -4186,7 +4315,7 @@ export class Component extends DCLogic {
       invStatIconA: soldView ? 'ph-fill ph-bank' : (holdView ? 'ph-fill ph-archive' : 'ph-fill ph-buildings'),
       invStatIconB: soldView ? 'ph-fill ph-seal-check' : (holdView ? 'ph-fill ph-pause-circle' : 'ph-fill ph-check-circle'),
       invStatIconC: soldView ? 'ph-fill ph-coins' : (holdView ? 'ph-fill ph-paper-plane-tilt' : 'ph-fill ph-paper-plane-tilt'),
-      invLiveCount: allLive.length, invSoldCount: allSold.length, invHoldCount: allHold.length,
+      invLiveCount: onSaleLive.length, invSoldCount: allSold.length, invHoldCount: allHold.length,
       invSegLive: segBase + ';height:60px;padding:0 26px;font-size:18.5px;border-radius:16px;white-space:nowrap;' + (!soldView && !holdView ? 'background:#1d4ed8;background-image:linear-gradient(140deg,#2563eb,#1d4ed8);color:#ffffff;box-shadow:0 14px 28px -12px rgba(29,78,216,.95),inset 0 0 0 2px #60a5fa;transform:scale(1.02)' : 'background:transparent;color:#475569;opacity:.8'),
       invSegSold: segBase + ';height:60px;padding:0 26px;font-size:18.5px;border-radius:16px;white-space:nowrap;' + (soldView ? 'background:#0a6634;color:#eafff2;box-shadow:0 14px 28px -12px rgba(10,102,52,.95),inset 0 0 0 2px #2fd07f;transform:scale(1.02)' : 'background:transparent;color:#786950;opacity:.75'),
       invSegHold: segBase + ';height:60px;padding:0 26px;font-size:18.5px;border-radius:16px;white-space:nowrap;' + (holdView ? 'background:#be123c;color:#fff;box-shadow:0 14px 28px -12px rgba(190,18,60,.95),inset 0 0 0 2px #e11d48;transform:scale(1.02)' : 'background:transparent;color:#786950;opacity:.75'),

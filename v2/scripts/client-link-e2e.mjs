@@ -3,6 +3,7 @@
  * removes only those rows/objects in finally. It never prints tokens or keys. */
 import { readFileSync } from 'node:fs';
 import { createClient } from '@supabase/supabase-js';
+import { randomBytes } from 'node:crypto';
 
 const envPath = process.argv[2] ?? 'supabase/.env';
 const env = Object.fromEntries(readFileSync(envPath, 'utf8').split(/\r?\n/).filter(Boolean).map((line) => {
@@ -18,6 +19,53 @@ if (!URL?.includes('lswzrkvdwirhvggtvuch') || !ANON || !SERVICE || !PASSWORD) {
 }
 
 const admin = createClient(URL, SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
+
+/* Device approval is a founder action — plotmap_founder_create_device_code
+   requires plotmap_is_platform_admin(), which is pinned to one verified
+   identity. The harness therefore approves its device the same way a real
+   one is approved rather than working around the gate. */
+const FOUNDER_EMAIL = env.MAPCO_FOUNDER_EMAIL ?? process.env.MAPCO_FOUNDER_EMAIL;
+const FOUNDER_PASSWORD = env.MAPCO_FOUNDER_PASSWORD ?? process.env.MAPCO_FOUNDER_PASSWORD;
+if (!FOUNDER_EMAIL || !FOUNDER_PASSWORD) {
+  console.error('Refusing to run: MAPCO_FOUNDER_EMAIL and MAPCO_FOUNDER_PASSWORD are required.');
+  console.error('Every authenticated request passes the device gate; without an approved');
+  console.error('device this harness can only produce PT403 failures.');
+  process.exit(2);
+}
+const founder = createClient(URL, ANON, { auth: { persistSession: false, autoRefreshToken: false } });
+let approvedDeviceId = null;
+
+/** Approve one device for `dealerId` and bind every given session to it. */
+async function approveDeviceForSessions(dealerId, sessions) {
+  const signedIn = await founder.auth.signInWithPassword({
+    email: FOUNDER_EMAIL, password: FOUNDER_PASSWORD,
+  });
+  if (signedIn.error) throw new Error(`founder sign-in: ${signedIn.error.message}`);
+  const { data: code, error: codeErr } = await founder.rpc(
+    'plotmap_founder_create_device_code', { p_dealer_id: dealerId });
+  if (codeErr) throw new Error(`device code: ${codeErr.message}`);
+
+  const deviceToken = randomBytes(32).toString('hex');
+  const { data: act, error: actErr } = await sessions[0].rpc('plotmap_activate_device', {
+    p_access_code: String(code.code), p_device_token: deviceToken,
+    p_device_label: `client-link-e2e-${runId}`, p_browser_info: 'client-link-e2e',
+  });
+  if (actErr) throw new Error(`activate: ${actErr.message}`);
+  const status = Array.isArray(act) ? act[0]?.status : act?.status;
+  if (status !== 'approved') throw new Error(`activate: ${status}`);
+
+  // Every session of this dealer binds itself to that one approved device.
+  for (const session of sessions) {
+    const { data: access, error } = await session.rpc(
+      'plotmap_dealer_access_status', { p_device_token: deviceToken });
+    if (error) throw new Error(`gate: ${error.message}`);
+    if (access?.status !== 'approved') throw new Error(`gate: ${JSON.stringify(access)}`);
+  }
+
+  const { data: devices } = await founder.rpc('plotmap_admin_list_dealer_devices');
+  approvedDeviceId = (devices ?? []).find(
+    (d) => d.dealer_id === dealerId && d.device_label === `client-link-e2e-${runId}`)?.id ?? null;
+}
 const browser = createClient(URL, ANON, { auth: { persistSession: false, autoRefreshToken: false } });
 let passed = 0;
 let failed = 0;
@@ -85,6 +133,17 @@ async function cleanup() {
   await admin.from('crm_records').delete().in('id', [PROP_A, PROP_B, SALE_PROP, CLIENT]);
   await admin.from('prebuilt_maps').delete().in('id', [SECTOR, MASTER, DRAFT]);
   await admin.storage.from('maps').remove([MAP_PATH]);
+  /* Hand the device slot back. The limit is four per dealer, so a harness
+     that kept its device would lock the demo dealer out after four runs. */
+  if (approvedDeviceId) {
+    try {
+      await founder.rpc('plotmap_admin_set_device_status', {
+        p_device_id: approvedDeviceId, p_status: 'revoked',
+        p_developer_notes: 'client-link-e2e cleanup',
+      });
+    } catch { /* best effort */ }
+    approvedDeviceId = null;
+  }
 }
 
 async function main() {
@@ -123,6 +182,12 @@ async function main() {
   const teamBrowser = createClient(URL, ANON, { auth: { persistSession: false, autoRefreshToken: false } });
   const teamSignIn = await teamBrowser.auth.signInWithPassword({ email: 'demo-team@mapco.dev', password: PASSWORD });
   if (teamSignIn.error) throw teamSignIn.error;
+
+  /* Both of this dealer's sessions bind to one founder-approved device
+     before any authenticated read or write. Signing in is no longer enough:
+     an unbound session is refused by the request gate with PT403. */
+  await approveDeviceForSessions(dealer, [browser, teamBrowser]);
+  pass('dealer sessions bound to a founder-approved device');
   const teamRows = await teamBrowser.from('crm_records').select('id').in('id', [CLIENT, PROP_A]);
   check((teamRows.data ?? []).length === 2, 'new property and client interlink across dealer and team workspaces');
 
