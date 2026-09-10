@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "reviewDate": "2026-09-11",
+  "canonicalCommit": "328c770adb47c288a1da0b6375929d24e678aee0",
+  "donor": {
+    "repository": "rachitchaurasia17-ctrl/property-software",
+    "branch": "developer-intelligence-and-performance",
+    "commit": "31da12275ced4d8b6f3c54b5fc0374d8834f52fc",
+    "files": [
+      "admin/core/dev360.js",
+      "docs/DEALER-360-ARCHITECTURE.md",
+      "docs/DEALER360_STAGING_VERIFICATION.md"
+    ],
+    "implementationCommit": "daf3857e148834783e47873868b82846817ea07e"
+  },
+  "archives": [
+    {
+      "file": "founders thing.zip",
+      "sha256": "48c3fe312e24cb15aeb19d639984b72defb6aec3eb7b65ad616649ce049b8226"
+    },
+    {
+      "file": "founders thing2.zip",
+      "sha256": "a8b9e81e18fa860f6daf22ad09a9fec06ee93611381ce5596f14400e11428baf"
+    },
+    {
+      "file": "founderthing3.zip",
+      "sha256": "df78e038afd588060453978eef9fb44d1dd5c548f42c5c6694ccce482776bba7"
+    }
+  ],
+  "evidenceCommits": {
+    "diverged": "5933ecb420fff15a0ebefa8b7640733191e5f1e7",
+    "canonical": "733d2d656d0e7b6c1011b8df1f3cc394fcd9247a"
+  },
+  "currentSources": [
+    "v2/src/packages/data/telemetry.ts",
+    "v2/src/packages/data/supabase/supabase-adapter.ts",
+    "v2/src/apps/dealer/add-property-telemetry.ts",
+    "v2/src/apps/dealer/logic.ts",
+    "v2/src/apps/client/main.ts",
+    "v2/src/packages/ui/client-link-view.ts",
+    "v2/src/apps/developer/templates.ts",
+    "v2/src/apps/developer/repository.ts",
+    "supabase/migrations/20260903000100_evidence_foundation.sql",
+    "supabase/migrations/20260910064125_founder_control_foundation.sql"
+  ],
+  "devReadOnlySnapshot": {
+    "project": "MAPCO-DEV",
+    "presentationEventRows": 8,
+    "buyerEventRows": 7,
+    "trials": 0,
+    "evidence": 0,
+    "predictions": 0,
+    "allPresentationBuilds": "dev",
+    "allPresentationEnvironmentTags": "missing",
+    "deviceGatePresent": false,
+    "inference": "Development records only; no customer behavior or production capture conclusion."
+  },
+  "verification": {
+    "suites": [
+      "telemetry-contract",
+      "add-property-telemetry",
+      "evidence-foundation"
+    ],
+    "testsPassed": 104,
+    "testsFailed": 0,
+    "limitation": "Contract tests are not authenticated browser or live delivery proof."
+  }
+}
