@@ -39,16 +39,20 @@ if (!URL || !ANON || !SERVICE) {
   console.error('Need SUPABASE_URL, SUPABASE_ANON_KEY and SUPABASE_SERVICE_KEY.');
   process.exit(2);
 }
-if (!FOUNDER_EMAIL || !FOUNDER_PASSWORD) {
-  console.error([
-    'Need MAPCO_FOUNDER_EMAIL and MAPCO_FOUNDER_PASSWORD.',
-    '',
-    'Every authenticated request now passes through the device gate',
-    '(pgrst.db_pre_request -> plotmap_check_dealer_request). A session that is',
-    'not bound to an approved device is refused with PT403, so this harness',
-    'must have its devices approved by the founder before it can test anything.',
-  ].join('\n'));
-  process.exit(2);
+/* Whether the gate is switched on is a property of the database, not an
+   assumption this harness gets to make: it has been applied and rolled back
+   on MAPCO-DEV more than once. Asking is one query and it is asked the only
+   way that cannot be fooled — by making an ordinary authenticated request
+   and seeing whether the gate refuses it. */
+let gateOn = null;
+async function deviceGateIsOn(session) {
+  if (gateOn !== null) return gateOn;
+  const { error } = await session.from('dealer_settings').select('dealer_id').limit(1);
+  gateOn = !!error && (error.code === 'PT403' || /device/i.test(error.message || ''));
+  console.log(gateOn
+    ? '· device gate is ON — every dealer here gets a founder-approved device'
+    : '· device gate is OFF on this database — nothing to approve');
+  return gateOn;
 }
 if (!/lswzrkvdwirhvggtvuch/.test(URL)) {
   console.error(`Refusing to run: ${URL} is not MAPCO-DEV.`);
@@ -150,7 +154,23 @@ async function provisionDealer(tag) {
   const { error: signInErr } = await session.auth.signInWithPassword({ email, password });
   if (signInErr) throw new Error(`signIn(${tag}): ${signInErr.message}`);
 
-  const deviceToken = await approveDeviceFor(dealerId, session, tag);
+  /* Approved the real way when the gate is on, and skipped when it is not —
+     never worked around. Without founder credentials a gated database can
+     only produce PT403 on every check, so say so instead of reporting
+     dozens of failures that are really one missing setting. */
+  let deviceToken = null;
+  if (await deviceGateIsOn(session)) {
+    if (!FOUNDER_EMAIL || !FOUNDER_PASSWORD) {
+      console.error([
+        'This database enforces the device gate, so this harness needs',
+        'MAPCO_FOUNDER_EMAIL and MAPCO_FOUNDER_PASSWORD: a session that is not',
+        'bound to an approved device is refused with PT403 on every request,',
+        'and only the founder can approve a device.',
+      ].join('\n'));
+      process.exit(2);
+    }
+    deviceToken = await approveDeviceFor(dealerId, session, tag);
+  }
 
   const record = { tag, dealerId, email, password, userId, session, deviceToken };
   dealers.push(record);

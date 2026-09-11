@@ -55,10 +55,49 @@ describe('a draft is never presented as on sale', () => {
       missing: ['city'],
     } as never);
 
-    await c.savePlot(false);
+    await c.savePlot();
 
     expect(c.state.propError).toBe('Saved as a draft. Add the city to put it on sale.');
     expect(c.state.propMissing).toEqual(['city']);
+  });
+
+  it('says it on the finish, not on every step of the way there', async () => {
+    /* Each Next autosaves so nothing typed is lost. Announcing the downgrade
+       on every one of those read as an error the dealer had caused, halfway
+       through a form whose later steps supply the very fields it named. */
+    const c = new Component() as any;
+    c.state = { ...c.state, pform: { ...c.blankP(), city: '', area: 'Sector 12', type: 'Residential Plot' } };
+    vi.spyOn(deskStore, 'saveProperty').mockResolvedValue({
+      property: { id: 'p9', city: '', area: 'Sector 12', photos: [] },
+      missing: ['city'],
+    } as never);
+
+    await c.savePlot(false);
+
+    expect(c.state.propError).toBe('');
+    // Still persisted, and still known to be incomplete.
+    expect(c.state.pEditId).toBe('p9');
+    expect(c.state.propMissing).toEqual(['city']);
+  });
+
+  it('never announces a draft as live on Earth, Links and Marketing', async () => {
+    const c = new Component() as any;
+    c.state = { ...c.state, pform: { ...c.blankP(), city: 'Mohali', area: 'Sector 12' } };
+    const saveProperty = vi.spyOn(deskStore, 'saveProperty');
+
+    saveProperty.mockResolvedValue({
+      property: { id: 'p9', city: 'Mohali', area: 'Sector 12', photos: [] },
+      missing: ['size'],
+    } as never);
+    await c.savePlot();
+    expect(c.state.savingProp.live).toBe(false);
+
+    c.state = { ...c.state, pform: { ...c.blankP(), city: 'Mohali', area: 'Sector 12' } };
+    saveProperty.mockResolvedValue({
+      property: { id: 'p9', city: 'Mohali', area: 'Sector 12', photos: [] },
+    } as never);
+    await c.savePlot();
+    expect(c.state.savingProp.live).toBe(true);
   });
 
   it('says nothing when the property really did go on sale', async () => {

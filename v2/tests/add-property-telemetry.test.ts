@@ -280,7 +280,8 @@ describe('telemetry can never break Add Property', () => {
 
   it('emits the success only after the store returned a saved property', () => {
     const wiring = source('src/apps/dealer/logic.ts');
-    const savePlot = wiring.slice(wiring.indexOf('async savePlot('), wiring.indexOf('async saveDraft('));
+    // savePlot() queues; runSavePlot() is the write itself.
+    const savePlot = wiring.slice(wiring.indexOf('async runSavePlot('), wiring.indexOf('async saveDraft('));
     const failedAt = savePlot.indexOf("persistFailed('on_sale'");
     const savedAt = savePlot.indexOf('const saved = result.property;');
     const completedAt = savePlot.indexOf('addPropertyTelemetry.persisted({');

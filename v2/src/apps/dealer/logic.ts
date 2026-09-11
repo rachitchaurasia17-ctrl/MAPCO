@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { DCLogic, Router } from '../../framework/dc';
+import { DCLogic } from '../../framework/dc';
 import { deskStore } from './desk-store';
 import { loadDeskLinks } from './desk-links';
 import { loadDeskDeals } from './desk-deals';
@@ -2177,11 +2177,27 @@ export class Component extends DCLogic {
      boundary — the record survives refresh and re-login, and a property
      that cannot legally go On Sale is kept as a Draft with the dealer told
      exactly what is still missing rather than the save failing silently. */
-  async savePlot(closeAfter) {
+  /* Saves are queued, never overlapped. Every step of the wizard autosaves
+     without waiting, so two could otherwise be in flight together — both
+     reading the same empty pEditId and each inserting its own row for what
+     the dealer thinks is one property. Closing the wizard waits on the same
+     queue for the same reason. */
+  savePlot(closeAfter) {
+    const queued = (this._plotSave || Promise.resolve())
+      .catch(() => {})
+      .then(() => this.runSavePlot(closeAfter));
+    this._plotSave = queued.catch(() => {});
+    return queued;
+  }
+  async runSavePlot(closeAfter) {
+    /* A step advance is background work: the dealer asked to see the next
+       step, not to publish anything. It saves so nothing typed is ever lost,
+       and says nothing. The full-screen card and the draft notice belong to
+       the moment the dealer finishes. */
+    const quiet = closeAfter === false;
     const f = this.state.pform; if (!f.city && !f.area) return;
-    if (this.state.savingProp && this.state.savingProp !== false) return;
     const editId = this.state.pEditId;
-    this.setState({ savingProp: { title: (f.type || 'Property') + (f.size ? ' · ' + f.size + ' ' + (f.unit || '') : ''), loc: [f.area, f.city].filter(Boolean).join(', ') }, propError: '' });
+    this.setState({ propError: '', plotSaving: !quiet });
     const wanted = f.avail === 'onhold' ? 'archived' : 'on-sale';
     let result;
     try {
@@ -2193,12 +2209,12 @@ export class Component extends DCLogic {
       const detail = error instanceof Error && error.message
         ? error.message
         : 'Could not save this property. Please try again.';
-      this.setState({ savingProp: false, propError: detail });
+      this.setState({ savingProp: false, plotSaving: false, propError: detail });
       return;
     }
     if (result.error) {
       addPropertyTelemetry.persistFailed('on_sale', result.errorCode);
-      this.setState({ savingProp: false, propError: result.error }); return;
+      this.setState({ savingProp: false, plotSaving: false, propError: result.error }); return;
     }
     const saved = result.property;
     /* Papers ticked in the wizard. toCanonicalProperty carries registryRef
@@ -2217,20 +2233,41 @@ export class Component extends DCLogic {
       hasLocation: !!saved.location,
       photoCount: (saved.photos || []).length,
     });
-    if (closeAfter === false) {
-      this.setState({ savingProp: false, pEditId: saved.id, pSaved: true,
-        propError: this.paperError(paperFailures) || this.draftNotice(result.missing),
+    if (quiet) {
+      this.setState({ savingProp: false, plotSaving: false, pEditId: saved.id, pSaved: true,
+        /* Only a genuine failure interrupts a step advance. What is still
+           missing is already on screen as the step's own guidance; repeating
+           it as an alert on every Next read as an error the dealer had
+           somehow caused. */
+        propError: this.paperError(paperFailures),
         propMissing: result.missing || [] });
       return;
     }
     addPropertyTelemetry.closed();
+    const live = !(result.missing && result.missing.length);
     this.setState({
       addPlotOpen: false, pstep: 1, pEditId: null, pSaved: false, section: 'properties',
-      invView: 'live', plotCity: saved.city || 'Mohali', pform: this.blankP(),
-      savingProp: false, propError: this.paperError(paperFailures) || this.draftNotice(result.missing),
+      invView: 'live', plotCity: saved.city || 'Mohali', pform: this.blankP(), plotSaving: false,
+      /* Shown AFTER the write landed, so it is a receipt rather than a
+         prediction. It used to go up the moment Save was pressed — and on
+         every step advance too — announcing a property as live on Earth,
+         Links and Marketing while nothing had been written yet, and
+         sometimes for a record that persisted as a draft and was live
+         nowhere at all. */
+      savingProp: {
+        title: (f.type || 'Property') + (f.size ? ' · ' + f.size + ' ' + (f.unit || '') : ''),
+        loc: [f.area, f.city].filter(Boolean).join(', '),
+        live,
+      },
+      propError: this.paperError(paperFailures) || this.draftNotice(result.missing),
       propMissing: result.missing || [],
       propDetail: saved.id, propShot: 0,
     });
+    if (this._savedCard) clearTimeout(this._savedCard);
+    this._savedCard = setTimeout(() => {
+      this._savedCard = null;
+      this.setState({ savingProp: false });
+    }, 1500);
   }
   /* Save as Draft. Incomplete records are allowed — a draft is a real
      persisted property, not a local placeholder. */
@@ -2266,6 +2303,7 @@ export class Component extends DCLogic {
     return failed;
   }
   async saveDraft() {
+    await (this._plotSave || Promise.resolve());
     const f = this.state.pform;
     if (!f.city && !f.area) {
       // The one abandonment the Desk can truthfully observe: Close ran, and
@@ -4965,6 +5003,10 @@ export class Component extends DCLogic {
       pSellerBusiness: pSellerPicked && pSellerPicked.business ? pSellerPicked.business : '', pSellerHasBusiness: !!(pSellerPicked && pSellerPicked.business),
       savingProp: !!s.savingProp,
       savingTitle: s.savingProp ? s.savingProp.title : '', savingLoc: s.savingProp ? s.savingProp.loc : '',
+      // The card claimed a property was live on Earth, Links and Marketing
+      // whatever actually happened. A draft is saved, but it is live nowhere.
+      savingLive: !!(s.savingProp && s.savingProp.live),
+      pSaveLabel: s.plotSaving ? 'Saving…' : 'Save this property',
       saveSellerStyle: `display:flex;align-items:center;gap:9px;height:60px;padding:0 24px;border-radius:16px;font-size:18px;font-weight:800;${(s.nsform.name.trim() && s.nsform.phone.trim()) ? 'background:#0a6634;color:#eafff2' : 'background:#e6dcc6;color:#a99878'}`,
       pRel, pConfirmWhen, pSellerDocs,
       pAvailYes: () => this.setP({ availConfirmed: true }), pAvailNo: () => this.setP({ availConfirmed: false }),

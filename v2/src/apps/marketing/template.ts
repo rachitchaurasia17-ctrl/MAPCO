@@ -37,8 +37,15 @@ export const globalHead = `
 </style>
 `;
 
+/* Built once and kept. `new Function` compiles its body from source, and
+   that body is this entire screen — hundreds of kilobytes of it. It was
+   being rebuilt on every render, and every keystroke in every form is a
+   render, so each character typed made the engine parse and compile the
+   whole app again before a single node could be written. */
+let compiler: ((props: any) => string) | null = null;
+
 export function renderApp(state: any) {
-  const compiler = new Function('props', `
+  if (!compiler) compiler = new Function('props', `
     with (props) {
       return \`
 
@@ -620,7 +627,7 @@ export function renderApp(state: any) {
 </div>
 \`;
     }
-  `);
-  
+  `) as (props: any) => string;
+
   return compiler(state);
 }

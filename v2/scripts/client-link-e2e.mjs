@@ -26,14 +26,18 @@ const admin = createClient(URL, SERVICE, { auth: { persistSession: false, autoRe
    one is approved rather than working around the gate. */
 const FOUNDER_EMAIL = env.MAPCO_FOUNDER_EMAIL ?? process.env.MAPCO_FOUNDER_EMAIL;
 const FOUNDER_PASSWORD = env.MAPCO_FOUNDER_PASSWORD ?? process.env.MAPCO_FOUNDER_PASSWORD;
-if (!FOUNDER_EMAIL || !FOUNDER_PASSWORD) {
-  console.error('Refusing to run: MAPCO_FOUNDER_EMAIL and MAPCO_FOUNDER_PASSWORD are required.');
-  console.error('Every authenticated request passes the device gate; without an approved');
-  console.error('device this harness can only produce PT403 failures.');
-  process.exit(2);
-}
 const founder = createClient(URL, ANON, { auth: { persistSession: false, autoRefreshToken: false } });
 let approvedDeviceId = null;
+
+/* Whether the gate is switched on is a property of the database, not an
+   assumption this harness gets to make: it has been applied and rolled back
+   on MAPCO-DEV more than once. It is asked the only way that cannot be
+   fooled — by making an ordinary authenticated request and seeing whether
+   the gate refuses it. */
+async function deviceGateIsOn(session) {
+  const { error } = await session.from('dealer_settings').select('dealer_id').limit(1);
+  return !!error && (error.code === 'PT403' || /device/i.test(error.message || ''));
+}
 
 /** Approve one device for `dealerId` and bind every given session to it. */
 async function approveDeviceForSessions(dealerId, sessions) {
@@ -186,8 +190,18 @@ async function main() {
   /* Both of this dealer's sessions bind to one founder-approved device
      before any authenticated read or write. Signing in is no longer enough:
      an unbound session is refused by the request gate with PT403. */
-  await approveDeviceForSessions(dealer, [browser, teamBrowser]);
-  pass('dealer sessions bound to a founder-approved device');
+  if (await deviceGateIsOn(browser)) {
+    if (!FOUNDER_EMAIL || !FOUNDER_PASSWORD) {
+      console.error('This database enforces the device gate, so this harness needs');
+      console.error('MAPCO_FOUNDER_EMAIL and MAPCO_FOUNDER_PASSWORD: only the founder can');
+      console.error('approve a device, and an unbound session is refused with PT403.');
+      process.exit(2);
+    }
+    await approveDeviceForSessions(dealer, [browser, teamBrowser]);
+    pass('dealer sessions bound to a founder-approved device');
+  } else {
+    pass('device gate is off on this database — no device to bind');
+  }
   const teamRows = await teamBrowser.from('crm_records').select('id').in('id', [CLIENT, PROP_A]);
   check((teamRows.data ?? []).length === 2, 'new property and client interlink across dealer and team workspaces');
 

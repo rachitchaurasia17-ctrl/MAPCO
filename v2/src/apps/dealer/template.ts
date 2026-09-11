@@ -8,7 +8,6 @@ export const globalHead = `
       <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
       <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/fill/style.css">
       <link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
-      <script src="./image-slot.js"></script>
       <style>
         * {
           box-sizing: border-box
@@ -274,8 +273,15 @@ export const globalHead = `
       </style>
     `;
 
+/* Built once and kept. `new Function` compiles its body from source, and
+   that body is this entire screen — hundreds of kilobytes of it. It was
+   being rebuilt on every render, and every keystroke in every form is a
+   render, so each character typed made the engine parse and compile the
+   whole app again before a single node could be written. */
+let compiler: ((props: any) => string) | null = null;
+
 export function renderApp(state: any) {
-  const compiler = new Function('props', `
+  if (!compiler) compiler = new Function('props', `
     with (props) {
       return \`
     
@@ -3902,10 +3908,13 @@ export function renderApp(state: any) {
                 <div
                   style="font-size:18px;font-weight:600;color:#4a7a5c;margin-top:5px;animation:moneyUp .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:.22s">
                   \${savingLoc}</div>
-                <div
+                \${ savingLive ? \`<div
                   style="display:inline-flex;align-items:center;gap:9px;margin-top:20px;padding:11px 20px;border-radius:999px;background:#0b6f39;color:#eafff2;font-size:16px;font-weight:800;animation:moneyUp .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:.3s">
                   <i class="ph-fill ph-globe-hemisphere-east" style="font-size:18px"></i>Live on MAPCO Earth, Links and
-                  Marketing</div>
+                  Marketing</div>\` : \`<div
+                  style="display:inline-flex;align-items:center;gap:9px;margin-top:20px;padding:11px 20px;border-radius:999px;background:#8a6a18;color:#fff6e2;font-size:16px;font-weight:800;animation:moneyUp .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:.3s">
+                  <i class="ph-fill ph-note-pencil" style="font-size:18px"></i>Saved as a draft — not on sale
+                  yet</div>\` }
               </div>
             </div>
           \` : '' }
@@ -4666,7 +4675,7 @@ export function renderApp(state: any) {
                                 style="height:42px;padding:0 14px;border-radius:12px;background:rgba(255,253,247,.9);color:#4c463d;font-size:14px;font-weight:800;border:none;cursor:pointer">Move pin</button>\` : '' }
                             <button onClick="\${__b(pSave)}"
                               style="height:42px;padding:0 22px;border-radius:12px;background:#148347;color:#fff;font-size:15px;font-weight:800;border:none;box-shadow:0 4px 14px rgba(0,0,0,.4);cursor:pointer;display:inline-flex;align-items:center;gap:8px"><i
-                                class="ph-fill ph-check-circle" style="font-size:19px"></i>Save this property</button>
+                                class="ph-fill ph-check-circle" style="font-size:19px"></i>\${pSaveLabel}</button>
                           </div>
                         </div>
                       </div>
@@ -5086,7 +5095,7 @@ export function renderApp(state: any) {
     </div>
   \`;
     }
-  `);
-  
+  `) as (props: any) => string;
+
   return compiler(state);
 }
