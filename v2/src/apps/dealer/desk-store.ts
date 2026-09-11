@@ -80,6 +80,27 @@ export const toDeskRelation = (relationship: SellerRelationship | undefined): st
  * A usable geographic coordinate: both halves present, finite, in range,
  * and not the 0,0 null island that a partially-filled form produces.
  */
+/**
+ * Is this the same spot the record already holds? Compared at the six
+ * decimals the coordinate is stored to — about 11 centimetres.
+ *
+ * Re-saving a property is not moving it. `location.updatedAt` is a
+ * relocation marker: Property Intelligence folds it into its cache digest,
+ * so a fresh timestamp means "this property is somewhere else now, throw
+ * the intelligence away and generate it again" — a paid round of Places,
+ * Routes and model calls. Stamping it on every save spent that on a dealer
+ * correcting a typo.
+ */
+function sameCoordinate(
+  existing: Property['location'] | undefined,
+  lat: unknown,
+  lng: unknown,
+): boolean {
+  if (!existing) return false;
+  return +Number(existing.latitude).toFixed(6) === +Number(lat).toFixed(6)
+    && +Number(existing.longitude).toFixed(6) === +Number(lng).toFixed(6);
+}
+
 function isRealCoordinate(lat: unknown, lng: unknown): boolean {
   const latitude = Number(lat);
   const longitude = Number(lng);
@@ -495,14 +516,17 @@ export function toCanonicalProperty(
     ...(form.location
       ? { location: form.location }
       : (form.earth === true && isRealCoordinate(form.lat, form.lng)
-        ? {
-            location: {
-              latitude: +Number(form.lat).toFixed(6),
-              longitude: +Number(form.lng).toFixed(6),
-              source: 'dealer-selected' as const,
-              updatedAt: new Date().toISOString(),
-            },
-          }
+        ? (sameCoordinate(existing?.location, form.lat, form.lng)
+          // Unmoved: keep the marker the relocation it describes gave it.
+          ? { location: existing!.location }
+          : {
+              location: {
+                latitude: +Number(form.lat).toFixed(6),
+                longitude: +Number(form.lng).toFixed(6),
+                source: 'dealer-selected' as const,
+                updatedAt: new Date().toISOString(),
+              },
+            })
         : (existing?.location ? { location: existing.location } : {}))),
   } as Property;
 }

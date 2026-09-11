@@ -15,6 +15,8 @@ export class FakeModel implements TextModelProvider {
   readonly model = 'fake-1';
   readonly prompts: string[] = [];
   readonly groundingUsed: boolean[] = [];
+  /** The coordinate each turn was grounded at, so its provenance is checkable. */
+  readonly groundingPoints: Array<{ latitude: number; longitude: number } | undefined> = [];
   private readonly script: Array<string | Error>;
   private index = 0;
 
@@ -25,6 +27,7 @@ export class FakeModel implements TextModelProvider {
   async generate(prompt: string, opts: { grounding?: { latitude: number; longitude: number } } = {}): Promise<ModelResponse> {
     this.prompts.push(prompt);
     this.groundingUsed.push(Boolean(opts.grounding));
+    this.groundingPoints.push(opts.grounding);
     const next = this.script[Math.min(this.index, this.script.length - 1)];
     this.index++;
     if (next instanceof Error) throw next;

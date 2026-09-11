@@ -39,20 +39,24 @@ if (!URL || !ANON || !SERVICE) {
   console.error('Need SUPABASE_URL, SUPABASE_ANON_KEY and SUPABASE_SERVICE_KEY.');
   process.exit(2);
 }
-/* Whether the gate is switched on is a property of the database, not an
-   assumption this harness gets to make: it has been applied and rolled back
-   on MAPCO-DEV more than once. Asking is one query and it is asked the only
-   way that cannot be fooled — by making an ordinary authenticated request
-   and seeing whether the gate refuses it. */
-let gateOn = null;
+/* Whether a session needs an approved device is a property of the database,
+   not an assumption this harness gets to make: the gate has been applied and
+   rolled back on MAPCO-DEV more than once, and the two halves can be rolled
+   back separately. Enforcement (the pre-request hook and the restrictive
+   policies) can be gone while dealer IDENTITY still depends on an approved
+   device — plotmap_current_dealer_id() returns '' without one, so every read
+   comes back empty rather than refused. Asking the product's own access RPC
+   is the only probe that sees both halves. */
+let needsDevice = null;
 async function deviceGateIsOn(session) {
-  if (gateOn !== null) return gateOn;
-  const { error } = await session.from('dealer_settings').select('dealer_id').limit(1);
-  gateOn = !!error && (error.code === 'PT403' || /device/i.test(error.message || ''));
-  console.log(gateOn
-    ? '· device gate is ON — every dealer here gets a founder-approved device'
-    : '· device gate is OFF on this database — nothing to approve');
-  return gateOn;
+  if (needsDevice !== null) return needsDevice;
+  const { data, error } = await session.rpc('plotmap_dealer_access_status');
+  // No such RPC at all: this database has no device gate of any kind.
+  needsDevice = !error && data?.status !== 'approved';
+  console.log(needsDevice
+    ? `· this session needs an approved device (${data?.status}) — approving through the founder`
+    : '· no device gate on this database — nothing to approve');
+  return needsDevice;
 }
 if (!/lswzrkvdwirhvggtvuch/.test(URL)) {
   console.error(`Refusing to run: ${URL} is not MAPCO-DEV.`);

@@ -29,14 +29,17 @@ const FOUNDER_PASSWORD = env.MAPCO_FOUNDER_PASSWORD ?? process.env.MAPCO_FOUNDER
 const founder = createClient(URL, ANON, { auth: { persistSession: false, autoRefreshToken: false } });
 let approvedDeviceId = null;
 
-/* Whether the gate is switched on is a property of the database, not an
-   assumption this harness gets to make: it has been applied and rolled back
-   on MAPCO-DEV more than once. It is asked the only way that cannot be
-   fooled — by making an ordinary authenticated request and seeing whether
-   the gate refuses it. */
+/* Whether a session needs an approved device is a property of the database,
+   not an assumption this harness gets to make. The gate has two halves and
+   they can be rolled back separately: enforcement (the pre-request hook and
+   the restrictive policies) can be gone while dealer IDENTITY still depends
+   on an approved device — plotmap_current_dealer_id() returns '' without
+   one, so reads come back EMPTY rather than refused, and a harness that
+   probed for a refusal would wrongly conclude there was no gate. Asking the
+   product's own access RPC is the probe that sees both halves. */
 async function deviceGateIsOn(session) {
-  const { error } = await session.from('dealer_settings').select('dealer_id').limit(1);
-  return !!error && (error.code === 'PT403' || /device/i.test(error.message || ''));
+  const { data, error } = await session.rpc('plotmap_dealer_access_status');
+  return !error && data?.status !== 'approved';
 }
 
 /** Approve one device for `dealerId` and bind every given session to it. */
