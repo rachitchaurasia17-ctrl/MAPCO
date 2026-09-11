@@ -215,9 +215,36 @@ and retain device/audit rows until their operational evidence is exported.
 
 Local completion verification: 44 focused tests pass, the full suite passes
 1,051 tests across 76 files with two workers, typecheck passes, and the
-Supabase-mode production build passes. The migration and Founder Auth identity
-are still absent from MAPCO-DEV until the separately reviewed live approval is
-accepted. No browser or live E2E claim is made yet.
+Supabase-mode production build passes.
+
+### MAPCO-DEV rollout attempt (2026-09-11)
+
+Preflight found that the original `founder_device_and_link_access` migration
+and the requested Founder Auth email had already been created in MAPCO-DEV.
+That Auth identity was already confirmed, had signed in, and was already the
+sole active platform administrator before this rollout attempt.
+The original migration still had its global PostgREST hook, 63 blanket
+restrictive policies, anonymous device activation, and the demo tenant's legacy
+one-device limit.
+
+The scoped corrective migration was attempted after explicit MAPCO-DEV
+approval. PostgreSQL rejected it atomically when the existing provider-only
+`dealer_settings` guard blocked the demo device-limit update, so none of that
+migration committed. The approved stop-and-rollback safeguard was then used.
+The live `founder_device_access_rollback` migration removed the global hook and
+all 63 blanket policies, restored the canonical dealer helpers and all five
+buyer-link functions to their pre-rollout account gate, and removed dealer
+access to the incomplete device-status RPC. Device and audit evidence was
+retained.
+
+Live verification after rollback found no configured PostgREST pre-request
+hook, zero `founder_approved_session` policies, no global hook function, and no
+authenticated execution grant on `plotmap_dealer_access_status`. The scoped
+device rollout and Founder bootstrap/browser verification remain blocked until
+a separately approved retry. The pending forward migration no longer mutates
+provider-owned account columns; the demo limit must be normalised through the
+authenticated Founder RPC after successful bootstrap. It has not been applied
+to MAPCO-DEV.
 
 
 ## Isolated review checkpoint
