@@ -246,6 +246,46 @@ provider-owned account columns; the demo limit must be normalised through the
 authenticated Founder RPC after successful bootstrap. It has not been applied
 to MAPCO-DEV.
 
+### Scoped retry and E2E rollback (2026-09-11)
+
+The scoped migration was re-reviewed by execution context. It performs no
+`dealer_settings` mutation, keeps the provider-only trigger enabled, leaves
+profile self-read available for authenticated activation bootstrap, tightens
+the canonical tenant/account/status helpers for approved sessions, and keeps
+only the token-scoped buyer resolver and event recorder anonymous. Legacy
+anonymous device-token/passcode endpoints and unrelated anonymous internal
+commands lost browser execution while service access was retained.
+
+The migration passed 20 focused tests, typecheck, function-signature preflight,
+and the Supabase production-mode build, then applied successfully to MAPCO-DEV
+as `20260911065526_founder_device_access_scoped`. Live schema verification found
+no global hook or blanket policy, authenticated-only activation and access
+status, device-gated canonical helpers, and buyer-link functions bound to the
+dealer-existence helper while preserving link expiry/revocation checks.
+
+The live verifier then passed seven checks: migration presence, confirmed sole
+Founder identity, server-issued Founder session, private Founder RPC access,
+legitimate demo limit normalisation through the Founder RPC, existing demo
+email/password login, and server-side gating of its unapproved browser. The
+next required step, real dealer provisioning through the deployed Edge
+Function, returned HTTP 403 before creating any tenant or Auth data.
+
+Because provisioning is a central Founder workflow, the rollout stopped and
+`20260911070412_founder_device_access_rollback_after_e2e` was applied. Post-
+rollback verification found the device boundary disabled, all five buyer
+functions restored to their prior account gate, no hook/policies, and no E2E
+dealer, profile, Auth user, or provisioning-attempt debris. Browser UI testing
+and the remaining live device matrix were not run after this mandatory stop.
+
+Post-rollback security advisors report two anonymous SECURITY DEFINER
+functions, both intentional token-scoped buyer APIs:
+`plotmap_resolve_client_link` and `plotmap_record_client_link_event`. Remaining
+project-level findings are 139 authenticated SECURITY DEFINER warnings, five
+mutable search paths, 28 RLS-enabled tables with no direct policies, and leaked
+password protection disabled. The full local suite passes 1,056 tests across
+76 files; typecheck, verifier syntax, diff checks, and the Supabase production-
+mode build also pass.
+
 
 ## Isolated review checkpoint
 

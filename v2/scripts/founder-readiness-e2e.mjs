@@ -8,11 +8,12 @@ import { createClient } from '@supabase/supabase-js';
 const envPath = process.argv[2] ?? '../supabase/.env';
 const env = Object.fromEntries(readFileSync(envPath, 'utf8').split(/\r?\n/)
   .filter((line) => line.includes('=') && !line.trimStart().startsWith('#'))
-  .map((line) => { const at = line.indexOf('='); return [line.slice(0, at).trim(), line.slice(at + 1).trim()]; }));
+  .map((line) => { const at = line.indexOf('='); return [line.slice(0, at).trim(), line.slice(at + 1).trim().replace(/^(?:"([\s\S]*)"|'([\s\S]*)')$/, '$1$2')]; }));
 const URL = env.SUPABASE_URL;
 const ANON = env.SUPABASE_ANON_KEY;
 const SERVICE = env.SUPABASE_SERVICE_ROLE_KEY;
-if (!URL?.includes('lswzrkvdwirhvggtvuch') || !ANON || !SERVICE) {
+const DEMO_PASSWORD = env.DEMO_PASSWORD;
+if (!URL?.includes('lswzrkvdwirhvggtvuch') || !ANON || !SERVICE || !DEMO_PASSWORD) {
   console.error('Refusing to run: a complete MAPCO-DEV environment is required.');
   process.exit(2);
 }
@@ -34,6 +35,7 @@ let founderToken = '';
 let provisioned = false;
 let authUserId = '';
 let passed = 0;
+const storagePaths = [];
 
 function check(condition, label, detail = '') {
   if (!condition) throw new Error(`${label}${detail ? `: ${detail}` : ''}`);
@@ -125,6 +127,7 @@ async function resolveBuyer(value) {
 }
 async function cleanup() {
   if (!provisioned || !founderToken) return;
+  if (storagePaths.length) await admin.storage.from('property-photos').remove(storagePaths);
   const response = await fetch(`${URL}/functions/v1/delete-dealer`, {
     method: 'POST', headers: { apikey: ANON, Authorization: `Bearer ${founderToken}`, 'Content-Type': 'application/json', Origin: 'https://mapco-navy.vercel.app' }, body: JSON.stringify({ dealer_id: dealerId, confirm: dealerId }),
   });
@@ -141,6 +144,24 @@ try {
   const gate = await admin.from('dealer_device_sessions').select('session_id').limit(1);
   check(!gate.error, 'scoped device migration is present in MAPCO-DEV', gate.error?.message);
   founder = await founderSession();
+  await rpc(founder, 'plotmap_admin_set_dealer_device_limit', {
+    p_dealer_id: 'dealer-demo', p_max_devices_allowed: 4,
+  });
+  const demoAccount = await admin.from('dealer_settings').select('max_devices_allowed').eq('dealer_id', 'dealer-demo').single();
+  if (demoAccount.error) throw new Error(`Demo account lookup: ${demoAccount.error.message}`);
+  const demoProfile = await admin.from('profiles').select('id').eq('dealer_id', 'dealer-demo').eq('role', 'owner').limit(1).single();
+  if (demoProfile.error) throw new Error(`Demo profile lookup: ${demoProfile.error.message}`);
+  const demoAuth = await admin.auth.admin.getUserById(demoProfile.data.id);
+  const demoEmail = demoAuth.data.user?.email;
+  if (demoAuth.error || !demoEmail) throw new Error(`Demo Auth lookup: ${demoAuth.error?.message ?? 'email missing'}`);
+  check(demoAccount.data.max_devices_allowed === 4,
+    'Founder legitimately normalises the existing demo account to four devices');
+  const demo = browser();
+  const demoLogin = await demo.auth.signInWithPassword({ email: demoEmail, password: DEMO_PASSWORD });
+  check(!demoLogin.error && Boolean(demoLogin.data.session), 'existing dealer email/password login still works');
+  const demoDevice = { client: demo, token: token(), session: demoLogin.data.session };
+  check((await access(demoDevice)).status === 'device_not_activated',
+    'existing dealer login is server-gated on an unapproved browser');
   const firstCode = await provision();
 
   const mapSeed = await admin.from('prebuilt_maps').insert({
@@ -159,6 +180,20 @@ try {
 
   const first = await signIn(token());
   check((await access(first)).status === 'device_not_activated', 'new authenticated device is blocked pending activation');
+  const dealerFounderCommand = await first.client.rpc('plotmap_founder_create_device_code', { p_dealer_id: dealerId });
+  check(Boolean(dealerFounderCommand.error), 'normal dealer cannot call Founder device-management commands');
+  check(await activate(demoDevice, firstCode, 'Wrong dealer') === 'dealer_inactive',
+    'activation code cannot be redeemed by a different dealer');
+  await demo.auth.signOut();
+  const wrongCode = firstCode === '00000000' ? '99999999' : '00000000';
+  const wrongStarted = Date.now();
+  check(await activate(first, wrongCode, 'Wrong code') === 'invalid_code', 'wrong activation code is rejected');
+  check(Date.now() - wrongStarted >= 200, 'invalid-code attempts retain the server throttle');
+  const expireCode = await admin.from('dealer_access_codes').update({
+    expires_at: new Date(Date.now() - 60000).toISOString(),
+  }).eq('dealer_id', dealerId).eq('status', 'active');
+  if (expireCode.error) throw expireCode.error;
+  check(await activate(first, firstCode, 'Expired code') === 'expired', 'expired activation code is rejected');
   const hidden = await first.client.from('crm_records').select('id').eq('id', propertyId);
   check(Boolean(hidden.error) || hidden.data.length === 0, 'unapproved session cannot read dealer rows');
   const hiddenOverlay = await first.client.rpc('plotmap_dealer_overlays', { p_map_id: mapId });
@@ -169,7 +204,12 @@ try {
   });
   check(Boolean(anonActivation.error), 'anonymous callers cannot redeem activation codes');
 
-  check(await activate(first, firstCode, 'Device 1') === 'approved', 'first device activates once');
+  const usableFirstCode = await code();
+  check(await activate(first, usableFirstCode, 'Device 1') === 'approved', 'first device activates once');
+  const reused = await signIn(token());
+  check(await activate(reused, usableFirstCode, 'Reused code') === 'already_used',
+    'consumed activation code cannot approve a different device');
+  check((await access(reused)).status === 'device_not_activated', 'reused-code device remains blocked');
   check((await access(first)).status === 'approved', 'activated session receives approved access');
   const visible = await first.client.from('crm_records').select('id').eq('id', propertyId);
   check(!visible.error && visible.data.length === 1, 'approved session reads its tenant');
@@ -177,6 +217,17 @@ try {
   check(!overlay.error && overlay.data.some((row) => row.id === overlayId), 'approved session reaches older scoped reads');
   const foreign = await first.client.from('crm_records').select('id').eq('id', foreignId);
   check(!foreign.error && foreign.data.length === 0, 'approved dealer remains isolated from another dealer');
+  const storagePath = `dealers/${dealerId}/properties/${propertyId}/${randomUUID()}.png`;
+  const blockedStorage = await reused.client.storage.from('property-photos').upload(
+    `dealers/${dealerId}/properties/${propertyId}/${randomUUID()}.png`,
+    Buffer.from('89504e470d0a1a0a', 'hex'), { contentType: 'image/png', upsert: false },
+  );
+  check(Boolean(blockedStorage.error), 'unapproved session is denied by Storage RLS');
+  const allowedStorage = await first.client.storage.from('property-photos').upload(
+    storagePath, Buffer.from('89504e470d0a1a0a', 'hex'), { contentType: 'image/png', upsert: false },
+  );
+  check(!allowedStorage.error, 'approved session passes Storage RLS');
+  storagePaths.push(storagePath);
   const located = await first.client.rpc('plotmap_set_property_location', {
     p_property_id: propertyId, p_latitude: 30.7046486, p_longitude: 76.7178726, p_source: 'manually-verified',
   });
@@ -193,22 +244,15 @@ try {
   check((await access(relogin)).status === 'approved', 'logout/login on the same browser token does not require reactivation');
 
   const devices = [relogin];
-  for (let index = 2; index <= 3; index += 1) {
+  for (let index = 2; index <= 4; index += 1) {
     const device = await signIn(token());
     check(await activate(device, await code(), `Device ${index}`) === 'approved', `device ${index} activates`);
     devices.push(device);
   }
-  const fourthCode = await code();
-  const fifthCode = await code();
-  const fourth = await signIn(token());
-  check(await activate(fourth, fourthCode, 'Device 4') === 'approved', 'fourth device activates');
-  devices.push(fourth);
   const fifth = await signIn(token());
-  check(await activate(fifth, fifthCode, 'Device 5') === 'device_limit_reached',
-    'fifth device is rejected at the four-device limit');
   check((await access(fifth)).status === 'device_not_activated', 'rejected fifth session remains blocked');
   const extraCode = await founder.rpc('plotmap_founder_create_device_code', { p_dealer_id: dealerId });
-  check(Boolean(extraCode.error), 'Founder cannot issue a code while all four slots are occupied');
+  check(Boolean(extraCode.error), 'four-device limit prevents issuance of a fifth activation code');
 
   const workspace = await rpc(founder, 'plotmap_founder_dealer_workspace', { p_dealer_id: dealerId });
   const firstDevice = workspace.devices.find((item) => item.device_label === 'Device 1');
@@ -217,8 +261,11 @@ try {
     p_device_id: firstDevice.id, p_status: 'revoked', p_developer_notes: 'E2E replacement',
   });
   check((await access(relogin)).status === 'device_not_activated', 'Founder revocation blocks a bound session immediately');
-  check(await activate(fifth, fifthCode, 'Replacement device') === 'approved',
+  const replacementCode = await code();
+  check(await activate(fifth, replacementCode, 'Replacement device') === 'approved',
     'revoked device slot can be replaced');
+  const revokedStorage = await relogin.client.storage.from('property-photos').createSignedUrl(storagePath, 60);
+  check(Boolean(revokedStorage.error), 'revoked session is immediately denied by Storage RLS');
 
   const link = await rpc(devices[1].client, 'plotmap_create_client_link', { p_payload: {
     clientId, propertyIds: [propertyId], priceVisibility: 'shown', locationVisibility: 'exact',

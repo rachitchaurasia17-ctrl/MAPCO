@@ -18,6 +18,83 @@ begin
   end loop;
 end $$;
 
+-- Least-privilege cleanup for the access-system SECURITY DEFINER surface.
+-- The current product uses authenticated session-bound device access. Retire
+-- direct browser execution of the legacy anonymous device-token/passcode
+-- endpoints while retaining them for trusted service operations and evidence.
+revoke all on function public.plotmap_activation_request_status(uuid,text) from public,anon,authenticated;
+revoke all on function public.plotmap_client_maps_for_device(text,text) from public,anon,authenticated;
+revoke all on function public.plotmap_client_overlays_for_device(text,text) from public,anon,authenticated;
+revoke all on function public.plotmap_client_properties_for_device(text,text) from public,anon,authenticated;
+revoke all on function public.plotmap_device_access_reason(text,text) from public,anon,authenticated;
+revoke all on function public.plotmap_device_is_approved(text,text) from public,anon,authenticated;
+revoke all on function public.plotmap_device_status(text,text,text,text) from public,anon,authenticated;
+revoke all on function public.plotmap_passcode_login(text) from public,anon,authenticated;
+revoke all on function public.plotmap_record_device_presentation_event(text,text,text,text,text,text,text,text,text,jsonb,text,timestamptz) from public,anon,authenticated;
+grant execute on function public.plotmap_activation_request_status(uuid,text) to service_role;
+grant execute on function public.plotmap_client_maps_for_device(text,text) to service_role;
+grant execute on function public.plotmap_client_overlays_for_device(text,text) to service_role;
+grant execute on function public.plotmap_client_properties_for_device(text,text) to service_role;
+grant execute on function public.plotmap_device_access_reason(text,text) to service_role;
+grant execute on function public.plotmap_device_is_approved(text,text) to service_role;
+grant execute on function public.plotmap_device_status(text,text,text,text) to service_role;
+grant execute on function public.plotmap_passcode_login(text) to service_role;
+grant execute on function public.plotmap_record_device_presentation_event(text,text,text,text,text,text,text,text,text,jsonb,text,timestamptz) to service_role;
+
+-- Founder commands remain callable only by an authenticated session; their
+-- function bodies independently require the sole active platform admin.
+revoke all on function public.plotmap_admin_list_dealer_accounts() from public,anon;
+revoke all on function public.plotmap_admin_set_dealer_account(text,text,text,timestamptz,timestamptz,text,boolean,integer,integer,integer,integer,text) from public,anon;
+grant execute on function public.plotmap_admin_list_dealer_accounts() to authenticated;
+grant execute on function public.plotmap_admin_set_dealer_account(text,text,text,timestamptz,timestamptz,text,boolean,integer,integer,integer,integer,text) to authenticated;
+
+-- Internal dealer reads, mutations, role/capability helpers and trigger
+-- helpers have no anonymous product workflow. Preserve authenticated/service
+-- access where appropriate and remove the default PUBLIC execute privilege.
+revoke all on function public.plotmap_can_edit_crm() from public,anon;
+revoke all on function public.plotmap_can_edit_maps() from public,anon;
+revoke all on function public.plotmap_can_edit_properties() from public,anon;
+revoke all on function public.plotmap_can_manage_billing() from public,anon;
+revoke all on function public.plotmap_can_manage_settings() from public,anon;
+revoke all on function public.plotmap_can_manage_team() from public,anon;
+revoke all on function public.plotmap_current_role() from public,anon;
+revoke all on function public.plotmap_dealer_overlays(text) from public,anon;
+revoke all on function public.plotmap_delete_highlight_set(text) from public,anon;
+revoke all on function public.plotmap_is_active_member() from public,anon;
+revoke all on function public.plotmap_is_staff() from public,anon;
+revoke all on function public.plotmap_link_property_to_map(text,text,numeric,numeric) from public,anon;
+revoke all on function public.plotmap_save_highlight_set(jsonb) from public,anon;
+revoke all on function public.plotmap_set_map_status(text,text,boolean) from public,anon;
+revoke all on function public.plotmap_unlink_property_from_map(text) from public,anon;
+revoke all on function public.plotmap_upsert_map(jsonb) from public,anon;
+revoke all on function public.plotmap_guard_crm_dealer_settings_payload() from public,anon,authenticated;
+revoke all on function public.plotmap_guard_profile_team_update() from public,anon,authenticated;
+revoke all on function public.rls_auto_enable() from public,anon,authenticated;
+grant execute on function public.plotmap_can_edit_crm() to authenticated,service_role;
+grant execute on function public.plotmap_can_edit_maps() to authenticated,service_role;
+grant execute on function public.plotmap_can_edit_properties() to authenticated,service_role;
+grant execute on function public.plotmap_can_manage_billing() to authenticated,service_role;
+grant execute on function public.plotmap_can_manage_settings() to authenticated,service_role;
+grant execute on function public.plotmap_can_manage_team() to authenticated,service_role;
+grant execute on function public.plotmap_current_role() to authenticated,service_role;
+grant execute on function public.plotmap_dealer_overlays(text) to authenticated,service_role;
+grant execute on function public.plotmap_delete_highlight_set(text) to authenticated,service_role;
+grant execute on function public.plotmap_is_active_member() to authenticated,service_role;
+grant execute on function public.plotmap_is_staff() to authenticated,service_role;
+grant execute on function public.plotmap_link_property_to_map(text,text,numeric,numeric) to authenticated,service_role;
+grant execute on function public.plotmap_save_highlight_set(jsonb) to authenticated,service_role;
+grant execute on function public.plotmap_set_map_status(text,text,boolean) to authenticated,service_role;
+grant execute on function public.plotmap_unlink_property_from_map(text) to authenticated,service_role;
+grant execute on function public.plotmap_upsert_map(jsonb) to authenticated,service_role;
+
+-- These two token-scoped buyer APIs are the intentional anonymous surface.
+-- Their function bodies continue to enforce link token, expiry, revocation,
+-- privacy and event validation independent of dealer device/account access.
+revoke all on function public.plotmap_resolve_client_link(text) from public,anon,authenticated;
+revoke all on function public.plotmap_record_client_link_event(text,text,text,text,jsonb) from public,anon,authenticated;
+grant execute on function public.plotmap_resolve_client_link(text) to anon,authenticated;
+grant execute on function public.plotmap_record_client_link_event(text,text,text,text,jsonb) to anon,authenticated;
+
 drop function if exists public.plotmap_check_dealer_request();
 
 create or replace function public.plotmap_dealer_access_status(p_device_token text default null)
@@ -92,7 +169,7 @@ grant execute on function public.plotmap_dealer_access_status(text) to authentic
 
 -- Device activation requires a real authenticated dealer session. The
 -- activation transaction validates that the code belongs to that same dealer.
-revoke execute on function public.plotmap_activate_device(text,text,text,text) from anon;
+revoke all on function public.plotmap_activate_device(text,text,text,text) from public,anon;
 grant execute on function public.plotmap_activate_device(text,text,text,text) to authenticated;
 
 create or replace function public.plotmap_device_gate_bootstrap_request()
