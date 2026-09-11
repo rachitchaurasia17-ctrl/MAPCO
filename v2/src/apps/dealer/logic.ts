@@ -1976,6 +1976,16 @@ export class Component extends DCLogic {
       selected.forEach((result, index) => {
         if (!result.ok) throw Error(result.error.message || 'Could not load a selected property.');
         const property = result.value;
+        /* The last word on what may be sent, because the pickers are not the
+           only way in: every Send shortcut on a card, a client row and the
+           property detail puts a property straight into the link. A draft is
+           one the database refused to put on sale, and the buyer's resolver
+           does not filter by lifecycle — it would arrive at the customer with
+           no size, no facing and no price. */
+        if (property.lifecycle === 'draft') {
+          const where = property.loc || property.city || 'This property';
+          throw Error(where + ' is still a draft. Finish it under Properties before sending it to a customer.');
+        }
         photoSelections[f.plots[index]] = (property.photos || []).slice(0, 8)
           .flatMap((url, photoIndex) => /^https:\/\//.test(url) ? ['external:' + photoIndex] : []);
         if (property.price > 0) customPrices[property.id] = property.price;
@@ -4226,7 +4236,13 @@ export class Component extends DCLogic {
 
     // Link builder
     const lf = s.lform;
-    const lPlots = this.properties.filter(pr => pr.status !== 'sold').map(pr => {
+    /* A draft cannot be sent to anybody. The database refused to put it on
+       sale because it is missing something it must have, and the buyer's
+       resolver does not filter by lifecycle — so a draft picked here really
+       does reach the customer, as a property with no size, no facing and no
+       price. It is finished on the Properties page, not offered here. */
+    const sendable = (pr) => pr.status !== 'sold' && !pr.draft;
+    const lPlots = this.properties.filter(sendable).map(pr => {
       const on = lf.plots.includes(pr.id);
       return {
         title: pr.type + ' · ' + pr.size, loc: pr.loc,
@@ -4658,7 +4674,7 @@ export class Component extends DCLogic {
           go: () => this.setL({ clientId: on ? '' : c.id, newName: '' })
         };
       }),
-      lPlotPicks: this.properties.filter(pr => pr.status !== 'sold').slice(0, 8).map(pr => {
+      lPlotPicks: this.properties.filter(sendable).slice(0, 8).map(pr => {
         const on = lf.plots.includes(pr.id);
         return {
           label: pr.loc, on,
@@ -4716,6 +4732,9 @@ export class Component extends DCLogic {
         const typeFilter = s.sendLinkType || 'all';
         const cityFilter = s.sendLinkCity || 'all';
         return this.properties.filter(pr => {
+          // A draft belongs to none of these three: it is not on sale, not
+          // sold, and not withdrawn. It is unfinished, and unsendable.
+          if (pr.draft) return false;
           if (statusFilter === 'onsale') return pr.status !== 'sold' && pr.status !== 'unsold' && pr.status !== 'deleted';
           if (statusFilter === 'sold') return pr.status === 'sold';
           if (statusFilter === 'unsold') return pr.status === 'unsold' || pr.status === 'deleted';
