@@ -151,11 +151,11 @@ function initLanding(container: HTMLElement) {
         <h2 id="pm-activation-title" style="font-family:var(--pm-font-display);font-size:24px;font-weight:500;color:#241f1c;letter-spacing:-.02em">Activate Device</h2>
         <button id="pm-close-modal" aria-label="Close device activation" style="background:none;border:none;cursor:pointer;color:#9a8f7c;padding:4px"><i class="ph-bold ph-x" style="font-size:20px"></i></button>
       </div>
-      <p style="font-size:15px;color:#6b6156;line-height:1.5;margin-bottom:24px">Enter the 6-digit activation code provided by your MAPCO platform administrator.</p>
+      <p style="font-size:15px;color:#6b6156;line-height:1.5;margin-bottom:24px">Enter the 8-digit activation code provided by your MAPCO platform administrator.</p>
       
       <div style="display:flex;flex-direction:column;gap:16px">
-        <label for="pm-act-code" class="pm-sr-only">Six-digit activation code</label>
-        <input type="text" id="pm-act-code" inputmode="numeric" autocomplete="one-time-code" aria-describedby="pm-act-error" placeholder="000-000" style="width:100%;height:52px;border-radius:14px;border:1px solid #ddd2f5;padding:0 16px;font-family:var(--pm-font-ui);font-size:16px;text-align:center;letter-spacing:4px;font-weight:700;color:#1f1a12;background:#fff" maxlength="7">
+        <label for="pm-act-code" class="pm-sr-only">Eight-digit activation code</label>
+        <input type="text" id="pm-act-code" inputmode="numeric" autocomplete="one-time-code" aria-describedby="pm-act-error" placeholder="0000-0000" style="width:100%;height:52px;border-radius:14px;border:1px solid #ddd2f5;padding:0 16px;font-family:var(--pm-font-ui);font-size:16px;text-align:center;letter-spacing:4px;font-weight:700;color:#1f1a12;background:#fff" maxlength="9">
         
         <div id="pm-act-error" role="alert" aria-live="assertive" style="display:none;color:#c2185b;font-size:13px;font-weight:700;text-align:center;padding:8px;background:#ffe1e6;border-radius:8px">Invalid activation code.</div>
         
@@ -234,10 +234,10 @@ function initLanding(container: HTMLElement) {
   if (inputCode) {
     inputCode.addEventListener('input', (e) => {
       let val = inputCode.value.replace(/[^0-9]/g, '');
-      if (val.length > 3) val = val.slice(0, 3) + '-' + val.slice(3, 6);
+      if (val.length > 4) val = val.slice(0, 4) + '-' + val.slice(4, 8);
       inputCode.value = val;
       errorMsg.style.display = 'none';
-      const ready = val.replace(/\D/g, '').length === 6;
+      const ready = val.replace(/\D/g, '').length === 8;
       submitCode.disabled = !ready;
       submitCode.setAttribute('aria-disabled', String(!ready));
       submitCode.style.cursor = ready ? 'pointer' : 'not-allowed';

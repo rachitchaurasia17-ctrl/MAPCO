@@ -11,6 +11,7 @@ import { isClientCoordinate } from '../client-location';
    ═══════════════════════════════════════════════════════════════ */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getSupabase } from './client';
+import { readDealerAccess, requestDeviceActivation } from '../device-access';
 import {
   ok, err,
   type Result, type Page, type PageParams, type QueryOptions,
@@ -1722,36 +1723,49 @@ class SupaAuth implements AuthRepository {
   async getActivationState(o?: QueryOptions): Promise<Result<ActivationState>> {
     const a = aborted<ActivationState>(o); if (a) return a;
     try {
-      const c = await client();
-      const { data } = await c.auth.getSession();
-      // With no device-token gate wired client-side yet, a live session ⇒ activated.
-      return ok(data.session ? { kind: 'activated' } : { kind: 'required' });
+      const access = await readDealerAccess();
+      return ok(access.status === 'approved' ? { kind: 'activated' } : { kind: 'required' });
     } catch (e) { return err('unknown', (e as Error).message); }
   }
-  async submitActivationCode(_code: string, o?: QueryOptions): Promise<Result<ActivationState>> {
+  async submitActivationCode(code: string, o?: QueryOptions): Promise<Result<ActivationState>> {
     const a = aborted<ActivationState>(o); if (a) return a;
-    // Device activation RPC wiring is the next phase; fail closed for now.
-    return ok({ kind: 'device-approval-required' });
+    try {
+      const status = await requestDeviceActivation(code.replace(/\D/g, ''), '');
+      if (status === 'device_limit_reached') {
+        const access = await readDealerAccess();
+        if (!Number.isInteger(access.maxDevices) || access.maxDevices! < 1) {
+          return err('validation', 'Device limit is unavailable.');
+        }
+        return ok({ kind: 'device-limit-reached', max: access.maxDevices! });
+      }
+      const state: Record<string, ActivationState> = {
+        approved: { kind: 'activated' },
+        invalid_code: { kind: 'invalid-code' },
+        expired: { kind: 'expired-code' },
+        already_used: { kind: 'invalid-code' },
+        dealer_inactive: { kind: 'device-approval-required' },
+        activation_failed: { kind: 'device-approval-required' },
+      };
+      return ok(state[status]!);
+    } catch (e) { return err('unknown', (e as Error).message); }
   }
   async getAccountState(o?: QueryOptions): Promise<Result<AccountState>> {
     const a = aborted<AccountState>(o); if (a) return a;
     try {
-      const c = await client();
-      const { data: sess } = await c.auth.getSession();
-      if (!sess.session) return ok({ kind: 'access-denied' });
-      const { data, error } = await c.from('dealer_settings')
-        .select('subscription_status,account_status,trial_end').maybeSingle();
-      if (error || !data) return ok({ kind: 'active' });
-      const d = data as { subscription_status?: string; account_status?: string; trial_end?: string };
-      if (d.account_status === 'suspended') return ok({ kind: 'suspended' });
-      if (d.account_status === 'expired' || d.subscription_status === 'expired') return ok({ kind: 'expired' });
-      if (d.subscription_status === 'trial') {
-        const daysLeft = d.trial_end
-          ? Math.max(0, Math.ceil((Date.parse(d.trial_end) - Date.now()) / 86400000)) : 14;
+      const access = await readDealerAccess();
+      if (access.status === 'sign_in_required') return ok({ kind: 'access-denied' });
+      if (access.status === 'account_suspended') return ok({ kind: 'suspended' });
+      if (access.status === 'trial_expired' || access.status === 'account_blocked') return ok({ kind: 'expired' });
+      if (access.subscriptionStatus === 'trial') {
+        if (!access.expiresAt || !Number.isFinite(Date.parse(access.expiresAt))) return err('validation', 'Trial expiry is unavailable.');
+        const daysLeft = Math.max(0, Math.ceil((Date.parse(access.expiresAt) - Date.now()) / 86400000));
         return ok(daysLeft <= 3 ? { kind: 'trial-ending', daysLeft } : { kind: 'trial', daysLeft });
       }
-      return ok({ kind: 'active' });
-    } catch { return ok({ kind: 'active' }); }
+      if (access.subscriptionStatus === 'active' || access.subscriptionStatus === 'paid' || access.founder) {
+        return ok({ kind: 'active' });
+      }
+      return err('validation', 'Account status is unavailable.');
+    } catch (e) { return err('unknown', (e as Error).message); }
   }
 }
 

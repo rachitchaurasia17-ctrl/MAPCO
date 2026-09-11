@@ -181,6 +181,44 @@ buyer-link continuity and exact-location/PI regression proof; final security
 review. No production deployment or
 merge has been performed. Status: implementation in progress, not complete.
 
+## Completion hardening (11 September 2026)
+
+The pending access migration was narrowed after review. It no longer configures
+a global PostgREST pre-request hook and no longer generates a restrictive policy
+across every public/Storage table. It binds a real `auth.sessions` row to an
+approved hashed browser token, and tightens the existing
+`plotmap_current_dealer_id`, `plotmap_current_status`, and
+`plotmap_dealer_is_active` boundaries used by current RLS, Storage and RPC code.
+Activation now requires an authenticated dealer, so an anonymous caller cannot
+consume a valid code. Public buyer functions retain token/privacy checks but use
+a dealer-existence boundary so already-shared links survive entitlement changes.
+
+The six-digit landing control and its fixture Supabase adapter were also found
+during review. They now use the same eight-digit code as Founder Control and
+read real activation/account status. Backend errors no longer become an active
+account state. Founder invite/recovery sessions are accepted only on
+`/admin/developer.html`, verified again by the confirmed-email Founder RPC, and
+set a password without exposing an admin key. Other sessions are revoked after
+a successful password change.
+
+`v2/scripts/founder-readiness-e2e.mjs` is the destructive-safe MAPCO-DEV proof.
+It provisions an isolated dealer through the deployed Edge Function, exercises
+unapproved denial, four devices, fifth-device rejection, revocation/replacement,
+refresh and relogin, cross-tenant denial, WGS84 and map placement, buyer-link
+continuity through expiry/suspension, paid conversion and cleanup through the
+deployed delete boundary.
+
+Emergency rollback must be a separately reviewed forward migration. It should
+restore the three captured pre-rollout helper definitions, reattach the five
+buyer functions to `plotmap_dealer_is_active`, remove the access-status grants,
+and retain device/audit rows until their operational evidence is exported.
+
+Local completion verification: 44 focused tests pass, the full suite passes
+1,051 tests across 76 files with two workers, typecheck passes, and the
+Supabase-mode production build passes. The migration and Founder Auth identity
+are still absent from MAPCO-DEV until the separately reviewed live approval is
+accepted. No browser or live E2E claim is made yet.
+
 
 ## Isolated review checkpoint
 

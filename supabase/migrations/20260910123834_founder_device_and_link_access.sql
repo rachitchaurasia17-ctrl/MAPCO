@@ -45,13 +45,18 @@ grant execute on function public.plotmap_session_is_approved() to authenticated;
 
 create or replace function public.plotmap_dealer_access_status(p_device_token text default null)
 returns jsonb language plpgsql security definer set search_path=public,pg_catalog,extensions as $$
-declare v_reason text; v_profile public.profiles%rowtype; v_session uuid; v_device uuid; v_end timestamptz;
+declare v_reason text; v_profile public.profiles%rowtype; v_session uuid; v_device uuid; v_end timestamptz; v_limit integer; v_subscription text;
 begin
   if auth.uid() is null then raise exception 'Sign in required'; end if;
   if public.plotmap_is_platform_admin() then return jsonb_build_object('status','approved','founder',true); end if;
   select * into v_profile from public.profiles where id=auth.uid();
+  select case when subscription_status='trial' then trial_end else expiry_date end,
+    max_devices_allowed,subscription_status into v_end,v_limit,v_subscription
+    from public.dealer_settings where dealer_id=v_profile.dealer_id;
   v_reason:=public.plotmap_dealer_account_access_reason();
-  if v_reason<>'active' then return jsonb_build_object('status',v_reason); end if;
+  if v_reason<>'active' then return jsonb_strip_nulls(jsonb_build_object(
+    'status',v_reason,'dealerId',v_profile.dealer_id,'expiresAt',v_end,
+    'maxDevices',v_limit,'subscriptionStatus',v_subscription,'founder',false)); end if;
   select id into v_session from auth.sessions where id::text=auth.jwt()->>'session_id'
     and user_id=auth.uid() and (not_after is null or not_after>now());
   if v_session is null then return jsonb_build_object('status','sign_in_required'); end if;
@@ -68,49 +73,95 @@ begin
       update public.dealer_devices set last_seen=now() where id=v_device;
     end if;
   end if;
-  select case when subscription_status='trial' then trial_end else expiry_date end into v_end
-    from public.dealer_settings where dealer_id=v_profile.dealer_id;
   return jsonb_build_object('status',case when public.plotmap_session_is_approved() then 'approved' else 'device_not_activated' end,
-    'dealerId',v_profile.dealer_id,'expiresAt',v_end,'founder',false);
+    'dealerId',v_profile.dealer_id,'expiresAt',v_end,'maxDevices',v_limit,
+    'subscriptionStatus',v_subscription,'founder',false);
 end;
 $$;
 revoke all on function public.plotmap_dealer_access_status(text) from public,anon;
 grant execute on function public.plotmap_dealer_access_status(text) to authenticated;
 
--- SECURITY DEFINER RPCs must pass this gate too, not only table RLS.
-create or replace function public.plotmap_check_dealer_request()
-returns void language plpgsql security definer set search_path=public,pg_catalog as $$
-declare v_path text:=current_setting('request.path',true);
-begin
-  if coalesce(auth.jwt()->>'role','')<>'authenticated' then return; end if;
-  -- Public token-scoped buyer operations keep working even when the browser
-  -- also holds an expired dealer login. Their own token/privacy checks remain.
-  if v_path in ('/rpc/plotmap_resolve_client_link','/rpc/plotmap_record_client_link_event',
-    '/rpc/plotmap_activate_device','/rpc/plotmap_dealer_access_status',
-    '/rpc/plotmap_is_platform_admin','/rpc/plotmap_founder_bootstrap') then return; end if;
-  if not public.plotmap_session_is_approved() then
-    raise sqlstate 'PT403' using message='Dealer account or device access is not approved',hint='Sign in and activate this device, or contact 8968017508.';
-  end if;
-end;
-$$;
-revoke all on function public.plotmap_check_dealer_request() from public;
-grant execute on function public.plotmap_check_dealer_request() to anon,authenticated,service_role;
-alter role authenticator set pgrst.db_pre_request='public.plotmap_check_dealer_request';
-notify pgrst,'reload config';
+-- Activation happens only after a dealer has authenticated. The existing
+-- activation transaction calls plotmap_dealer_is_active(code.dealer_id), and
+-- the tightened helper below also proves that the code belongs to the signed-in
+-- dealer. Removing anon execution prevents code redemption before login.
+revoke execute on function public.plotmap_activate_device(text,text,text,text) from anon;
+grant execute on function public.plotmap_activate_device(text,text,text,text) to authenticated;
 
--- Add a restrictive gate alongside existing tenant/capability policies. This
--- also protects direct Storage/Realtime paths outside PostgREST. No existing
--- tenant policy is replaced and anon buyer projections are not changed.
-do $$
-declare r record;
-begin
-  for r in select n.nspname,c.relname from pg_class c join pg_namespace n on n.oid=c.relnamespace
-    where c.relkind in ('r','p') and c.relrowsecurity and
-      (n.nspname='public' or (n.nspname='storage' and c.relname='objects'))
-  loop
-    execute format('create policy founder_approved_session on %I.%I as restrictive for all to authenticated using ((select public.plotmap_session_is_approved())) with check ((select public.plotmap_session_is_approved()))',r.nspname,r.relname);
-  end loop;
-end $$;
+-- Use DealSetu's existing account boundary instead of a global PostgREST hook
+-- or a policy generated across every table. Current dealer RLS, Storage RLS
+-- and SECURITY DEFINER commands already converge on plotmap_dealer_is_active
+-- and the capability helpers that read plotmap_current_status. Tightening
+-- those two helpers keeps the change reviewable and leaves Auth, public buyer
+-- traffic, service operations and unrelated schemas untouched.
+create or replace function public.plotmap_device_gate_bootstrap_request()
+returns boolean language sql stable security definer set search_path=public,pg_catalog as $$
+  select trim(leading '/' from current_setting('request.path',true)) in
+    ('rpc/plotmap_activate_device','rpc/plotmap_dealer_access_status');
+$$;
+revoke all on function public.plotmap_device_gate_bootstrap_request() from public,anon;
+grant execute on function public.plotmap_device_gate_bootstrap_request() to authenticated,service_role;
+
+-- A large part of the existing RLS/RPC surface scopes through this helper.
+-- Returning no tenant until the real Auth session is bound closes those paths
+-- too, including older SECURITY DEFINER reads that do not call the active
+-- account helper themselves.
+create or replace function public.plotmap_current_dealer_id()
+returns text language sql stable security definer set search_path=public,pg_catalog as $$
+  select coalesce((select p.dealer_id from public.profiles p where p.id=auth.uid()
+    and (
+      public.plotmap_is_platform_admin()
+      or public.plotmap_device_gate_bootstrap_request()
+      or public.plotmap_session_is_approved()
+    )), '');
+$$;
+revoke all on function public.plotmap_current_dealer_id() from public,anon;
+grant execute on function public.plotmap_current_dealer_id() to authenticated,service_role;
+
+create or replace function public.plotmap_dealer_is_active(p_dealer_id text)
+returns boolean language sql stable security definer set search_path=public,pg_catalog as $$
+  select nullif(p_dealer_id,'') is not null
+    and (
+      (
+        coalesce(auth.jwt()->>'role','')<>'authenticated'
+        and coalesce(nullif(current_setting('role',true),'none'),'')<>'authenticated'
+      )
+      or public.plotmap_is_platform_admin()
+      or (
+        p_dealer_id=(select p.dealer_id from public.profiles p where p.id=auth.uid())
+        and (public.plotmap_device_gate_bootstrap_request() or public.plotmap_session_is_approved())
+      )
+    )
+    and exists(
+      select 1 from public.dealer_settings d where d.dealer_id=p_dealer_id
+        and coalesce(d.account_status,'active')='active'
+        and (
+          (coalesce(d.subscription_status,'trial')='trial'
+            and (d.trial_end is null or d.trial_end>=timezone('utc'::text,now())))
+          or (coalesce(d.subscription_status,'trial') in ('active','paid')
+            and (d.expiry_date is null or d.expiry_date>=timezone('utc'::text,now())))
+        )
+    );
+$$;
+revoke all on function public.plotmap_dealer_is_active(text) from public,anon;
+grant execute on function public.plotmap_dealer_is_active(text) to authenticated,service_role;
+
+create or replace function public.plotmap_current_status()
+returns text language sql stable security definer set search_path=public,pg_catalog as $$
+  select p.status from public.profiles p where p.id=auth.uid()
+    and (
+      public.plotmap_is_platform_admin()
+      or public.plotmap_device_gate_bootstrap_request()
+      or public.plotmap_session_is_approved()
+    );
+$$;
+revoke all on function public.plotmap_current_status() from public,anon;
+grant execute on function public.plotmap_current_status() to authenticated,service_role;
+
+-- The canonical demo tenant follows the same four-device default as newly
+-- provisioned real dealers. Do not overwrite an explicitly customised limit.
+update public.dealer_settings set max_devices_allowed=4,updated_at=now()
+  where dealer_id='dealer-demo' and max_devices_allowed=1;
 
 -- Decouple only the existing buyer-link boundaries from dealer entitlement.
 -- Preserve every other byte of the current resolver, telemetry and map logic.

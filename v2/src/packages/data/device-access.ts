@@ -1,7 +1,8 @@
 import { getSupabase } from './supabase/client';
 import { readDeviceToken, requireDeviceToken } from './device-identity';
 
-export interface DeviceAccess { status: 'approved'|'device_not_activated'|'account_blocked'|'account_suspended'|'trial_expired'|'sign_in_required'; expiresAt?: string; founder?: boolean; }
+export interface DeviceAccess { status: 'approved'|'device_not_activated'|'account_blocked'|'account_suspended'|'trial_expired'|'sign_in_required'; expiresAt?: string; maxDevices?: number; subscriptionStatus?: 'trial'|'paid'|'active'; founder?: boolean; }
+export type DeviceActivationStatus = 'approved'|'invalid_code'|'expired'|'already_used'|'device_limit_reached'|'dealer_inactive'|'activation_failed';
 export async function readDealerAccess(): Promise<DeviceAccess> {
   const client=await getSupabase(); if(!client)throw new Error('Backend not configured.');
   const {data,error}=await client.rpc('plotmap_dealer_access_status',{p_device_token:readDeviceToken()});
@@ -9,7 +10,7 @@ export async function readDealerAccess(): Promise<DeviceAccess> {
   if(!data || !['approved','device_not_activated','account_blocked','account_suspended','trial_expired','sign_in_required'].includes(data.status))throw new Error('Account access could not be verified.');
   return data;
 }
-export async function activateCurrentDevice(code: string,label: string): Promise<void> {
+export async function requestDeviceActivation(code: string,label: string): Promise<DeviceActivationStatus> {
   if(!/^\d{8}$/.test(code))throw new Error('Enter the 8-digit code from Founder Control.');
   const client=await getSupabase();if(!client)throw new Error('Backend not configured.');
   const {data,error}=await client.rpc('plotmap_activate_device',{
@@ -17,7 +18,12 @@ export async function activateCurrentDevice(code: string,label: string): Promise
     p_browser_info:navigator.userAgent.slice(0,240),
   });
   if(error)throw new Error(error.message);
-  const status=Array.isArray(data)?data[0]?.status:data?.status;
+  const status=String(Array.isArray(data)?data[0]?.status:data?.status);
+  if(['approved','invalid_code','expired','already_used','device_limit_reached','dealer_inactive','activation_failed'].includes(status))return status as DeviceActivationStatus;
+  return 'activation_failed';
+}
+export async function activateCurrentDevice(code: string,label: string): Promise<void> {
+  const status=await requestDeviceActivation(code,label);
   if(status==='approved')return;
   const messages: Record<string,string>={invalid_code:'This code is not valid. Ask the founder for a new code.',expired:'This code has expired. Ask the founder for a new code.',already_used:'This code has already been used.',device_limit_reached:'All approved device slots are in use. Ask the founder to replace an old device.',dealer_inactive:'Account access has ended. Contact 8968017508.'};
   throw new Error(messages[status]??'Device activation could not be completed. Try again.');

@@ -15,6 +15,23 @@ export interface SupabaseEnv {
   readonly anonKey: string;
 }
 
+/** Auth links are consumed only by the private Founder route. Dealer pages do
+ * not accept URL-carried sessions, which keeps the normal login boundary
+ * unchanged while allowing a Supabase invite/recovery link to set the sole
+ * Founder's password. */
+export function shouldDetectAuthSessionInUrl(
+  value: Pick<Location, 'pathname' | 'search' | 'hash'> | null =
+    typeof location === 'undefined' ? null : location,
+): boolean {
+  if (!value || !/\/admin\/developer\.html\/?$/.test(value.pathname)) return false;
+  const query = new URLSearchParams(value.search);
+  const hash = new URLSearchParams(value.hash.replace(/^#/, ''));
+  const type = query.get('type') ?? hash.get('type');
+  return query.has('code')
+    || Boolean((query.has('token_hash') || hash.has('access_token'))
+      && ['invite', 'recovery'].includes(type ?? ''));
+}
+
 function decodeJwtRole(key: string): string | null {
   const parts = key.split('.');
   if (parts.length !== 3) return null;
@@ -60,7 +77,9 @@ export async function getSupabase(): Promise<SupabaseClient | null> {
     clientPromise = import('@supabase/supabase-js').then(({ createClient }) =>
       createClient(env.url, env.anonKey, {
         auth: {
-          persistSession: true, autoRefreshToken: true, detectSessionInUrl: false,
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: shouldDetectAuthSessionInUrl(),
         },
         global: { headers: { 'x-mapco-client': 'v2-web' }, fetch: deviceAwareFetch(env.url) },
       }),
