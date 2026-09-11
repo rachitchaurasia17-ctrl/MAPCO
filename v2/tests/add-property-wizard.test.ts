@@ -6,7 +6,7 @@
  */
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Component } from '../src/apps/dealer/logic';
-import { deskStore } from '../src/apps/dealer/desk-store';
+import { deskStore, toDeskProperty } from '../src/apps/dealer/desk-store';
 
 afterEach(() => vi.restoreAllMocks());
 
@@ -92,5 +92,91 @@ describe('moving between steps', () => {
 
     expect(ids).toEqual([undefined, 'p1']);
     expect(c.state.addPlotOpen).toBe(false);
+  });
+});
+
+describe('a double-click on the step buttons', () => {
+  /* Every handler is rebound on each render and a render happens the instant
+     the step changes, so a second click milliseconds later read the new
+     handler and moved again. A dealer double-clicking Next went from
+     Property past Seller to Photos without ever seeing the step they
+     skipped. */
+  const wizard = () => {
+    const c = new Component() as any;
+    c.state = { ...c.state, pstep: 1, addPlotOpen: true,
+      pform: { ...c.blankP(), city: 'Mohali', area: 'Sector 12' } };
+    vi.spyOn(c, 'savePlot').mockResolvedValue(undefined);
+    return c;
+  };
+
+  it('moves exactly one step forward', () => {
+    const c = wizard();
+    const next = () => c.renderVals().pNext();
+    next(); next(); next();
+    expect(c.state.pstep).toBe(2);
+  });
+
+  it('moves exactly one step back', async () => {
+    const c = wizard();
+    c.renderVals().pNext();
+    expect(c.state.pstep).toBe(2);
+    await new Promise((r) => setTimeout(r, 400));
+    const back = () => c.renderVals().pBack();
+    back(); back();
+    expect(c.state.pstep).toBe(1);
+  });
+
+  it('still lets a dealer walk the wizard at their own pace', async () => {
+    const c = wizard();
+    for (const expected of [2, 3, 4]) {
+      c.renderVals().pNext();
+      expect(c.state.pstep).toBe(expected);
+      await new Promise((r) => setTimeout(r, 400));
+    }
+  });
+});
+
+describe('coming back to an unfinished draft', () => {
+  /* A dealer who closes the wizard half way through must find their work
+     where they left it. Everything they typed is on the canonical record by
+     then — the step advances autosave — so reopening has to put all of it
+     back into the form, not just the fields step 1 happens to show. */
+  const saved = {
+    id: 'p-draft', type: 'Kothi', want: 'Kothi', city: 'Mohali', area: 'Sector 70',
+    loc: 'Sector 70, Mohali', sector: '70', size: '400 sq yd', sizeUnit: 'sq yd',
+    facing: 'North', position: 'Corner plot', price: 21000000,
+    approvals: [], landmarks: [], photos: [], published: false, sold: false,
+    lifecycle: 'draft', specs: { beds: '5', baths: '4', lawn: true },
+    registryRef: 'REG-70', approvalRef: 'GMADA-70',
+  };
+
+  it('puts back what the dealer had already entered', () => {
+    const c = new Component() as any;
+    c.properties = [toDeskProperty(saved as never)];
+    c.sellerLinks = {};
+
+    c.openEdit('p-draft', 1);
+
+    const form = c.state.pform;
+    expect(c.state.pEditId).toBe('p-draft');
+    expect(form.type).toBe('Kothi');
+    expect(form.city).toBe('Mohali');
+    expect(form.area).toBe('Sector 70');
+    expect(form.size).toBe('400');
+    expect(form.unit).toBe('sq yd');
+    expect(form.facing).toBe('North');
+    // 2.1 crore, as the form takes it.
+    expect(form.price).toBe('2.1');
+  });
+
+  it('opens on the step the dealer was sent to, not always the first', () => {
+    const c = new Component() as any;
+    c.properties = [toDeskProperty(saved as never)];
+    c.sellerLinks = {};
+
+    c.openEdit('p-draft', 3);
+
+    expect(c.state.pstep).toBe(3);
+    expect(c.state.addPlotOpen).toBe(true);
   });
 });

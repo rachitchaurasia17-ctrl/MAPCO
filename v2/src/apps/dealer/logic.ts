@@ -2382,8 +2382,23 @@ export class Component extends DCLogic {
   setWiz(patch) { this.setState({ wiz: { ...this.state.wiz, ...patch } }); }
   pickWizClient(id) { const w = this.state.wiz; this.setWiz({ clientId: w.clientId === id ? '' : id, useNewClient: false }); }
   pickWizProp(id) { const w = this.state.wiz; this.setWiz({ propId: w.propId === id ? '' : id, useManualProp: false }); }
-  wizNext() { const w = this.state.wiz; if (w.step >= 3) return; this.setWiz({ step: w.step + 1 }); }
-  wizBack() { const w = this.state.wiz; if (w.step <= 1) return; this.setWiz({ step: w.step - 1 }); }
+  /**
+   * One gesture, one step.
+   *
+   * Every handler is rebound on each render, and a render happens the
+   * instant a step changes — so a second click a few milliseconds later
+   * read the NEW handler and moved again. A dealer double-clicking Next
+   * jumped from Property straight past Seller to Photos and never saw the
+   * step they skipped; a triple-click went three.
+   */
+  stepOnce() {
+    const now = Date.now();
+    if (this._steppedAt && now - this._steppedAt < 350) return false;
+    this._steppedAt = now;
+    return true;
+  }
+  wizNext() { const w = this.state.wiz; if (w.step >= 3 || !this.stepOnce()) return; this.setWiz({ step: w.step + 1 }); }
+  wizBack() { const w = this.state.wiz; if (w.step <= 1 || !this.stepOnce()) return; this.setWiz({ step: w.step - 1 }); }
   toggleCPlot(id) { const cur = this.state.cform.plots || []; const next = cur.includes(id) ? cur.filter(x => x !== id) : [...cur, id]; this.setState({ cform: { ...this.state.cform, plots: next } }); }
   onCFormInput(e) { this.setState({ cform: { ...this.state.cform, [e.target.name]: e.target.value } }); }
   /* A property paper the dealer holds but has not uploaded. It saves onto the
@@ -4794,9 +4809,9 @@ export class Component extends DCLogic {
       lNotS1: s.lstep > 1, lNotS3: s.lstep < 3,
       lStepNext: () => {
         const ok = s.lstep === 1 ? lf.plots.length > 0 : !!(lf.clientId || (lf.newName || '').trim());
-        if (ok && s.lstep < 3) this.setState({ lstep: s.lstep + 1 });
+        if (ok && s.lstep < 3 && this.stepOnce()) this.setState({ lstep: s.lstep + 1 });
       },
-      lStepBack: () => { if (s.lstep > 1) this.setState({ lstep: s.lstep - 1 }); },
+      lStepBack: () => { if (s.lstep > 1 && this.stepOnce()) this.setState({ lstep: s.lstep - 1 }); },
       lStepNextLabel: s.lstep === 1 ? 'Next — customer' : 'Next — voice note',
       lStepNextStyle: `display:flex;align-items:center;gap:10px;height:56px;padding:0 24px;border-radius:15px;font-size:17.5px;font-weight:800;${(s.lstep === 1 ? lf.plots.length > 0 : !!(lf.clientId || (lf.newName || '').trim())) ? 'background:#0e4d2f;color:#eafff2;box-shadow:0 14px 26px -16px rgba(14,77,47,.9)' : 'background:#dbe8e0;color:#9db3a6;cursor:not-allowed'}`,
       lStepHint: { 1: 'Tap the properties this customer should see — up to 4.', 2: 'Pick a saved customer, or type a new name.', 3: 'A voice note makes the link feel personal. It is optional.' }[s.lstep],
@@ -5167,8 +5182,12 @@ export class Component extends DCLogic {
       pEarthStatus: pf.earth ? (s.pinMode === 'sector' ? 'Pinned on Sector Map' : 'Exact location confirmed') : (s.pinMode === 'sector' ? 'Sector Map selected' : 'Not confirmed yet'),
       pEarthStatusStyle: pf.earth ? 'display:inline-flex;align-items:center;gap:9px;height:52px;padding:0 20px;border-radius:15px;background:#d9f5e3;color:#0a6634;font-size:17px;font-weight:800' : 'display:inline-flex;align-items:center;gap:9px;height:52px;padding:0 20px;border-radius:15px;background:#ffdccb;color:#a33417;font-size:17px;font-weight:800',
       pSaved: s.pSaved,
-      pNext: () => { this.savePlot(false); if (pstep < 4) this.setState({ pstep: pstep + 1 }); },
-      pBack: () => { if (pstep > 1) this.setState({ pstep: pstep - 1 }); },
+      pNext: () => {
+        if (!this.stepOnce()) return;
+        this.savePlot(false);
+        if (pstep < 4) this.setState({ pstep: pstep + 1 });
+      },
+      pBack: () => { if (pstep > 1 && this.stepOnce()) this.setState({ pstep: pstep - 1 }); },
       pCanNext: pstep === 1 ? !!(pf.city && pf.area) : true, pSave: () => this.savePlot(),
       pSaveDraft: () => this.saveDraft(),
       pNextLabel: { 1: 'Next — seller', 2: 'Next — photos', 3: 'Next — MAPCO Earth' }[pstep] || 'Next',
