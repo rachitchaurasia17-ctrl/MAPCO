@@ -11,7 +11,14 @@ describe('Marketing production boundary', () => {
   const edge = read('supabase/functions/marketing-ops/index.ts');
   const ops = read('v2/src/apps/ops/main.ts');
   const gateway = read('v2/src/packages/marketing/ops/gateway.ts');
-  const dealer = read('v2/src/apps/marketing/main.ts');
+  /* The dealer-facing app, not its bootstrap. This guard used to read
+     main.ts — fourteen lines that mount a component — so every string it
+     looked for lived in a doc comment there while the app itself still
+     carried the sample properties, the sample posts, the invented reach
+     chart and a publish button that waited 600ms per channel and then
+     declared the post live. The guard was green the whole time. */
+  const dealer = read('v2/src/apps/marketing/logic.ts')
+    + read('v2/src/apps/marketing/template.ts');
 
   it('enforces exactly four outputs per day and 28 per week', () => {
     expect(migration).toContain('check (per_day = 4)');
@@ -76,6 +83,11 @@ describe('Marketing production boundary', () => {
     for (const fixture of ['const PROPS', 'const TODAY', 'reachChartSvg', '8,400 people', 'Posts published', 'Hot right now']) {
       expect(dealer).not.toContain(fixture);
     }
+    // Nothing may put a creative into a posted state on this screen's say-so.
+    expect(dealer).not.toMatch(/status:\s*\{[^}]*'posted'/);
+    expect(dealer).not.toContain('postedChans');
+    // The dealer's own creatives, read from the canonical record.
+    expect(dealer).toContain('loadDealerMarketingFeed');
     expect(dealer).toContain('Publishing not connected');
     expect(dealer).toContain('provider credential and connector report success');
     expect(dealer).toContain('No verified platform metrics yet');

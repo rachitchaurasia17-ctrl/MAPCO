@@ -97,531 +97,161 @@ export function renderApp(state: any) {
 
   <div data-scroll="" style="\${contentStyle}">
 
-  \${ isToday ? \`
-  <div style="flex:1;min-height:0;display:flex;flex-direction:column;padding:0 32px 16px">
-
-    <div style="flex:none;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 2px 10px">
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="width:9px;height:9px;border-radius:50%;background:#e0473a;box-shadow:0 0 0 4px rgba(224,71,58,.18)"></span>
-        <div style="font-size:12.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#7a2fe0">Today's Post · 1 post every day</div>
+  \${ loading ? \`
+    <div style="flex:1;display:grid;place-items:center;padding:60px">
+      <div style="text-align:center;color:#6b5f80">
+        <i class="ph-bold ph-circle-notch" style="font-size:34px;color:#7a2fe0;display:inline-block;animation:omSpin 1s linear infinite"></i>
+        <div style="margin-top:14px;font-size:16px;font-weight:700">Loading your marketing workspace…</div>
       </div>
     </div>
-
-    <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center;gap:14px">
-      <button onClick="\${__b(goPrev)}" title="Previous post" style="width:52px;height:52px;flex:none;border-radius:50%;background:rgba(255,255,255,.8);color:#7a2fe0;display:grid;place-items:center;box-shadow:0 14px 28px -14px rgba(90,40,150,.6);border:1px solid rgba(122,47,224,.18)" style-hover="background:#fff;transform:scale(1.06)"><i class="ph-bold ph-caret-left" style="font-size:22px"></i></button>
-
-      <div style="\${active.wrapStyle};max-height:calc(100vh - 210px)">
-        <div style="\${active.creativeStyle};max-height:calc(100vh - 210px)" style-hover="transform:translateY(-4px);box-shadow:0 54px 90px -34px rgba(40,15,70,.75)">
-          \${ active.split ? \`
-            <div style="\${active.photoStyle}"></div>
-            <div style="position:absolute;left:0;right:0;bottom:0;height:55%;background:linear-gradient(155deg,#221a3e,#14101f);border-top-left-radius:26cqw;box-shadow:0 -30px 50px -30px rgba(0,0,0,.6);display:flex;flex-direction:column;justify-content:center;padding:2% 9% 9%;color:#fff">
-              <div style="font-size:3.1cqw;font-weight:800;letter-spacing:.24em;text-transform:uppercase;color:#ffcb45">\${active.eyebrow}</div>
-              <div style="white-space:nowrap;font-family:'Newsreader',serif;font-weight:500;font-size:9.6cqw;line-height:1;letter-spacing:-.01em;margin-top:1.5%">\${active.line1}</div>
-              <div style="white-space:nowrap;font-family:'Newsreader',serif;font-weight:500;font-size:9.6cqw;line-height:1;letter-spacing:-.01em">\${active.line2}</div>
-              <div style="font-size:3.1cqw;font-weight:700;letter-spacing:.05em;color:#e0d6f0;margin-top:3.5%">\${active.factA}</div>
-              <div style="font-size:3.1cqw;font-weight:700;letter-spacing:.05em;color:#e0d6f0;margin-top:1%">\${active.factB}</div>
-              <div style="display:flex;gap:2%;margin-top:6%">
-                \${ (active.features || []).map(f => \`
-                  <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;min-width:0"><i class="\${f.icon}" style="font-size:5.2cqw;color:#ffcb45"></i><span style="font-size:2.2cqw;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#d4ad55;text-align:center;line-height:1.15">\${f.label}</span></div>
-                \`).join('') }
-              </div>
-            </div>
-            <div style="position:absolute;left:0;right:0;bottom:0;padding:1.6% 0;text-align:center;background:linear-gradient(90deg,#c8892a,#ffcb45);color:#241010;font-size:3cqw;font-weight:800;letter-spacing:.18em">\${active.tagline}</div>
-          \` : '' }
-
-          \${ active.overlay ? \`
-            <div style="\${active.photoStyle}"></div>
-            <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(16,12,28,.96) 6%,rgba(16,12,28,.82) 46%,rgba(16,12,28,.12) 78%)"></div>
-            <div style="position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column;padding:0 8% 8%;color:#fff">
-              <div style="font-family:'Newsreader',serif;font-weight:500;font-size:7.4cqw;letter-spacing:.02em;line-height:1">\${active.line1}</div>
-              <div style="font-size:3.1cqw;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#e0d6f0;margin-top:1.6%">\${active.eyebrow}</div>
-              <div style="font-family:'Newsreader',serif;font-weight:600;font-size:13cqw;line-height:.96;letter-spacing:-.01em;color:#ffcb45;margin-top:1.4%">\${active.line2}</div>
-              <div style="font-size:3.1cqw;font-weight:700;letter-spacing:.05em;color:#ece4f5;margin-top:3.4%">\${active.factA}</div>
-              <div style="font-size:3.1cqw;font-weight:700;letter-spacing:.05em;color:#ece4f5;margin-top:1%">\${active.factB}</div>
-              <div style="display:flex;gap:2%;margin-top:6%">
-                \${ (active.features || []).map(f => \`
-                  <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;min-width:0"><i class="\${f.icon}" style="font-size:5.2cqw;color:#ffcb45"></i><span style="font-size:2.2cqw;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:#d4ad55;text-align:center;line-height:1.15">\${f.label}</span></div>
-                \`).join('') }
-              </div>
-              <div style="display:flex;align-items:center;gap:10px;margin-top:6%"><span style="width:7%;height:1.5px;background:#c8892a"></span><span style="font-size:3cqw;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#ffcb45">\${active.tagline}</span></div>
-            </div>
-          \` : '' }
-
-          \${ active.isPosted ? \`
-            <div style="position:absolute;top:0;right:0;z-index:5;display:inline-flex;align-items:center;gap:8px;padding:11px 18px 11px 15px;border-bottom-left-radius:18px;background:rgba(34,197,94,.96);color:#fff;font-size:14px;font-weight:800;"><i class="ph-fill ph-check-circle" style="font-size:17px"></i>Live now</div>
-          \` : '' }
-          \${ active.isSkipped ? \`
-            <div style="position:absolute;inset:0;z-index:6;background:rgba(16,12,28,.72);backdrop-filter:blur(2px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#fff"><i class="ph ph-moon-stars" style="font-size:40px;opacity:.85"></i><div style="font-size:20px;font-weight:800">Skipped for today</div><button onClick="\${__b(active.unskip)}" style="padding:12px 22px;border-radius:12px;background:rgba(255,255,255,.16);color:#fff;font-size:15px;font-weight:800" style-hover="background:rgba(255,255,255,.28)">Bring it back</button></div>
-          \` : '' }
-        </div>
-      </div>
-
-      <button onClick="\${__b(goNext)}" title="Next post" style="width:52px;height:52px;flex:none;border-radius:50%;background:rgba(255,255,255,.8);color:#7a2fe0;display:grid;place-items:center;box-shadow:0 14px 28px -14px rgba(90,40,150,.6);border:1px solid rgba(122,47,224,.18)" style-hover="background:#fff;transform:scale(1.06)"><i class="ph-bold ph-caret-right" style="font-size:22px"></i></button>
-    </div>
-
-    <div style="flex:none;max-width:1120px;width:100%;margin:12px auto 0;border-radius:20px;background:linear-gradient(120deg,rgba(255,240,196,.82),rgba(236,219,255,.82) 55%,rgba(214,251,227,.82));border:1px solid rgba(255,255,255,.7);padding:13px 18px;box-shadow:0 26px 54px -28px rgba(40,15,70,.55);backdrop-filter:blur(10px)">
-
-      \${ timeOpen ? \`
-      <div style="display:flex;align-items:center;gap:9px;padding:2px 2px 13px;overflow-x:auto;">
-        <span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#7a2fe0;flex:none">When?</span>
-        \${ (timeOptions || []).map(o => \`
-          <button onClick="\${__b(o.pick)}" style="\${o.style}">\${o.label}</button>
-        \`).join('') }
-      </div>
-      \` : '' }
-
-      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-        \${ barReady ? \`
-        <button onClick="\${__b(toggleTime)}" style="\${timeChipStyle}" style-hover="background:#fff;box-shadow:0 12px 24px -12px rgba(90,40,150,.5)"><i class="ph-fill ph-clock" style="font-size:17px;color:#e0473a"></i><span style="font-size:9.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#a8571e">Goes out</span><span style="font-size:14px;font-weight:800;color:#1c1430">\${activeTime}</span><i class="ph-bold ph-caret-down" style="font-size:12px;color:#8a7862"></i></button>
-
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;min-width:0">
-          \${ (active.channels || []).map(c => \`
-            <button onClick="\${__b(c.toggle)}" title="\${c.name}" style="\${c.style}"><i class="\${c.icon}" style="font-size:22px;color:\${c.iconColor}"></i>\${ c.on ? \`<span style="position:absolute;top:-4px;right:-4px;width:17px;height:17px;border-radius:50%;background:#22c55e;border:2px solid #fff;display:grid;place-items:center"><i class="ph-bold ph-check" style="font-size:10px;color:#fff"></i></span>\` : '' }</button>
-          \`).join('') }
-        </div>
-
-        <div style="flex:1"></div>
-        <button onClick="\${__b(active.skip)}" style="display:inline-flex;align-items:center;gap:6px;padding:10px 14px;border-radius:11px;color:#8a7862;font-size:13px;font-weight:700;flex:none" style-hover="background:rgba(122,47,224,.08);color:#5a18c0"><i class="ph ph-moon" style="font-size:15px"></i>Not today</button>
-        <button onClick="\${__b(publishActive)}" style="\${publishBtnStyle}" style-hover="transform:translateY(-2px);box-shadow:0 26px 46px -14px rgba(224,71,58,.7)" style-active="transform:translateY(0) scale(.99)"><i class="ph-fill ph-paper-plane-right" style="font-size:22px"></i>\${publishLabel}</button>
-        \` : '' }
-
-        \${ barPublishing ? \`
-        <div style="font-size:16px;font-weight:800;color:#1c1430;flex:none">Sending…</div>
-        <div style="display:flex;align-items:center;gap:10px;flex:1;flex-wrap:wrap">
-          \${ (progressChannels || []).map(c => \`
-            <div style="\${c.style}">
-              \${ c.done ? \`<i class="ph-fill ph-check-circle" style="font-size:18px;color:#22c55e;animation:omCheck .4s cubic-bezier(.2,.8,.2,1) both"></i>\` : '' }
-              \${ c.active ? \`<i class="ph-bold ph-spinner-gap" style="font-size:17px;color:#7a2fe0;animation:omSpin .8s linear infinite"></i>\` : '' }
-              \${ c.pending ? \`<i class="\${c.icon}" style="font-size:16px;color:#b8a68e"></i>\` : '' }
-              <span style="font-size:13px;font-weight:800;color:\${c.textColor}">\${c.name}</span>
-            </div>
-          \`).join('') }
-        </div>
-        \` : '' }
-
-        \${ barPosted ? \`
-        <span style="width:46px;height:46px;flex:none;border-radius:14px;background:rgba(34,197,94,.18);display:grid;place-items:center"><i class="ph-fill ph-check-circle" style="font-size:26px;color:#16a34a;animation:omCheck .5s cubic-bezier(.2,.8,.2,1) both"></i></span>
-        <div style="flex:1;min-width:180px"><div style="font-size:16px;font-weight:800;color:#1c1430">This post is live.</div><div style="font-size:12.5px;color:#8a5a2e;margin-top:1px">\${postedLine}</div></div>
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          \${ (postedChannels || []).map(c => \`
-            <span style="display:inline-flex;align-items:center;gap:6px;padding:9px 13px;border-radius:11px;background:rgba(34,197,94,.14);color:#177a42;font-size:13px;font-weight:800"><i class="\${c.icon}" style="font-size:15px;color:\${c.color}"></i>\${c.name}</span>
-          \`).join('') }
-        </div>
-        \` : '' }
-      </div>
-    </div>
-  </div>
   \` : '' }
 
-  \${ isReels ? \`
-  <div style="flex:1;min-height:0;display:flex;flex-direction:column;padding:0 32px 16px">
-
-    <div style="flex:none;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 2px 10px">
-      <div style="display:flex;align-items:center;gap:10px;min-width:0">
-        <span style="width:9px;height:9px;border-radius:50%;background:#7a2fe0;box-shadow:0 0 0 4px rgba(122,47,224,.18);flex:none"></span>
-        <div style="font-size:12.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#7a2fe0">Reel Schedule · 2 a week (8 a month)</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:12px;flex:none">
-        <button onClick="\${__b(openUpload)}" style="\${uploadBtnStyle}" style-hover="transform:translateY(-1px)"><i class="ph-bold ph-plus" style="font-size:16px"></i>Upload Video</button>
+  \${ (!loading && loadError) ? \`
+    <div style="flex:1;display:grid;place-items:center;padding:60px">
+      <div style="max-width:520px;text-align:center;background:#fff;border-radius:22px;padding:34px;border:1px solid rgba(224,71,58,.3);box-shadow:0 30px 60px -40px rgba(60,30,90,.6)">
+        <i class="ph-fill ph-warning-circle" style="font-size:42px;color:#e0473a"></i>
+        <div style="margin-top:12px;font-family:'Newsreader',serif;font-size:26px;color:#241833">This did not load</div>
+        <div style="margin-top:8px;font-size:16px;line-height:1.55;color:#6b5f80">\${loadError}</div>
+        <button onClick="\${__b(retry)}" style="margin-top:20px;height:46px;padding:0 22px;border-radius:13px;background:#7a2fe0;color:#fff;font-size:15.5px;font-weight:800">Try again</button>
       </div>
     </div>
+  \` : '' }
 
-    <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center;gap:14px">
-      <button onClick="\${__b(reelPrev)}" title="Previous reel" style="width:52px;height:52px;flex:none;border-radius:50%;background:rgba(255,255,255,.8);color:#7a2fe0;display:grid;place-items:center;box-shadow:0 14px 28px -14px rgba(90,40,150,.6);border:1px solid rgba(122,47,224,.18)" style-hover="background:#fff;transform:scale(1.06)"><i class="ph-bold ph-caret-left" style="font-size:22px"></i></button>
+  \${ (!loading && !loadError && !hasCreatives && (isToday || isReels)) ? \`
+    <div style="flex:1;display:grid;place-items:center;padding:60px">
+      <div style="max-width:560px;text-align:center">
+        <span style="width:76px;height:76px;border-radius:24px;background:rgba(122,47,224,.1);color:#7a2fe0;display:inline-grid;place-items:center"><i class="ph-fill ph-megaphone" style="font-size:38px"></i></span>
+        <div style="margin-top:18px;font-family:'Newsreader',serif;font-weight:500;font-size:34px;letter-spacing:-.01em;color:#241833">\${emptyTitle}</div>
+        <div style="margin-top:10px;font-size:16.5px;line-height:1.6;color:#6b5f80">\${emptyLine}</div>
+      </div>
+    </div>
+  \` : '' }
 
-      <div style="height:100%;max-height:calc(100vh - 210px);min-width:0;display:flex;flex-direction:column;align-items:center;animation:omSlideX .3s cubic-bezier(.2,.8,.2,1) both">
-        <div style="height:100%;max-height:calc(100vh - 210px);aspect-ratio:9/16;position:relative;border-radius:26px;overflow:hidden;background:#14101f;box-shadow:0 44px 84px -34px rgba(40,15,70,.75)">
-          <div style="\${reel.photoStyle}"></div>
-          <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(12,9,22,.9) 4%,rgba(12,9,22,.12) 42%,rgba(12,9,22,.45))"></div>
+  \${ (!loading && !loadError && hasCreatives && (isToday || isReels)) ? \`
+  <div style="flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:26px;padding:4px 32px 24px;align-items:start">
 
-          \${ reel.isReady ? \`
-            <div style="position:absolute;top:14px;left:14px;right:14px;z-index:3;display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
-              \${ reel.showStatus ? \`<span style="\${reel.statusPill}">\${reel.eyebrow}</span>\` : '' }
-              <span style="margin-left:auto;flex:none;padding:6px 11px;border-radius:9px;background:rgba(12,9,22,.62);color:#fff;font-size:11.5px;font-weight:800;letter-spacing:.06em;backdrop-filter:blur(6px)">\${reel.dur}</span>
-            </div>
-            <button onClick="\${__b(reel.togglePlay)}" style="\${reel.playStyle}" style-hover="transform:translate(-50%,-50%) scale(1.07)"><i class="\${reel.playIcon}" style="font-size:30px;color:#1c1430;margin-left:\${reel.playNudge}"></i></button>
-            <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 16px 18px;color:#fff">
-              <div style="font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#ffcb45">\${reel.loc}</div>
-              <div style="font-family:'Newsreader',serif;font-weight:500;font-size:21px;line-height:1.1;margin-top:2px;text-wrap:pretty">\${reel.title}</div>
-              <div style="font-size:11.5px;font-weight:700;color:#e0d6f0;margin-top:4px">\${reel.sub}</div>
-              <div style="height:4px;border-radius:3px;background:rgba(255,255,255,.24);margin-top:14px;overflow:hidden"><div style="\${reel.barStyle}"></div></div>
-            </div>
-          \` : '' }
+    <div style="min-width:0;display:flex;flex-direction:column;align-items:center;gap:14px">
+      <div style="width:100%;display:flex;align-items:center;justify-content:space-between;gap:16px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="width:9px;height:9px;border-radius:50%;background:#e0473a;box-shadow:0 0 0 4px rgba(224,71,58,.18)"></span>
+          <div style="font-size:12.5px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#7a2fe0">\${active.kindLabel} · \${active.when}</div>
+        </div>
+        \${ canStep ? \`
+          <div style="display:flex;align-items:center;gap:8px">
+            <button onClick="\${__b(goPrev)}" title="Previous" style="width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.8);color:#7a2fe0;display:grid;place-items:center;border:1px solid rgba(122,47,224,.18)"><i class="ph-bold ph-caret-left" style="font-size:18px"></i></button>
+            <span style="font-size:13px;font-weight:800;color:#6b5f80;min-width:62px;text-align:center">\${countLabel}</span>
+            <button onClick="\${__b(goNext)}" title="Next" style="width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,.8);color:#7a2fe0;display:grid;place-items:center;border:1px solid rgba(122,47,224,.18)"><i class="ph-bold ph-caret-right" style="font-size:18px"></i></button>
+          </div>
+        \` : '' }
+      </div>
 
-          \${ reel.isPending ? \`
-            <div style="position:absolute;inset:0;background:rgba(14,10,26,.74);backdrop-filter:blur(7px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:30px;text-align:center;color:#fff">
-              <span style="width:64px;height:64px;border-radius:50%;background:rgba(255,203,69,.18);display:grid;place-items:center"><i class="\${reel.stageIcon}" style="font-size:30px;color:#ffcb45"></i></span>
-              <div style="font-size:11px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#ffcb45">\${reel.loc}</div>
-              <div style="font-family:'Newsreader',serif;font-weight:500;font-size:24px;line-height:1.2;text-wrap:pretty">\${reel.pendingLine}</div>
-              <div style="font-size:13px;font-weight:700;color:#c9bcdf">\${reel.sub}</div>
-            </div>
-          \` : '' }
-
-          \${ reel.isSkipped ? \`
-            <div style="position:absolute;inset:0;z-index:6;background:rgba(16,12,28,.76);backdrop-filter:blur(3px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:#fff;padding:24px;text-align:center"><i class="ph ph-moon-stars" style="font-size:40px;opacity:.85"></i><div style="font-size:19px;font-weight:800">Not posting today</div><div style="font-size:12.5px;color:#c9bcdf;max-width:200px">The reel stays saved in your Library.</div><button onClick="\${__b(active.unskip)}" style="padding:12px 22px;border-radius:12px;background:rgba(255,255,255,.16);color:#fff;font-size:15px;font-weight:800" style-hover="background:rgba(255,255,255,.28)">Bring it back</button></div>
-          \` : '' }
-
-          \${ reel.isPosted ? \`
-            <div style="position:absolute;top:0;left:0;z-index:5;display:inline-flex;align-items:center;gap:8px;padding:11px 16px 11px 14px;border-bottom-right-radius:18px;background:rgba(34,197,94,.96);color:#fff;font-size:13.5px;font-weight:800;"><i class="ph-fill ph-check-circle" style="font-size:16px"></i>Live now</div>
+      <div style="width:min(420px,100%);animation:omPop .3s ease both">
+        <div style="\${active.mediaStyle}">
+          \${ active.isReel ? \`
+            <span style="position:absolute;left:14px;top:14px;display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 13px;border-radius:11px;background:rgba(20,12,32,.72);color:#fff;font-size:13px;font-weight:800;backdrop-filter:blur(6px)"><i class="ph-fill ph-film-slate" style="font-size:15px"></i>Reel\${ active.durationLabel ? ' · ' + active.durationLabel : '' }</span>
           \` : '' }
         </div>
       </div>
-
     </div>
 
-    <div style="flex:none;max-width:1120px;width:100%;margin:12px auto 0;border-radius:20px;background:linear-gradient(120deg,rgba(255,240,196,.82),rgba(236,219,255,.82) 55%,rgba(214,251,227,.82));border:1px solid rgba(255,255,255,.7);padding:13px 18px;box-shadow:0 26px 54px -28px rgba(40,15,70,.55);backdrop-filter:blur(10px)">
-
-      \${ reelPending ? \`
-      <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-        <span style="width:46px;height:46px;flex:none;border-radius:14px;background:rgba(122,47,224,.14);display:grid;place-items:center"><i class="\${reel.stageIcon}" style="font-size:24px;color:#7a2fe0"></i></span>
-        <div style="flex:1;min-width:200px"><div style="font-size:16px;font-weight:800;color:#1c1430">\${reel.pendingLine}</div><div style="font-size:12.5px;color:#8a5a2e;margin-top:1px">Publishing options appear here once MAPCO marks it ready.</div></div>
-        <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
-          \${ (reel.steps || []).map(st => \`
-            <span style="\${st.style}"><i class="\${st.icon}" style="font-size:14px"></i>\${st.label}</span>
-          \`).join('') }
-        </div>
-      </div>
-      \` : '' }
-
-      \${ reelPublishable ? \`
+    <aside style="min-width:0;display:flex;flex-direction:column;gap:14px;background:rgba(255,255,255,.72);border:1px solid rgba(122,47,224,.16);border-radius:22px;padding:20px;box-shadow:0 26px 54px -36px rgba(60,30,90,.6);backdrop-filter:blur(8px)">
       <div>
-        \${ timeOpen ? \`
-        <div style="display:flex;align-items:center;gap:9px;padding:2px 2px 13px;overflow-x:auto;">
-          <span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#7a2fe0;flex:none">When?</span>
-          \${ (timeOptions || []).map(o => \`
-            <button onClick="\${__b(o.pick)}" style="\${o.style}">\${o.label}</button>
-          \`).join('') }
-        </div>
-        \` : '' }
-
-        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-          \${ barReady ? \`
-          <button onClick="\${__b(toggleTime)}" style="\${timeChipStyle}" style-hover="background:#fff;box-shadow:0 12px 24px -12px rgba(90,40,150,.5)"><i class="ph-fill ph-clock" style="font-size:17px;color:#e0473a"></i><span style="font-size:9.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#a8571e">Goes out</span><span style="font-size:14px;font-weight:800;color:#1c1430">\${activeTime}</span><i class="ph-bold ph-caret-down" style="font-size:12px;color:#8a7862"></i></button>
-
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;min-width:0">
-            \${ (active.channels || []).map(c => \`
-              <button onClick="\${__b(c.toggle)}" title="\${c.name}" style="\${c.style}"><i class="\${c.icon}" style="font-size:22px;color:\${c.iconColor}"></i>\${ c.on ? \`<span style="position:absolute;top:-4px;right:-4px;width:17px;height:17px;border-radius:50%;background:#22c55e;border:2px solid #fff;display:grid;place-items:center"><i class="ph-bold ph-check" style="font-size:10px;color:#fff"></i></span>\` : '' }</button>
-            \`).join('') }
-            <span style="font-size:11.5px;font-weight:700;color:#8a7862;max-width:150px;line-height:1.2">Reels post to Instagram &amp; Facebook</span>
-          </div>
-
-          <div style="flex:1"></div>
-          <button onClick="\${__b(active.skip)}" style="display:inline-flex;align-items:center;gap:6px;padding:10px 14px;border-radius:11px;color:#8a7862;font-size:13px;font-weight:700;flex:none" style-hover="background:rgba(122,47,224,.08);color:#5a18c0"><i class="ph ph-moon" style="font-size:15px"></i>Not today</button>
-          <button onClick="\${__b(publishActive)}" style="\${publishBtnStyle}" style-hover="transform:translateY(-2px);box-shadow:0 26px 46px -14px rgba(224,71,58,.7)" style-active="transform:translateY(0) scale(.99)"><i class="ph-fill ph-paper-plane-right" style="font-size:22px"></i>\${publishLabel}</button>
-          \` : '' }
-
-          \${ barPublishing ? \`
-          <div style="font-size:16px;font-weight:800;color:#1c1430;flex:none">Sending…</div>
-          <div style="display:flex;align-items:center;gap:10px;flex:1;flex-wrap:wrap">
-            \${ (progressChannels || []).map(c => \`
-              <div style="\${c.style}">
-                \${ c.done ? \`<i class="ph-fill ph-check-circle" style="font-size:18px;color:#22c55e;animation:omCheck .4s cubic-bezier(.2,.8,.2,1) both"></i>\` : '' }
-                \${ c.active ? \`<i class="ph-bold ph-spinner-gap" style="font-size:17px;color:#7a2fe0;animation:omSpin .8s linear infinite"></i>\` : '' }
-                \${ c.pending ? \`<i class="\${c.icon}" style="font-size:16px;color:#b8a68e"></i>\` : '' }
-                <span style="font-size:13px;font-weight:800;color:\${c.textColor}">\${c.name}</span>
-              </div>
-            \`).join('') }
-          </div>
-          \` : '' }
-
-          \${ barPosted ? \`
-          <span style="width:46px;height:46px;flex:none;border-radius:14px;background:rgba(34,197,94,.18);display:grid;place-items:center"><i class="ph-fill ph-check-circle" style="font-size:26px;color:#16a34a;animation:omCheck .5s cubic-bezier(.2,.8,.2,1) both"></i></span>
-          <div style="flex:1;min-width:180px"><div style="font-size:16px;font-weight:800;color:#1c1430">This reel is live.</div><div style="font-size:12.5px;color:#8a5a2e;margin-top:1px">\${postedLine}</div></div>
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-            \${ (postedChannels || []).map(c => \`
-              <span style="display:inline-flex;align-items:center;gap:6px;padding:9px 13px;border-radius:11px;background:rgba(34,197,94,.14);color:#177a42;font-size:13px;font-weight:800"><i class="\${c.icon}" style="font-size:15px;color:\${c.color}"></i>\${c.name}</span>
-            \`).join('') }
-          </div>
-          \` : '' }
-        </div>
+        <div style="font-size:11.5px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#7a2fe0">Property</div>
+        <div style="margin-top:5px;font-family:'Newsreader',serif;font-weight:500;font-size:25px;line-height:1.15;color:#241833">\${active.property}</div>
       </div>
-      \` : '' }
-    </div>
-  </div>
-  \` : '' }
 
-  \${ isLibrary ? \`
-  <div style="\${libWrapStyle}">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
-      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-        <div style="font-size:12px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#7a2fe0">The archive</div>
-        <div style="display:flex;align-items:center;gap:3px;background:rgba(255,255,255,.58);border:1px solid rgba(122,47,224,.16);border-radius:13px;padding:4px;box-shadow:0 12px 26px -20px rgba(60,30,90,.6)">
-          \${ (kindTabs || []).map(kt => \`
-            <button onClick="\${__b(kt.go)}" style="\${kt.style}"><i class="\${kt.icon}" style="font-size:14px"></i>\${kt.label}</button>
-          \`).join('') }
-        </div>
-        <span style="width:5px;height:5px;border-radius:50%;background:#c8a24e"></span>
-        <div style="font-size:14px;font-weight:800;color:#5a3a1c">\${libCount}</div>
-        \${ activeFilter ? \`
-          <span style="display:inline-flex;align-items:center;gap:7px;padding:6px 8px 6px 13px;border-radius:11px;background:#1c1430;color:#ffcb45;font-size:12.5px;font-weight:800">\${filterLabel}<button onClick="\${__b(clearFilter)}" style="width:20px;height:20px;border-radius:7px;background:rgba(255,255,255,.16);color:#fff;display:grid;place-items:center" style-hover="background:rgba(255,255,255,.3)"><i class="ph-bold ph-x" style="font-size:11px"></i></button></span>
-        \` : '' }
+      <div>
+        <div style="font-size:11.5px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#7a2fe0">Caption</div>
+        <div style="margin-top:6px;font-size:15.5px;line-height:1.6;color:\${ active.hasCaption ? '#241833' : '#948aa6' };white-space:pre-wrap">\${active.caption}</div>
       </div>
-      <button onClick="\${__b(openLibFilter)}" style="\${libFilterBtnStyle}" style-hover="background:#fff;box-shadow:0 12px 26px -14px rgba(90,40,150,.5)"><i class="ph-fill ph-funnel" style="font-size:16px;color:#7a2fe0"></i>Filter by property<i class="ph-bold ph-caret-down" style="font-size:12px;color:#8a7862"></i></button>
-    </div>
 
-    \${ (libGroups || []).map(g => \`
-      <div style="\${g.wrapStyle}">
-        \${ g.showHeader ? \`
-        <div style="display:flex;align-items:center;gap:14px;margin-bottom:15px">
-          <div style="font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#1c1430">\${g.label}</div>
-          <div style="font-size:12.5px;font-weight:800;color:#a8571e">\${g.date}</div>
-          <div style="flex:1;height:2px;border-radius:2px;background:linear-gradient(90deg,rgba(122,47,224,.32),transparent)"></div>
-          <div style="font-size:12px;font-weight:800;color:#7a6a55">\${g.count}</div>
-        </div>
-        \` : '' }
-        \${ g.hasReels ? \`
-        <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:28px;margin:0 auto 16px;max-width:1200px">
-          \${ (g.reels || []).map(r => \`
-            <div style="width:min(100%, 380px);flex:1 1 340px;max-width:420px">
-              <div style="\${r.mediaStyle}">
-                <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(12,9,22,.88) 2%,rgba(12,9,22,.05) 40%,rgba(12,9,22,.4))"></div>
-                <span style="\${r.statusStyle}"><i class="\${r.statusIcon}" style="font-size:12px"></i>\${r.statusLabel}</span>
-                <span style="position:absolute;top:14px;right:14px;width:36px;height:36px;border-radius:11px;background:#fff;display:grid;place-items:center;z-index:2;box-shadow:0 6px 14px -6px rgba(0,0,0,.4)"><i class="\${r.chanIcon}" style="font-size:16px;color:\${r.chanColor}"></i></span>
-                <button onClick="\${__b(r.play)}" title="Play reel" style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:78px;height:78px;border-radius:50%;background:rgba(255,255,255,.92);display:grid;place-items:center;box-shadow:0 18px 38px -14px rgba(0,0,0,.7);transition:transform .18s" style-hover="transform:translate(-50%,-50%) scale(1.07)"><i class="ph-fill ph-play" style="font-size:31px;color:#1c1430;margin-left:4px"></i></button>
-                <div style="position:absolute;left:0;right:0;bottom:0;padding:20px 22px 22px;color:#fff;display:flex;align-items:flex-end;gap:10px">
-                  <div style="flex:1;min-width:0">
-                    <div style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#ffcb45">\${r.loc}</div>
-                    <div style="font-family:'Newsreader',serif;font-weight:500;font-size:27px;line-height:1.05;margin-top:3px;text-wrap:pretty">\${r.title}</div>
-                  </div>
-                  <span style="flex:none;padding:6px 11px;border-radius:9px;background:rgba(12,9,22,.66);color:#fff;font-size:12px;font-weight:800;backdrop-filter:blur(6px)">\${r.dur}</span>
-                </div>
+      <div>
+        <div style="font-size:11.5px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#7a2fe0;margin-bottom:8px">Where it goes</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          \${ (channelRows || []).map(c => \`
+            <div style="\${c.style}">
+              <i class="\${c.icon}" style="font-size:20px;color:\${c.color};flex:none"></i>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:14.5px;font-weight:800;color:#241833">\${c.label}</div>
+                <div style="font-size:12.5px;color:#6b5f80;margin-top:1px">\${c.note}</div>
               </div>
-              <div style="border-radius:0 0 24px 24px;background:rgba(255,255,255,.66);border:1px solid rgba(122,47,224,.16);border-top:none;padding:11px 14px 13px;box-shadow:0 22px 44px -34px rgba(40,15,70,.6)">
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-                  <span style="display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:800;color:#8a5a2e"><i class="ph-fill ph-calendar-blank" style="font-size:13px;color:#c8892a"></i>\${r.when}</span>
-                  <button onClick="\${__b(r.reuse)}" style="display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:9px;background:rgba(122,47,224,.14);color:#5a18c0;font-size:12px;font-weight:800" style-hover="background:rgba(122,47,224,.24)"><i class="ph-bold ph-arrow-clockwise" style="font-size:12px"></i>Reuse</button>
-                </div>
-                <div style="display:flex;align-items:center;gap:8px;margin-top:10px">
-                  \${ (r.stats || []).map(st => \`
-                    <div style="flex:1;min-width:0;border-radius:11px;background:rgba(255,255,255,.72);border:1px solid \${st.bd};padding:9px 4px;text-align:center"><div style="display:flex;align-items:center;justify-content:center;gap:5px"><i class="\${st.icon}" style="font-size:14px;color:\${st.fg}"></i><span style="font-size:16px;font-weight:800;color:#1c1430">\${st.value}</span></div><div style="font-size:9px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#7a6a55;margin-top:2px">\${st.label}</div></div>
-                  \`).join('') }
-                </div>
-              </div>
+              <span style="\${c.badgeStyle}">\${c.line}</span>
             </div>
           \`).join('') }
         </div>
-        \` : '' }
-
-        \${ g.hasPosts ? \`
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px">
-          \${ (g.posts || []).map(a => \`
-            <div style="\${a.cardStyle}">
-              <div style="\${a.photoStyle}">
-                <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(16,12,28,.82),transparent 58%)"></div>
-                <span style="\${a.chipStyle}"><i class="\${a.chanIcon}" style="font-size:16px;color:\${a.chanColor}"></i></span>
-                <span style="\${a.statusStyle}"><i class="\${a.statusIcon}" style="font-size:12px"></i>\${a.statusLabel}</span>
-                <div style="position:absolute;left:0;right:0;bottom:0;padding:18px 20px;color:#fff">
-                  <div style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#ffcb45">\${a.loc}</div>
-                  <div style="font-family:'Newsreader',serif;font-weight:500;font-size:27px;line-height:1.05;margin-top:3px">\${a.title}</div>
-                </div>
-              </div>
-              <div style="padding:16px 18px 17px">
-                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><span style="display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:800;color:#8a5a2e"><i class="ph-fill ph-calendar-blank" style="font-size:14px;color:#c8892a"></i>\${a.when}</span><button onClick="\${__b(a.reuse)}" style="display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:10px;background:rgba(122,47,224,.14);color:#5a18c0;font-size:12.5px;font-weight:800" style-hover="background:rgba(122,47,224,.24)"><i class="ph-bold ph-arrow-clockwise" style="font-size:13px"></i>Reuse</button></div>
-                <div style="display:flex;align-items:center;gap:9px;margin-top:14px">
-                  \${ (a.stats || []).map(st => \`
-                    <div style="flex:1;min-width:0;border-radius:13px;background:\${st.bg};padding:12px 6px;text-align:center;border:1px solid \${st.bd}"><div style="display:flex;align-items:center;justify-content:center;gap:5px"><i class="\${st.icon}" style="font-size:15px;color:\${st.fg}"></i><span style="font-size:18px;font-weight:800;color:#1c1430">\${st.value}</span></div><div style="font-size:9.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#7a6a55;margin-top:3px">\${st.label}</div></div>
-                  \`).join('') }
-                </div>
-              </div>
-            </div>
-          \`).join('') }
-        </div>
-        \` : '' }
       </div>
-    \`).join('') }
+
+      <div style="margin-top:auto;padding-top:6px">
+        <button onClick="\${__b(publish)}" style="\${publishBtnStyle}"><i class="ph-fill ph-paper-plane-tilt" style="font-size:18px"></i>\${publishLabel}</button>
+        <div style="margin-top:9px;font-size:12.5px;line-height:1.5;color:#6b5f80">\${publishNote}</div>
+        \${ hasQuota ? \`<div style="margin-top:10px;font-size:12.5px;font-weight:700;color:#7a2fe0">\${quotaLabel}</div>\` : '' }
+      </div>
+    </aside>
   </div>
   \` : '' }
 
-  \${ isPerf ? \`
-  <div style="max-width:1200px;margin:0 auto;padding:16px 34px 56px;width:100%">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
-      <div style="display:flex;align-items:center;gap:12px"><div style="font-size:12px;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#7a2fe0">Performance</div><span style="width:5px;height:5px;border-radius:50%;background:#c8a24e"></span><div style="font-size:14px;font-weight:800;color:#5a3a1c">Last 30 days</div></div>
-      <div style="display:flex;align-items:center;gap:8px;padding:11px 15px;border-radius:13px;background:rgba(255,255,255,.6);border:1px solid rgba(122,47,224,.14);font-size:12.5px;font-weight:800;color:#7a6a55"><i class="ph ph-link" style="font-size:15px;color:#7a2fe0"></i>Pulled from your connected accounts</div>
+  \${ (!loading && !loadError && isLibrary) ? \`
+  <div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:14px;padding:4px 32px 24px">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      \${ (libraryKinds || []).map(k => \`<button onClick="\${__b(k.go)}" style="\${k.style}">\${k.label}</button>\`).join('') }
+      <span style="width:1px;height:24px;background:rgba(122,47,224,.18);margin:0 6px"></span>
+      \${ (libraryProps || []).map(p => \`<button onClick="\${__b(p.go)}" style="\${p.style}">\${p.label}</button>\`).join('') }
+      <span style="margin-left:auto;font-size:13px;font-weight:800;color:#6b5f80">\${libCount} item\${ libCount === 1 ? '' : 's' }</span>
     </div>
 
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:20px">
-      \${ (kpis || []).map(k => \`
-        <div style="\${k.cardStyle}">
-          <div style="display:flex;align-items:center;justify-content:space-between"><span style="width:38px;height:38px;border-radius:12px;background:\${k.bg};color:\${k.fg};display:grid;place-items:center"><i class="\${k.icon}" style="font-size:20px"></i></span><span style="font-size:12px;font-weight:800;color:#16a34a">\${k.delta}</span></div>
-          <div style="font-family:'Newsreader',serif;font-size:42px;font-weight:500;color:#1c1430;line-height:1;margin-top:14px">\${k.value}</div>
-          <div style="font-size:12.5px;font-weight:700;color:#5a4a38;margin-top:4px">\${k.label}</div>
-        </div>
-      \`).join('') }
-    </div>
-
-    <div style="display:grid;grid-template-columns:1.55fr 1fr;gap:16px;margin-top:16px">
-      <div style="border-radius:24px;background:linear-gradient(160deg,#251b40,#151020);border:1px solid rgba(122,47,224,.4);padding:22px 24px;box-shadow:0 28px 58px -32px rgba(20,10,40,.8);position:relative;overflow:hidden">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px"><div><div style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#ffcb45">Reach over 30 days</div><div style="font-size:16px;font-weight:800;color:#fff;margin-top:4px">8,400 people · up 38% this month</div></div><div style="display:flex;align-items:center;gap:7px;font-size:12px;font-weight:800;color:#ffd873"><span style="width:14px;height:5px;border-radius:3px;background:linear-gradient(90deg,#ffd24d,#ff6b5c)"></span>Daily reach</div></div>
-        <div style="margin-top:12px" data-om-raster="">\${reachChart}</div>
-      </div>
-
-      <div style="border-radius:24px;background:linear-gradient(150deg,#ecdbff,#d3b8fa);border:1px solid rgba(122,47,224,.28);padding:22px 24px;display:flex;flex-direction:column;box-shadow:0 24px 50px -34px rgba(90,40,150,.5)">
-        <div style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#5a18c0">Reach by channel</div>
-        <div style="display:flex;align-items:center;gap:22px;margin-top:14px;flex:1">
-          <div data-om-raster="" style="flex:none">\${donut}</div>
-          <div style="flex:1;display:flex;flex-direction:column;gap:14px">
-            \${ (perfChannels || []).map(c => \`
-              <div style="display:flex;align-items:center;gap:11px"><span style="width:14px;height:14px;border-radius:5px;background:\${c.color};flex:none;box-shadow:0 3px 8px -3px \${c.color}"></span><span style="flex:1;font-size:14.5px;font-weight:800;color:#2a1e3d">\${c.name}</span><span style="font-size:13px;font-weight:700;color:#7a6a8e">\${c.reach}</span><span style="font-size:15px;font-weight:800;color:#1c1430;min-width:38px;text-align:right">\${c.pct}</span></div>
-            \`).join('') }
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:16px">
-      <div style="border-radius:22px;overflow:hidden;background:linear-gradient(150deg,#fff0c4,#ffd873);border:1px solid rgba(230,150,0,.35);box-shadow:0 24px 50px -34px rgba(230,150,0,.5)">
-        <div style="\${topPropStyle}"><div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(16,12,28,.85),transparent 60%)"></div><div style="position:absolute;left:16px;right:16px;bottom:14px;color:#fff"><div style="font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#ffcb45">Most-viewed property</div><div style="font-family:'Newsreader',serif;font-size:23px;font-weight:500;margin-top:2px">\${topPropTitle}</div></div></div>
-        <div style="padding:16px 18px;font-size:13.5px;font-weight:600;color:#6a4a1e;line-height:1.45">\${topPropLine}</div>
-      </div>
-
-      <div style="border-radius:22px;background:linear-gradient(150deg,#dbfbe3,#8ce9a8);border:1px solid rgba(30,158,69,.3);padding:22px 24px;box-shadow:0 24px 50px -34px rgba(30,158,69,.5)">
-        <div style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#166534">Engagement · from the platforms</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px 10px;margin-top:16px">
-          \${ (engagement || []).map(e => \`
-            <div style="display:flex;align-items:center;gap:10px"><span style="width:38px;height:38px;flex:none;border-radius:12px;background:\${e.bg};color:\${e.fg};display:grid;place-items:center"><i class="\${e.icon}" style="font-size:18px"></i></span><div><div style="font-size:20px;font-weight:800;color:#1c1430;line-height:1">\${e.value}</div><div style="font-size:11px;font-weight:700;color:#3a4d38">\${e.label}</div></div></div>
-          \`).join('') }
-        </div>
-      </div>
-
-      <div style="border-radius:22px;background:linear-gradient(150deg,#ffe3de,#ffb9b0);border:1px solid rgba(224,71,58,.3);padding:22px 24px;box-shadow:0 24px 50px -34px rgba(224,71,58,.5);display:flex;flex-direction:column">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px"><div style="font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#c0402e">Follower growth</div><div style="font-size:13px;font-weight:800;color:#16a34a">\${followerTotal}</div></div>
-        <div style="display:flex;flex-direction:column;gap:16px;margin-top:18px;flex:1;justify-content:center">
-          \${ (followerRows || []).map(r => \`
-            <div>
-              <div style="display:flex;align-items:center;gap:9px;margin-bottom:7px"><i class="\${r.icon}" style="font-size:18px;color:\${r.color}"></i><span style="flex:1;font-size:13.5px;font-weight:800;color:#2a1e3d">\${r.name}</span><span style="font-size:15px;font-weight:800;color:#1c1430">\${r.val}</span></div>
-              <div style="height:9px;border-radius:6px;background:rgba(255,255,255,.55);overflow:hidden"><div style="\${r.barStyle}"></div></div>
+    \${ libCount === 0 ? \`
+      <div style="flex:1;display:grid;place-items:center;color:#6b5f80;font-size:16px;text-align:center;padding:40px;line-height:1.6">\${libEmptyLine}</div>
+    \` : \`
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(212px,1fr));gap:16px">
+        \${ (library || []).map(item => \`
+          <button onClick="\${__b(item.go)}" style="\${item.style};text-align:left;padding:0">
+            <div style="\${item.thumbStyle}"></div>
+            <div style="padding:11px 13px 13px">
+              <div style="font-size:14.5px;font-weight:800;color:#241833;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">\${item.title}</div>
+              <div style="margin-top:3px;font-size:12.5px;color:#6b5f80">\${item.kind} · \${item.when}</div>
             </div>
-          \`).join('') }
-        </div>
-        <div style="font-size:11.5px;font-weight:700;color:#8a4a42;margin-top:14px">Net new followers across Instagram &amp; Facebook this month.</div>
-      </div>
-    </div>
-  </div>
-  \` : '' }
-
-  </div>
-
-  \${ picker ? \`
-  <div onClick="\${__b(closePicker)}" style="position:fixed;inset:0;z-index:80;background:rgba(24,16,40,.5);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:32px;">
-    <div onClick="\${__b(stop)}" style="width:min(680px,100%);max-height:82vh;overflow-y:auto;border-radius:24px;background:linear-gradient(160deg,#fff6ec,#fdeefb);border:1px solid rgba(122,47,224,.18);box-shadow:0 40px 80px -30px rgba(24,16,40,.6);padding:26px 28px">
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
-        <div><div style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#7a2fe0">Filter by property</div><div style="font-size:21px;font-weight:800;color:#1c1430;margin-top:2px">Show posts for one property</div></div>
-        <button onClick="\${__b(closePicker)}" style="width:38px;height:38px;border-radius:11px;background:rgba(122,47,224,.1);color:#6a5b48;display:grid;place-items:center" style-hover="background:rgba(122,47,224,.2)"><i class="ph-bold ph-x" style="font-size:18px"></i></button>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px">
-        \${ (pickerItems || []).map(i => \`
-          <button onClick="\${__b(i.choose)}" style="\${i.style}" style-hover="border-color:#7a2fe0;transform:translateY(-2px)">
-            <div style="\${i.photoStyle}">\${ i.isAll ? \`<i class="ph-fill ph-squares-four" style="font-size:22px;color:#fff"></i>\` : '' }</div>
-            <div style="flex:1;min-width:0;text-align:left"><div style="font-size:14px;font-weight:800;color:#1c1430;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">\${i.title}</div><div style="font-size:12px;color:#8a7862">\${i.sub}</div></div>
-            \${ i.current ? \`<span style="padding:4px 8px;border-radius:7px;background:rgba(230,173,69,.25);color:#a8571e;font-size:10px;font-weight:800;flex:none">CURRENT</span>\` : '' }
           </button>
         \`).join('') }
       </div>
-    </div>
+    \` }
   </div>
   \` : '' }
 
-  \${ uploadOpen ? \`
-  <div onClick="\${__b(closeUpload)}" style="position:fixed;inset:0;z-index:85;background:rgba(24,16,40,.5);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:32px;">
-    <div onClick="\${__b(stop)}" style="width:min(560px,100%);max-height:86vh;overflow-y:auto;border-radius:24px;background:linear-gradient(160deg,#fff6ec,#fdeefb);border:1px solid rgba(122,47,224,.18);box-shadow:0 40px 80px -30px rgba(24,16,40,.6);padding:26px 28px">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
-        <div><div style="font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#7a2fe0">\${stepLabel} · \${quotaLabel}</div><div style="font-size:22px;font-weight:800;color:#1c1430;margin-top:3px">\${stepTitle}</div><div style="font-size:13px;font-weight:600;color:#8a7862;margin-top:4px;max-width:400px">\${stepSub}</div></div>
-        <button onClick="\${__b(closeUpload)}" style="width:38px;height:38px;flex:none;border-radius:11px;background:rgba(122,47,224,.1);color:#6a5b48;display:grid;place-items:center" style-hover="background:rgba(122,47,224,.2)"><i class="ph-bold ph-x" style="font-size:18px"></i></button>
-      </div>
-
-      <div style="display:flex;align-items:center;gap:8px;margin-top:18px">
-        <span style="\${dot1Style}"></span>
-        <span style="\${dot2Style}"></span>
-      </div>
-
-      \${ isStep1 ? \`
-      <div style="margin-top:18px;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
-          \${ (upProps || []).map(p => \`
-            <button onClick="\${__b(p.pick)}" style="\${p.style}" style-hover="border-color:#7a2fe0">
-              <div style="\${p.photoStyle}"></div>
-              <div style="flex:1;min-width:0;text-align:left"><div style="font-size:13.5px;font-weight:800;color:#1c1430;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">\${p.title}</div><div style="font-size:11.5px;color:#8a7862;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">\${p.sub}</div></div>
-              \${ p.on ? \`<i class="ph-fill ph-check-circle" style="font-size:18px;color:#22c55e;flex:none"></i>\` : '' }
-            </button>
-          \`).join('') }
-        </div>
-        <button onClick="\${__b(nextStep)}" style="\${nextStyle}" style-hover="transform:translateY(-2px)">Continue<i class="ph-bold ph-arrow-right" style="font-size:18px"></i></button>
-      </div>
-      \` : '' }
-
-      \${ isStep2 ? \`
-      <div style="margin-top:18px;">
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:18px;background:linear-gradient(135deg,#fff8e6,#ffe8b8);border:1.5px solid #f6cf7a;box-shadow:0 10px 24px -12px rgba(220,130,20,.35)">
-          <div style="\${chosenPhotoStyle}"></div>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#a8571e">Property</div>
-            <div style="font-size:15px;font-weight:800;color:#241833">\${chosenTitle}</div>
-          </div>
-          <button onClick="\${__b(backStep)}" style="padding:7px 14px;border-radius:10px;background:#e07e10;color:#fff;font-size:12.5px;font-weight:800;box-shadow:0 4px 10px -4px rgba(224,126,16,.6)" style-hover="background:#c26a09">Change</button>
-        </div>
-
-        <button onClick="\${__b(chooseFile)}" style="width:100%;margin-top:12px;display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:18px;background:linear-gradient(135deg,#f5eeff,#e8d6ff);border:2px dashed #9333ea;box-shadow:0 10px 24px -12px rgba(147,51,234,.35);transition:all .15s;cursor:pointer" style-hover="transform:translateY(-1px);background:linear-gradient(135deg,#ede0ff,#dcbeff)">
-          <span style="width:46px;height:46px;flex:none;border-radius:14px;background:linear-gradient(135deg,#7a2fe0,#9333ea);color:#fff;display:grid;place-items:center;box-shadow:0 8px 16px -8px rgba(122,47,224,.8)"><i class="\${fileIcon}" style="font-size:22px"></i></span>
-          <div style="text-align:left;flex:1;min-width:0">
-            <div style="font-size:15px;font-weight:800;color:#241833">\${fileTitle}</div>
-            <div style="font-size:12.5px;font-weight:600;color:#6b46c1;margin-top:1px">\${fileSub}</div>
-          </div>
-          \${ upFile ? \`<span style="padding:4px 9px;border-radius:8px;background:#16a34a;color:#fff;font-size:11px;font-weight:800">READY</span>\` : '' }
-        </button>
-
-        <div style="margin-top:16px">
-          <div style="font-size:11.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#7a2fe0">Record voice note <span style="font-weight:700;color:#9b82be">· audio instructions for MAPCO editors</span></div>
-          
-          <div style="margin-top:9px;padding:14px 16px;border-radius:18px;background:linear-gradient(135deg,#fff0f3,#ffe0e6);border:1.5px solid #fda4af;box-shadow:0 10px 24px -12px rgba(244,63,94,.35)">
-            \${ audioRec ? \`
-              <div style="display:flex;align-items:center;gap:14px">
-                <span style="width:42px;height:42px;border-radius:50%;background:#ef4444;color:#fff;display:grid;place-items:center;animation:omPulse 1s ease-in-out infinite;box-shadow:0 0 0 6px rgba(239,68,68,.25)"><i class="ph-fill ph-microphone" style="font-size:22px"></i></span>
-                <div style="flex:1;min-width:0">
-                  <div style="display:flex;align-items:center;gap:8px">
-                    <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;animation:omPulse .8s infinite"></span>
-                    <span style="font-size:14px;font-weight:800;color:#991b1b">Recording voice note… 0:18</span>
-                  </div>
-                  <div style="font-size:12px;color:#b91c1c;margin-top:2px">Speak instructions clearly (e.g. highlight north facing & road width).</div>
+  \${ (!loading && !loadError && isPerformance) ? \`
+  <div style="flex:1;min-height:0;padding:4px 32px 24px">
+    \${ hasPerformance ? \`
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">
+        \${ (performance || []).map(row => \`
+          <div style="background:#fff;border-radius:18px;padding:18px;border:1px solid rgba(122,47,224,.14);box-shadow:0 18px 36px -30px rgba(60,30,90,.6)">
+            <div style="font-size:15px;font-weight:800;color:#241833">\${row.provider}</div>
+            <div style="font-size:12.5px;color:#6b5f80;margin-top:2px">\${row.scope} · \${row.period}</div>
+            <div style="margin-top:12px;display:flex;flex-direction:column;gap:7px">
+              \${ (row.metrics || []).map(m => \`
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px">
+                  <span style="font-size:13.5px;color:#6b5f80">\${m.name}</span>
+                  <span style="font-family:'Newsreader',serif;font-size:22px;font-weight:600;color:#241833">\${m.value}</span>
                 </div>
-                <button onClick="\${__b(toggleAudioRecord)}" style="padding:9px 16px;border-radius:12px;background:#ef4444;color:#fff;font-size:13px;font-weight:800;flex:none;box-shadow:0 4px 12px rgba(239,68,68,.4)">Stop &amp; Save</button>
-              </div>
-            \` : audioDone ? \`
-              <div style="display:flex;align-items:center;gap:14px">
-                <span style="width:42px;height:42px;border-radius:50%;background:#16a34a;color:#fff;display:grid;place-items:center;box-shadow:0 4px 14px rgba(22,163,74,.4)"><i class="ph-fill ph-check" style="font-size:22px"></i></span>
-                <div style="flex:1;min-width:0">
-                  <div style="font-size:14.5px;font-weight:800;color:#166534">Voice note recorded (0:18s)</div>
-                  <div style="font-size:12px;color:#15803d;margin-top:1px">Attached to reel upload for MAPCO studio.</div>
-                </div>
-                <button onClick="\${__b(toggleAudioRecord)}" title="Re-record" style="padding:8px 12px;border-radius:10px;background:rgba(22,163,74,.15);color:#15803d;font-size:12.5px;font-weight:800;flex:none" style-hover="background:rgba(22,163,74,.25)"><i class="ph-bold ph-arrow-clockwise" style="font-size:14px"></i> Re-record</button>
-                <button onClick="\${__b(deleteAudio)}" title="Delete" style="width:32px;height:32px;border-radius:9px;background:rgba(239,68,68,.12);color:#dc2626;display:grid;place-items:center;flex:none"><i class="ph-bold ph-trash" style="font-size:14px"></i></button>
-              </div>
-            \` : \`
-              <div style="display:flex;align-items:center;justify-content:space-between;gap:14px">
-                <div style="display:flex;align-items:center;gap:12px">
-                  <span style="width:42px;height:42px;border-radius:50%;background:rgba(225,29,72,.14);color:#e11d48;display:grid;place-items:center"><i class="ph-fill ph-microphone" style="font-size:22px"></i></span>
-                  <div>
-                    <div style="font-size:14px;font-weight:800;color:#881337">Record audio note for editor</div>
-                    <div style="font-size:12px;color:#9f1239;margin-top:1px">Tap mic to speak voice directions directly.</div>
-                  </div>
-                </div>
-                <button onClick="\${__b(toggleAudioRecord)}" style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:12px;background:linear-gradient(135deg,#e11d48,#be123c);color:#fff;font-size:13.5px;font-weight:800;flex:none;box-shadow:0 8px 18px -8px rgba(225,29,72,.8)" style-hover="transform:scale(1.03)"><i class="ph-fill ph-microphone" style="font-size:16px"></i>Record voice</button>
-              </div>
-            \` }
+              \`).join('') }
+            </div>
           </div>
-        </div>
-
-        <div style="display:flex;align-items:center;gap:10px;margin-top:20px">
-          <button onClick="\${__b(backStep)}" style="display:inline-flex;align-items:center;gap:7px;padding:16px 18px;border-radius:16px;background:rgba(122,47,224,.1);color:#5a18c0;font-size:15px;font-weight:800;flex:none" style-hover="background:rgba(122,47,224,.2)"><i class="ph-bold ph-arrow-left" style="font-size:17px"></i>Back</button>
-          <button onClick="\${__b(submitUpload)}" style="\${submitStyle}" style-hover="transform:translateY(-2px)"><i class="ph-fill ph-paper-plane-right" style="font-size:20px"></i>Submit video</button>
+        \`).join('') }
+      </div>
+    \` : \`
+      <div style="height:100%;display:grid;place-items:center">
+        <div style="max-width:520px;text-align:center">
+          <span style="width:68px;height:68px;border-radius:22px;background:rgba(122,47,224,.1);color:#7a2fe0;display:inline-grid;place-items:center"><i class="ph-fill ph-chart-line-up" style="font-size:34px"></i></span>
+          <div style="margin-top:16px;font-family:'Newsreader',serif;font-weight:500;font-size:30px;color:#241833">Nothing measured yet</div>
+          <div style="margin-top:10px;font-size:16px;line-height:1.6;color:#6b5f80">\${noMetricsLine}</div>
         </div>
       </div>
-      \` : '' }
-    </div>
+    \` }
   </div>
   \` : '' }
+
+  </div>
 
   \${ toast ? \`
-  <div style="position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:90;display:flex;align-items:center;gap:11px;padding:15px 22px;border-radius:15px;background:#1c1430;color:#f3ecff;font-size:14.5px;font-weight:700;box-shadow:0 24px 48px -18px rgba(28,15,56,.85);"><i class="ph-fill ph-check-circle" style="font-size:20px;color:#ffcb45"></i>\${toast}</div>
+    <div style="position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:40;max-width:min(620px,92vw);background:#241833;color:#fff;padding:14px 20px;border-radius:15px;font-size:15px;line-height:1.5;font-weight:600;box-shadow:0 26px 50px -24px rgba(0,0,0,.7);animation:omRise .24s ease both">\${toast}</div>
   \` : '' }
 
 </div>

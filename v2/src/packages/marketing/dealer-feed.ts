@@ -70,7 +70,12 @@ export async function loadDealerMarketingFeed(): Promise<DealerMarketingFeed> {
     return {
       id: text(row.id), creativeType: text(row.creativeType) === 'reel' ? 'reel' : 'post',
       slotRef: text(row.slotRef), localDate: text(row.localDate),
-      status: text(row.status) === 'posted' ? 'posted' : 'ready', propertyId: text(row.propertyId),
+      /* marketing_creatives.status is constrained to draft / rendering /
+         ready / approved / rejected / published / failed / archived. The
+         word 'posted' is not among them, so looking for it meant a creative
+         that had genuinely been published still reported as merely ready. */
+      status: text(row.status) === 'published' ? 'posted' : 'ready',
+      propertyId: text(row.propertyId),
       propertyLabel: text(row.propertyLabel) || text(row.propertyId), caption: text(row.caption) || undefined,
       channels: list(row.channels).map(text).filter((channel): channel is MarketingChannel =>
         channel === 'instagram' || channel === 'facebook_page' || channel === 'google_business' || channel === 'whatsapp_business'),

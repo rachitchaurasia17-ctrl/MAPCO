@@ -41,7 +41,11 @@ describe('Phase 1 rapid-interaction boundary', () => {
   it('keeps important save, delete, publish, deal, decision, and revoke actions guarded', () => {
     expect(sharedModals).toContain('if (this.saving) return');
     expect(sharedModals).toContain('if (!this.form.name.trim() || this.saving) return');
-    expect(marketingPage).toContain("if (this.state.phase !== 'ready') return");
+    /* Publishing used to be a timer that ticked through the channels and then
+       declared the post live; its guard was a phase flag on that animation.
+       The real latch now sits on the one method that asks an adapter to
+       publish, so a second click cannot become a second post. */
+    expect(marketingPage).toContain('if (this._publishing) return');
     expect(aiConsole).toContain('decisionFlights.run(`decision:${id}`');
     // One SingleFlight boundary now covers every dealer mutation.
     expect(dealerScreen).toContain('_flights = new SingleFlight()');
