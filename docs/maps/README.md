@@ -1,5 +1,10 @@
 # Committed map-library reconciliation
 
+Continuation status: see `LIVE-PREFLIGHT.md`. The 160 entries below are the
+first checkpoint, not a certified final unique-map count. PDF exclusions and
+visual-duplicate evidence are being reopened; live publication is blocked by
+historical map bindings that require an explicit recovery decision.
+
 Canonical baseline: `865d1f0a9bf61901e42013d9c38fe12ec38dfbcd` (MAPCO).
 Donor: `b89424538d5e1b287f85ebad74ccefd22f57ed87` (property-software).
 

@@ -1,0 +1,3246 @@
+{
+  "project": "lswzrkvdwirhvggtvuch",
+  "inspectionDate": "2026-09-12",
+  "mode": "read-only",
+  "note": "Historical observations, not a substitute for a fresh preflight immediately before mutation.",
+  "result": {
+    "safeToPublish": false,
+    "collisions": [
+      "chandigarh-sector-15",
+      "chandigarh-sector-4"
+    ],
+    "brokenAssets": [],
+    "unresolvedPlacements": [
+      {
+        "propertyId": "ecocity",
+        "mapId": "map-nc-master"
+      },
+      {
+        "propertyId": "omx",
+        "mapId": "map-nc-master"
+      }
+    ],
+    "unresolvedLinks": [
+      {
+        "propertyId": "ecocity",
+        "field": "masterplan_id",
+        "mapId": "map-nc-master"
+      },
+      {
+        "propertyId": "omx",
+        "field": "masterplan_id",
+        "mapId": "map-nc-master"
+      }
+    ],
+    "duplicateTypedIds": false
+  },
+  "maps": [
+    {
+      "databaseId": "aerocity-gamada-gamada",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/aerocity/aerocity-gamada-gamada-original.jpg",
+      "databaseDimensions": {
+        "original": {
+          "h": 724,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "original": {
+          "h": 724,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/aerocity/aerocity-gamada-gamada-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "f8e1ba608c4c7ac326d9781ef003643271681d1b82ca0975d89095c295f78f8e",
+      "bytes": 232638,
+      "committedMatches": [
+        "non 3d maps/gamada aerocity mohali.jpg",
+        "v2/public/maps/gamada-aerocity-mohali.jpg"
+      ],
+      "typedMatches": [
+        "gamada-aerocity-mohali"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "aerocity-master",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/aerocity/aerocity-master-original.png",
+      "databaseDimensions": {
+        "original": {
+          "h": 3069,
+          "w": 4599
+        }
+      },
+      "assets": {
+        "overlay": {
+          "h": 3069,
+          "w": 4599,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/aerocity/aerocity-master-overlay.svg"
+        },
+        "original": {
+          "h": 3069,
+          "w": 4599,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/aerocity/aerocity-master-original.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "0d33e9992c04eedc8832b94c92f10325e007f835f2b1143920ec78c0e9c57554",
+      "bytes": 17247165,
+      "committedMatches": [
+        "migration-kit/maps with svg/aerotropolis-original.png.png"
+      ],
+      "typedMatches": [],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "aerocity-sector-83",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/aerocity/aerocity-sector-83-original.png",
+      "databaseDimensions": {
+        "original": {
+          "h": 1053,
+          "w": 1494
+        }
+      },
+      "assets": {
+        "original": {
+          "h": 1053,
+          "w": 1494,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/aerocity/aerocity-sector-83-original.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "31fb50fd67fb48762eb19a8574aa5989bc5adb4b52103292c6731bae29f676a6",
+      "bytes": 2157266,
+      "committedMatches": [
+        "non 3d maps/sector 83.png",
+        "v2/public/maps/sector-83.png"
+      ],
+      "typedMatches": [
+        "sector-83"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "aerotropolis-master",
+      "dealerId": "dealer-demo",
+      "status": "archived",
+      "deleted": true,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/aerotropolis/aerotropolis-master-original.png",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 3069,
+          "w": 4599
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/aerotropolis/aerotropolis-master-threeD.png"
+        },
+        "overlay": {
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/aerotropolis/aerotropolis-master-overlay.svg"
+        },
+        "original": {
+          "h": 3069,
+          "w": 4599,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/aerotropolis/aerotropolis-master-original.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "0d33e9992c04eedc8832b94c92f10325e007f835f2b1143920ec78c0e9c57554",
+      "bytes": 17247165,
+      "committedMatches": [
+        "migration-kit/maps with svg/aerotropolis-original.png.png"
+      ],
+      "typedMatches": [],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "chandigarh-master",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-master-original.v2-1785657855465.png",
+      "databaseDimensions": {
+        "original": {
+          "h": 1278,
+          "w": 1603
+        }
+      },
+      "assets": {
+        "overlay": {
+          "h": 1278,
+          "w": 1603,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-master-overlay.v2-1785657855465.svg"
+        },
+        "original": {
+          "h": 1278,
+          "w": 1603,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-master-original.v2-1785657855465.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "46202fe92aabdcde8a59f00830ef5728b8406dcdb8da52519b5727ad6af17df6",
+      "bytes": 2942566,
+      "committedMatches": [
+        "chandigarh masterplan (2).png"
+      ],
+      "typedMatches": [],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "chandigarh-phase-1",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-phase-1-original.jpg",
+      "databaseDimensions": {
+        "original": {
+          "h": 1024,
+          "w": 752
+        }
+      },
+      "assets": {
+        "original": {
+          "h": 1024,
+          "w": 752,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-phase-1-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "b5a624831f09dd2e050c0e8735bcede4031603c6055dced973b12065524d9804",
+      "bytes": 221488,
+      "committedMatches": [
+        "non 3d maps/industrial area phase 1 chd.jpg",
+        "v2/public/maps/industrial-area-phase-1-chd.jpg"
+      ],
+      "typedMatches": [
+        "industrial-area-phase-1-chd"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "chandigarh-secter-32",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-secter-32-original.jpg",
+      "databaseDimensions": {
+        "original": {
+          "h": 749,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "original": {
+          "h": 749,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-secter-32-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "b0ea55f7276052f78213d37f8b3cc4152d5cc8a7ab810d70a783418f0c1cf360",
+      "bytes": 190304,
+      "committedMatches": [
+        "non 3d maps/secter 32 chd.jpg",
+        "non 3d maps/sector 32 chandigarh.jpg",
+        "v2/public/maps/secter-32-chd.jpg",
+        "v2/public/maps/sector-32-chandigarh.jpg"
+      ],
+      "typedMatches": [
+        "secter-32-chd",
+        "sector-32-chandigarh"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "chandigarh-sector-10c",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-10c-threeD.png",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-10c-threeD.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "ee4efe63dae026192b8ea3740eddded14ca456e69405ee7a5516cea2a803535d",
+      "bytes": 2941905,
+      "committedMatches": [
+        "3d maps/sector 10chd.png"
+      ],
+      "typedMatches": [],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "chandigarh-sector-15",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-15-threeD.png",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-15-threeD.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "7539a0e9376048396e2d29a341481cb1ef95a4317471ca3ebaf67d44de14a862",
+      "bytes": 3157068,
+      "committedMatches": [
+        "3d maps/sector 15 chd.png"
+      ],
+      "typedMatches": [],
+      "idCollision": true,
+      "sameIdTypedDimensions": {
+        "width": 2217,
+        "height": 1649
+      },
+      "properties": []
+    },
+    {
+      "databaseId": "chandigarh-sector-16",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-16-original.png",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 1051,
+          "w": 1496
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-16-threeD.png"
+        },
+        "original": {
+          "h": 1051,
+          "w": 1496,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-16-original.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "ce03e96d5ffb71dced019a58813ffec247d9d886aecd94bc4db7c224a263144f",
+      "bytes": 1998323,
+      "committedMatches": [
+        "non 3d maps/sector 16 chd.png",
+        "v2/public/maps/sector-16-chd.png"
+      ],
+      "typedMatches": [
+        "sector-16-chd"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "chandigarh-sector-17",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-17-original.png",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 1066,
+          "w": 1476
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-17-threeD.png"
+        },
+        "original": {
+          "h": 1066,
+          "w": 1476,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-17-original.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "ffda95aff1b54a53842452049268955ab5521a8df02b0f783d40f956dc01e2d3",
+      "bytes": 1757262,
+      "committedMatches": [
+        "non 3d maps/sector 17 chd.png",
+        "v2/public/maps/sector-17-chd.png"
+      ],
+      "typedMatches": [
+        "sector-17-chd"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "chandigarh-sector-19c",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-19c-threeD.png",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-19c-threeD.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "07acc0eb3ff1e4781fa794fa34c7ece1958070f9643f9bbc785dc7ab017cfbcd",
+      "bytes": 2980833,
+      "committedMatches": [
+        "3d maps/sector 19c chd.png"
+      ],
+      "typedMatches": [],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "chandigarh-sector-2",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-2-original.png",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 1110,
+          "w": 1417
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-2-threeD.png"
+        },
+        "original": {
+          "h": 1110,
+          "w": 1417,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-2-original.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "ee03bfe259321260977151122f49332492c920f2eef59148494c1403c335bfe0",
+      "bytes": 2196502,
+      "committedMatches": [
+        "non 3d maps/sector 2 chd.png",
+        "v2/public/maps/sector-2-chd.png"
+      ],
+      "typedMatches": [
+        "sector-2-chd"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "chandigarh-sector-21",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-21-original.png",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1060,
+          "w": 1484
+        },
+        "original": {
+          "h": 1021,
+          "w": 1540
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1060,
+          "w": 1484,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-21-threeD.png"
+        },
+        "original": {
+          "h": 1021,
+          "w": 1540,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-21-original.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "2327072a1078b24d34feb75411a6cd8c790296db993fa6fbb1498e0f3bd9244a",
+      "bytes": 1930326,
+      "committedMatches": [
+        "non 3d maps/sector 21 chd.png",
+        "v2/public/maps/sector-21-chd.png"
+      ],
+      "typedMatches": [
+        "sector-21-chd"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "chandigarh-sector-28",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-28-original.png",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 572,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-28-threeD.png"
+        },
+        "original": {
+          "h": 572,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-28-original.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "d3c2013cec5ebd904851202a4205c443067d9d293d00549f65abe9c3dbbb04c6",
+      "bytes": 816171,
+      "committedMatches": [
+        "non 3d maps/sector 28 chd.png",
+        "v2/public/maps/sector-28-chd.png"
+      ],
+      "typedMatches": [
+        "sector-28-chd"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "chandigarh-sector-3",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-3-original.png",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1024,
+          "w": 1536
+        },
+        "original": {
+          "h": 1036,
+          "w": 1518
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1024,
+          "w": 1536,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-3-threeD.png"
+        },
+        "original": {
+          "h": 1036,
+          "w": 1518,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-3-original.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "443e0bf4867f6a0d4e4cdabe0ccf47952af7f5a5c340b50d1a03b1a2b26f0393",
+      "bytes": 1536907,
+      "committedMatches": [
+        "non 3d maps/sector 3 chd.png",
+        "v2/public/maps/sector-3-chd.png"
+      ],
+      "typedMatches": [
+        "sector-3-chd"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "chandigarh-sector-30",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-30-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1071,
+          "w": 1469
+        },
+        "original": {
+          "h": 747,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1071,
+          "w": 1469,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-30-threeD.png"
+        },
+        "original": {
+          "h": 747,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-30-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "bb080384efdac81d9aab271385b14feb4f38a6baf78aa8f168ddf85b2f943034",
+      "bytes": 173520,
+      "committedMatches": [
+        "non 3d maps/sector 30 chd.jpg",
+        "v2/public/maps/sector-30-chd.jpg"
+      ],
+      "typedMatches": [
+        "sector-30-chd"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "chandigarh-sector-32",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-32-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 749,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-32-threeD.png"
+        },
+        "original": {
+          "h": 749,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-32-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "b0ea55f7276052f78213d37f8b3cc4152d5cc8a7ab810d70a783418f0c1cf360",
+      "bytes": 190304,
+      "committedMatches": [
+        "non 3d maps/secter 32 chd.jpg",
+        "non 3d maps/sector 32 chandigarh.jpg",
+        "v2/public/maps/secter-32-chd.jpg",
+        "v2/public/maps/sector-32-chandigarh.jpg"
+      ],
+      "typedMatches": [
+        "secter-32-chd",
+        "sector-32-chandigarh"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "chandigarh-sector-34",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-34-threeD.png",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-34-threeD.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "a2c42df4b3eecc09b5f071a8b73085c92bf33d026ca0a1ff9e333cf139467dc6",
+      "bytes": 2731676,
+      "committedMatches": [
+        "3d maps/sector 34 chd.png"
+      ],
+      "typedMatches": [],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "chandigarh-sector-36",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-36-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 761,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-36-threeD.png"
+        },
+        "original": {
+          "h": 761,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-36-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "8213319af929632ef9eb952bf46e5c77eb37e2152dad19fdc1fc8e1f864f6c04",
+      "bytes": 210782,
+      "committedMatches": [
+        "non 3d maps/sector 36 chd.jpg",
+        "v2/public/maps/sector-36-chd.jpg"
+      ],
+      "typedMatches": [
+        "sector-36-chd"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "chandigarh-sector-37",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-37-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1107,
+          "w": 1421
+        },
+        "original": {
+          "h": 763,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1107,
+          "w": 1421,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-37-threeD.png"
+        },
+        "original": {
+          "h": 763,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-37-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "8bf4f8159e01345832bed1805ab844a1ef250ecc7a2b58581717e57e0b774210",
+      "bytes": 231505,
+      "committedMatches": [
+        "non 3d maps/sector 37 chd.jpg",
+        "v2/public/maps/sector-37-chd.jpg"
+      ],
+      "typedMatches": [
+        "sector-37-chd"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "chandigarh-sector-39",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-39-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1087,
+          "w": 1446
+        },
+        "original": {
+          "h": 770,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1087,
+          "w": 1446,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-39-threeD.png"
+        },
+        "original": {
+          "h": 770,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-39-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "a9cce140848a7cae94fa043b1ee6d7d272ef24c25812dac2f6cfd1114493e004",
+      "bytes": 134821,
+      "committedMatches": [
+        "non 3d maps/sector 39 chd.jpg",
+        "v2/public/maps/sector-39-chd.jpg"
+      ],
+      "typedMatches": [
+        "sector-39-chd"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "chandigarh-sector-4",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-4-threeD.png",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-4-threeD.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "a3afa50d88cef9465ca4a01ea71eb336d93468e159c2771cef3edf9e7c617ee2",
+      "bytes": 3017246,
+      "committedMatches": [
+        "3d maps/sector 4 chd.png"
+      ],
+      "typedMatches": [],
+      "idCollision": true,
+      "sameIdTypedDimensions": {
+        "width": 2221,
+        "height": 1573
+      },
+      "properties": []
+    },
+    {
+      "databaseId": "chandigarh-sector-40",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-40-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1084,
+          "w": 1451
+        },
+        "original": {
+          "h": 766,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1084,
+          "w": 1451,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-40-threeD.png"
+        },
+        "original": {
+          "h": 766,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-40-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "85a67d36c39930c57fccf73e31c1d6dbb2b6d100e63550cf9203f13b1b4ec91b",
+      "bytes": 234351,
+      "committedMatches": [
+        "non 3d maps/sector 40 chd.jpg",
+        "v2/public/maps/sector-40-chd.jpg"
+      ],
+      "typedMatches": [
+        "sector-40-chd"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "chandigarh-sector-41",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-41-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1087,
+          "w": 1447
+        },
+        "original": {
+          "h": 759,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1087,
+          "w": 1447,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-41-threeD.png"
+        },
+        "original": {
+          "h": 759,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-41-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "db504665fd06dda2b557fc3457984ea4de86f8b201edebf3343a96af55ec54c2",
+      "bytes": 138196,
+      "committedMatches": [
+        "non 3d maps/sector 41 chd.jpg",
+        "v2/public/maps/sector-41-chd.jpg"
+      ],
+      "typedMatches": [
+        "sector-41-chd"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "chandigarh-sector-43",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-43-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1076,
+          "w": 1462
+        },
+        "original": {
+          "h": 757,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1076,
+          "w": 1462,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-43-threeD.png"
+        },
+        "original": {
+          "h": 757,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-43-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "c4fb0b9b89946cab6f999a3aff7cdf6579b61aa04b09c44eb297422a7b049075",
+      "bytes": 201521,
+      "committedMatches": [
+        "non 3d maps/sector 43 chd.jpg",
+        "v2/public/maps/sector-43-chd.jpg"
+      ],
+      "typedMatches": [
+        "sector-43-chd"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "chandigarh-sector-45",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-45-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 761,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-45-threeD.png"
+        },
+        "original": {
+          "h": 761,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-45-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "6404ba0e8c1be9b2c74b5674a0cbf9ae4f12ef4ad73840c904bc87e2c9e468b0",
+      "bytes": 199331,
+      "committedMatches": [
+        "non 3d maps/sector 45 chd.jpg",
+        "v2/public/maps/sector-45-chd.jpg"
+      ],
+      "typedMatches": [
+        "sector-45-chd"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "chandigarh-sector-46",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-46-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1080,
+          "w": 1456
+        },
+        "original": {
+          "h": 743,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1080,
+          "w": 1456,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-46-threeD.png"
+        },
+        "original": {
+          "h": 743,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-46-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "89d7b638796c947f8cfd26eb1d038989223a902dad1ae2cadac4415388085596",
+      "bytes": 234132,
+      "committedMatches": [
+        "non 3d maps/sector 46 chd.jpg",
+        "v2/public/maps/sector-46-chd.jpg"
+      ],
+      "typedMatches": [
+        "sector-46-chd"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "chandigarh-sector-50",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-50-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 750,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-50-threeD.png"
+        },
+        "original": {
+          "h": 750,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-50-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "2c8b874613d96fcdafc712ec279269ebf081602b67040b895f9748e4948245bf",
+      "bytes": 147386,
+      "committedMatches": [
+        "non 3d maps/sector 50 chd.jpg",
+        "v2/public/maps/sector-50-chd.jpg"
+      ],
+      "typedMatches": [
+        "sector-50-chd"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "chandigarh-sector-52",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-52-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1118,
+          "w": 1407
+        },
+        "original": {
+          "h": 767,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1118,
+          "w": 1407,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-52-threeD.png"
+        },
+        "original": {
+          "h": 767,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-52-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "1bced9c6d30131fd8c1e3e1618d8ae740b5c275b483352ccc6d49b95fed8dc7c",
+      "bytes": 194589,
+      "committedMatches": [
+        "non 3d maps/sector 52 chd.jpg",
+        "v2/public/maps/sector-52-chd.jpg"
+      ],
+      "typedMatches": [
+        "sector-52-chd"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "chandigarh-sector-8",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-8-original.png",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 1086,
+          "w": 1448
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-8-threeD.png"
+        },
+        "original": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/chandigarh/chandigarh-sector-8-original.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "b375e004c0e2db7934eb969ba001b450b7fbe144e8a17276378499a712bf8d36",
+      "bytes": 2187587,
+      "committedMatches": [
+        "non 3d maps/sector 8 chd.png",
+        "v2/public/maps/sector-8-chd.png"
+      ],
+      "typedMatches": [
+        "sector-8-chd"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "derabassi-master",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/derabassi/derabassi-master-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 1083,
+          "w": 1349
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/derabassi/derabassi-master-threeD.png"
+        },
+        "original": {
+          "h": 1083,
+          "w": 1349,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/derabassi/derabassi-master-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "83aee7d18233470272bf8bcebae00271bee0f266ca3144c2ba1ab0ce6f001fa8",
+      "bytes": 170937,
+      "committedMatches": [
+        "non 3d maps/derabassi masterplan.jpg",
+        "v2/public/maps/derabassi-masterplan.jpg"
+      ],
+      "typedMatches": [
+        "derabassi-masterplan"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "kharar-master",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/kharar/kharar-master-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 1132,
+          "w": 1422
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/kharar/kharar-master-threeD.png"
+        },
+        "original": {
+          "h": 1132,
+          "w": 1422,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/kharar/kharar-master-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "e836e368008eb58c172f0866c2053b04163e3e11cf21a0a70a1b87f7542e91a0",
+      "bytes": 215409,
+      "committedMatches": [
+        "non 3d maps/kharar masterplan.jpg",
+        "v2/public/maps/kharar-masterplan.jpg"
+      ],
+      "typedMatches": [
+        "kharar-masterplan"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-gillco-gillco",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-gillco-gillco-original.jpg",
+      "databaseDimensions": {
+        "original": {
+          "h": 724,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "original": {
+          "h": 724,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-gillco-gillco-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "f5f0aec8edb535cc6aece18a06563b71df9e724259767a030072ef7a9491ae16",
+      "bytes": 139881,
+      "committedMatches": [
+        "non 3d maps/gillco.jpg",
+        "v2/public/maps/gillco.jpg"
+      ],
+      "typedMatches": [
+        "gillco"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-gillco-gillco-valley",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-gillco-gillco-valley-threeD.png",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-gillco-gillco-valley-threeD.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "706e784b2dbfc121c5ec60c91e711119ed7516270a50dfca34898b8a8a76b286",
+      "bytes": 2461404,
+      "committedMatches": [
+        "3d maps/gillco valley.png"
+      ],
+      "typedMatches": [],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-ireo-ireo",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-ireo-ireo-original.png",
+      "databaseDimensions": {
+        "original": {
+          "h": 2476,
+          "w": 3356
+        }
+      },
+      "assets": {
+        "original": {
+          "h": 2476,
+          "w": 3356,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-ireo-ireo-original.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "fdee14177ec497000798fd27ab9e49e029d3538f5c534abc7a9dc4329950c143",
+      "bytes": 9405801,
+      "committedMatches": [
+        "non 3d maps/ireo mohali.png",
+        "v2/public/maps/ireo-mohali.png"
+      ],
+      "typedMatches": [
+        "ireo-mohali"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-master",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-master-original.png",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 1278,
+          "w": 1603
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-master-threeD.png"
+        },
+        "overlay": {
+          "h": 1278,
+          "w": 1603,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-master-overlay.svg"
+        },
+        "original": {
+          "h": 1278,
+          "w": 1603,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-master-original.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "b758fdba2b33220135a81ca1b1586f37c709fd1507979e787312eac015077c52",
+      "bytes": 2745162,
+      "committedMatches": [
+        "migration-kit/maps with svg/alligned svg/mohali masterplan.png"
+      ],
+      "typedMatches": [],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-phase-1",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-phase-1-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1448,
+          "w": 1086
+        },
+        "original": {
+          "h": 724,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1448,
+          "w": 1086,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-phase-1-threeD.png"
+        },
+        "original": {
+          "h": 724,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-phase-1-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "eb15af71a927a736bf674858523e884f239fe6edd839751ef46f82286e3d7723",
+      "bytes": 195902,
+      "committedMatches": [
+        "non 3d maps/industrial area phase 1.jpg",
+        "v2/public/maps/industrial-area-phase-1.jpg"
+      ],
+      "typedMatches": [
+        "industrial-area-phase-1"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-phase-10",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-phase-10-threeD.png",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-phase-10-threeD.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "072457e546f897a0ebe1744db733089f178042d3b52817c9a49c07b60719a2fc",
+      "bytes": 2699786,
+      "committedMatches": [
+        "3d maps/shopping centre phase 10.png"
+      ],
+      "typedMatches": [],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-phase-2",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-phase-2-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1055,
+          "w": 1491
+        },
+        "original": {
+          "h": 724,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1055,
+          "w": 1491,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-phase-2-threeD.png"
+        },
+        "original": {
+          "h": 724,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-phase-2-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "ed474b6ba81d31ef5db97bde8c4b214a36c960c344d7e10cd87a2a5e228b1996",
+      "bytes": 176275,
+      "committedMatches": [
+        "non 3d maps/industrial area phase 2 and 3.jpg",
+        "v2/public/maps/industrial-area-phase-2-and-3.jpg"
+      ],
+      "typedMatches": [
+        "industrial-area-phase-2-and-3"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-phase-5",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-phase-5-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1060,
+          "w": 1484
+        },
+        "original": {
+          "h": 724,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1060,
+          "w": 1484,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-phase-5-threeD.png"
+        },
+        "original": {
+          "h": 724,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-phase-5-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "347efddd97cdc0b5c7538ceea5ab2122da6ed3e0309295c22c9606c5ddbb5107",
+      "bytes": 165226,
+      "committedMatches": [
+        "non 3d maps/phase 5 mohali.jpg",
+        "v2/public/maps/phase-5-mohali.jpg"
+      ],
+      "typedMatches": [
+        "phase-5-mohali"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-phase-7",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-phase-7-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1055,
+          "w": 1491
+        },
+        "original": {
+          "h": 724,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1055,
+          "w": 1491,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-phase-7-threeD.png"
+        },
+        "original": {
+          "h": 724,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-phase-7-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "7f6a00fd8f878db405f62f28b27df599a30e4862c48ee17038c786226ec67c09",
+      "bytes": 175819,
+      "committedMatches": [
+        "non 3d maps/phase 7 mohali.jpg",
+        "v2/public/maps/phase-7-mohali.jpg"
+      ],
+      "typedMatches": [
+        "phase-7-mohali"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-phase-8",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-phase-8-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 724,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-phase-8-threeD.png"
+        },
+        "original": {
+          "h": 724,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-phase-8-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "995d04b43858d4ae91fa3e7434546f73b5622216e160366d2ed7513efa2fe8b7",
+      "bytes": 170822,
+      "committedMatches": [
+        "non 3d maps/industrial focal point phase 8.jpg",
+        "v2/public/maps/industrial-focal-point-phase-8.jpg"
+      ],
+      "typedMatches": [
+        "industrial-focal-point-phase-8"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-phase-8-b",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-phase-8-b-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 724,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-phase-8-b-threeD.png"
+        },
+        "original": {
+          "h": 724,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-phase-8-b-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "2b19e5ea6420f1771a6ea254ee55e6367d53e149998ec3da0876f1bb4f6ae079",
+      "bytes": 123725,
+      "committedMatches": [
+        "non 3d maps/phase  8-b.jpg",
+        "v2/public/maps/phase-8-b.jpg"
+      ],
+      "typedMatches": [
+        "phase-8-b"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-phase-9",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-phase-9-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 723,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-phase-9-threeD.png"
+        },
+        "original": {
+          "h": 723,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-phase-9-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "9abcea5b8aa4f93d85f6c42007f0c149a95217c90e4c28bd5d479215b4c047a3",
+      "bytes": 205258,
+      "committedMatches": [
+        "non 3d maps/industrial area phase 9 mohali.jpg",
+        "v2/public/maps/industrial-area-phase-9-mohali.jpg"
+      ],
+      "typedMatches": [
+        "industrial-area-phase-9-mohali"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-phase2",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-phase2-threeD.png",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1055,
+          "w": 1491
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1055,
+          "w": 1491,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-phase2-threeD.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "eff54b208c4ef78744dd8e5ce202d953e1b76ebac0a5d11dcfc16951894a355b",
+      "bytes": 3014408,
+      "committedMatches": [
+        "3d maps/industrial area phase2 and 3.png"
+      ],
+      "typedMatches": [],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-sec-100",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sec-100-original.jpg",
+      "databaseDimensions": {
+        "original": {
+          "h": 751,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "original": {
+          "h": 751,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sec-100-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "bfaf8e97e8d5d3192e2cf0e4c87a3dd65f58a1ba6f4e343f74371e971538780c",
+      "bytes": 183614,
+      "committedMatches": [
+        "non 3d maps/pearls city sec 100 mohali.jpg",
+        "v2/public/maps/pearls-city-sec-100-mohali.jpg"
+      ],
+      "typedMatches": [
+        "pearls-city-sec-100-mohali"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-sector-53",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-53-original.png",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1101,
+          "w": 1429
+        },
+        "original": {
+          "h": 1086,
+          "w": 1448
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1101,
+          "w": 1429,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-53-threeD.png"
+        },
+        "original": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-53-original.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "4ff4f1dcb9be21c1cce388c054a346409f94ca383fa81f52c8605da015883bf0",
+      "bytes": 1742951,
+      "committedMatches": [
+        "non 3d maps/sector 53 mohali.png",
+        "v2/public/maps/sector-53-mohali.png"
+      ],
+      "typedMatches": [
+        "sector-53-mohali"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-sector-54",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-54-original.png",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 1086,
+          "w": 1448
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-54-threeD.png"
+        },
+        "original": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-54-original.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "abe9f9634356d413d49d50cbb374be769a5a297e940f635cf6416ba66649bda7",
+      "bytes": 1702665,
+      "committedMatches": [
+        "non 3d maps/sector 54 mohali.png",
+        "v2/public/maps/sector-54-mohali.png"
+      ],
+      "typedMatches": [
+        "sector-54-mohali"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-sector-55",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-55-original.png",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1056,
+          "w": 1489
+        },
+        "original": {
+          "h": 1055,
+          "w": 1491
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1056,
+          "w": 1489,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-55-threeD.png"
+        },
+        "original": {
+          "h": 1055,
+          "w": 1491,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-55-original.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "391d6a8f6aeb36eae11949d063b43a8102bb7f8c82f17ac36c2dda21760456d9",
+      "bytes": 1734737,
+      "committedMatches": [
+        "non 3d maps/sector 55 mohali.png",
+        "v2/public/maps/sector-55-mohali.png"
+      ],
+      "typedMatches": [
+        "sector-55-mohali"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-sector-56",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-56-original.png",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 1086,
+          "w": 1448
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-56-threeD.png"
+        },
+        "original": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-56-original.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "e2e9d102175876ad4255684c23be6a3427a723609427b69002af63879949de3a",
+      "bytes": 1688248,
+      "committedMatches": [
+        "non 3d maps/sector 56 mohali.png",
+        "v2/public/maps/sector-56-mohali.png"
+      ],
+      "typedMatches": [
+        "sector-56-mohali"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-sector-59",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-59-original.jpg",
+      "databaseDimensions": {
+        "original": {
+          "h": 737,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "original": {
+          "h": 737,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-59-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "d91fb16aec5132bd9c9838d930ccb4f0884dd6a3d990fb5923c942f88299cb6f",
+      "bytes": 287340,
+      "committedMatches": [
+        "non 3d maps/sector 59 mohali.jpg",
+        "v2/public/maps/sector-59-mohali.jpg"
+      ],
+      "typedMatches": [
+        "sector-59-mohali"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-sector-60",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-60-original.png",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 1059,
+          "w": 1485
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-60-threeD.png"
+        },
+        "original": {
+          "h": 1059,
+          "w": 1485,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-60-original.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "6063dce4bc9fe0ee1a88b376017c06b2d0cd005c49556516ca00dc39ef8f1842",
+      "bytes": 2053630,
+      "committedMatches": [
+        "non 3d maps/sector 60 mohali.png",
+        "v2/public/maps/sector-60-mohali.png"
+      ],
+      "typedMatches": [
+        "sector-60-mohali"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-sector-61",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-61-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1054,
+          "w": 1492
+        },
+        "original": {
+          "h": 724,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1054,
+          "w": 1492,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-61-threeD.png"
+        },
+        "original": {
+          "h": 724,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-61-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "6139db34ae19bfbdae5df2717448fc871b136b6d04c91ee01fd96d3c15cd940e",
+      "bytes": 226306,
+      "committedMatches": [
+        "non 3d maps/sector 61 mohali.jpg",
+        "v2/public/maps/sector-61-mohali.jpg"
+      ],
+      "typedMatches": [
+        "sector-61-mohali"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-sector-62",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-62-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1122,
+          "w": 1402
+        },
+        "original": {
+          "h": 724,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1122,
+          "w": 1402,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-62-threeD.png"
+        },
+        "original": {
+          "h": 724,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-62-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "4a6a655520f5b9b2a8f6380a2f6f58869737f59d1cb9e9f010b1150f1059562a",
+      "bytes": 113494,
+      "committedMatches": [
+        "non 3d maps/sector 62 mohali.jpg",
+        "v2/public/maps/sector-62-mohali.jpg"
+      ],
+      "typedMatches": [
+        "sector-62-mohali"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-sector-63",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-63-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 724,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-63-threeD.png"
+        },
+        "original": {
+          "h": 724,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-63-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "12d3bf06bba6f56614712c2b581fdb24a189285bd7dc42a75ecf08f46d7286e7",
+      "bytes": 202407,
+      "committedMatches": [
+        "non 3d maps/sector 63 mohalli.jpg",
+        "v2/public/maps/sector-63-mohalli.jpg"
+      ],
+      "typedMatches": [
+        "sector-63-mohalli"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-sector-64",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-64-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 724,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-64-threeD.png"
+        },
+        "original": {
+          "h": 724,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-64-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "ecbbf1cc900f1dc4dc251aa03756f2368292fa8cf062fc1d6d928752e68141ff",
+      "bytes": 243856,
+      "committedMatches": [
+        "non 3d maps/sector 64 mohali.jpg",
+        "v2/public/maps/sector-64-mohali.jpg"
+      ],
+      "typedMatches": [
+        "sector-64-mohali"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-sector-65",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-65-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 724,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-65-threeD.png"
+        },
+        "original": {
+          "h": 724,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-65-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "dc70ca6eb89fe03a85624bece2739581d2d3518cb7e400bd802a95f9b1c5d5af",
+      "bytes": 243701,
+      "committedMatches": [
+        "non 3d maps/sector 65 mohali.jpg",
+        "v2/public/maps/sector-65-mohali.jpg"
+      ],
+      "typedMatches": [
+        "sector-65-mohali"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-sector-66",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-66-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1052,
+          "w": 1494
+        },
+        "original": {
+          "h": 724,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1052,
+          "w": 1494,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-66-threeD.png"
+        },
+        "original": {
+          "h": 724,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-66-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "61a5c62f717b81b6487a04ca03556c4d16e3bebf0144ff2cf31aabeb0320e812",
+      "bytes": 160982,
+      "committedMatches": [
+        "non 3d maps/sector 66 mohali.jpg",
+        "v2/public/maps/sector-66-mohali.jpg"
+      ],
+      "typedMatches": [
+        "sector-66-mohali"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-sector-67",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-67-original.jpg",
+      "databaseDimensions": {
+        "original": {
+          "h": 735,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "original": {
+          "h": 735,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-67-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "1948571bb2633826e7bede3b0d92661620a6fa3a90309359faf15878754277f4",
+      "bytes": 150832,
+      "committedMatches": [
+        "non 3d maps/sector 67 mohli.jpg",
+        "v2/public/maps/sector-67-mohli.jpg"
+      ],
+      "typedMatches": [
+        "sector-67-mohli"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-sector-68",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-68-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 724,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-68-threeD.png"
+        },
+        "original": {
+          "h": 724,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-68-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "5b5659499f3d2955c27441cac5f7c8ba78d3023b8996902140496b6a3340e7c2",
+      "bytes": 196844,
+      "committedMatches": [
+        "non 3d maps/sector 68 mohali.jpg",
+        "v2/public/maps/sector-68-mohali.jpg"
+      ],
+      "typedMatches": [
+        "sector-68-mohali"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-sector-69",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-69-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 724,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-69-threeD.png"
+        },
+        "original": {
+          "h": 724,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-69-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "46db47d58b9aa0971324760e2e4dc4dcd75b0d6d41634ae68ce773437ba7b8d2",
+      "bytes": 228747,
+      "committedMatches": [
+        "non 3d maps/sector 69 mohali.jpg",
+        "v2/public/maps/sector-69-mohali.jpg"
+      ],
+      "typedMatches": [
+        "sector-69-mohali"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-sector-70",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-70-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 724,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-70-threeD.png"
+        },
+        "original": {
+          "h": 724,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-70-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "3e9a86d89f596624bc47699d6021faafa7eb8a361c9171cd643d50f1a7a15e59",
+      "bytes": 193917,
+      "committedMatches": [
+        "non 3d maps/sector 70 mohali.jpg",
+        "v2/public/maps/sector-70-mohali.jpg"
+      ],
+      "typedMatches": [
+        "sector-70-mohali"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-sector-71",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-71-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 724,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-71-threeD.png"
+        },
+        "original": {
+          "h": 724,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-71-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "433087d3f449ce30dc39bdae2753c447fcca577a5145ffdff1e7bab6736ee02f",
+      "bytes": 240881,
+      "committedMatches": [
+        "non 3d maps/sector 71 mohali.jpg",
+        "v2/public/maps/sector-71-mohali.jpg"
+      ],
+      "typedMatches": [
+        "sector-71-mohali"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": [
+        {
+          "id": "omx",
+          "placement": {
+            "x": 0.6,
+            "y": 0.55,
+            "mapId": "map-nc-master"
+          },
+          "masterplanId": "map-nc-master",
+          "sectorMapId": "mohali-sector-71"
+        }
+      ]
+    },
+    {
+      "databaseId": "mohali-sector-77",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-77-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 724,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-77-threeD.png"
+        },
+        "original": {
+          "h": 724,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-77-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "ee866f73101cb08042053d19de556510fe43664b71e06326595014b1d3fb4667",
+      "bytes": 222903,
+      "committedMatches": [
+        "non 3d maps/sector 77 mohali.jpg",
+        "v2/public/maps/sector-77-mohali.jpg"
+      ],
+      "typedMatches": [
+        "sector-77-mohali"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-sector-78",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-78-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 724,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-78-threeD.png"
+        },
+        "original": {
+          "h": 724,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-78-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "2c578c5f95f7d075f1dc601eb45c3c449a904c2f38c86eb49ec5335dcfd4cba0",
+      "bytes": 219882,
+      "committedMatches": [
+        "non 3d maps/sector 78 mohali.jpg",
+        "v2/public/maps/sector-78-mohali.jpg"
+      ],
+      "typedMatches": [
+        "sector-78-mohali"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-sector-79",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-79-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 724,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-79-threeD.png"
+        },
+        "original": {
+          "h": 724,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-79-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "47d3959ed0a7809a18fd2b5e89782848f84c00566dc9ed1e7386a77e8c788f8a",
+      "bytes": 251128,
+      "committedMatches": [
+        "non 3d maps/sector 79 mohali.jpg",
+        "v2/public/maps/sector-79-mohali.jpg"
+      ],
+      "typedMatches": [
+        "sector-79-mohali"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-sector-80",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-80-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 724,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-80-threeD.png"
+        },
+        "original": {
+          "h": 724,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-80-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "0d4b61295e80495bf415c4bf8f303f689c60d5b111af5f3cd287818c7017e714",
+      "bytes": 223972,
+      "committedMatches": [
+        "non 3d maps/sector 80 mohali.jpg",
+        "v2/public/maps/sector-80-mohali.jpg"
+      ],
+      "typedMatches": [
+        "sector-80-mohali"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-sector-82",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-82-original.png",
+      "databaseDimensions": {
+        "original": {
+          "h": 2472,
+          "w": 3356
+        }
+      },
+      "assets": {
+        "original": {
+          "h": 2472,
+          "w": 3356,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-82-original.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "28183ba79147ad0ea0b8fa0a8265e9483f178ef731be38c66920b5446359e736",
+      "bytes": 12361871,
+      "committedMatches": [
+        "non 3d maps/jlpl sector 82.png",
+        "v2/public/maps/jlpl-sector-82.png"
+      ],
+      "typedMatches": [
+        "jlpl-sector-82"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-sector-83",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-83-threeD.png",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-83-threeD.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "670ddb73273b1d35ffe291c2789046595b2f600d46e410adeba9547c004575ac",
+      "bytes": 3038613,
+      "committedMatches": [
+        "3d maps/sector 83 mohali.png"
+      ],
+      "typedMatches": [],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": [
+        {
+          "id": "ecocity",
+          "placement": {
+            "x": 0.42,
+            "y": 0.31,
+            "mapId": "map-nc-master"
+          },
+          "masterplanId": "map-nc-master",
+          "sectorMapId": "mohali-sector-83"
+        }
+      ]
+    },
+    {
+      "databaseId": "mohali-sector-85",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-85-original.png",
+      "databaseDimensions": {
+        "original": {
+          "h": 2408,
+          "w": 3364
+        }
+      },
+      "assets": {
+        "original": {
+          "h": 2408,
+          "w": 3364,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-85-original.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "36d7a914bd4a5aafb87c33c5b1abc10dabe94f51686d5c49258aea669f89616d",
+      "bytes": 13312014,
+      "committedMatches": [
+        "non 3d maps/wave estate sector 85 mohali.png",
+        "v2/public/maps/wave-estate-sector-85-mohali.png"
+      ],
+      "typedMatches": [
+        "wave-estate-sector-85-mohali"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-sector-90-91",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-90-91-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 724,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-90-91-threeD.png"
+        },
+        "original": {
+          "h": 724,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-90-91-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "9db74b4d4d1098cada951671dff280c5392b53cfc03f7ebacbe0bda40728a26f",
+      "bytes": 191520,
+      "committedMatches": [
+        "non 3d maps/janta township sector 90-91 mohali.jpg",
+        "v2/public/maps-pilot/mohali-sector-90-91.jpg",
+        "v2/public/maps/janta-township-sector-90-91-mohali.jpg"
+      ],
+      "typedMatches": [
+        "janta-township-sector-90-91-mohali"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-sector-94",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-94-original.jpg",
+      "databaseDimensions": {
+        "original": {
+          "h": 2488,
+          "w": 3356
+        }
+      },
+      "assets": {
+        "original": {
+          "h": 2488,
+          "w": 3356,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-94-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "874bd7bfd42c6daa55938cffb563d722d98a31875639b27856e91fdff5efdf6f",
+      "bytes": 1920575,
+      "committedMatches": [
+        "non 3d maps/jlpl sector 94 mohali.jpg",
+        "v2/public/maps/jlpl-sector-94-mohali.jpg"
+      ],
+      "typedMatches": [
+        "jlpl-sector-94-mohali"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-sector-97-106",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-97-106-original.jpg",
+      "databaseDimensions": {
+        "original": {
+          "h": 724,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "original": {
+          "h": 724,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-sector-97-106-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "75226bd7a48c36132be407bc547d9df8ef3c86fc1551102edee13d0c7197838e",
+      "bytes": 235156,
+      "committedMatches": [
+        "non 3d maps/uniworld city sector 97 106 109.jpg",
+        "v2/public/maps/uniworld-city-sector-97-106-109.jpg"
+      ],
+      "typedMatches": [
+        "uniworld-city-sector-97-106-109"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-shivalik-shivalik-city",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-shivalik-shivalik-city-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1054,
+          "w": 1492
+        },
+        "original": {
+          "h": 724,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1054,
+          "w": 1492,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-shivalik-shivalik-city-threeD.png"
+        },
+        "original": {
+          "h": 724,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-shivalik-shivalik-city-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "b48d8303c362eccbbed57f0833304c5c7b72a14330c2d9335d6f64771b27edb8",
+      "bytes": 175866,
+      "committedMatches": [
+        "non 3d maps/shivalik city.jpg",
+        "v2/public/maps/shivalik-city.jpg"
+      ],
+      "typedMatches": [
+        "shivalik-city"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-shopping-centre-shopping-centre-10-phase",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-shopping-centre-shopping-centre-10-phase-original.jpg",
+      "databaseDimensions": {
+        "original": {
+          "h": 724,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "original": {
+          "h": 724,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-shopping-centre-shopping-centre-10-phase-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "bef337e598138384542db5429da4f94cedade9f621074f30552f34f548314f29",
+      "bytes": 151946,
+      "committedMatches": [
+        "non 3d maps/shopping centre 10 phase.jpg",
+        "v2/public/maps/shopping-centre-10-phase.jpg"
+      ],
+      "typedMatches": [
+        "shopping-centre-10-phase"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "mohali-shopping-centre-shopping-centre-7-phase",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-shopping-centre-shopping-centre-7-phase-original.jpg",
+      "databaseDimensions": {
+        "original": {
+          "h": 572,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "original": {
+          "h": 572,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/mohali/mohali-shopping-centre-shopping-centre-7-phase-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "31383ea53fb00f62491a277664fbc5112b0f034c1773f34ea43bcccc1a7ae993",
+      "bytes": 109628,
+      "committedMatches": [
+        "non 3d maps/shopping centre 7 phase.jpg",
+        "v2/public/maps/shopping-centre-7-phase.jpg"
+      ],
+      "typedMatches": [
+        "shopping-centre-7-phase"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "new-chandigarh-master",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/newchandigarh/new-chandigarh-master-original.png",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 1278,
+          "w": 1603
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/new-chandigarh/new-chandigarh-master-threeD.png"
+        },
+        "overlay": {
+          "h": 1278,
+          "w": 1603,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/newchandigarh/new-chandigarh-master-overlay.svg"
+        },
+        "original": {
+          "h": 1278,
+          "w": 1603,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/newchandigarh/new-chandigarh-master-original.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "f854e972b7a702cf271f1291e1368e67f0952d8c37f16720d5058b84db76c859",
+      "bytes": 2528254,
+      "committedMatches": [
+        "migration-kit/maps with svg/alligned svg/new chd 2.png"
+      ],
+      "typedMatches": [],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "new-chandigarh-phase-2",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/new-chandigarh/new-chandigarh-phase-2-threeD.png",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/new-chandigarh/new-chandigarh-phase-2-threeD.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "caada20a685020d5365364a72568eca5346ae5d4e003af76af96ad21b149671d",
+      "bytes": 2789750,
+      "committedMatches": [
+        "3d maps/ecocity phase 2 new chandigarh.png"
+      ],
+      "typedMatches": [],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "panchkula-master",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/panchkula/panchkula-master-original.jpg",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448
+        },
+        "original": {
+          "h": 1536,
+          "w": 1024
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1086,
+          "w": 1448,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/panchkula/panchkula-master-threeD.png"
+        },
+        "original": {
+          "h": 1536,
+          "w": 1024,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/panchkula/panchkula-master-original.jpg"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "ae8bfe5c1ff242f0197304cf906c920ee2bfe2f8216c651afea9e418bd88f2c3",
+      "bytes": 171962,
+      "committedMatches": [
+        "non 3d maps/panchulka extenstion.jpg",
+        "v2/public/maps/panchulka-extenstion.jpg"
+      ],
+      "typedMatches": [
+        "panchulka-extenstion"
+      ],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    },
+    {
+      "databaseId": "zirakpur-master",
+      "dealerId": "dealer-demo",
+      "status": "published",
+      "deleted": false,
+      "raster": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/zirakpur/zirakpur-master-original.png",
+      "databaseDimensions": {
+        "threeD": {
+          "h": 1159,
+          "w": 1357
+        },
+        "original": {
+          "h": 1089,
+          "w": 1449
+        }
+      },
+      "assets": {
+        "threeD": {
+          "h": 1159,
+          "w": 1357,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/zirakpur/zirakpur-master-threeD.png"
+        },
+        "original": {
+          "h": 1089,
+          "w": 1449,
+          "path": "https://lswzrkvdwirhvggtvuch.supabase.co/storage/v1/object/public/maps/zirakpur/zirakpur-master-original.png"
+        }
+      },
+      "httpStatus": 200,
+      "sha256": "fddb39a0124f899ba608beefeef54f3f568944e44bc199722a5b3f3af394c364",
+      "bytes": 2137521,
+      "committedMatches": [
+        "migration-kit/maps with svg/zirakpur with svg.png"
+      ],
+      "typedMatches": [],
+      "idCollision": false,
+      "sameIdTypedDimensions": null,
+      "properties": []
+    }
+  ],
+  "referencesWithoutDatabaseRow": [
+    {
+      "propertyId": "ecocity",
+      "field": "placement",
+      "mapId": "map-nc-master",
+      "typedCatalogHasId": false
+    },
+    {
+      "propertyId": "ecocity",
+      "field": "masterplan_id",
+      "mapId": "map-nc-master",
+      "typedCatalogHasId": false
+    },
+    {
+      "propertyId": "omx",
+      "field": "placement",
+      "mapId": "map-nc-master",
+      "typedCatalogHasId": false
+    },
+    {
+      "propertyId": "omx",
+      "field": "masterplan_id",
+      "mapId": "map-nc-master",
+      "typedCatalogHasId": false
+    },
+    {
+      "propertyId": "prop-1789073001707",
+      "field": "sector_map_id",
+      "mapId": "sector-77-mohali",
+      "typedCatalogHasId": true
+    },
+    {
+      "propertyId": "prop-1789076851676",
+      "field": "sector_map_id",
+      "mapId": "sector-66-mohali",
+      "typedCatalogHasId": true
+    }
+  ]
+}
