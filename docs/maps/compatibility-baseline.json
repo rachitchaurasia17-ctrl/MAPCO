@@ -1,22 +1,18 @@
 {
-  "version": 1,
-  "count": 160,
+  "commit": "865d1f0",
   "maps": [
     {
       "id": "aerocity-masterplan",
-      "name": "Greater Mohali and Aerotropolis Regional Plan",
+      "name": "Aerocity Masterplan",
       "kind": "MASTERPLAN",
-      "city": "Aerotropolis",
+      "city": "Aerocity",
       "image": "/maps/aerocity-masterplan.jpg",
       "dimensions": {
         "width": 1535,
         "height": 1024
       },
       "active": true,
-      "aliases": [
-        "Aerocity Masterplan",
-        "Greater Mohali Regional Plan"
-      ]
+      "sha256": "dbbda4ce3019a54d5f44bdfbbe54b3d34eff7489885e9c3f0fae29598b8c6c56"
     },
     {
       "id": "chandigarh-masterplan",
@@ -28,7 +24,8 @@
         "width": 1253,
         "height": 984
       },
-      "active": true
+      "active": true,
+      "sha256": "d8176349b8d9b4bc74b1776207b68e9ed93d8d805123ec82670ec688ef6c30ae"
     },
     {
       "id": "derabassi-masterplan",
@@ -40,46 +37,41 @@
         "width": 1349,
         "height": 1083
       },
-      "active": true
+      "active": true,
+      "sha256": "83aee7d18233470272bf8bcebae00271bee0f266ca3144c2ba1ab0ce6f001fa8"
     },
     {
       "id": "eco-city-1",
-      "name": "Eco City I — New Chandigarh",
+      "name": "Eco City 1",
       "kind": "PROJECT_MAP",
-      "city": "New Chandigarh",
-      "project": "eco city 1",
+      "city": "Mohali",
+      "project": "eco city",
       "image": "/maps/eco-city-1.jpg",
       "dimensions": {
         "width": 1024,
         "height": 724
       },
       "active": true,
-      "aliases": [
-        "Eco City I",
-        "Mullanpur Eco City"
-      ]
+      "sha256": "09fb3dbfe5f692c8029ee67ee8c69e496f42921bca6b6fb3271b03efd6af052b"
     },
     {
       "id": "ecocity-mohali",
-      "name": "Eco City II — New Chandigarh",
+      "name": "Ecocity Mohali",
       "kind": "PROJECT_MAP",
-      "city": "New Chandigarh",
-      "project": "eco city 2",
+      "city": "Mohali",
+      "project": "ecocity",
       "image": "/maps/ecocity-mohali.jpg",
       "dimensions": {
         "width": 1024,
         "height": 724
       },
       "active": true,
-      "aliases": [
-        "Ecocity Phase 2",
-        "Mullanpur Eco City II"
-      ]
+      "sha256": "84f2068871efe7c6d54b10fd87c29fd8897f8fb2fccb52d88d04d9105c4a4dad"
     },
     {
       "id": "gamada-aerocity-mohali",
-      "name": "Aerocity Blocks E and F Reference",
-      "kind": "PROJECT_MAP",
+      "name": "Gamada Aerocity Mohali",
+      "kind": "MASTERPLAN",
       "city": "Aerocity",
       "image": "/maps/gamada-aerocity-mohali.jpg",
       "dimensions": {
@@ -87,7 +79,7 @@
         "height": 724
       },
       "active": true,
-      "project": "aerocity blocks e and f"
+      "sha256": "f8e1ba608c4c7ac326d9781ef003643271681d1b82ca0975d89095c295f78f8e"
     },
     {
       "id": "gillco",
@@ -100,7 +92,8 @@
         "width": 1024,
         "height": 724
       },
-      "active": true
+      "active": true,
+      "sha256": "f5f0aec8edb535cc6aece18a06563b71df9e724259767a030072ef7a9491ae16"
     },
     {
       "id": "industrial-area-phase-1-chd",
@@ -113,7 +106,8 @@
         "width": 752,
         "height": 1024
       },
-      "active": true
+      "active": true,
+      "sha256": "b5a624831f09dd2e050c0e8735bcede4031603c6055dced973b12065524d9804"
     },
     {
       "id": "industrial-area-phase-1",
@@ -126,7 +120,8 @@
         "width": 1024,
         "height": 724
       },
-      "active": true
+      "active": true,
+      "sha256": "eb15af71a927a736bf674858523e884f239fe6edd839751ef46f82286e3d7723"
     },
     {
       "id": "industrial-area-phase-2-and-3",
@@ -139,7 +134,8 @@
         "width": 1024,
         "height": 724
       },
-      "active": true
+      "active": true,
+      "sha256": "ed474b6ba81d31ef5db97bde8c4b214a36c960c344d7e10cd87a2a5e228b1996"
     },
     {
       "id": "industrial-area-phase-9-mohali",
@@ -152,7 +148,8 @@
         "width": 1024,
         "height": 723
       },
-      "active": true
+      "active": true,
+      "sha256": "9abcea5b8aa4f93d85f6c42007f0c149a95217c90e4c28bd5d479215b4c047a3"
     },
     {
       "id": "industrial-focal-point-phase-8",
@@ -165,7 +162,8 @@
         "width": 1024,
         "height": 724
       },
-      "active": true
+      "active": true,
+      "sha256": "995d04b43858d4ae91fa3e7434546f73b5622216e160366d2ed7513efa2fe8b7"
     },
     {
       "id": "ireo-mohali",
@@ -178,7 +176,8 @@
         "width": 3356,
         "height": 2476
       },
-      "active": true
+      "active": true,
+      "sha256": "fdee14177ec497000798fd27ab9e49e029d3538f5c534abc7a9dc4329950c143"
     },
     {
       "id": "janta-township-sector-90-91-mohali",
@@ -192,7 +191,8 @@
         "width": 1024,
         "height": 724
       },
-      "active": true
+      "active": true,
+      "sha256": "9db74b4d4d1098cada951671dff280c5392b53cfc03f7ebacbe0bda40728a26f"
     },
     {
       "id": "jlpl-sector-82",
@@ -206,7 +206,8 @@
         "width": 3356,
         "height": 2472
       },
-      "active": true
+      "active": true,
+      "sha256": "28183ba79147ad0ea0b8fa0a8265e9483f178ef731be38c66920b5446359e736"
     },
     {
       "id": "jlpl-sector-94-mohali",
@@ -220,7 +221,8 @@
         "width": 3356,
         "height": 2488
       },
-      "active": true
+      "active": true,
+      "sha256": "874bd7bfd42c6daa55938cffb563d722d98a31875639b27856e91fdff5efdf6f"
     },
     {
       "id": "jlpl-sector-94",
@@ -234,7 +236,8 @@
         "width": 3356,
         "height": 2488
       },
-      "active": true
+      "active": true,
+      "sha256": "1ab34c77dc7b3d627bcd589653f20ed4b295053aa501ebedb1ad03a8b71f58d4"
     },
     {
       "id": "kharar-masterplan",
@@ -246,7 +249,8 @@
         "width": 1422,
         "height": 1132
       },
-      "active": true
+      "active": true,
+      "sha256": "e836e368008eb58c172f0866c2053b04163e3e11cf21a0a70a1b87f7542e91a0"
     },
     {
       "id": "mohali-masterplan",
@@ -258,7 +262,8 @@
         "width": 1600,
         "height": 1278
       },
-      "active": true
+      "active": true,
+      "sha256": "43aa72c202a01bada6041f9981a14e6aa49ba770b3089b2dd2537d78d6a00d75"
     },
     {
       "id": "mullanpur-masterplan",
@@ -270,7 +275,8 @@
         "width": 1381,
         "height": 1124
       },
-      "active": true
+      "active": true,
+      "sha256": "7b44297f013c9bd0ee31ffb0d9e87a2c0a3699b43b29870cfb78a2e860c06b3f"
     },
     {
       "id": "new-chd-normal",
@@ -282,11 +288,12 @@
         "width": 1484,
         "height": 1060
       },
-      "active": true
+      "active": true,
+      "sha256": "b0a7cd489cf747ec3e3fd238716764252967c078dd67ed3620e75ad9909a50db"
     },
     {
       "id": "amravti",
-      "name": "Amravati Enclave",
+      "name": "Amravti",
       "kind": "PROJECT_MAP",
       "city": "Panchkula",
       "project": "amravati enclave",
@@ -296,46 +303,39 @@
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Amravti",
-        "Amravati"
-      ]
+      "sha256": "67d9d07d7d750aac79dbc7e00ee8986edccb0d57bb3d2a61baf7effeaa97cb24"
     },
     {
       "id": "scctor-10-p",
-      "name": "Panchkula Sector 10",
+      "name": "Scctor 10 P",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
-      "sector": "10",
+      "sector": "10p",
       "image": "/maps/scctor-10-p.jpg",
       "dimensions": {
         "width": 5658,
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Scctor 10 P"
-      ]
+      "sha256": "995d588c83cbee943a5429fdce3e00be30093551f5cd0e8d7130bed2b4a4e42f"
     },
     {
       "id": "scctor-11-p",
-      "name": "Panchkula Sector 11",
+      "name": "Scctor 11 P",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
-      "sector": "11",
+      "sector": "11p",
       "image": "/maps/scctor-11-p.jpg",
       "dimensions": {
         "width": 5658,
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Scctor 11 P"
-      ]
+      "sha256": "e52ecc51317378de7cc1a1817d9a199e5c8e1ddf9870f2ff09ad51f6e0f181b2"
     },
     {
       "id": "scctor-p-12",
-      "name": "Panchkula Sector 12",
+      "name": "Scctor P 12",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
       "sector": "12",
@@ -345,13 +345,11 @@
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Scctor P 12"
-      ]
+      "sha256": "0396b8a0cac29b63a72c5de25032994ea26dd6558a8475d952cd1dcf4d786482"
     },
     {
       "id": "scctor-p-12a",
-      "name": "Panchkula Sector 12A",
+      "name": "Scctor P 12a",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
       "sector": "12a",
@@ -361,13 +359,11 @@
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Scctor P 12a"
-      ]
+      "sha256": "4b4df29818fa445ab29c2d0eee42c55a04d154bf2abb4499127e1a8bc53bf1ba"
     },
     {
       "id": "scctor-p14",
-      "name": "Panchkula Sector 14",
+      "name": "Scctor P14",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
       "sector": "14",
@@ -377,13 +373,11 @@
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Scctor P14"
-      ]
+      "sha256": "ff408c8098f62b7d313f06cd5fc290c76e2b85773bcfe139f6b1daa14dacb944"
     },
     {
       "id": "scctor-p15",
-      "name": "Panchkula Sector 15",
+      "name": "Scctor P15",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
       "sector": "15",
@@ -393,13 +387,11 @@
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Scctor P15"
-      ]
+      "sha256": "b271827d88d4a72cfde4b2914dbf52646bd9e4ac28a8482464e0862e6561d496"
     },
     {
       "id": "scctor-p16",
-      "name": "Panchkula Sector 16",
+      "name": "Scctor P16",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
       "sector": "16",
@@ -409,13 +401,11 @@
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Scctor P16"
-      ]
+      "sha256": "c8e98b62f236f3daf4b9108b9f88be907ecfa622b094517fa0c64a427024b8ff"
     },
     {
       "id": "scctor-p17",
-      "name": "Panchkula Sector 17",
+      "name": "Scctor P17",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
       "sector": "17",
@@ -425,29 +415,25 @@
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Scctor P17"
-      ]
+      "sha256": "e1a90524eeb0406bf503ce2ed46b26fd9944ceea60b9cbca838fba3ee9601238"
     },
     {
       "id": "sector-25-p",
-      "name": "Panchkula Sector 25",
+      "name": "Sector 25 P",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
-      "sector": "25",
+      "sector": "25p",
       "image": "/maps/sector-25-p.jpg",
       "dimensions": {
         "width": 5658,
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Sector 25 P"
-      ]
+      "sha256": "ac6c4bd095c207190f35b3be550ca9ce78c1ef29ac054d15c8a808b6bd41ed29"
     },
     {
       "id": "sector-26",
-      "name": "Panchkula Sector 26",
+      "name": "Sector 26",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
       "sector": "26",
@@ -457,109 +443,95 @@
         "height": 3508
       },
       "active": true,
-      "aliases": [
-        "Sector 26"
-      ]
+      "sha256": "1f263bdf1ea87bd3be7ddb65a25ce6959e27f72e9557e1a9048f5577488ba77b"
     },
     {
       "id": "sector-3-p",
-      "name": "Panchkula Sector 3",
+      "name": "Sector 3 P",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
-      "sector": "3",
+      "sector": "3p",
       "image": "/maps/sector-3-p.jpg",
       "dimensions": {
         "width": 5658,
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Sector 3 P"
-      ]
+      "sha256": "8c729377ac8cafaef7a66a56f3a01731c86de8a837ede50459a39cb92e82572d"
     },
     {
       "id": "sector-4-p",
-      "name": "Panchkula Sector 4",
+      "name": "Sector 4 P",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
-      "sector": "4",
+      "sector": "4p",
       "image": "/maps/sector-4-p.jpg",
       "dimensions": {
         "width": 5658,
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Sector 4 P"
-      ]
+      "sha256": "8a687fd774566d8f0a681014eb3ee847afc06003d7776e6eb66a06422896028a"
     },
     {
       "id": "sector-5-p",
-      "name": "Panchkula Sector 5",
+      "name": "Sector 5 P",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
-      "sector": "5",
+      "sector": "5p",
       "image": "/maps/sector-5-p.jpg",
       "dimensions": {
         "width": 5658,
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Sector 5 P"
-      ]
+      "sha256": "c017a47e146a37f069020d6e8d3f7a61bbcbd217748d99471d037b3af51e4cca"
     },
     {
       "id": "sector-6-p",
-      "name": "Panchkula Sector 6",
+      "name": "Sector 6 P",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
-      "sector": "6",
+      "sector": "6p",
       "image": "/maps/sector-6-p.jpg",
       "dimensions": {
         "width": 5658,
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Sector 6 P"
-      ]
+      "sha256": "497e85d8a6f174f8a1092edb371313370931d34ebc8c958d42a8de8f279b4f38"
     },
     {
       "id": "sector-7-p",
-      "name": "Panchkula Sector 7",
+      "name": "Sector 7 P",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
-      "sector": "7",
+      "sector": "7p",
       "image": "/maps/sector-7-p.jpg",
       "dimensions": {
         "width": 5658,
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Sector 7 P"
-      ]
+      "sha256": "9e4730ecc89c231799ce53c1763472bc3d0c44aa34abf8f3f83e64fe548825bb"
     },
     {
       "id": "sector-8-p",
-      "name": "Panchkula Sector 8",
+      "name": "Sector 8 P",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
-      "sector": "8",
+      "sector": "8p",
       "image": "/maps/sector-8-p.jpg",
       "dimensions": {
         "width": 5658,
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Sector 8 P"
-      ]
+      "sha256": "c61ee1e45688288c21b9fc3038324b35c6e6c50526230a310de4eaa6c7b70429"
     },
     {
       "id": "sector-p-18",
-      "name": "Panchkula Sector 18",
+      "name": "Sector P 18",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
       "sector": "18",
@@ -569,13 +541,11 @@
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Sector P 18"
-      ]
+      "sha256": "ffe821225a2efccf942927b30db1ccef8f054acfe72ed2bbfe15d4f2674a02e1"
     },
     {
       "id": "sector-p-19",
-      "name": "Panchkula Sector 19",
+      "name": "Sector P 19",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
       "sector": "19",
@@ -585,16 +555,14 @@
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Sector P 19"
-      ]
+      "sha256": "981b19caf6dce63c4672e23d91b60f427a1034dc3f5e71f92c607d233fd99b83"
     },
     {
       "id": "sector-p-2-mansa-devi",
-      "name": "Panchkula Mansa Devi Complex Sector 2",
+      "name": "Sector P 2 Mansa Devi",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
-      "sector": "mdc 2",
+      "sector": "2",
       "project": "mansa devi complex",
       "image": "/maps/sector-p-2-mansa-devi.jpg",
       "dimensions": {
@@ -602,13 +570,11 @@
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Sector P 2 Mansa Devi"
-      ]
+      "sha256": "1e2d2c3b6135cf4ea15d667ea7c7f405132ce1112a528627c3a0dc45aae51bb4"
     },
     {
       "id": "sector-p-21",
-      "name": "Panchkula Sector 21",
+      "name": "Sector P 21",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
       "sector": "21",
@@ -618,13 +584,11 @@
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Sector P 21"
-      ]
+      "sha256": "e3ea7bf749ec66006da6ace33a7dbb65114dfe970600decb32d3a7a8effb78e5"
     },
     {
       "id": "sector-p-23",
-      "name": "Panchkula Sector 23",
+      "name": "Sector P 23",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
       "sector": "23",
@@ -634,13 +598,11 @@
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Sector P 23"
-      ]
+      "sha256": "6823c99ac543d43f789d392229de9c9d6c85a9aaefe3548d419b1d5707bbb9c9"
     },
     {
       "id": "sector-p-24",
-      "name": "Panchkula Sector 24",
+      "name": "Sector P 24",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
       "sector": "24",
@@ -650,13 +612,11 @@
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Sector P 24"
-      ]
+      "sha256": "45c72317f501d4fec54ebeaa81ff861b9683387ffac44c49ccb15d7038a8669f"
     },
     {
       "id": "sector-p-27",
-      "name": "Panchkula Sector 27",
+      "name": "Sector P 27",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
       "sector": "27",
@@ -666,13 +626,11 @@
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Sector P 27"
-      ]
+      "sha256": "bbd5d9da1db79115a328cdb2e7ff1aeff7658545888b737da908f3f8279dcbdd"
     },
     {
       "id": "sector-p-28",
-      "name": "Panchkula Sector 28",
+      "name": "Sector P 28",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
       "sector": "28",
@@ -682,13 +640,11 @@
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Sector P 28"
-      ]
+      "sha256": "b80c60b628a3d99b77b142a80c52eadb05a20b986b795eb295fa33b5975d79f4"
     },
     {
       "id": "sector-p-31",
-      "name": "Panchkula Sector 31",
+      "name": "Sector P 31",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
       "sector": "31",
@@ -698,16 +654,14 @@
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Sector P 31"
-      ]
+      "sha256": "6b90b109de3d445bea268c0f3d9f9cda28062dec30eff2140ede52df4542567e"
     },
     {
       "id": "sector-p-4-mansa-devi",
-      "name": "Panchkula Mansa Devi Complex Sector 4",
+      "name": "Sector P 4 Mansa Devi",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
-      "sector": "mdc 4",
+      "sector": "4",
       "project": "mansa devi complex",
       "image": "/maps/sector-p-4-mansa-devi.jpg",
       "dimensions": {
@@ -715,16 +669,14 @@
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Sector P 4 Mansa Devi"
-      ]
+      "sha256": "a1d818fe4f7900579c7f8009e3a3238507955348e7806fe92aeaf415cb6d1627"
     },
     {
       "id": "sector-p-5-mansa-devi",
-      "name": "Panchkula Mansa Devi Complex Sector 5",
+      "name": "Sector P 5 Mansa Devi",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
-      "sector": "mdc 5",
+      "sector": "5",
       "project": "mansa devi complex",
       "image": "/maps/sector-p-5-mansa-devi.jpg",
       "dimensions": {
@@ -732,16 +684,14 @@
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Sector P 5 Mansa Devi"
-      ]
+      "sha256": "8a3f9261849db09b94bdc74a4181885e556607aa4f36689663d4b59b986a5f8c"
     },
     {
       "id": "sector-p-6-mansa-devi",
-      "name": "Panchkula Mansa Devi Complex Sector 6",
+      "name": "Sector P 6 Mansa Devi",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
-      "sector": "mdc 6",
+      "sector": "6",
       "project": "mansa devi complex",
       "image": "/maps/sector-p-6-mansa-devi.jpg",
       "dimensions": {
@@ -749,13 +699,11 @@
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Sector P 6 Mansa Devi"
-      ]
+      "sha256": "46d97297a8b967804606ada21f94b3fd6013da67ef631f38d858b2f47b9910d4"
     },
     {
       "id": "sector-p-8",
-      "name": "Panchkula Sector 8",
+      "name": "Sector P 8",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
       "sector": "8",
@@ -765,13 +713,11 @@
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Sector P 8"
-      ]
+      "sha256": "c61ee1e45688288c21b9fc3038324b35c6e6c50526230a310de4eaa6c7b70429"
     },
     {
       "id": "sector-p-9",
-      "name": "Panchkula Sector 9",
+      "name": "Sector P 9",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
       "sector": "9",
@@ -781,13 +727,11 @@
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Sector P 9"
-      ]
+      "sha256": "2c041d46ad626c0ee4530d8cd5e2d388671a0fd4e7a14af3aeaa95b323ce567e"
     },
     {
       "id": "sector-p20",
-      "name": "Panchkula Sector 20",
+      "name": "Sector P20",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
       "sector": "20",
@@ -797,45 +741,39 @@
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Sector P20"
-      ]
+      "sha256": "b65497a4096b031ae755ea2a8760e31c7492053f20b394f18ce9199dc5ce107e"
     },
     {
       "id": "sector1-p",
-      "name": "Panchkula Sector 1",
+      "name": "Sector1 P",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
-      "sector": "1",
+      "sector": "1p",
       "image": "/maps/sector1-p.jpg",
       "dimensions": {
         "width": 5658,
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Sector1 P"
-      ]
+      "sha256": "43c6eb5c5cb7177ecadc4e7bb46a7649ac12847f521721aad26e5bbb6ef77ff3"
     },
     {
       "id": "sector2-p",
-      "name": "Panchkula Sector 2",
+      "name": "Sector2 P",
       "kind": "SECTOR_MAP",
       "city": "Panchkula",
-      "sector": "2",
+      "sector": "2p",
       "image": "/maps/sector2-p.jpg",
       "dimensions": {
         "width": 5658,
         "height": 4000
       },
       "active": true,
-      "aliases": [
-        "Sector2 P"
-      ]
+      "sha256": "76373766da53c0113795cf4c7b6749bc88c1fb096d1e81d6148bb2051e3005b4"
     },
     {
       "id": "panchulka-extenstion",
-      "name": "Panchkula Extension Masterplan",
+      "name": "Panchulka Extenstion",
       "kind": "MASTERPLAN",
       "city": "Panchkula",
       "image": "/maps/panchulka-extenstion.jpg",
@@ -844,13 +782,11 @@
         "height": 1536
       },
       "active": true,
-      "aliases": [
-        "Panchulka Extension"
-      ]
+      "sha256": "ae8bfe5c1ff242f0197304cf906c920ee2bfe2f8216c651afea9e418bd88f2c3"
     },
     {
       "id": "panchulka-masterplan",
-      "name": "Panchkula Masterplan",
+      "name": "Panchulka Masterplan",
       "kind": "MASTERPLAN",
       "city": "Panchkula",
       "image": "/maps/panchulka-masterplan.jpg",
@@ -859,9 +795,7 @@
         "height": 1126
       },
       "active": true,
-      "aliases": [
-        "Panchulka Masterplan"
-      ]
+      "sha256": "aad09c79480e24930acfc87e05d6c36f03a21446a77aadc07df4a21a62ec1890"
     },
     {
       "id": "pearls-city-sec-100-mohali",
@@ -875,7 +809,8 @@
         "width": 1024,
         "height": 751
       },
-      "active": true
+      "active": true,
+      "sha256": "bfaf8e97e8d5d3192e2cf0e4c87a3dd65f58a1ba6f4e343f74371e971538780c"
     },
     {
       "id": "phase-8-b",
@@ -888,7 +823,8 @@
         "width": 1024,
         "height": 724
       },
-      "active": true
+      "active": true,
+      "sha256": "2b19e5ea6420f1771a6ea254ee55e6367d53e149998ec3da0876f1bb4f6ae079"
     },
     {
       "id": "phase-5-mohali",
@@ -901,7 +837,8 @@
         "width": 1024,
         "height": 724
       },
-      "active": true
+      "active": true,
+      "sha256": "347efddd97cdc0b5c7538ceea5ab2122da6ed3e0309295c22c9606c5ddbb5107"
     },
     {
       "id": "phase-7-mohali",
@@ -914,11 +851,12 @@
         "width": 1024,
         "height": 724
       },
-      "active": true
+      "active": true,
+      "sha256": "7f6a00fd8f878db405f62f28b27df599a30e4862c48ee17038c786226ec67c09"
     },
     {
       "id": "sctor-34-chd",
-      "name": "Chandigarh Sector 34",
+      "name": "Sctor 34 Chd",
       "kind": "SECTOR_MAP",
       "city": "Chandigarh",
       "sector": "34",
@@ -928,13 +866,11 @@
         "height": 761
       },
       "active": true,
-      "aliases": [
-        "Sctor 34 Chd"
-      ]
+      "sha256": "60043a22a3d5fcfa9568be0d66794311452b59832a000d625b1600884ecc8868"
     },
     {
       "id": "secter-32-chd",
-      "name": "Chandigarh Sector 32 — Reference",
+      "name": "Secter 32 Chd",
       "kind": "SECTOR_MAP",
       "city": "Chandigarh",
       "sector": "32",
@@ -944,9 +880,7 @@
         "height": 749
       },
       "active": true,
-      "aliases": [
-        "Secter 32 Chd"
-      ]
+      "sha256": "b0ea55f7276052f78213d37f8b3cc4152d5cc8a7ab810d70a783418f0c1cf360"
     },
     {
       "id": "sector-16-chd",
@@ -959,7 +893,8 @@
         "width": 1496,
         "height": 1051
       },
-      "active": true
+      "active": true,
+      "sha256": "ce03e96d5ffb71dced019a58813ffec247d9d886aecd94bc4db7c224a263144f"
     },
     {
       "id": "sector-17-chd",
@@ -972,7 +907,8 @@
         "width": 1476,
         "height": 1066
       },
-      "active": true
+      "active": true,
+      "sha256": "ffda95aff1b54a53842452049268955ab5521a8df02b0f783d40f956dc01e2d3"
     },
     {
       "id": "sector-2-chd",
@@ -985,7 +921,8 @@
         "width": 1417,
         "height": 1110
       },
-      "active": true
+      "active": true,
+      "sha256": "ee03bfe259321260977151122f49332492c920f2eef59148494c1403c335bfe0"
     },
     {
       "id": "sector-21-chd",
@@ -998,7 +935,8 @@
         "width": 1540,
         "height": 1021
       },
-      "active": true
+      "active": true,
+      "sha256": "2327072a1078b24d34feb75411a6cd8c790296db993fa6fbb1498e0f3bd9244a"
     },
     {
       "id": "sector-28-chd",
@@ -1011,7 +949,8 @@
         "width": 1024,
         "height": 572
       },
-      "active": true
+      "active": true,
+      "sha256": "d3c2013cec5ebd904851202a4205c443067d9d293d00549f65abe9c3dbbb04c6"
     },
     {
       "id": "sector-3-chd",
@@ -1024,7 +963,8 @@
         "width": 1518,
         "height": 1036
       },
-      "active": true
+      "active": true,
+      "sha256": "443e0bf4867f6a0d4e4cdabe0ccf47952af7f5a5c340b50d1a03b1a2b26f0393"
     },
     {
       "id": "sector-30-chd",
@@ -1037,7 +977,8 @@
         "width": 1024,
         "height": 747
       },
-      "active": true
+      "active": true,
+      "sha256": "bb080384efdac81d9aab271385b14feb4f38a6baf78aa8f168ddf85b2f943034"
     },
     {
       "id": "sector-32-chandigarh",
@@ -1050,7 +991,8 @@
         "width": 1024,
         "height": 749
       },
-      "active": true
+      "active": true,
+      "sha256": "b0ea55f7276052f78213d37f8b3cc4152d5cc8a7ab810d70a783418f0c1cf360"
     },
     {
       "id": "sector-36-chd",
@@ -1063,7 +1005,8 @@
         "width": 1024,
         "height": 761
       },
-      "active": true
+      "active": true,
+      "sha256": "8213319af929632ef9eb952bf46e5c77eb37e2152dad19fdc1fc8e1f864f6c04"
     },
     {
       "id": "sector-37-chd",
@@ -1076,7 +1019,8 @@
         "width": 1024,
         "height": 763
       },
-      "active": true
+      "active": true,
+      "sha256": "8bf4f8159e01345832bed1805ab844a1ef250ecc7a2b58581717e57e0b774210"
     },
     {
       "id": "sector-39-chd",
@@ -1089,7 +1033,8 @@
         "width": 1024,
         "height": 770
       },
-      "active": true
+      "active": true,
+      "sha256": "a9cce140848a7cae94fa043b1ee6d7d272ef24c25812dac2f6cfd1114493e004"
     },
     {
       "id": "sector-40-chd",
@@ -1102,7 +1047,8 @@
         "width": 1024,
         "height": 766
       },
-      "active": true
+      "active": true,
+      "sha256": "85a67d36c39930c57fccf73e31c1d6dbb2b6d100e63550cf9203f13b1b4ec91b"
     },
     {
       "id": "sector-41-chd",
@@ -1115,7 +1061,8 @@
         "width": 1024,
         "height": 759
       },
-      "active": true
+      "active": true,
+      "sha256": "db504665fd06dda2b557fc3457984ea4de86f8b201edebf3343a96af55ec54c2"
     },
     {
       "id": "sector-43-chd",
@@ -1128,7 +1075,8 @@
         "width": 1024,
         "height": 757
       },
-      "active": true
+      "active": true,
+      "sha256": "c4fb0b9b89946cab6f999a3aff7cdf6579b61aa04b09c44eb297422a7b049075"
     },
     {
       "id": "sector-45-chd",
@@ -1141,7 +1089,8 @@
         "width": 1024,
         "height": 761
       },
-      "active": true
+      "active": true,
+      "sha256": "6404ba0e8c1be9b2c74b5674a0cbf9ae4f12ef4ad73840c904bc87e2c9e468b0"
     },
     {
       "id": "sector-46-chd",
@@ -1154,7 +1103,8 @@
         "width": 1024,
         "height": 743
       },
-      "active": true
+      "active": true,
+      "sha256": "89d7b638796c947f8cfd26eb1d038989223a902dad1ae2cadac4415388085596"
     },
     {
       "id": "sector-50-chd",
@@ -1167,7 +1117,8 @@
         "width": 1024,
         "height": 750
       },
-      "active": true
+      "active": true,
+      "sha256": "2c8b874613d96fcdafc712ec279269ebf081602b67040b895f9748e4948245bf"
     },
     {
       "id": "sector-52-chd",
@@ -1180,7 +1131,8 @@
         "width": 1024,
         "height": 767
       },
-      "active": true
+      "active": true,
+      "sha256": "1bced9c6d30131fd8c1e3e1618d8ae740b5c275b483352ccc6d49b95fed8dc7c"
     },
     {
       "id": "sector-53-mohali",
@@ -1193,7 +1145,8 @@
         "width": 1448,
         "height": 1086
       },
-      "active": true
+      "active": true,
+      "sha256": "4ff4f1dcb9be21c1cce388c054a346409f94ca383fa81f52c8605da015883bf0"
     },
     {
       "id": "sector-54-mohali",
@@ -1206,7 +1159,8 @@
         "width": 1448,
         "height": 1086
       },
-      "active": true
+      "active": true,
+      "sha256": "abe9f9634356d413d49d50cbb374be769a5a297e940f635cf6416ba66649bda7"
     },
     {
       "id": "sector-55-mohali",
@@ -1219,7 +1173,8 @@
         "width": 1491,
         "height": 1055
       },
-      "active": true
+      "active": true,
+      "sha256": "391d6a8f6aeb36eae11949d063b43a8102bb7f8c82f17ac36c2dda21760456d9"
     },
     {
       "id": "sector-56-mohali",
@@ -1232,7 +1187,8 @@
         "width": 1448,
         "height": 1086
       },
-      "active": true
+      "active": true,
+      "sha256": "e2e9d102175876ad4255684c23be6a3427a723609427b69002af63879949de3a"
     },
     {
       "id": "sector-59-mohali",
@@ -1245,7 +1201,8 @@
         "width": 1024,
         "height": 737
       },
-      "active": true
+      "active": true,
+      "sha256": "d91fb16aec5132bd9c9838d930ccb4f0884dd6a3d990fb5923c942f88299cb6f"
     },
     {
       "id": "sector-60-mohali",
@@ -1258,7 +1215,8 @@
         "width": 1485,
         "height": 1059
       },
-      "active": true
+      "active": true,
+      "sha256": "6063dce4bc9fe0ee1a88b376017c06b2d0cd005c49556516ca00dc39ef8f1842"
     },
     {
       "id": "sector-61-mohali",
@@ -1271,7 +1229,8 @@
         "width": 1024,
         "height": 724
       },
-      "active": true
+      "active": true,
+      "sha256": "6139db34ae19bfbdae5df2717448fc871b136b6d04c91ee01fd96d3c15cd940e"
     },
     {
       "id": "sector-62-mohali",
@@ -1284,11 +1243,12 @@
         "width": 1024,
         "height": 724
       },
-      "active": true
+      "active": true,
+      "sha256": "4a6a655520f5b9b2a8f6380a2f6f58869737f59d1cb9e9f010b1150f1059562a"
     },
     {
       "id": "sector-63-mohalli",
-      "name": "Mohali Sector 63",
+      "name": "Sector 63 Mohalli",
       "kind": "SECTOR_MAP",
       "city": "Mohali",
       "sector": "63",
@@ -1298,9 +1258,7 @@
         "height": 724
       },
       "active": true,
-      "aliases": [
-        "Sector 63 Mohalli"
-      ]
+      "sha256": "12d3bf06bba6f56614712c2b581fdb24a189285bd7dc42a75ecf08f46d7286e7"
     },
     {
       "id": "sector-64-mohali",
@@ -1313,7 +1271,8 @@
         "width": 1024,
         "height": 724
       },
-      "active": true
+      "active": true,
+      "sha256": "ecbbf1cc900f1dc4dc251aa03756f2368292fa8cf062fc1d6d928752e68141ff"
     },
     {
       "id": "sector-65-mohali",
@@ -1326,7 +1285,8 @@
         "width": 1024,
         "height": 724
       },
-      "active": true
+      "active": true,
+      "sha256": "dc70ca6eb89fe03a85624bece2739581d2d3518cb7e400bd802a95f9b1c5d5af"
     },
     {
       "id": "sector-66-mohali",
@@ -1339,11 +1299,12 @@
         "width": 1024,
         "height": 724
       },
-      "active": true
+      "active": true,
+      "sha256": "61a5c62f717b81b6487a04ca03556c4d16e3bebf0144ff2cf31aabeb0320e812"
     },
     {
       "id": "sector-67-mohli",
-      "name": "Mohali Sector 67",
+      "name": "Sector 67 Mohli",
       "kind": "SECTOR_MAP",
       "city": "Mohali",
       "sector": "67",
@@ -1353,9 +1314,7 @@
         "height": 735
       },
       "active": true,
-      "aliases": [
-        "Sector 67 Mohli"
-      ]
+      "sha256": "1948571bb2633826e7bede3b0d92661620a6fa3a90309359faf15878754277f4"
     },
     {
       "id": "sector-68-mohali",
@@ -1368,7 +1327,8 @@
         "width": 1024,
         "height": 724
       },
-      "active": true
+      "active": true,
+      "sha256": "5b5659499f3d2955c27441cac5f7c8ba78d3023b8996902140496b6a3340e7c2"
     },
     {
       "id": "sector-69-mohali",
@@ -1381,7 +1341,8 @@
         "width": 1024,
         "height": 724
       },
-      "active": true
+      "active": true,
+      "sha256": "46db47d58b9aa0971324760e2e4dc4dcd75b0d6d41634ae68ce773437ba7b8d2"
     },
     {
       "id": "sector-70-mohali",
@@ -1394,7 +1355,8 @@
         "width": 1024,
         "height": 724
       },
-      "active": true
+      "active": true,
+      "sha256": "3e9a86d89f596624bc47699d6021faafa7eb8a361c9171cd643d50f1a7a15e59"
     },
     {
       "id": "sector-71-mohali",
@@ -1407,7 +1369,8 @@
         "width": 1024,
         "height": 724
       },
-      "active": true
+      "active": true,
+      "sha256": "433087d3f449ce30dc39bdae2753c447fcca577a5145ffdff1e7bab6736ee02f"
     },
     {
       "id": "sector-77-mohali",
@@ -1420,7 +1383,8 @@
         "width": 1024,
         "height": 724
       },
-      "active": true
+      "active": true,
+      "sha256": "ee866f73101cb08042053d19de556510fe43664b71e06326595014b1d3fb4667"
     },
     {
       "id": "sector-78-mohali",
@@ -1433,7 +1397,8 @@
         "width": 1024,
         "height": 724
       },
-      "active": true
+      "active": true,
+      "sha256": "2c578c5f95f7d075f1dc601eb45c3c449a904c2f38c86eb49ec5335dcfd4cba0"
     },
     {
       "id": "sector-79-mohali",
@@ -1446,7 +1411,8 @@
         "width": 1024,
         "height": 724
       },
-      "active": true
+      "active": true,
+      "sha256": "47d3959ed0a7809a18fd2b5e89782848f84c00566dc9ed1e7386a77e8c788f8a"
     },
     {
       "id": "sector-8-chd",
@@ -1459,7 +1425,8 @@
         "width": 1448,
         "height": 1086
       },
-      "active": true
+      "active": true,
+      "sha256": "b375e004c0e2db7934eb969ba001b450b7fbe144e8a17276378499a712bf8d36"
     },
     {
       "id": "sector-80-mohali",
@@ -1472,7 +1439,8 @@
         "width": 1024,
         "height": 724
       },
-      "active": true
+      "active": true,
+      "sha256": "0d4b61295e80495bf415c4bf8f303f689c60d5b111af5f3cd287818c7017e714"
     },
     {
       "id": "sector-83",
@@ -1485,7 +1453,8 @@
         "width": 1494,
         "height": 1053
       },
-      "active": true
+      "active": true,
+      "sha256": "31fb50fd67fb48762eb19a8574aa5989bc5adb4b52103292c6731bae29f676a6"
     },
     {
       "id": "shivalik-city",
@@ -1498,7 +1467,8 @@
         "width": 1024,
         "height": 724
       },
-      "active": true
+      "active": true,
+      "sha256": "b48d8303c362eccbbed57f0833304c5c7b72a14330c2d9335d6f64771b27edb8"
     },
     {
       "id": "shopping-centre-10-phase",
@@ -1511,7 +1481,8 @@
         "width": 1024,
         "height": 724
       },
-      "active": true
+      "active": true,
+      "sha256": "bef337e598138384542db5429da4f94cedade9f621074f30552f34f548314f29"
     },
     {
       "id": "shopping-centre-7-phase",
@@ -1524,7 +1495,8 @@
         "width": 1024,
         "height": 572
       },
-      "active": true
+      "active": true,
+      "sha256": "31383ea53fb00f62491a277664fbc5112b0f034c1773f34ea43bcccc1a7ae993"
     },
     {
       "id": "shopping-centre-phase-1",
@@ -1537,7 +1509,8 @@
         "width": 1024,
         "height": 724
       },
-      "active": true
+      "active": true,
+      "sha256": "ee570ddea1b6f2b0a6809da280036aede9d5b732d03d7d298a2df0fdf47e13f8"
     },
     {
       "id": "shopping-centre-phase-2-mohali",
@@ -1550,7 +1523,8 @@
         "width": 1024,
         "height": 724
       },
-      "active": true
+      "active": true,
+      "sha256": "b79efe60db0b447c7b17962cc2e224a0b7b334516b09fbc7657f66ac8acd541e"
     },
     {
       "id": "shopping-centre-phase-5-mohali",
@@ -1563,7 +1537,8 @@
         "width": 1024,
         "height": 724
       },
-      "active": true
+      "active": true,
+      "sha256": "2ca47f29904a82b41c35f0b47343c59abd561883565c63364a8d2050cc9e51b0"
     },
     {
       "id": "uniworld-city-sector-97-106-109",
@@ -1577,7 +1552,8 @@
         "width": 1024,
         "height": 724
       },
-      "active": true
+      "active": true,
+      "sha256": "75226bd7a48c36132be407bc547d9df8ef3c86fc1551102edee13d0c7197838e"
     },
     {
       "id": "wave-estate-sector-85-mohali",
@@ -1591,7 +1567,8 @@
         "width": 3364,
         "height": 2408
       },
-      "active": true
+      "active": true,
+      "sha256": "36d7a914bd4a5aafb87c33c5b1abc10dabe94f51686d5c49258aea669f89616d"
     },
     {
       "id": "zirakpur-masterplan",
@@ -1603,632 +1580,8 @@
         "width": 1448,
         "height": 1086
       },
-      "active": true
-    },
-    {
-      "id": "aerocity-block-c-reference",
-      "name": "Aerocity Block C Reference",
-      "kind": "PROJECT_MAP",
-      "city": "Aerocity",
-      "project": "aerocity block c",
-      "image": "/maps/aerocity-block-c-reference.jpg",
-      "dimensions": {
-        "width": 1296,
-        "height": 900
-      },
-      "active": true
-    },
-    {
-      "id": "aerocity-block-d-reference",
-      "name": "Aerocity Block D Reference",
-      "kind": "PROJECT_MAP",
-      "city": "Aerocity",
-      "project": "aerocity block d",
-      "image": "/maps/aerocity-block-d-reference.jpg",
-      "dimensions": {
-        "width": 1296,
-        "height": 900
-      },
-      "active": true
-    },
-    {
-      "id": "aerocity-block-i-reference",
-      "name": "Aerocity Block I Reference",
-      "kind": "PROJECT_MAP",
-      "city": "Aerocity",
-      "project": "aerocity block i",
-      "image": "/maps/aerocity-block-i-reference.jpg",
-      "dimensions": {
-        "width": 1296,
-        "height": 900
-      },
-      "active": true
-    },
-    {
-      "id": "aerocity-block-j-reference",
-      "name": "Aerocity Block J Reference",
-      "kind": "PROJECT_MAP",
-      "city": "Aerocity",
-      "project": "aerocity block j",
-      "image": "/maps/aerocity-block-j-reference.jpg",
-      "dimensions": {
-        "width": 1296,
-        "height": 900
-      },
-      "active": true
-    },
-    {
-      "id": "aerocity-blocks-a-and-c-reference",
-      "name": "Aerocity Blocks A and C Reference",
-      "kind": "PROJECT_MAP",
-      "city": "Aerocity",
-      "project": "aerocity blocks a and c",
-      "image": "/maps/aerocity-blocks-a-and-c-reference.jpg",
-      "dimensions": {
-        "width": 1296,
-        "height": 900
-      },
-      "active": true
-    },
-    {
-      "id": "aerocity-blocks-b-and-d-reference",
-      "name": "Aerocity Blocks B and D Reference",
-      "kind": "PROJECT_MAP",
-      "city": "Aerocity",
-      "project": "aerocity blocks b and d",
-      "image": "/maps/aerocity-blocks-b-and-d-reference.jpg",
-      "dimensions": {
-        "width": 1296,
-        "height": 900
-      },
-      "active": true
-    },
-    {
-      "id": "aerocity-blocks-g-and-h-reference",
-      "name": "Aerocity Blocks G and H Reference",
-      "kind": "PROJECT_MAP",
-      "city": "Aerocity",
-      "project": "aerocity blocks g and h",
-      "image": "/maps/aerocity-blocks-g-and-h-reference.jpg",
-      "dimensions": {
-        "width": 1296,
-        "height": 900
-      },
-      "active": true
-    },
-    {
-      "id": "aerocity-layout-sheet-54",
-      "name": "Aerocity Layout — Sheet 54",
-      "kind": "PROJECT_MAP",
-      "city": "Aerocity",
-      "project": "aerocity layout sheet 54",
-      "image": "/maps/aerocity-layout-sheet-54.jpg",
-      "dimensions": {
-        "width": 3364,
-        "height": 2480
-      },
-      "active": true
-    },
-    {
-      "id": "aerocity-layout-sheet-55",
-      "name": "Aerocity Layout — Sheet 55",
-      "kind": "PROJECT_MAP",
-      "city": "Aerocity",
-      "project": "aerocity layout sheet 55",
-      "image": "/maps/aerocity-layout-sheet-55.jpg",
-      "dimensions": {
-        "width": 3364,
-        "height": 2420
-      },
-      "active": true
-    },
-    {
-      "id": "chandigarh-sector-10",
-      "name": "Chandigarh Sector 10",
-      "kind": "SECTOR_MAP",
-      "city": "Chandigarh",
-      "sector": "10",
-      "image": "/maps/chandigarh-sector-10.jpg",
-      "dimensions": {
-        "width": 2221,
-        "height": 1629
-      },
-      "active": true
-    },
-    {
-      "id": "chandigarh-sector-11",
-      "name": "Chandigarh Sector 11",
-      "kind": "SECTOR_MAP",
-      "city": "Chandigarh",
-      "sector": "11",
-      "image": "/maps/chandigarh-sector-11.jpg",
-      "dimensions": {
-        "width": 2193,
-        "height": 1625
-      },
-      "active": true
-    },
-    {
-      "id": "chandigarh-sector-15",
-      "name": "Chandigarh Sector 15",
-      "kind": "SECTOR_MAP",
-      "city": "Chandigarh",
-      "sector": "15",
-      "image": "/maps/chandigarh-sector-15.jpg",
-      "dimensions": {
-        "width": 2217,
-        "height": 1649
-      },
-      "active": true
-    },
-    {
-      "id": "chandigarh-sector-19",
-      "name": "Chandigarh Sector 19",
-      "kind": "SECTOR_MAP",
-      "city": "Chandigarh",
-      "sector": "19",
-      "image": "/maps/chandigarh-sector-19.jpg",
-      "dimensions": {
-        "width": 2217,
-        "height": 1633
-      },
-      "active": true
-    },
-    {
-      "id": "chandigarh-sector-23",
-      "name": "Chandigarh Sector 23",
-      "kind": "SECTOR_MAP",
-      "city": "Chandigarh",
-      "sector": "23",
-      "image": "/maps/chandigarh-sector-23.jpg",
-      "dimensions": {
-        "width": 2257,
-        "height": 1657
-      },
-      "active": true
-    },
-    {
-      "id": "chandigarh-sector-24",
-      "name": "Chandigarh Sector 24",
-      "kind": "SECTOR_MAP",
-      "city": "Chandigarh",
-      "sector": "24",
-      "image": "/maps/chandigarh-sector-24.jpg",
-      "dimensions": {
-        "width": 2173,
-        "height": 1633
-      },
-      "active": true
-    },
-    {
-      "id": "chandigarh-sector-26",
-      "name": "Chandigarh Sector 26",
-      "kind": "SECTOR_MAP",
-      "city": "Chandigarh",
-      "sector": "26",
-      "image": "/maps/chandigarh-sector-26.jpg",
-      "dimensions": {
-        "width": 2201,
-        "height": 1597
-      },
-      "active": true
-    },
-    {
-      "id": "chandigarh-sector-27",
-      "name": "Chandigarh Sector 27",
-      "kind": "SECTOR_MAP",
-      "city": "Chandigarh",
-      "sector": "27",
-      "image": "/maps/chandigarh-sector-27.jpg",
-      "dimensions": {
-        "width": 2193,
-        "height": 1649
-      },
-      "active": true
-    },
-    {
-      "id": "chandigarh-sector-31",
-      "name": "Chandigarh Sector 31",
-      "kind": "SECTOR_MAP",
-      "city": "Chandigarh",
-      "sector": "31",
-      "image": "/maps/chandigarh-sector-31.jpg",
-      "dimensions": {
-        "width": 2169,
-        "height": 1649
-      },
-      "active": true
-    },
-    {
-      "id": "chandigarh-sector-4",
-      "name": "Chandigarh Sector 4",
-      "kind": "SECTOR_MAP",
-      "city": "Chandigarh",
-      "sector": "4",
-      "image": "/maps/chandigarh-sector-4.jpg",
-      "dimensions": {
-        "width": 2221,
-        "height": 1573
-      },
-      "active": true
-    },
-    {
-      "id": "chandigarh-sector-42",
-      "name": "Chandigarh Sector 42",
-      "kind": "SECTOR_MAP",
-      "city": "Chandigarh",
-      "sector": "42",
-      "image": "/maps/chandigarh-sector-42.jpg",
-      "dimensions": {
-        "width": 2137,
-        "height": 1629
-      },
-      "active": true
-    },
-    {
-      "id": "chandigarh-sector-48",
-      "name": "Chandigarh Sector 48",
-      "kind": "SECTOR_MAP",
-      "city": "Chandigarh",
-      "sector": "48",
-      "image": "/maps/chandigarh-sector-48.jpg",
-      "dimensions": {
-        "width": 2197,
-        "height": 1637
-      },
-      "active": true
-    },
-    {
-      "id": "emaar-mgf-composite-layout",
-      "name": "Emaar MGF Sectors 99, 104–106, 108–109",
-      "kind": "PROJECT_MAP",
-      "city": "Mohali",
-      "project": "emaar mgf",
-      "image": "/maps/emaar-mgf-composite-layout.jpg",
-      "dimensions": {
-        "width": 3368,
-        "height": 2496
-      },
-      "active": true
-    },
-    {
-      "id": "emaar-mgf-composite-updated-reference",
-      "name": "Emaar MGF Composite — Updated Reference Sheet",
-      "kind": "PROJECT_MAP",
-      "city": "Mohali",
-      "project": "emaar mgf updated reference",
-      "image": "/maps/emaar-mgf-composite-updated-reference.jpg",
-      "dimensions": {
-        "width": 3364,
-        "height": 2480
-      },
-      "active": true
-    },
-    {
-      "id": "emaar-mgf-sector-108",
-      "name": "Emaar MGF Sector 108",
-      "kind": "PROJECT_MAP",
-      "city": "Mohali",
-      "sector": "108",
-      "project": "emaar mgf sector 108",
-      "image": "/maps/emaar-mgf-sector-108.jpg",
-      "dimensions": {
-        "width": 3352,
-        "height": 2412
-      },
-      "active": true
-    },
-    {
-      "id": "emaar-mgf-sector-109",
-      "name": "Emaar MGF Sector 109",
-      "kind": "PROJECT_MAP",
-      "city": "Mohali",
-      "sector": "109",
-      "project": "emaar mgf sector 109",
-      "image": "/maps/emaar-mgf-sector-109.jpg",
-      "dimensions": {
-        "width": 3372,
-        "height": 2488
-      },
-      "active": true
-    },
-    {
-      "id": "ggp-sector-115",
-      "name": "GGP Sector 115",
-      "kind": "PROJECT_MAP",
-      "city": "Mohali",
-      "sector": "115",
-      "project": "ggp",
-      "image": "/maps/ggp-sector-115.jpg",
-      "dimensions": {
-        "width": 3348,
-        "height": 2404
-      },
-      "active": true
-    },
-    {
-      "id": "golf-links-ii-sector-116",
-      "name": "Golf Links II Sector 116",
-      "kind": "PROJECT_MAP",
-      "city": "Mohali",
-      "sector": "116",
-      "project": "golf links ii",
-      "image": "/maps/golf-links-ii-sector-116.jpg",
-      "dimensions": {
-        "width": 3364,
-        "height": 2412
-      },
-      "active": true
-    },
-    {
-      "id": "golf-links-ii-sector-116-sheet-43",
-      "name": "Golf Links II Sector 116 — Sheet 43",
-      "kind": "PROJECT_MAP",
-      "city": "Mohali",
-      "sector": "116",
-      "project": "golf links ii sheet 43",
-      "image": "/maps/golf-links-ii-sector-116-sheet-43.jpg",
-      "dimensions": {
-        "width": 3376,
-        "height": 2464
-      },
-      "active": true
-    },
-    {
-      "id": "gulmohar-complex-sector-125",
-      "name": "Gulmohar Complex Sector 125",
-      "kind": "PROJECT_MAP",
-      "city": "Mohali",
-      "sector": "125",
-      "project": "gulmohar complex",
-      "image": "/maps/gulmohar-complex-sector-125.jpg",
-      "dimensions": {
-        "width": 3368,
-        "height": 2420
-      },
-      "active": true
-    },
-    {
-      "id": "gulmohar-residency-sector-116",
-      "name": "Gulmohar Residency Sector 116",
-      "kind": "PROJECT_MAP",
-      "city": "Mohali",
-      "sector": "116",
-      "project": "gulmohar residency",
-      "image": "/maps/gulmohar-residency-sector-116.jpg",
-      "dimensions": {
-        "width": 3364,
-        "height": 2412
-      },
-      "active": true
-    },
-    {
-      "id": "highway-city-mohali",
-      "name": "Highway City",
-      "kind": "PROJECT_MAP",
-      "city": "Mohali",
-      "project": "highway city",
-      "image": "/maps/highway-city-mohali.jpg",
-      "dimensions": {
-        "width": 3356,
-        "height": 2488
-      },
-      "active": true
-    },
-    {
-      "id": "industrial-area-phase-6",
-      "name": "Industrial Area Phase 6",
-      "kind": "INDUSTRIAL_MAP",
-      "city": "Mohali",
-      "sector": "phase 6",
-      "image": "/maps/industrial-area-phase-6.jpg",
-      "dimensions": {
-        "width": 3368,
-        "height": 2396
-      },
-      "active": true
-    },
-    {
-      "id": "industrial-focal-point-phase-5",
-      "name": "Industrial Focal Point Phase 5",
-      "kind": "INDUSTRIAL_MAP",
-      "city": "Mohali",
-      "sector": "phase 5",
-      "image": "/maps/industrial-focal-point-phase-5.jpg",
-      "dimensions": {
-        "width": 3368,
-        "height": 2484
-      },
-      "active": true
-    },
-    {
-      "id": "industrial-focal-point-phase-7",
-      "name": "Industrial Focal Point Phase 7",
-      "kind": "INDUSTRIAL_MAP",
-      "city": "Mohali",
-      "sector": "phase 7",
-      "image": "/maps/industrial-focal-point-phase-7.jpg",
-      "dimensions": {
-        "width": 3412,
-        "height": 2408
-      },
-      "active": true
-    },
-    {
-      "id": "industrial-growth-mohali",
-      "name": "Mohali Industrial Growth Layout",
-      "kind": "INDUSTRIAL_MAP",
-      "city": "Mohali",
-      "image": "/maps/industrial-growth-mohali.jpg",
-      "dimensions": {
-        "width": 3372,
-        "height": 2420
-      },
-      "active": true
-    },
-    {
-      "id": "jtpl-city-sector-115",
-      "name": "JTPL City Sector 115",
-      "kind": "PROJECT_MAP",
-      "city": "Mohali",
-      "sector": "115",
-      "project": "jtpl city",
-      "image": "/maps/jtpl-city-sector-115.jpg",
-      "dimensions": {
-        "width": 3396,
-        "height": 2468
-      },
-      "active": true
-    },
-    {
-      "id": "pearl-city-sector-104",
-      "name": "Pearl City Sector 104",
-      "kind": "PROJECT_MAP",
-      "city": "Mohali",
-      "sector": "104",
-      "project": "pearl city",
-      "image": "/maps/pearl-city-sector-104.jpg",
-      "dimensions": {
-        "width": 3360,
-        "height": 2476
-      },
-      "active": true
-    },
-    {
-      "id": "pearls-city-sector-100-sheet-32",
-      "name": "Pearls City Sector 100 — Sheet 32",
-      "kind": "PROJECT_MAP",
-      "city": "Mohali",
-      "sector": "100",
-      "project": "pearls city sheet 32",
-      "image": "/maps/pearls-city-sector-100-sheet-32.jpg",
-      "dimensions": {
-        "width": 3376,
-        "height": 2480
-      },
-      "active": true
-    },
-    {
-      "id": "pearls-city-sector-100-sheet-34",
-      "name": "Pearls City Sector 100 — Sheet 34",
-      "kind": "PROJECT_MAP",
-      "city": "Mohali",
-      "sector": "100",
-      "project": "pearls city sheet 34",
-      "image": "/maps/pearls-city-sector-100-sheet-34.jpg",
-      "dimensions": {
-        "width": 3372,
-        "height": 2460
-      },
-      "active": true
-    },
-    {
-      "id": "rkm-sector-112",
-      "name": "RKM Sector 112",
-      "kind": "PROJECT_MAP",
-      "city": "Mohali",
-      "sector": "112",
-      "project": "rkm",
-      "image": "/maps/rkm-sector-112.jpg",
-      "dimensions": {
-        "width": 3360,
-        "height": 2468
-      },
-      "active": true
-    },
-    {
-      "id": "shiva-enclave-mohali",
-      "name": "Shiva Enclave",
-      "kind": "PROJECT_MAP",
-      "city": "Mohali",
-      "project": "shiva enclave",
-      "image": "/maps/shiva-enclave-mohali.jpg",
-      "dimensions": {
-        "width": 3368,
-        "height": 2492
-      },
-      "active": true
-    },
-    {
-      "id": "shivalik-avenue-sector-125",
-      "name": "Shivalik Avenue Sector 125",
-      "kind": "PROJECT_MAP",
-      "city": "Mohali",
-      "sector": "125",
-      "project": "shivalik avenue",
-      "image": "/maps/shivalik-avenue-sector-125.jpg",
-      "dimensions": {
-        "width": 3360,
-        "height": 2420
-      },
-      "active": true
-    },
-    {
-      "id": "shivalik-city-sector-127-sheet-52",
-      "name": "Shivalik City Sector 127 — Sheet 52",
-      "kind": "PROJECT_MAP",
-      "city": "Mohali",
-      "sector": "127",
-      "project": "shivalik city sheet 52",
-      "image": "/maps/shivalik-city-sector-127-sheet-52.jpg",
-      "dimensions": {
-        "width": 3368,
-        "height": 2420
-      },
-      "active": true
-    },
-    {
-      "id": "shivalik-city-sector-127-sheet-53",
-      "name": "Shivalik City Sector 127 — Sheet 53",
-      "kind": "PROJECT_MAP",
-      "city": "Mohali",
-      "sector": "127",
-      "project": "shivalik city sheet 53",
-      "image": "/maps/shivalik-city-sector-127-sheet-53.jpg",
-      "dimensions": {
-        "width": 3364,
-        "height": 2484
-      },
-      "active": true
-    },
-    {
-      "id": "sky-rock-city-sector-111-112",
-      "name": "Sky Rock City Sectors 111–112",
-      "kind": "PROJECT_MAP",
-      "city": "Mohali",
-      "project": "sky rock city",
-      "image": "/maps/sky-rock-city-sector-111-112.jpg",
-      "dimensions": {
-        "width": 3356,
-        "height": 2484
-      },
-      "active": true
-    },
-    {
-      "id": "tdi-city-sector-110-111",
-      "name": "TDI City Sectors 110–111",
-      "kind": "PROJECT_MAP",
-      "city": "Mohali",
-      "project": "tdi city 110 111",
-      "image": "/maps/tdi-city-sector-110-111.jpg",
-      "dimensions": {
-        "width": 3368,
-        "height": 2420
-      },
-      "active": true
-    },
-    {
-      "id": "tdi-city-sector-117-119",
-      "name": "TDI City Sectors 117–119",
-      "kind": "PROJECT_MAP",
-      "city": "Mohali",
-      "project": "tdi city 117 119",
-      "image": "/maps/tdi-city-sector-117-119.jpg",
-      "dimensions": {
-        "width": 3360,
-        "height": 2472
-      },
-      "active": true
+      "active": true,
+      "sha256": "b672caef80e61438c5c08c02e1b571b421cb33766ae635195b58df6cda16418b"
     }
   ]
 }

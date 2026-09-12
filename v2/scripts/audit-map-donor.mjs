@@ -1,0 +1,25 @@
+import { execFileSync } from 'node:child_process';
+import { writeFileSync, mkdirSync } from 'node:fs';
+import { resolve } from 'node:path';
+const root = resolve(import.meta.dirname, '../..');
+const donor = resolve(process.argv[2]);
+const git = (dir, ...args) => execFileSync('git', ['-C', dir, ...args], { maxBuffer: 64 * 1024 * 1024 });
+const canonicalRef = '865d1f0a9bf61901e42013d9c38fe12ec38dfbcd';
+const donorRef = 'b89424538d5e1b287f85ebad74ccefd22f57ed87';
+const tree = (dir, ref) => git(dir, 'ls-tree', '-r', '-z', ref).toString().split('\0').filter(Boolean).map(s => {
+  const [meta, path] = s.split('\t'); return { path, blob: meta.split(' ')[2] };
+});
+const current = JSON.parse(git(root, 'show', `${canonicalRef}:v2/public/maps/index.json`).toString()).maps;
+const currentTree = tree(root, canonicalRef);
+const donorTree = tree(donor, donorRef);
+const canonical = new Map(current.map(m => [currentTree.find(f => f.path === `v2/public${m.image}`)?.blob, m.id]));
+const allCurrent = new Map(currentTree.filter(f => /\.(png|jpe?g|webp|svg)$/i.test(f.path)).map(f => [f.blob, f.path]));
+const raw = git(donor,'show',`${donorRef}:app/plotmap/map-registry.js`).toString();
+const legacy = JSON.parse(raw.slice(raw.indexOf('{'), raw.lastIndexOf('}')+1));
+const refs = legacy.maps.flatMap(m => ['easyMapSrc','originalMapSrc'].filter(k => m[k]).map(k => ({id:m.id,title:m.title,role:k,path:decodeURIComponent(m[k]).replace(/^\//,'')})));
+const rows = donorTree.filter(f=>/\.(png|jpe?g|webp|svg|pdf)$/i.test(f.path)).map(f=> ({...f, canonicalId:canonical.get(f.blob)??null,currentAsset:allCurrent.get(f.blob)??null, references:refs.filter(r=>r.path===f.path), candidate:/^(maps\/|normal maps\/|mohali\/|new chandigarh\/|panchulka\/|new_map_files\/)|^[^/]*(map|plan)[^/]*\.(png|jpg|svg|pdf)$/i.test(f.path)}));
+const missing = refs.filter(r=>!donorTree.some(f=>f.path===r.path));
+mkdirSync(resolve(root,'docs/maps'),{recursive:true});
+const report = {donorCommit:donorRef,canonicalCommit:canonicalRef,before:current,missing,rows};
+writeFileSync(resolve(root,'docs/maps/donor-inventory.json'),JSON.stringify(report,null,2)+'\n');
+console.log(JSON.stringify({current:current.length,media:rows.length,candidates:rows.filter(r=>r.candidate).length,missing:missing.length,unmatched:rows.filter(r=>r.candidate&&!r.currentAsset).map(r=>({path:r.path,blob:r.blob,refs:r.references.map(x=>x.id)}))},null,2));

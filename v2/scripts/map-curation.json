@@ -1,0 +1,655 @@
+{
+  "version": 1,
+  "byId": {
+    "scctor-10-p": {
+      "name": "Panchkula Sector 10",
+      "sector": "10",
+      "aliases": [
+        "Scctor 10 P"
+      ]
+    },
+    "scctor-11-p": {
+      "name": "Panchkula Sector 11",
+      "sector": "11",
+      "aliases": [
+        "Scctor 11 P"
+      ]
+    },
+    "scctor-p-12": {
+      "name": "Panchkula Sector 12",
+      "sector": "12",
+      "aliases": [
+        "Scctor P 12"
+      ]
+    },
+    "scctor-p-12a": {
+      "name": "Panchkula Sector 12A",
+      "sector": "12a",
+      "aliases": [
+        "Scctor P 12a"
+      ]
+    },
+    "scctor-p14": {
+      "name": "Panchkula Sector 14",
+      "sector": "14",
+      "aliases": [
+        "Scctor P14"
+      ]
+    },
+    "scctor-p15": {
+      "name": "Panchkula Sector 15",
+      "sector": "15",
+      "aliases": [
+        "Scctor P15"
+      ]
+    },
+    "scctor-p16": {
+      "name": "Panchkula Sector 16",
+      "sector": "16",
+      "aliases": [
+        "Scctor P16"
+      ]
+    },
+    "scctor-p17": {
+      "name": "Panchkula Sector 17",
+      "sector": "17",
+      "aliases": [
+        "Scctor P17"
+      ]
+    },
+    "sector-25-p": {
+      "name": "Panchkula Sector 25",
+      "sector": "25",
+      "aliases": [
+        "Sector 25 P"
+      ]
+    },
+    "sector-26": {
+      "name": "Panchkula Sector 26",
+      "sector": "26",
+      "aliases": [
+        "Sector 26"
+      ]
+    },
+    "sector-3-p": {
+      "name": "Panchkula Sector 3",
+      "sector": "3",
+      "aliases": [
+        "Sector 3 P"
+      ]
+    },
+    "sector-4-p": {
+      "name": "Panchkula Sector 4",
+      "sector": "4",
+      "aliases": [
+        "Sector 4 P"
+      ]
+    },
+    "sector-5-p": {
+      "name": "Panchkula Sector 5",
+      "sector": "5",
+      "aliases": [
+        "Sector 5 P"
+      ]
+    },
+    "sector-6-p": {
+      "name": "Panchkula Sector 6",
+      "sector": "6",
+      "aliases": [
+        "Sector 6 P"
+      ]
+    },
+    "sector-7-p": {
+      "name": "Panchkula Sector 7",
+      "sector": "7",
+      "aliases": [
+        "Sector 7 P"
+      ]
+    },
+    "sector-8-p": {
+      "name": "Panchkula Sector 8",
+      "sector": "8",
+      "aliases": [
+        "Sector 8 P"
+      ]
+    },
+    "sector-p-18": {
+      "name": "Panchkula Sector 18",
+      "sector": "18",
+      "aliases": [
+        "Sector P 18"
+      ]
+    },
+    "sector-p-19": {
+      "name": "Panchkula Sector 19",
+      "sector": "19",
+      "aliases": [
+        "Sector P 19"
+      ]
+    },
+    "sector-p-2-mansa-devi": {
+      "name": "Panchkula Mansa Devi Complex Sector 2",
+      "sector": "mdc 2",
+      "aliases": [
+        "Sector P 2 Mansa Devi"
+      ]
+    },
+    "sector-p-21": {
+      "name": "Panchkula Sector 21",
+      "sector": "21",
+      "aliases": [
+        "Sector P 21"
+      ]
+    },
+    "sector-p-23": {
+      "name": "Panchkula Sector 23",
+      "sector": "23",
+      "aliases": [
+        "Sector P 23"
+      ]
+    },
+    "sector-p-24": {
+      "name": "Panchkula Sector 24",
+      "sector": "24",
+      "aliases": [
+        "Sector P 24"
+      ]
+    },
+    "sector-p-27": {
+      "name": "Panchkula Sector 27",
+      "sector": "27",
+      "aliases": [
+        "Sector P 27"
+      ]
+    },
+    "sector-p-28": {
+      "name": "Panchkula Sector 28",
+      "sector": "28",
+      "aliases": [
+        "Sector P 28"
+      ]
+    },
+    "sector-p-31": {
+      "name": "Panchkula Sector 31",
+      "sector": "31",
+      "aliases": [
+        "Sector P 31"
+      ]
+    },
+    "sector-p-4-mansa-devi": {
+      "name": "Panchkula Mansa Devi Complex Sector 4",
+      "sector": "mdc 4",
+      "aliases": [
+        "Sector P 4 Mansa Devi"
+      ]
+    },
+    "sector-p-5-mansa-devi": {
+      "name": "Panchkula Mansa Devi Complex Sector 5",
+      "sector": "mdc 5",
+      "aliases": [
+        "Sector P 5 Mansa Devi"
+      ]
+    },
+    "sector-p-6-mansa-devi": {
+      "name": "Panchkula Mansa Devi Complex Sector 6",
+      "sector": "mdc 6",
+      "aliases": [
+        "Sector P 6 Mansa Devi"
+      ]
+    },
+    "sector-p-8": {
+      "name": "Panchkula Sector 8",
+      "sector": "8",
+      "aliases": [
+        "Sector P 8"
+      ]
+    },
+    "sector-p-9": {
+      "name": "Panchkula Sector 9",
+      "sector": "9",
+      "aliases": [
+        "Sector P 9"
+      ]
+    },
+    "sector-p20": {
+      "name": "Panchkula Sector 20",
+      "sector": "20",
+      "aliases": [
+        "Sector P20"
+      ]
+    },
+    "sector1-p": {
+      "name": "Panchkula Sector 1",
+      "sector": "1",
+      "aliases": [
+        "Sector1 P"
+      ]
+    },
+    "sector2-p": {
+      "name": "Panchkula Sector 2",
+      "sector": "2",
+      "aliases": [
+        "Sector2 P"
+      ]
+    },
+    "eco-city-1": {
+      "name": "Eco City I — New Chandigarh",
+      "city": "New Chandigarh",
+      "project": "eco city 1",
+      "aliases": [
+        "Eco City I",
+        "Mullanpur Eco City"
+      ]
+    },
+    "ecocity-mohali": {
+      "name": "Eco City II — New Chandigarh",
+      "city": "New Chandigarh",
+      "project": "eco city 2",
+      "aliases": [
+        "Ecocity Phase 2",
+        "Mullanpur Eco City II"
+      ]
+    },
+    "gamada-aerocity-mohali": {
+      "name": "Aerocity Blocks E and F Reference",
+      "kind": "PROJECT_MAP",
+      "project": "aerocity blocks e and f"
+    },
+    "aerocity-masterplan": {
+      "name": "Greater Mohali and Aerotropolis Regional Plan",
+      "city": "Aerotropolis",
+      "aliases": [
+        "Aerocity Masterplan",
+        "Greater Mohali Regional Plan"
+      ]
+    },
+    "panchulka-masterplan": {
+      "name": "Panchkula Masterplan",
+      "aliases": [
+        "Panchulka Masterplan"
+      ]
+    },
+    "panchulka-extenstion": {
+      "name": "Panchkula Extension Masterplan",
+      "aliases": [
+        "Panchulka Extension"
+      ]
+    },
+    "amravti": {
+      "name": "Amravati Enclave",
+      "aliases": [
+        "Amravti",
+        "Amravati"
+      ]
+    },
+    "sctor-34-chd": {
+      "name": "Chandigarh Sector 34",
+      "aliases": [
+        "Sctor 34 Chd"
+      ]
+    },
+    "secter-32-chd": {
+      "name": "Chandigarh Sector 32 — Reference",
+      "aliases": [
+        "Secter 32 Chd"
+      ]
+    },
+    "sector-63-mohalli": {
+      "name": "Mohali Sector 63",
+      "aliases": [
+        "Sector 63 Mohalli"
+      ]
+    },
+    "sector-67-mohli": {
+      "name": "Mohali Sector 67",
+      "aliases": [
+        "Sector 67 Mohli"
+      ]
+    }
+  },
+  "sources": {
+    "legacy/aerocity-block-c-reference.jpg": {
+      "id": "aerocity-block-c-reference",
+      "name": "Aerocity Block C Reference",
+      "city": "Aerocity",
+      "kind": "PROJECT_MAP",
+      "project": "aerocity block c"
+    },
+    "legacy/aerocity-block-d-reference.jpg": {
+      "id": "aerocity-block-d-reference",
+      "name": "Aerocity Block D Reference",
+      "city": "Aerocity",
+      "kind": "PROJECT_MAP",
+      "project": "aerocity block d"
+    },
+    "legacy/aerocity-blocks-a-and-c-reference.jpg": {
+      "id": "aerocity-blocks-a-and-c-reference",
+      "name": "Aerocity Blocks A and C Reference",
+      "city": "Aerocity",
+      "kind": "PROJECT_MAP",
+      "project": "aerocity blocks a and c"
+    },
+    "legacy/aerocity-blocks-b-and-d-reference.jpg": {
+      "id": "aerocity-blocks-b-and-d-reference",
+      "name": "Aerocity Blocks B and D Reference",
+      "city": "Aerocity",
+      "kind": "PROJECT_MAP",
+      "project": "aerocity blocks b and d"
+    },
+    "legacy/aerocity-blocks-g-and-h-reference.jpg": {
+      "id": "aerocity-blocks-g-and-h-reference",
+      "name": "Aerocity Blocks G and H Reference",
+      "city": "Aerocity",
+      "kind": "PROJECT_MAP",
+      "project": "aerocity blocks g and h"
+    },
+    "legacy/aerocity-block-i-reference.jpg": {
+      "id": "aerocity-block-i-reference",
+      "name": "Aerocity Block I Reference",
+      "city": "Aerocity",
+      "kind": "PROJECT_MAP",
+      "project": "aerocity block i"
+    },
+    "legacy/aerocity-block-j-reference.jpg": {
+      "id": "aerocity-block-j-reference",
+      "name": "Aerocity Block J Reference",
+      "city": "Aerocity",
+      "kind": "PROJECT_MAP",
+      "project": "aerocity block j"
+    },
+    "legacy/aerocity-layout-sheet-54.jpg": {
+      "id": "aerocity-layout-sheet-54",
+      "name": "Aerocity Layout — Sheet 54",
+      "city": "Aerocity",
+      "kind": "PROJECT_MAP",
+      "project": "aerocity layout sheet 54"
+    },
+    "legacy/aerocity-layout-sheet-55.jpg": {
+      "id": "aerocity-layout-sheet-55",
+      "name": "Aerocity Layout — Sheet 55",
+      "city": "Aerocity",
+      "kind": "PROJECT_MAP",
+      "project": "aerocity layout sheet 55"
+    },
+    "legacy/golf-links-ii-sector-116.jpg": {
+      "id": "golf-links-ii-sector-116",
+      "name": "Golf Links II Sector 116",
+      "city": "Mohali",
+      "kind": "PROJECT_MAP",
+      "sector": "116",
+      "project": "golf links ii"
+    },
+    "legacy/golf-links-ii-sector-116-sheet-43.jpg": {
+      "id": "golf-links-ii-sector-116-sheet-43",
+      "name": "Golf Links II Sector 116 — Sheet 43",
+      "city": "Mohali",
+      "kind": "PROJECT_MAP",
+      "sector": "116",
+      "project": "golf links ii sheet 43"
+    },
+    "legacy/emaar-mgf-sector-108.jpg": {
+      "id": "emaar-mgf-sector-108",
+      "name": "Emaar MGF Sector 108",
+      "city": "Mohali",
+      "kind": "PROJECT_MAP",
+      "sector": "108",
+      "project": "emaar mgf sector 108"
+    },
+    "legacy/emaar-mgf-sector-109.jpg": {
+      "id": "emaar-mgf-sector-109",
+      "name": "Emaar MGF Sector 109",
+      "city": "Mohali",
+      "kind": "PROJECT_MAP",
+      "sector": "109",
+      "project": "emaar mgf sector 109"
+    },
+    "legacy/emaar-mgf-composite-layout.jpg": {
+      "id": "emaar-mgf-composite-layout",
+      "name": "Emaar MGF Sectors 99, 104–106, 108–109",
+      "city": "Mohali",
+      "kind": "PROJECT_MAP",
+      "project": "emaar mgf"
+    },
+    "legacy/emaar-mgf-composite-updated-reference.jpg": {
+      "id": "emaar-mgf-composite-updated-reference",
+      "name": "Emaar MGF Composite — Updated Reference Sheet",
+      "city": "Mohali",
+      "kind": "PROJECT_MAP",
+      "project": "emaar mgf updated reference"
+    },
+    "legacy/ggp-sector-115.jpg": {
+      "id": "ggp-sector-115",
+      "name": "GGP Sector 115",
+      "city": "Mohali",
+      "kind": "PROJECT_MAP",
+      "sector": "115",
+      "project": "ggp"
+    },
+    "legacy/gulmohar-complex-sector-125.jpg": {
+      "id": "gulmohar-complex-sector-125",
+      "name": "Gulmohar Complex Sector 125",
+      "city": "Mohali",
+      "kind": "PROJECT_MAP",
+      "sector": "125",
+      "project": "gulmohar complex"
+    },
+    "legacy/gulmohar-residency-sector-116.jpg": {
+      "id": "gulmohar-residency-sector-116",
+      "name": "Gulmohar Residency Sector 116",
+      "city": "Mohali",
+      "kind": "PROJECT_MAP",
+      "sector": "116",
+      "project": "gulmohar residency"
+    },
+    "legacy/highway-city-mohali.jpg": {
+      "id": "highway-city-mohali",
+      "name": "Highway City",
+      "city": "Mohali",
+      "kind": "PROJECT_MAP",
+      "project": "highway city"
+    },
+    "legacy/jtpl-city-sector-115.jpg": {
+      "id": "jtpl-city-sector-115",
+      "name": "JTPL City Sector 115",
+      "city": "Mohali",
+      "kind": "PROJECT_MAP",
+      "sector": "115",
+      "project": "jtpl city"
+    },
+    "legacy/pearls-city-sector-100-sheet-32.jpg": {
+      "id": "pearls-city-sector-100-sheet-32",
+      "name": "Pearls City Sector 100 — Sheet 32",
+      "city": "Mohali",
+      "kind": "PROJECT_MAP",
+      "sector": "100",
+      "project": "pearls city sheet 32"
+    },
+    "legacy/pearls-city-sector-100-sheet-34.jpg": {
+      "id": "pearls-city-sector-100-sheet-34",
+      "name": "Pearls City Sector 100 — Sheet 34",
+      "city": "Mohali",
+      "kind": "PROJECT_MAP",
+      "sector": "100",
+      "project": "pearls city sheet 34"
+    },
+    "legacy/pearl-city-sector-104.jpg": {
+      "id": "pearl-city-sector-104",
+      "name": "Pearl City Sector 104",
+      "city": "Mohali",
+      "kind": "PROJECT_MAP",
+      "sector": "104",
+      "project": "pearl city"
+    },
+    "legacy/rkm-sector-112.jpg": {
+      "id": "rkm-sector-112",
+      "name": "RKM Sector 112",
+      "city": "Mohali",
+      "kind": "PROJECT_MAP",
+      "sector": "112",
+      "project": "rkm"
+    },
+    "legacy/shiva-enclave-mohali.jpg": {
+      "id": "shiva-enclave-mohali",
+      "name": "Shiva Enclave",
+      "city": "Mohali",
+      "kind": "PROJECT_MAP",
+      "project": "shiva enclave"
+    },
+    "legacy/shivalik-avenue-sector-125.jpg": {
+      "id": "shivalik-avenue-sector-125",
+      "name": "Shivalik Avenue Sector 125",
+      "city": "Mohali",
+      "kind": "PROJECT_MAP",
+      "sector": "125",
+      "project": "shivalik avenue"
+    },
+    "legacy/shivalik-city-sector-127-sheet-52.jpg": {
+      "id": "shivalik-city-sector-127-sheet-52",
+      "name": "Shivalik City Sector 127 — Sheet 52",
+      "city": "Mohali",
+      "kind": "PROJECT_MAP",
+      "sector": "127",
+      "project": "shivalik city sheet 52"
+    },
+    "legacy/shivalik-city-sector-127-sheet-53.jpg": {
+      "id": "shivalik-city-sector-127-sheet-53",
+      "name": "Shivalik City Sector 127 — Sheet 53",
+      "city": "Mohali",
+      "kind": "PROJECT_MAP",
+      "sector": "127",
+      "project": "shivalik city sheet 53"
+    },
+    "legacy/sky-rock-city-sector-111-112.jpg": {
+      "id": "sky-rock-city-sector-111-112",
+      "name": "Sky Rock City Sectors 111–112",
+      "city": "Mohali",
+      "kind": "PROJECT_MAP",
+      "project": "sky rock city"
+    },
+    "legacy/tdi-city-sector-110-111.jpg": {
+      "id": "tdi-city-sector-110-111",
+      "name": "TDI City Sectors 110–111",
+      "city": "Mohali",
+      "kind": "PROJECT_MAP",
+      "project": "tdi city 110 111"
+    },
+    "legacy/tdi-city-sector-117-119.jpg": {
+      "id": "tdi-city-sector-117-119",
+      "name": "TDI City Sectors 117–119",
+      "city": "Mohali",
+      "kind": "PROJECT_MAP",
+      "project": "tdi city 117 119"
+    },
+    "legacy/industrial-focal-point-phase-7.jpg": {
+      "id": "industrial-focal-point-phase-7",
+      "name": "Industrial Focal Point Phase 7",
+      "city": "Mohali",
+      "kind": "INDUSTRIAL_MAP",
+      "sector": "phase 7"
+    },
+    "legacy/industrial-area-phase-6.jpg": {
+      "id": "industrial-area-phase-6",
+      "name": "Industrial Area Phase 6",
+      "city": "Mohali",
+      "kind": "INDUSTRIAL_MAP",
+      "sector": "phase 6"
+    },
+    "legacy/industrial-focal-point-phase-5.jpg": {
+      "id": "industrial-focal-point-phase-5",
+      "name": "Industrial Focal Point Phase 5",
+      "city": "Mohali",
+      "kind": "INDUSTRIAL_MAP",
+      "sector": "phase 5"
+    },
+    "legacy/industrial-growth-mohali.jpg": {
+      "id": "industrial-growth-mohali",
+      "name": "Mohali Industrial Growth Layout",
+      "city": "Mohali",
+      "kind": "INDUSTRIAL_MAP"
+    },
+    "legacy/chandigarh-sector-10.jpg": {
+      "id": "chandigarh-sector-10",
+      "name": "Chandigarh Sector 10",
+      "city": "Chandigarh",
+      "kind": "SECTOR_MAP",
+      "sector": "10"
+    },
+    "legacy/chandigarh-sector-11.jpg": {
+      "id": "chandigarh-sector-11",
+      "name": "Chandigarh Sector 11",
+      "city": "Chandigarh",
+      "kind": "SECTOR_MAP",
+      "sector": "11"
+    },
+    "legacy/chandigarh-sector-15.jpg": {
+      "id": "chandigarh-sector-15",
+      "name": "Chandigarh Sector 15",
+      "city": "Chandigarh",
+      "kind": "SECTOR_MAP",
+      "sector": "15"
+    },
+    "legacy/chandigarh-sector-19.jpg": {
+      "id": "chandigarh-sector-19",
+      "name": "Chandigarh Sector 19",
+      "city": "Chandigarh",
+      "kind": "SECTOR_MAP",
+      "sector": "19"
+    },
+    "legacy/chandigarh-sector-23.jpg": {
+      "id": "chandigarh-sector-23",
+      "name": "Chandigarh Sector 23",
+      "city": "Chandigarh",
+      "kind": "SECTOR_MAP",
+      "sector": "23"
+    },
+    "legacy/chandigarh-sector-24.jpg": {
+      "id": "chandigarh-sector-24",
+      "name": "Chandigarh Sector 24",
+      "city": "Chandigarh",
+      "kind": "SECTOR_MAP",
+      "sector": "24"
+    },
+    "legacy/chandigarh-sector-26.jpg": {
+      "id": "chandigarh-sector-26",
+      "name": "Chandigarh Sector 26",
+      "city": "Chandigarh",
+      "kind": "SECTOR_MAP",
+      "sector": "26"
+    },
+    "legacy/chandigarh-sector-27.jpg": {
+      "id": "chandigarh-sector-27",
+      "name": "Chandigarh Sector 27",
+      "city": "Chandigarh",
+      "kind": "SECTOR_MAP",
+      "sector": "27"
+    },
+    "legacy/chandigarh-sector-31.jpg": {
+      "id": "chandigarh-sector-31",
+      "name": "Chandigarh Sector 31",
+      "city": "Chandigarh",
+      "kind": "SECTOR_MAP",
+      "sector": "31"
+    },
+    "legacy/chandigarh-sector-4.jpg": {
+      "id": "chandigarh-sector-4",
+      "name": "Chandigarh Sector 4",
+      "city": "Chandigarh",
+      "kind": "SECTOR_MAP",
+      "sector": "4"
+    },
+    "legacy/chandigarh-sector-42.jpg": {
+      "id": "chandigarh-sector-42",
+      "name": "Chandigarh Sector 42",
+      "city": "Chandigarh",
+      "kind": "SECTOR_MAP",
+      "sector": "42"
+    },
+    "legacy/chandigarh-sector-48.jpg": {
+      "id": "chandigarh-sector-48",
+      "name": "Chandigarh Sector 48",
+      "city": "Chandigarh",
+      "kind": "SECTOR_MAP",
+      "sector": "48"
+    }
+  }
+}
